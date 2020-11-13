@@ -1,0 +1,331 @@
+#! /usr/bin/perl -wT
+
+use strict;
+use warnings;
+use Sys::Syslog();
+use Fcntl();
+use Symbol();
+use Getopt::Long();
+use English qw( -no_match_vars );
+
+delete $ENV{PATH};
+
+local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin';
+
+our $VERSION = '1.00';
+
+my $binary  = 'firefox';
+my $ident   = 'ssh-auth-cmd-marionette';
+my %options = ( facility => 'LOG_LOCAL0' );
+
+eval {
+    Getopt::Long::GetOptions( \%options, 'help', 'version', 'facility:s',
+        'allow-binary:s@', 'force-binary:s' );
+    if ( $options{help} ) {
+        require Pod::Simple::Text;
+        my $parser = Pod::Simple::Text->new();
+        $parser->parse_from_file($PROGRAM_NAME);
+        <<"_USAGE_" or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+Usage: $PROGRAM_NAME [--help] [--version] [--facility=(LOG_LOCAL0|LOG_LEVEL1|..)] (--allow-binary=\$path_to_firefox_binary) [--force-binary=\$path_to_firefox_binary]
+
+
+_USAGE_
+        exit 0;
+    }
+    elsif ( $options{version} ) {
+        print "$VERSION\n"
+          or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+        exit 0;
+    }
+    %options = _validate_parameters(%options);
+    my $tmp_directory = $ENV{TMPDIR} || '/tmp';
+    $tmp_directory =~ s/\/$//smx;    # remove trailing / for darwin
+    my $root_dir_regex;
+    my $quoted_tmp_directory;
+    if ( $tmp_directory =~
+        s/^(.*firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx )
+    {
+        $quoted_tmp_directory = quotemeta $tmp_directory;
+        $root_dir_regex       = qr/$quoted_tmp_directory/smx;
+    }
+    else {
+        $quoted_tmp_directory = quotemeta $tmp_directory;
+        $root_dir_regex =
+          qr/${quoted_tmp_directory}\/firefox_marionette_remote\w+/smx;
+    }
+    my $allowed_binaries = q[(?:]
+      . ( join q[|], map { quotemeta } @{ $options{'allow-binary'} } ) . q[)];
+    my $allowed_binary_regex = qr/$allowed_binaries/smx;
+    my $sub_directory_regex  = qr/(?:profile|downloads|tmp|addons|certs)/smx;
+    my $profile_file_regex =
+      qr/profile\/(?:bookmarks[.]html|prefs[.]js|mimeTypes[.]rdf)/smx;
+    my $file_regex      = qr/[+\w\-()]{1,255}(?:[.][+\w\-()]{1,255})*/smx;
+    my $downloads_regex = qr/downloads\/$file_regex/smx;
+    my $ca_name_regex   = qr/Firefox::Marionette[ ]Root[ ]CA/smx;
+    my $certutil_arguments_regex = join q[],
+      qr/[ ]\-A/smx,
+      qr/[ ]\-d[ ](?:dbm|sql):$root_dir_regex\/profile/smx,
+      qr/[ ]\-i[ ]$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer/smx,
+      qr/[ ]\-n[ ]$ca_name_regex[ ]\d{1,10}[ ]\-t[ ]TC,,/smx;
+    my $firefox_arguments_regex = join q[],
+      qr/[ ]\-marionette/smx,
+      qr/(?:[ ]\-width[ ]\d{1,8})?/smx,
+      qr/(?:[ ]\-height[ ]\d{1,8})?/smx,
+      qr/(?:[ ]-safe\-mode)?/smx,
+      qr/(?:[ ]\-headless)?/smx,
+      qr/[ ]\-profile[ ]$root_dir_regex\/profile/smx,
+      qr/[ ]\-\-no\-remote/smx,
+      qr/[ ]\-\-new\-instance/smx,
+      qr/(?:[ ]\-\-devtools)?/smx;
+    my $prefs_grep_patterns_regex = join q[],
+      qr/\-e[ ]marionette\\.port[ ]/smx,
+      qr/\-e[ ]security\\.sandbox\\.content\\.tempDirSuffix[ ]/smx,
+      qr/\-e[ ]security\\.sandbox\\.plugin\\.tempDirSuffix[ ]/smx;
+    my @darwin_regexes;
+
+    if ( $OSNAME eq 'darwin' ) {
+        my $plist_prefix_regex =
+          _get_plist_prefix_regex( @{ $options{'allow-binary'} } );
+        @darwin_regexes = (
+            qr/ls[ ]-1[ ]"$allowed_binary_regex"/smx,
+qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/smx,
+        );
+    }
+
+    my $allowed_commands_regex = join q[|],
+      qr/"$allowed_binary_regex"[ ]\-\-version/smx,
+      @darwin_regexes,
+      qr/uname[ ][|][|][ ]ver/smx,
+      qr/echo[ ]"TMPDIR=\\"\$TMPDIR\\""/smx,
+      qr/echo[ ]"TMP=\\"\$TMP\\""/smx,
+      qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex/smx,
+      qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex\/$sub_directory_regex/smx,
+      qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/$profile_file_regex"/smx,
+      qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/addons\/$file_regex"/smx,
+      qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer"/smx,
+      qr/scp[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$downloads_regex"/smx,
+      qr/kill[ ]\-0[ ]\d{1,8}/smx,
+      qr/ps[ ]xwwe/smx,
+qr/rm[ ]\-Rf[ ]$root_dir_regex(?:[ ]$quoted_tmp_directory\/Temp\-[\d\-a-f]{1,255})*/smx,
+      qr/ls[ ]-1[ ]"$root_dir_regex\/downloads"/smx,
+      qr/certutil$certutil_arguments_regex/smx,
+      qr/"$allowed_binary_regex"$firefox_arguments_regex/smx,
+qr/grep[ ]$prefs_grep_patterns_regex$root_dir_regex\/profile\/prefs[.]js/smx;
+
+    if ( $ENV{SSH_ORIGINAL_COMMAND} =~ m/^($allowed_commands_regex)$/smx ) {
+        my ($command_and_arguments) = ($1);
+        if ( $options{'force-binary'} ) {
+            $command_and_arguments =~
+              s/^"$allowed_binary_regex"/"$options{'force-binary'}"/smx;
+        }
+        Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
+            "Executing '$command_and_arguments'" );
+        Sys::Syslog::closelog();
+        exec $command_and_arguments
+          or die "Failed to '$command_and_arguments':$EXTENDED_OS_ERROR\n";
+    }
+    else {
+        die 'Unrecognisable command "'
+          . $ENV{SSH_ORIGINAL_COMMAND}
+          . "\" with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\"\n";
+    }
+    1;
+} or do {
+    my $eval_error = $EVAL_ERROR;
+    chomp $eval_error;
+    Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
+    Sys::Syslog::syslog( Sys::Syslog::LOG_ERR(), $eval_error );
+    Sys::Syslog::closelog();
+    warn "$eval_error\n";
+    exit 1;
+};
+
+sub _validate_parameters {
+    my (%parameters) = @_;
+    my $facility = $parameters{facility};
+    eval { $parameters{facility} = Sys::Syslog->$facility(); } or do {
+        my $original = $parameters{facility};
+        $parameters{facility} = Sys::Syslog::LOG_LOCAL0();
+        Sys::Syslog::openlog( $ident, 'cons', $parameters{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
+            "Failed to parse --facility argument of '$original':$EVAL_ERROR" );
+        Sys::Syslog::closelog();
+    };
+    if ( !defined $ENV{SSH_ORIGINAL_COMMAND} ) {
+        die
+"$PROGRAM_NAME requires the SSH_ORIGINAL_COMMAND environment variable to be defined\n";
+    }
+    if ( !defined $parameters{'allow-binary'} ) {
+        $parameters{'allow-binary'} = ['firefox'];
+        if ( $OSNAME eq 'darwin' ) {
+            push @{ $parameters{'allow-binary'} },
+              '/Applications/Firefox.app/Contents/MacOS/firefox',
+'/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox',
+              '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
+              '/Applications/Waterfox Current.app/Contents/MacOS/waterfox';
+        }
+    }
+    if (   ( defined $parameters{'force-binary'} )
+        && ( $parameters{'force-binary'} =~ /^(.*)$/smx ) )
+    {
+        my ($untainted) = ($1);
+        $parameters{'force-binary'} =
+          $untainted; # passed in on the command line from .authorized_keys file
+        Sys::Syslog::openlog( $ident, 'cons', $parameters{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_DEBUG(),
+            "Untainting --force-binary of '$parameters{'force-binary'}'" );
+        Sys::Syslog::closelog();
+    }
+    return %parameters;
+}
+
+sub _get_plist_prefix_regex {
+    my (@allow_binaries) = @_;
+    my %allowed_plist_prefixes;
+    foreach my $binary (@allow_binaries) {
+        my $prefix = $binary;
+        if ( $prefix =~ s/Contents\/MacOS\/(?:water|fire)fox$/Contents/smx ) {
+            $allowed_plist_prefixes{$prefix} = 1;
+        }
+    }
+    my $regex = join q[|],
+      map { quotemeta } sort { $a cmp $b } keys %allowed_plist_prefixes;
+    return $regex;
+}
+
+__END__
+=head1 NAME
+
+ssh-auth-cmd-marionette - ssh ~/.ssh/authorized_keys command for Firefox::Marionette
+
+=head1 VERSION
+
+Version 1.00
+
+=head1 USAGE
+
+~/.ssh/authorized_keys entry to allow the remote user to run a default firefox as user@server (all syslog entries go to LOG_LOCAL0)
+
+   no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
+
+~/.ssh/authorized_keys entry to allow the remote user to run a default firefox as user@server (all syslog entries go to LOG_LOCAL1)
+
+   no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette --facility=LOG_LOCAL1" ssh-rsa AAAA ... == user@server
+
+~/.ssh/authorized_keys entry to force the remote user to run /path/to/firefox when logging in as user@server (all syslog entries go to LOG_LOCAL0)
+
+   no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette --force-binary=/path/to/firefox" ssh-rsa AAAA ... == user@server
+
+~/.ssh/authorized_keys entry to allow the remote user to run /path/to/firefox or /path/to/waterfox when logging in as user@server (all syslog entries go to LOG_LOCAL0)
+
+   no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette --allow-binary=/path/to/firefox --allow-binary=/path/to/waterfox" ssh-rsa AAAA ... == user@server
+
+=head1 DESCRIPTION
+
+This program is intended to allow secure remote usage of the perl Firefox::Marionette library via ssh.  It allows a list
+of pre-defined commands that can be permitted via ssh public key authentication.
+
+Be default, it will log all commands that the remote perl library requests to run on this machine to the LOG_LOCAL0 syslog
+facility.  If desired, syslog messages can be sent to a facility of your choosing, using the syslog(3) documentation for
+a list of allowed facilities and the --facility argument for this program.
+
+An example .ssh/authorized_keys file using this program would look like this 
+
+   no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
+
+By default, the only firefox version that may be used will be present in the PATH environment variable.  However, the remote user may be permitted to specify the
+path to a different firefox binary with (multiple) --allow-binary parameters, or simply forced to use the firefox that the local user is setup for with the 
+--force-binary parameter.
+
+=head1 REQUIRED ARGUMENTS
+
+None
+
+=head1 OPTIONS
+
+Option names can be abbreviated to uniqueness and can be stated with singe or double dashes, and option values can be separated from the option name by a space or '=' (as with Getopt::Long). Option names are also case-
+sensitive.
+
+=over 4
+
+=item * --help - This page.
+
+=item * --version - print the version of ssh-auth-cmd-marionette.
+
+=item * --facility - use L<facility|https://metacpan.org/pod/Sys::Syslog#Facilities> for L<syslog|https://linux.die.net/man/3/syslog> messages, instead of the default LOG_LOCAL0.
+
+=item * --allow-binary - allow this path to be used in calls to L<new|Firefox::Marionette#new>.  This option may be specified multiple times
+
+=item * --force-binary - regardless of the settings that L<new()|Firefox::Marionette#new> requests, send all requests for the firefox binary to the path requested.
+
+=back
+
+=head1 CONFIGURATION
+
+ssh-auth-cmd-marionette requires no configuration files or environment variables.
+
+=head1 DEPENDENCIES
+
+ssh-auth-cmd-marionette requires the following non-core Perl modules
+ 
+=over
+ 
+=item *
+L<Pod::Simple::Text|Pod::Simple::Text>
+ 
+=back
+
+=head1 DIAGNOSTICS
+
+Check syslog for any errors
+
+=head1 INCOMPATIBILITIES
+
+This program depends on L<exec|https://linux.die.net/man/3/exec> and hence will not work in a Windows environment.  Always interested in any ssh incompatibilities.  Patches welcome.
+
+=head1 EXIT STATUS
+
+This program will either L<exec|https://linux.die.net/man/3/exec> a permitted program or exit with a 1.
+
+=head1 BUGS AND LIMITATIONS
+
+No bugs have been reported.
+
+Please report any bugs or feature requests to
+C<bug-firefox-marionette@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org>.
+
+=head1 AUTHOR
+
+David Dick  C<< <ddick@cpan.org> >>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2020, David Dick C<< <ddick@cpan.org> >>. All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic/perlartistic>.
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.

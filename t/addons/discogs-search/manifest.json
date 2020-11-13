@@ -1,0 +1,22 @@
+{
+
+  "manifest_version": 2,
+  "name": "Discogs search engine",
+  "description": "Adds a search engine that searches discogs.com",
+  "version": "1.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "test@example.com",
+      "strict_min_version": "55"
+    }
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Discogs",
+      "search_url": "https://www.discogs.com/search/?q={searchTerms}",
+      "keyword": "disc",
+      "favicon_url": "https://www.discogs.com/favicon.ico"
+    }
+  }
+
+}

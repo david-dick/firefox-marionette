@@ -1,0 +1,72 @@
+{
+   "abstract" : "Automate the Firefox browser with the Marionette protocol",
+   "author" : [
+      "David Dick <ddick@cpan.org>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "ExtUtils::MakeMaker version 7.46, CPAN::Meta::Converter version 2.150010",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Firefox-Marionette",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Compress::Zlib" : "0",
+            "Cwd" : "0",
+            "Digest::SHA" : "0",
+            "File::HomeDir" : "0",
+            "HTTP::Daemon" : "0",
+            "HTTP::Response" : "0",
+            "HTTP::Status" : "0",
+            "IO::Socket::SSL" : "0",
+            "PDF::API2" : "2.036",
+            "Test::More" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Archive::Zip" : "0",
+            "Config" : "0",
+            "Config::INI::Reader" : "0",
+            "Crypt::URandom" : "0",
+            "DirHandle" : "0",
+            "English" : "0",
+            "Exporter" : "0",
+            "Fcntl" : "0",
+            "File::Find" : "0",
+            "File::Spec" : "0",
+            "File::Temp" : "0",
+            "FileHandle" : "0",
+            "IPC::Open3" : "1.03",
+            "JSON" : "0",
+            "MIME::Base64" : "0",
+            "POSIX" : "0",
+            "Socket" : "0",
+            "Time::HiRes" : "0",
+            "URI" : "0",
+            "base" : "0",
+            "overload" : "0",
+            "perl" : "5.006"
+         }
+      }
+   },
+   "release_status" : "unstable",
+   "version" : "1.00",
+   "x_serialization_backend" : "JSON::PP version 4.04"
+}
