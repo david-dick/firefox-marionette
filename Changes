@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.01  Sat Nov 14 20:57:00 2020
+       Added README.md
+
 1.00  Sat Nov 14 20:42:00 2020
        Adding add_header method.
        Adding application.ini support in attempt to fix RT#133427. 

@@ -59,6 +59,30 @@ SUBROUTINES/METHODS
     the current cookie jar. This method returns itself to aid in chaining
     methods.
 
+ add_header
+
+    accepts a hash of HTTP headers to include in every future HTTP Request.
+
+        $firefox->add_header( 'Track-my-automated-tests' => $uuid );
+
+    these headers are added to any existing headers. To clear headers, see
+    the delete_header method
+
+        $firefox->delete_header( 'Accept' );
+        $firefox->add_header( 'Accept' => 'text/perl' );
+
+    will only send out an Accept
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept>
+    header that looks like Accept: text/perl.
+
+        $firefox->add_header( 'Accept' => 'text/perl' );
+
+    by itself, will send out an Accept
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept>
+    header that may resemble Accept:
+    text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8,
+    text/perl. This method returns itself to aid in chaining methods.
+
  addons
 
     returns if pre-existing addons (extensions/themes) are allowed to run.
@@ -208,8 +232,17 @@ SUBROUTINES/METHODS
 
  context
 
-    returns the context type that is Marionette's current target for
-    browsing context scoped commands.
+    accepts a string as the first parameter, which may be either 'content'
+    or 'chrome'. It returns the context type that is Marionette's current
+    target for browsing context scoped commands.
+
+        use Firefox::Marionette();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new();
+        my $old_context = $firefox->context('chrome');
+        $firefox->script(...); # running script in chrome context
+        $firefox->context($old_context);
 
  cookies
 
@@ -258,6 +291,23 @@ SUBROUTINES/METHODS
 
     here be cookie monsters! This method returns itself to aid in chaining
     methods.
+
+ delete_header
+
+    accepts a list of HTTP header names to delete from future HTTP
+    Requests.
+
+        $firefox->delete_header( 'User-Agent', 'Accept', 'Accept-Encoding' );
+
+    will remove the User-Agent
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent>,
+    Accept
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> and
+    Accept-Encoding
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding>
+    headers from all future requests
+
+    This method returns itself to aid in chaining methods.
 
  delete_session
 

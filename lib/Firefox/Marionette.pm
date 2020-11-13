@@ -7138,7 +7138,7 @@ accepts a string as the first parameter, which may be either 'content' or 'chrom
 
     my $firefox = Firefox::Marionette->new();
     my $old_context = $firefox->context('chrome');
-    $firefox->script(...); # running script in chrome context 
+    $firefox->script(...); # running script in chrome context
     $firefox->context($old_context);
 
 =head2 cookies
