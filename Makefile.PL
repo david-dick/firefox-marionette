@@ -329,6 +329,11 @@ WriteMakefile(
         ? ( 'MIN_PERL_VERSION' => '5.006' )
         : ()
     ),
+    META_MERGE     => {
+        resources  => {
+            repository => 'https://github.com/david-dick/firefox-marionette',
+        },
+    },
     PL_FILES       => {},
     EXE_FILES      => ['ssh-auth-cmd-marionette'],
     BUILD_REQUIRES => {
