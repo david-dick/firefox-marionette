@@ -7004,16 +7004,25 @@ accepts a single L<cookie|Firefox::Marionette::Cookie> object as the first param
 
 accepts a hash of HTTP headers to include in every future HTTP Request.
 
+    use Firefox::Marionette();
+    use UUID();
+
+    my $firefox = Firefox::Marionette->new();
+    my $uuid = UUID::uuid();
     $firefox->add_header( 'Track-my-automated-tests' => $uuid );
+    $firefox->go('https://metacpan.org/');
 
 these headers are added to any existing headers.  To clear headers, see the L<delete_header|Firefox::Marionette#delete_headers> method
 
-    $firefox->delete_header( 'Accept' );
-    $firefox->add_header( 'Accept' => 'text/perl' );
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->delete_header( 'Accept' )->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
 will only send out an L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> header that looks like C<Accept: text/perl>.
 
-    $firefox->add_header( 'Accept' => 'text/perl' );
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
 by itself, will send out an L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> header that may resemble C<Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl>. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
