@@ -244,9 +244,9 @@ if (( !defined $version_string ) && (defined $binary)) {
 if (( !defined $version_string ) && (defined $binary)) {
     $version_string = `"$binary" -version 2>$dev_null`;
 }
-print $version_string;
 my $major;
 if ($version_string) {
+    print $version_string;
     if ( $version_string =~ /^(?:Mozilla[ ]Firefox|Firefox[ ]Developer[ ]Edition|Nightly)[ ](\d+)[.]\d+(?:a\d+)?([.]\d+)?\s*/smx )
     {
         ($major) = ($1);
