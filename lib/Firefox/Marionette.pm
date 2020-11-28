@@ -4407,12 +4407,16 @@ sub add_header {
     my ( $self, %headers ) = @_;
     foreach my $name ( sort { $a cmp $b } keys %headers ) {
         $self->{_headers}->{$name} ||= [];
-        if (($self->{_deleted_headers}->{$name}) && (! exists $self->{_headers}->{$name} )) {
-        $self->{_headers}->{$name} = [ { value => $headers{$name}, merge => 'false' } ];
-	} else {
-        push @{ $self->{_headers}->{$name} },
-          { value => $headers{$name}, merge => 'true' };
-	}
+        if (   ( $self->{_deleted_headers}->{$name} )
+            && ( !exists $self->{_headers}->{$name} ) )
+        {
+            $self->{_headers}->{$name} =
+              [ { value => $headers{$name}, merge => 'false' } ];
+        }
+        else {
+            push @{ $self->{_headers}->{$name} },
+              { value => $headers{$name}, merge => 'true' };
+        }
     }
     $self->_set_headers();
     return $self;
