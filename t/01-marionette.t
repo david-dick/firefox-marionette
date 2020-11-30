@@ -1073,9 +1073,18 @@ SKIP: {
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
         my $testing_header_name = 'X-CPAN-Testing';
-        my $testing_header_value = (ref $firefox) . q[ ] . $Firefox::Marionette::VERSION;
+        my $testing_header_value = (ref $firefox) . q[ All ] . $Firefox::Marionette::VERSION;
         $firefox->add_header($testing_header_name => $testing_header_value);
+        my $testing_site_header_name = 'X-CPAN-Site-Testing';
+        my $testing_site_header_value = (ref $firefox) . q[ Site ] . $Firefox::Marionette::VERSION;
+	my $site_hostname = 'fastapi.metacpan.org';
+        $firefox->add_site_header($site_hostname, $testing_site_header_name => $testing_site_header_value);
+        my $testing_no_site_header_name = 'X-CPAN-No-Site-Testing';
+        my $testing_no_site_header_value = (ref $firefox) . q[ None ] . $Firefox::Marionette::VERSION;
+	my $no_site_hostname = 'missing.metacpan.org';
+        $firefox->add_site_header($no_site_hostname, $testing_no_site_header_name => $testing_no_site_header_value);
         $firefox->delete_header('Accept-Language');
+        $firefox->delete_site_header('fastapi.metacpan.org', 'Cache-Control');
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	if (!grep /^accept_insecure_certs$/, $capabilities->enumerate()) {
@@ -1089,19 +1098,42 @@ SKIP: {
 		if ($major_version < 61) {
 			skip("HAR support not available in Firefox before version 61", 1);
 		}
-		my $har = $firefox->har();
-		ok($har->{log}->{creator}->{name} eq ucfirst $firefox->capabilities()->browser_name(), "\$firefox->har() gives a data structure with the correct creator name");
 		my $correct = 0;
-		foreach my $header (@{$har->{log}->{entries}->[0]->{request}->{headers}} ) {
-			if (lc $header->{name} eq 'accept-language') {
-				diag("Should not have found an '$header->{name}' header");
-				$correct = -1;
-			} elsif ((lc $header->{name} eq lc $testing_header_name) && ($header->{value} eq $testing_header_value)) {
-				diag("Found an '$header->{name}' header");
-				$correct = 1;
+		my $number_of_entries = 0;
+		while($number_of_entries == 0) {
+			my $har = $firefox->har();
+			ok($har->{log}->{creator}->{name} eq ucfirst $firefox->capabilities()->browser_name(), "\$firefox->har() gives a data structure with the correct creator name");
+			$number_of_entries = 0;
+			$correct = 0;
+			foreach my $entry (@{$har->{log}->{entries}}) {
+				$number_of_entries += 1;
+			}
+			if ($number_of_entries > 0) {
+				foreach my $header (@{$har->{log}->{entries}->[0]->{request}->{headers}} ) {
+					if (lc $header->{name} eq $testing_no_site_header_name) {
+						diag("Should not have found an '$header->{name}' header");
+						$correct = -1;
+					} elsif (lc $header->{name} eq 'accept-language') {
+						diag("Should not have found an '$header->{name}' header");
+						$correct = -1;
+					} elsif (lc $header->{name} eq 'cache-control') {
+						diag("Should not have found an '$header->{name}' header");
+						$correct = -1;
+					} elsif ((lc $header->{name} eq lc $testing_header_name) && ($header->{value} eq $testing_header_value)) {
+						diag("Found an '$header->{name}' header");
+						if ($correct >= 0) {
+							$correct += 1;
+						}
+					} elsif ((lc $header->{name} eq lc $testing_site_header_name) && ($header->{value} eq $testing_site_header_value)) {
+						diag("Found an '$header->{name}' header");
+						if ($correct >= 0) {
+							$correct += 1;
+						}
+					}
+				}
 			}
 		}
-		ok($correct == 1, "Correct headers have been set");
+		ok($correct == 2, "Correct headers have been set");
 	}
 }
 

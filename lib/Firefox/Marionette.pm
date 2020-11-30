@@ -26,6 +26,7 @@ use File::Find();
 use File::Path();
 use File::Spec();
 use URI();
+use URI::Escape();
 use Time::HiRes();
 use File::Temp();
 use File::stat();
@@ -4411,11 +4412,30 @@ sub add_header {
             && ( !exists $self->{_headers}->{$name} ) )
         {
             $self->{_headers}->{$name} =
-              [ { value => $headers{$name}, merge => 'false' } ];
+              [ { value => $headers{$name}, merge => 0 } ];
         }
         else {
             push @{ $self->{_headers}->{$name} },
-              { value => $headers{$name}, merge => 'true' };
+              { value => $headers{$name}, merge => 1 };
+        }
+    }
+    $self->_set_headers();
+    return $self;
+}
+
+sub add_site_header {
+    my ( $self, $host, %headers ) = @_;
+    foreach my $name ( sort { $a cmp $b } keys %headers ) {
+        $self->{_site_headers}->{$host}->{$name} ||= [];
+        if (   ( $self->{_deleted_site_headers}->{$name} )
+            && ( !exists $self->{_site_headers}->{$name} ) )
+        {
+            $self->{_site_headers}->{$host}->{$name} =
+              [ { value => $headers{$name}, merge => 0 } ];
+        }
+        else {
+            push @{ $self->{_site_headers}->{$host}->{$name} },
+              { value => $headers{$name}, merge => 1 };
         }
     }
     $self->_set_headers();
@@ -4425,34 +4445,37 @@ sub add_header {
 sub delete_header {
     my ( $self, @names ) = @_;
     foreach my $name (@names) {
-        $self->{_headers}->{$name} = [ { value => q[], merge => 'false' } ];
+        $self->{_headers}->{$name}         = [ { value => q[], merge => 0 } ];
         $self->{_deleted_headers}->{$name} = 1;
     }
     $self->_set_headers();
     return $self;
 }
 
+sub delete_site_header {
+    my ( $self, $host, @names ) = @_;
+    foreach my $name (@names) {
+        $self->{_site_headers}->{$host}->{$name} =
+          [ { value => q[], merge => 0 } ];
+        $self->{_deleted_site_headers}->{$host}->{$name} = 1;
+    }
+    $self->_set_headers();
+    return $self;
+}
+
+sub _validate_request_header_merge {
+    my ( $self, $merge ) = @_;
+    if ($merge) {
+        return 'true';
+    }
+    else {
+        return 'false';
+    }
+
+}
+
 sub _set_headers {
     my ($self) = @_;
-    my @scriptlets;
-    foreach my $name ( sort { $a cmp $b } keys %{ $self->{_headers} } ) {
-        my @headers = @{ $self->{_headers}->{$name} };
-        my $first   = shift @headers;
-        if ( defined $first ) {
-            push @scriptlets,
-                'channel.setRequestHeader("'
-              . $name . '", "'
-              . $first->{value} . '", '
-              . $first->{merge} . ');';
-        }
-        foreach my $value (@headers) {
-            push @scriptlets,
-                'channel.setRequestHeader("'
-              . $name . '", "'
-              . $value->{value} . '", '
-              . $value->{merge} . ');';
-        }
-    }
     $self->context('chrome');
     my $script = <<'_JS_';
 if (typeof PerlFirefoxMarionette == "undefined" ) {
@@ -4477,14 +4500,66 @@ PerlFirefoxMarionette.headers =
   },
 
   onHeaderChanged: function(channel, topic, data) {
+    var host = channel.URI.host;
 _JS_
-    foreach my $scriptlet (@scriptlets) {
-        $script .= <<"_JS_";
-        $scriptlet
+    foreach my $name ( sort { $a cmp $b } keys %{ $self->{_headers} } ) {
+        my @headers      = @{ $self->{_headers}->{$name} };
+        my $first        = shift @headers;
+        my $encoded_name = URI::Escape::uri_escape($name);
+        if ( defined $first ) {
+            my $value         = $first->{value};
+            my $encoded_value = URI::Escape::uri_escape($value);
+            my $validated_merge =
+              $self->_validate_request_header_merge( $first->{merge} );
+            $script .= <<"_JS_";
+    channel.setRequestHeader(decodeURIComponent("$encoded_name"), decodeURIComponent("$encoded_value"), $validated_merge);
 _JS_
+        }
+        foreach my $value (@headers) {
+            my $value         = $value->{value};
+            my $encoded_value = URI::Escape::uri_escape($value);
+            my $validated_merge =
+              $self->_validate_request_header_merge( $value->{merge} );
+            $script .= <<"_JS_";
+    channel.setRequestHeader(decodeURIComponent("$encoded_name"), decodeURIComponent("$encoded_value"), $validated_merge);
+_JS_
+        }
+    }
+    foreach my $host ( sort { $a cmp $b } keys %{ $self->{_site_headers} } ) {
+        my $encoded_host = URI::Escape::uri_escape($host);
+        foreach my $name (
+            sort { $a cmp $b }
+            keys %{ $self->{_site_headers}->{$host} }
+          )
+        {
+            my @headers      = @{ $self->{_site_headers}->{$host}->{$name} };
+            my $first        = shift @headers;
+            my $encoded_name = URI::Escape::uri_escape($name);
+            if ( defined $first ) {
+                my $value         = $first->{value};
+                my $encoded_value = URI::Escape::uri_escape($value);
+                my $validated_merge =
+                  $self->_validate_request_header_merge( $first->{merge} );
+                $script .= <<"_JS_";
+    if (host === decodeURIComponent("$encoded_host")) {
+      channel.setRequestHeader(decodeURIComponent("$encoded_name"), decodeURIComponent("$encoded_value"), $validated_merge);
+    }
+_JS_
+            }
+            foreach my $value (@headers) {
+                my $value         = $value->{value};
+                my $encoded_value = URI::Escape::uri_escape($value);
+                my $validated_merge =
+                  $self->_validate_request_header_merge( $value->{merge} );
+                $script .= <<"_JS_";
+    if (host === decodeURIComponent("$encoded_host")) {
+      channel.setRequestHeader(decodeURIComponent("$encoded_name"), decodeURIComponent("$encoded_value"), $validated_merge);
+    }
+_JS_
+            }
+        }
     }
     $script .= <<'_JS_';
-
   }
 };
 
@@ -7030,6 +7105,20 @@ will only send out an L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP
 
 by itself, will send out an L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> header that may resemble C<Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl>. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 add_site_header
+
+accepts a host name and a hash of HTTP headers to include in every future HTTP Request that is being sent to that particular host.
+
+    use Firefox::Marionette();
+    use UUID();
+
+    my $firefox = Firefox::Marionette->new();
+    my $uuid = UUID::uuid();
+    $firefox->add_site_header( 'metacpan.org', 'Track-my-automated-tests' => $uuid );
+    $firefox->go('https://metacpan.org/');
+
+these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the L<delete_site_header|Firefox::Marionette#delete_site_headers> method
+
 =head2 addons
 
 returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as -safe-mode cannot be automated.
@@ -7201,6 +7290,9 @@ here be cookie monsters! This method returns L<itself|Firefox::Marionette> to ai
 
 accepts a list of HTTP header names to delete from future HTTP Requests.
 
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
     $firefox->delete_header( 'User-Agent', 'Accept', 'Accept-Encoding' );
 
 will remove the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent>, L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> and L<Accept-Encoding|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding> headers from all future requests
@@ -7210,6 +7302,19 @@ This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 =head2 delete_session
 
 deletes the current WebDriver session.
+
+=head2 delete_site_header
+
+accepts a host name and a list of HTTP headers names to delete from future HTTP Requests.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->delete_header( 'metacpan.org', 'User-Agent', 'Accept', 'Accept-Encoding' );
+
+will remove the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent>, L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> and L<Accept-Encoding|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding> headers from all future requests to metacpan.org.
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 developer
 

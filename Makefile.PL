@@ -370,6 +370,7 @@ WriteMakefile(
         'Socket'              => 0,
         'Time::HiRes'         => 0,
         'URI'                 => 0,
+        'URI::Escape'         => 0,
         (
             $^O eq 'MSWin32'
             ? (

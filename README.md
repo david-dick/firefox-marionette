@@ -4,7 +4,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 # VERSION
 
-Version 1.00_02
+Version 1.00\_02
 
 # SYNOPSIS
 
@@ -53,18 +53,41 @@ accepts a single [cookie](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3A
 
 accepts a hash of HTTP headers to include in every future HTTP Request.
 
+    use Firefox::Marionette();
+    use UUID();
+
+    my $firefox = Firefox::Marionette->new();
+    my $uuid = UUID::uuid();
     $firefox->add_header( 'Track-my-automated-tests' => $uuid );
+    $firefox->go('https://metacpan.org/');
 
 these headers are added to any existing headers.  To clear headers, see the [delete\_header](https://metacpan.org/pod/Firefox%3A%3AMarionette%23delete_headers) method
 
-    $firefox->delete_header( 'Accept' );
-    $firefox->add_header( 'Accept' => 'text/perl' );
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->delete_header( 'Accept' )->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
 will only send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) header that looks like `Accept: text/perl`.
 
-    $firefox->add_header( 'Accept' => 'text/perl' );
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
 by itself, will send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) header that may resemble `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl`. This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+
+## add\_site\_header
+
+accepts a host name and a hash of HTTP headers to include in every future HTTP Request that is being sent to that particular host.
+
+    use Firefox::Marionette();
+    use UUID();
+
+    my $firefox = Firefox::Marionette->new();
+    my $uuid = UUID::uuid();
+    $firefox->add_site_header( 'metacpan.org', 'Track-my-automated-tests' => $uuid );
+    $firefox->go('https://metacpan.org/');
+
+these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the [delete\_site\_header](https://metacpan.org/pod/Firefox%3A%3AMarionette%23delete_site_headers) method
 
 ## addons
 
@@ -237,6 +260,9 @@ here be cookie monsters! This method returns [itself](https://metacpan.org/pod/F
 
 accepts a list of HTTP header names to delete from future HTTP Requests.
 
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
     $firefox->delete_header( 'User-Agent', 'Accept', 'Accept-Encoding' );
 
 will remove the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) headers from all future requests
@@ -246,6 +272,19 @@ This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) t
 ## delete\_session
 
 deletes the current WebDriver session.
+
+## delete\_site\_header
+
+accepts a host name and a list of HTTP headers names to delete from future HTTP Requests.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->delete_header( 'metacpan.org', 'User-Agent', 'Accept', 'Accept-Encoding' );
+
+will remove the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) headers from all future requests to metacpan.org.
+
+This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
 
 ## developer
 
