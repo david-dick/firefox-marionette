@@ -1084,10 +1084,16 @@ SKIP: {
         my $testing_header_name = 'X-CPAN-Testing';
         my $testing_header_value = (ref $firefox) . q[ All ] . $Firefox::Marionette::VERSION;
         $firefox->add_header($testing_header_name => $testing_header_value);
+        my $testing_header_2_name = 'X-CPAN-Testing2';
+        my $testing_header_2_value = (ref $firefox) . q[ All2 ] . $Firefox::Marionette::VERSION;
+        $firefox->delete_header($testing_header_2_name)->add_header($testing_header_2_name => $testing_header_2_value);
         my $testing_site_header_name = 'X-CPAN-Site-Testing';
         my $testing_site_header_value = (ref $firefox) . q[ Site ] . $Firefox::Marionette::VERSION;
 	my $site_hostname = 'fastapi.metacpan.org';
         $firefox->add_site_header($site_hostname, $testing_site_header_name => $testing_site_header_value);
+        my $testing_site_header_2_name = 'X-CPAN-Site-Testing2';
+        my $testing_site_header_2_value = (ref $firefox) . q[ Site2 ] . $Firefox::Marionette::VERSION;
+        $firefox->delete_site_header($site_hostname, $testing_site_header_2_name)->add_site_header($site_hostname, $testing_site_header_2_name => $testing_site_header_2_value);
         my $testing_no_site_header_name = 'X-CPAN-No-Site-Testing';
         my $testing_no_site_header_value = (ref $firefox) . q[ None ] . $Firefox::Marionette::VERSION;
 	my $no_site_hostname = 'missing.metacpan.org';
@@ -1133,7 +1139,17 @@ SKIP: {
 						if ($correct >= 0) {
 							$correct += 1;
 						}
+					} elsif ((lc $header->{name} eq lc $testing_header_2_name) && ($header->{value} eq $testing_header_2_value)) {
+						diag("Found an '$header->{name}' header");
+						if ($correct >= 0) {
+							$correct += 1;
+						}
 					} elsif ((lc $header->{name} eq lc $testing_site_header_name) && ($header->{value} eq $testing_site_header_value)) {
+						diag("Found an '$header->{name}' header");
+						if ($correct >= 0) {
+							$correct += 1;
+						}
+					} elsif ((lc $header->{name} eq lc $testing_site_header_2_name) && ($header->{value} eq $testing_site_header_2_value)) {
 						diag("Found an '$header->{name}' header");
 						if ($correct >= 0) {
 							$correct += 1;
@@ -1142,7 +1158,7 @@ SKIP: {
 				}
 			}
 		}
-		ok($correct == 2, "Correct headers have been set");
+		ok($correct == 4, "Correct headers have been set");
 	}
 }
 

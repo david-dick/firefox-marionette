@@ -4516,8 +4516,7 @@ _JS_
 _JS_
         }
         foreach my $value (@headers) {
-            my $value         = $value->{value};
-            my $encoded_value = URI::Escape::uri_escape($value);
+            my $encoded_value = URI::Escape::uri_escape( $value->{value} );
             my $validated_merge =
               $self->_validate_request_header_merge( $value->{merge} );
             $script .= <<"_JS_";
@@ -4536,8 +4535,7 @@ _JS_
             my $first        = shift @headers;
             my $encoded_name = URI::Escape::uri_escape($name);
             if ( defined $first ) {
-                my $value         = $first->{value};
-                my $encoded_value = URI::Escape::uri_escape($value);
+                my $encoded_value = URI::Escape::uri_escape( $first->{value} );
                 my $validated_merge =
                   $self->_validate_request_header_merge( $first->{merge} );
                 $script .= <<"_JS_";
@@ -4547,8 +4545,7 @@ _JS_
 _JS_
             }
             foreach my $value (@headers) {
-                my $value         = $value->{value};
-                my $encoded_value = URI::Escape::uri_escape($value);
+                my $encoded_value = URI::Escape::uri_escape( $value->{value} );
                 my $validated_merge =
                   $self->_validate_request_header_merge( $value->{merge} );
                 $script .= <<"_JS_";
