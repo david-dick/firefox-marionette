@@ -774,6 +774,9 @@ SKIP: {
 		local $TODO = $major_version < 56 ? $capabilities->browser_version() . " does not have support for -headless argument" : q[];
 		ok($capabilities->moz_headless() == 1 || $ENV{FIREFOX_VISIBLE} || 0, "\$capabilities->moz_headless() is set to " . ($ENV{FIREFOX_VISIBLE} ? 'true' : 'false'));
 	}
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 13);
+	}
 	$capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	SKIP: {
@@ -798,6 +801,9 @@ SKIP: {
 			local $TODO = $major_version < 58 ? $capabilities->browser_version() . " does not have support for \$firefox->capabilities()->none()" : q[];
 			ok($none == 1, "\$capabilities->proxy()->none() is a reference to a list with 1 element");
 		}
+	}
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
 	}
 	SKIP: {
 		if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} ne 'localhost')) {
@@ -936,6 +942,9 @@ SKIP: {
 	}
 	ok($capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is true");
 	ok($firefox->go(URI->new("https://untrusted-root.badssl.com/")), "https://untrusted-root.badssl.com/ has been loaded");
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
+	}
 	my $raw_pdf;
 	eval {
 		my $handle = $firefox->pdf();
@@ -1149,6 +1158,9 @@ SKIP: {
 	my $frame_url = 'https://www.w3schools.com/html/tryit.asp?filename=tryhtml_iframe_height_width';
 	my $frame_element = '//iframe[@name="iframeResult"]';
 	ok($firefox->go(URI->new($frame_url)), "$frame_url has been loaded");
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 246);
+	}
 	ok($firefox->window_handle() =~ /^\d+$/, "\$firefox->window_handle() is an integer:" . $firefox->window_handle());
 	my $chrome_window_handle_supported;
 	eval {
@@ -1291,6 +1303,9 @@ SKIP: {
 	ok($firefox->switch_to_window($new_window_handle), "\$firefox->switch_to_window() used to move back to the original window");
 	my $metacpan_uri = 'https://metacpan.org/';
 	ok($firefox->go($metacpan_uri), "$metacpan_uri has been loaded in the new window");
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 224);
+	}
 	my $uri = $firefox->uri();
 	ok($uri =~ /metacpan/smx, "\$firefox->uri() contains /metacpan/:$uri");
 	if ($uri eq $metacpan_uri) {
@@ -1724,6 +1739,9 @@ SKIP: {
 		}
 		my $clicked;
 		my @elements = $firefox->find('//a[@href="https://fastapi.metacpan.org"]');
+		if (out_of_time()) {
+			skip("Running out of time.  Trying to shutdown tests as fast as possible", 61);
+		}
 		ELEMENTS: {
 			foreach my $element (@elements) {
 				if ($major_version < 31) {
