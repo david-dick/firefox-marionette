@@ -4406,18 +4406,9 @@ sub add_cookie {
 
 sub add_header {
     my ( $self, %headers ) = @_;
-    foreach my $name ( sort { $a cmp $b } keys %headers ) {
+    while ( ( my $name, my $value ) = each %headers ) {
         $self->{_headers}->{$name} ||= [];
-        if (   ( $self->{_deleted_headers}->{$name} )
-            && ( !exists $self->{_headers}->{$name} ) )
-        {
-            $self->{_headers}->{$name} =
-              [ { value => $headers{$name}, merge => 0 } ];
-        }
-        else {
-            push @{ $self->{_headers}->{$name} },
-              { value => $headers{$name}, merge => 1 };
-        }
+        push @{ $self->{_headers}->{$name} }, { value => $value, merge => 1 };
     }
     $self->_set_headers();
     return $self;
@@ -4425,18 +4416,10 @@ sub add_header {
 
 sub add_site_header {
     my ( $self, $host, %headers ) = @_;
-    foreach my $name ( sort { $a cmp $b } keys %headers ) {
+    while ( ( my $name, my $value ) = each %headers ) {
         $self->{_site_headers}->{$host}->{$name} ||= [];
-        if (   ( $self->{_deleted_site_headers}->{$name} )
-            && ( !exists $self->{_site_headers}->{$name} ) )
-        {
-            $self->{_site_headers}->{$host}->{$name} =
-              [ { value => $headers{$name}, merge => 0 } ];
-        }
-        else {
-            push @{ $self->{_site_headers}->{$host}->{$name} },
-              { value => $headers{$name}, merge => 1 };
-        }
+        push @{ $self->{_site_headers}->{$host}->{$name} },
+          { value => $value, merge => 1 };
     }
     $self->_set_headers();
     return $self;
