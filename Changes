@@ -1,14 +1,10 @@
 Revision history for Firefox-Marionette
 
-1.00_03  Mon Nov 30 20:58:00 2020
-       Adding add_site_header and delete_site_header methods.
-
-1.00_02  Mon Nov 16 08:12:00 2020
+1.00  Sat Dec  5 21:00:00 2020
        Added README.md
        Added github reference
-
-1.00_01  Sat Nov 14 20:42:00 2020
        Adding add_header and delete_header methods.
+       Adding add_site_header and delete_site_header methods.
        Adding application.ini support in attempt to fix RT#133427. 
 
 0.99  Sat Oct 10 08:22:00 2020
