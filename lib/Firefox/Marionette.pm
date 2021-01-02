@@ -526,6 +526,9 @@ sub _init {
     elsif ( $parameters{firefox} ) {
         $self->{firefox_binary} = $parameters{firefox};
     }
+    if ( $parameters{console} ) {
+        $self->{console} = 1;
+    }
 
     if ( defined $parameters{adb} ) {
         $self->_setup_adb( $parameters{adb} );
@@ -1055,6 +1058,9 @@ sub _setup_arguments {
     }
     if ( defined $self->{window_height} ) {
         push @arguments, '-height', $self->{window_height};
+    }
+    if ( defined $self->{console} ) {
+        push @arguments, '--jsconsole';
     }
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
@@ -7711,6 +7717,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * capabilities - use the supplied L<capabilities|Firefox::Marionette::Capabilities> object, for example to set whether the browser should L<accept insecure certs|Firefox::Marionette::Capabilities#accept_insecure_certs> or whether the browser should use a L<proxy|Firefox::Marionette::Proxy>.
 
 =item * chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, connections to firefox.settings.services.mozilla.com may still be made.  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via L</etc/hosts|https://en.wikipedia.org/wiki//etc/hosts>.  NOTE: that this option only works when profile_name/profile is not specified.
+
+=item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.
 
 =item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.
 
