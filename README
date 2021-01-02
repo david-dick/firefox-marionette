@@ -860,6 +860,10 @@ SUBROUTINES/METHODS
       <https://en.wikipedia.org/wiki//etc/hosts>. NOTE: that this option
       only works when profile_name/profile is not specified.
 
+      * console - show the browser console
+      <https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/>
+      when the browser is launched.
+
       * debug - should firefox's debug to be available via STDERR. This
       defaults to "0". Any ssh connections will also be printed to STDERR.
 
