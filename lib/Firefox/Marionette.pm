@@ -4461,13 +4461,13 @@ sub _set_headers {
     my ($self) = @_;
     $self->context('chrome');
     my $script = <<'_JS_';
-if (typeof PerlFirefoxMarionette == "undefined" ) {
-    PerlFirefoxMarionette = {};
-} else {
-    PerlFirefoxMarionette.headers.unregister();
+var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+var iterator = observerService.enumerateObservers("http-on-modify-request");
+while (iterator.hasMoreElements()) {
+	observerService.removeObserver(iterator.getNext(), "http-on-modify-request");
 }
-PerlFirefoxMarionette.headers =
-{ 
+var perlService =
+{
   observe: function(subject, topic, data) {
     this.onHeaderChanged(subject.QueryInterface(Components.interfaces.nsIHttpChannel), topic, data);
   },
@@ -4543,7 +4543,7 @@ _JS_
   }
 };
 
-PerlFirefoxMarionette.headers.register();
+perlService.register();
 _JS_
     $script =~ s/[\r\n\t]+/ /smxg;
     $script =~ s/[ ]+/ /smxg;
