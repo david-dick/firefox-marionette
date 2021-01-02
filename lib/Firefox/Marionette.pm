@@ -930,8 +930,9 @@ sub _clean_local_extension_directory {
 sub har {
     my ($self)  = @_;
     my $context = $self->context('content');
-    my $log     = $self->script(
-        'return (async function() { return await HAR.triggerExport() })();');
+    my $log     = $self->script(<<'_JS_');
+return (async function() { return await HAR.triggerExport() })();
+_JS_
     $self->context($context);
     return { log => $log };
 }
