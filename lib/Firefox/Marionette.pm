@@ -160,7 +160,7 @@ sub _download_directory {
         my $context = $self->context();
         $self->context('chrome');
         $directory =
-          $self->script( 'var branch = Components.classes["' . q[@]
+          $self->script( 'let branch = Components.classes["' . q[@]
               . 'mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(""); return branch.getStringPref ? branch.getStringPref("browser.download.downloadDir") : branch.getComplexValue("browser.download.downloadDir", Components.interfaces.nsISupportsString).data;'
           );
         $self->context($context);
@@ -4468,29 +4468,31 @@ sub _set_headers {
     my ($self) = @_;
     $self->context('chrome');
     my $script = <<'_JS_';
-var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-var iterator = observerService.enumerateObservers("http-on-modify-request");
-while (iterator.hasMoreElements()) {
-	observerService.removeObserver(iterator.getNext(), "http-on-modify-request");
-}
-var perlService =
-{
+(function() {
+    let observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    let iterator = observerService.enumerateObservers("http-on-modify-request");
+    while (iterator.hasMoreElements()) {
+        observerService.removeObserver(iterator.getNext(), "http-on-modify-request");
+    }
+})();
+
+({
   observe: function(subject, topic, data) {
     this.onHeaderChanged(subject.QueryInterface(Components.interfaces.nsIHttpChannel), topic, data);
   },
 
   register: function() {
-    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    let observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.addObserver(this, "http-on-modify-request", false);
   },
 
   unregister: function() {
-    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    let observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.removeObserver(this, "http-on-modify-request");
   },
 
   onHeaderChanged: function(channel, topic, data) {
-    var host = channel.URI.host;
+    let host = channel.URI.host;
 _JS_
     foreach my $name ( sort { $a cmp $b } keys %{ $self->{_headers} } ) {
         my @headers      = @{ $self->{_headers}->{$name} };
@@ -4548,9 +4550,7 @@ _JS_
     }
     $script .= <<'_JS_';
   }
-};
-
-perlService.register();
+}).register();
 _JS_
     $self->script( $self->_compress_script($script) );
     $self->context('content');
