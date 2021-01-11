@@ -4552,11 +4552,16 @@ _JS_
 
 perlService.register();
 _JS_
-    $script =~ s/[\r\n\t]+/ /smxg;
-    $script =~ s/[ ]+/ /smxg;
-    $self->script($script);
+    $self->script( $self->_compress_script($script) );
     $self->context('content');
     return;
+}
+
+sub _compress_script {
+    my ( $self, $script ) = @_;
+    $script =~ s/[\r\n\t]+/ /smxg;
+    $script =~ s/[ ]+/ /smxg;
+    return $script;
 }
 
 sub is_selected {
