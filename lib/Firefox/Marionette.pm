@@ -4559,6 +4559,7 @@ _JS_
 
 sub _compress_script {
     my ( $self, $script ) = @_;
+    $script =~ s/\/[*].*?[*]\///smxg;
     $script =~ s/[\r\n\t]+/ /smxg;
     $script =~ s/[ ]+/ /smxg;
     return $script;
