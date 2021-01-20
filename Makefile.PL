@@ -66,6 +66,10 @@ elsif ( $> == 0 ) {    # see RT#131304
         warn
 "Running as root.  Resetting HOME environment variable from $current to $ENV{HOME}\n";
     }
+    if ( exists $ENV{XAUTHORITY} ) {    # see GH#1
+        delete $ENV{XAUTHORITY};
+        warn "Running as root.  Deleting the XAUTHORITY environment variable\n";
+    }
 }
 
 my @possibles = qw(firefox waterfox basilisk);

@@ -21,14 +21,18 @@ my $test_time_limit = 90;
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 } elsif ($> == 0) { # see RT#131304
-	my $current = $ENV{HOME};
-	my $correct = (getpwuid($>))[7];
-	if ($current eq $correct) {
-	} else {
-		$ENV{HOME} = $correct;
-		diag("Running as root.  Resetting HOME environment variable from $current to $ENV{HOME}");
-		diag("Could be running in an environment where sudo does not reset the HOME environment variable, such as ubuntu");
-	}
+       my $current = $ENV{HOME};
+       my $correct = (getpwuid($>))[7];
+       if ($current eq $correct) {
+       } else {
+               $ENV{HOME} = $correct;
+               diag("Running as root.  Resetting HOME environment variable from $current to $ENV{HOME}");
+               diag("Could be running in an environment where sudo does not reset the HOME environment variable, such as ubuntu");
+       }
+       if ( exists $ENV{XAUTHORITY} ) {    # see GH#1
+               delete $ENV{XAUTHORITY};
+               warn "Running as root.  Deleting the XAUTHORITY environment variable\n";
+       }
 }
 
 my @sig_nums  = split q[ ], $Config{sig_num};
@@ -607,7 +611,7 @@ SKIP: {
 	ok($firefox->child_error() == $child_error, "Firefox returns $child_error for the child error, matching the return value of quit():$child_error:" . $firefox->child_error());
 	ok(!$firefox->alive(), "Firefox is not still alive");
 }
-if ($major_version < 40) {
+if ((!defined $major_version) || ($major_version < 40)) {
 	$profile->set_value('security.tls.version.max', 3); 
 }
 $profile->set_value('browser.newtabpage.activity-stream.feeds.favicon', 'true'); 
