@@ -1,11 +1,16 @@
 Revision history for Firefox-Marionette
 
+1.01  Wed Jan 20 18:47:00 2020
+       Fixes to Makefile.PL for Ubuntu to fix GH#1.
+       Fixes to add_header for Firefox 84.0.1
+       Improving documentation
+
 1.00  Sat Dec  5 21:00:00 2020
        Added README.md
        Added github reference
        Adding add_header and delete_header methods.
        Adding add_site_header and delete_site_header methods.
-       Adding application.ini support in attempt to fix RT#133427. 
+       Adding application.ini support to fix RT#133427.
 
 0.99  Sat Oct 10 08:22:00 2020
        Correcting searching Path for firefox on Win32/cygwin.
