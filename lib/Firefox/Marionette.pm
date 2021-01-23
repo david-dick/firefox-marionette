@@ -7042,6 +7042,8 @@ Version 1.00
 
     $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
 
+    say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
+
     my $file_handle = $firefox->selfie();
 
     $firefox->find('//button[@name="lucky"]')->click();
@@ -7255,6 +7257,12 @@ returns the L<contents|Firefox::Marionette::Cookie> of the cookie jar in scalar 
 =head2 css
 
 accepts an L<element|Firefox::Marionette::Element> as the first parameter and a scalar CSS property name as the second parameter.  It returns the value of the computed style for that property.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    say $firefox->find_id('search-input')->css('height');
 
 =head2 current_chrome_window_handle 
 

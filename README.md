@@ -19,6 +19,8 @@ Version 1.00
 
     $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
 
+    say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
+
     my $file_handle = $firefox->selfie();
 
     $firefox->find('//button[@name="lucky"]')->click();
@@ -232,6 +234,12 @@ returns the [contents](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACoo
 ## css
 
 accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and a scalar CSS property name as the second parameter.  It returns the value of the computed style for that property.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    say $firefox->find_id('search-input')->css('height');
 
 ## current\_chrome\_window\_handle 
 
