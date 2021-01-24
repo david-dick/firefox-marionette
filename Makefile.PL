@@ -341,8 +341,12 @@ WriteMakefile(
         : ()
     ),
     META_MERGE => {
-        resources => {
+        'meta-spec' => { version => 2 },
+        resources   => {
             repository => 'https://github.com/david-dick/firefox-marionette',
+            bugtracker => {
+                web => 'https://github.com/david-dick/firefox-marionette/issues'
+            },
         },
     },
     PL_FILES       => {},
