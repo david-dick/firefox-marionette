@@ -1,6 +1,10 @@
 Revision history for Firefox-Marionette
 
-1.01  Wed Jan 20 18:47:00 2020
+1.02  Thu Apr 22 19:48:00 2021
+       Fixes to tests for Firefox 88
+       Adjustments for github issue tracking
+
+1.02  Wed Jan 20 18:47:00 2021
        Fixes to Makefile.PL for Ubuntu to fix GH#1.
        Fixes to add_header for Firefox 84.0.1
        Improving documentation
