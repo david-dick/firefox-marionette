@@ -1254,7 +1254,7 @@ SKIP: {
 			$screen_orientation = $firefox->screen_orientation();
 			ok($screen_orientation, "\$firefox->screen_orientation() is " . $screen_orientation);
 		} or do {
-			if (($@->isa('Firefox::Marionette::Exception')) && ($@ =~ /Only supported in Fennec.* in .* at line \d+/)) {
+			if (($@->isa('Firefox::Marionette::Exception')) && ($@ =~ /(?:Only supported in Fennec|unsupported operation: Only supported on Android).* in .* at line \d+/)) {
 				local $TODO = "Only supported in Fennec";
 				ok($screen_orientation, "\$firefox->screen_orientation() is " . $screen_orientation);
 			} elsif ($major_version < 60) {
