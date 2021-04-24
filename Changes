@@ -1,8 +1,12 @@
 Revision history for Firefox-Marionette
 
+1.03  Sat Apr 24 10:38:00 2021
+       Cleanups to Makefile including github changes.
+       Changes for CPAN Testers in test suite
+
 1.02  Thu Apr 22 19:48:00 2021
-       Fixes to tests for Firefox 88
-       Adjustments for github issue tracking
+       Fixes to tests for Firefox 88.
+       Adjustments for github issue tracking.
 
 1.01  Wed Jan 20 18:47:00 2021
        Fixes to Makefile.PL for Ubuntu to fix GH#1.
