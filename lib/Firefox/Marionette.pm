@@ -5442,8 +5442,8 @@ sub pdf {
         return MIME::Base64::decode_base64($content);
     }
     else {
-        my $handle = File::Temp::tempfile(
-            File::Spec->catfile(
+        my $handle = File::Temp->new(
+            TEMPLATE => File::Spec->catfile(
                 File::Spec->tmpdir(), 'firefox_marionette_print_XXXXXXXXXXX'
             )
           )
@@ -5505,8 +5505,8 @@ sub selfie {
         return MIME::Base64::decode_base64($content);
     }
     else {
-        my $handle = File::Temp::tempfile(
-            File::Spec->catfile(
+        my $handle = File::Temp->new(
+            TEMPLATE => File::Spec->catfile(
                 File::Spec->tmpdir(), 'firefox_marionette_selfie_XXXXXXXXXXX'
             )
           )

@@ -952,6 +952,7 @@ SKIP: {
 	my $raw_pdf;
 	eval {
 		my $handle = $firefox->pdf();
+		ok(ref $handle eq 'File::Temp', "\$firefox->pdf() returns a File::Temp object:" . ref $handle);
 		my $result;
 		while($result = $handle->read(my $buffer, 4096)) {
 			$raw_pdf .= $buffer;
@@ -1752,6 +1753,7 @@ SKIP: {
 	ok($buffer =~ /^\x89\x50\x4E\x47\x0D\x0A\x1A\x0A/smx, "\$firefox->selfie() returns a PNG file");
 	$buffer = undef;
 	$handle = $firefox->find('//button[@name="lucky"]')->selfie();
+	ok(ref $handle eq 'File::Temp', "\$firefox->selfie() returns a File::Temp object");
 	$handle->read($buffer, 20);
 	ok($buffer =~ /^\x89\x50\x4E\x47\x0D\x0A\x1A\x0A/smx, "\$firefox->find('//button[\@name=\"lucky\"]')->selfie() returns a PNG file");
 	if ($major_version < 31) {
