@@ -19,6 +19,17 @@ sub new {
     return $element;
 }
 
+sub TO_JSON {
+    my ($self) = @_;
+    my $json = {};
+    foreach my $key ( sort { $a cmp $b } keys %{$self} ) {
+        if ( $key ne 'browser' ) {
+            $json->{$key} = $self->{$key};
+        }
+    }
+    return $json;
+}
+
 sub uuid {
     my ($self) = @_;
     return $self->{ELEMENT};

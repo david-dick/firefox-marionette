@@ -6354,6 +6354,9 @@ sub _script_parameters {
     my ( $self, %parameters ) = @_;
     delete $parameters{script};
     $parameters{args} ||= [];
+    if ( ( !ref $parameters{args} ) or ( ref $parameters{args} ne 'ARRAY' ) ) {
+        $parameters{args} = [ $parameters{args} ];
+    }
     my %mapping = (
         timeout => 'scriptTimeout',
         new     => 'newSandbox',
@@ -6847,7 +6850,7 @@ sub _convert_request_to_old_protocols {
 sub _send_request {
     my ( $self, $object ) = @_;
     $object = $self->_convert_request_to_old_protocols($object);
-    my $json   = JSON::encode_json($object);
+    my $json   = JSON->new()->convert_blessed()->encode($object);
     my $length = length $json;
     if ( $self->_debug() ) {
         warn ">> $length:$json\n";
@@ -7944,6 +7947,10 @@ Returns the result of the javascript function.
     if ($firefox->script('return window.find("lucky");')) {
         # luckily!
     }
+
+    my $search_input = $firefox->find_by_id('search-input');
+
+    $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
 The executing javascript is subject to the L<script|Firefox::Marionette::Timeouts#script> timeout, which, by default is 30 seconds.
 

@@ -8,6 +8,7 @@ all_pod_coverage_ok({ trustme => [
 		 qr/^(find_elements?|page_source|send_keys)$/,
 		 qr/^(active_frame|switch_to_shadow_root)$/,
 		 qr/^(xvfb)$/,
+		 qr/^(TO_JSON)$/,
 		 qr/^(list.*)$/,
 		 qr/^(accept_dialog)$/,
 		 qr/^(find_by_.*)$/,

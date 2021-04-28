@@ -2092,6 +2092,12 @@ SKIP: {
 		}
 		$result = undef;
 	}
+	$firefox->go('http://www.example.com');
+	my $body = $firefox->find("//body");
+	my $outer_html = $firefox->script(q{ return arguments[0].outerHTML;}, args => [$body]);
+	ok($outer_html =~ /<body>/smx, "Correctly passing found elements into script arguments");
+	$outer_html = $firefox->script(q{ return arguments[0].outerHTML;}, args => $body);
+	ok($outer_html =~ /<body>/smx, "Converts a single argument into an array");
 	eval {
 		$result = $firefox->accept_connections(0);
 	};
