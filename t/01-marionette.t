@@ -2098,6 +2098,12 @@ SKIP: {
 	ok($outer_html =~ /<body>/smx, "Correctly passing found elements into script arguments");
 	$outer_html = $firefox->script(q{ return arguments[0].outerHTML;}, args => $body);
 	ok($outer_html =~ /<body>/smx, "Converts a single argument into an array");
+	my $link = $firefox->find('//a');
+	$firefox->script(q{arguments[0].parentNode.removeChild(arguments[0]);}, args => [$link]);
+	eval {
+		$link->attribute('href');
+	};
+	ok($@->isa('Firefox::Marionette::Exception::StaleElement') && $@ =~ /stale/smxi, "Correctly throws useful stale element exception");
 	eval {
 		$result = $firefox->accept_connections(0);
 	};

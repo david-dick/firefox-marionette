@@ -8,10 +8,18 @@ our $VERSION = '1.03';
 
 sub throw {
     my ( $class, $response, $parameters ) = @_;
-    my $self = bless {
-        string => 'Failed to find '
+    my $string;
+    if ( defined $parameters ) {
+        $string =
+            'Failed to find '
           . $parameters->{using} . ' of "'
-          . $parameters->{value},
+          . $parameters->{value};
+    }
+    else {
+        $string = $response->{error}->{message};
+    }
+    my $self = bless {
+        string     => $string,
         response   => $response,
         parameters => $parameters,
     }, $class;
