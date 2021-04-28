@@ -7084,6 +7084,8 @@ returns the active element of the current browsing context's document element, i
 
 accepts a single L<cookie|Firefox::Marionette::Cookie> object as the first parameter and adds it to the current cookie jar.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+This method cannot thrown an exception if you try to L<add a cookie for a different domain than the current document|https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/InvalidCookieDomain>.
+
 =head2 add_header
 
 accepts a hash of HTTP headers to include in every future HTTP Request.
