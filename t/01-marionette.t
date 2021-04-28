@@ -2145,7 +2145,7 @@ SKIP: {
 			diag("\$capabilities->proxy is not supported for remote hosts");
 			skip("\$capabilities->proxy is not supported for remote hosts", 3);
 		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
-			my $json_document = '{ "id": "5", "value": "something"}';
+			my $json_document = '{ "id": "5", "value": "sömething"}';
 			my $txt_document = 'This is ordinary text';
 			if (my $pid = fork) {
 				$firefox->go($daemon->url() . '?format=JSON');

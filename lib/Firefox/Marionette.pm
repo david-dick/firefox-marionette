@@ -6404,8 +6404,9 @@ sub json {
 }
 
 sub strip {
-    my ($self)       = @_;
-    my $content      = $self->html();
+    my ($self) = @_;
+    my $content = $self->html();
+    $content = Encode::encode( 'UTF-8', $content, 1 );
     my $head_regex   = qr/<head><link[^>]+><\/head>/smx;
     my $script_regex = qr/(?:<script[^>]+><\/script>)?/smx;
     my $header       = qr/<html[^>]*>$script_regex$head_regex<body><pre>/smx;
@@ -8001,7 +8002,9 @@ returns the page source of the content document after an attempt has been made t
     use JSON();
     use v5.10;
 
-    say JSON::decode_json(Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->strip())->{version};
+    say JSON::decode_json(Firefox::Marionette->new()->go("https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->strip())->{version};
+
+Note that this method will assume the bytes it receives from the L<html|Firefox::Marionette#html> method are UTF-8 encoded and will translate accordingly, throwing an exception in the process if the bytes are not UTF-8 encoded.
 
 =head2 switch_to_frame
 
