@@ -96,6 +96,8 @@ sub _WATERFOX_CLASSIC_VERSION_EQUIV {
 my $proxy_name_regex = qr/perl_ff_m_\w+/smx;
 my $local_name_regex = qr/firefox_marionette_local_\w+/smx;
 my $tmp_name_regex   = qr/firefox_marionette_(?:remote|local)_\w+/smx;
+my @sig_nums  = split q[ ], $Config{sig_num};
+my @sig_names = split q[ ], $Config{sig_name};
 
 sub BY_XPATH {
     Carp::carp(
@@ -2650,7 +2652,6 @@ sub child_error {
 
 sub _signal_name {
     my ( $proto, $number ) = @_;
-    my @sig_names = split q[ ], $Config{sig_name};
     return $sig_names[$number];
 }
 
@@ -6976,8 +6977,6 @@ sub _get_response {
 
 sub _signal_number {
     my ( $proto, $name ) = @_;
-    my @sig_nums  = split q[ ], $Config{sig_num};
-    my @sig_names = split q[ ], $Config{sig_name};
     my %signals_by_name;
     my $idx = 0;
     foreach my $sig_name (@sig_names) {
