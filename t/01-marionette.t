@@ -525,9 +525,6 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
-	if ($firefox->xvfb()) {
-		diag("Internal xvfb PID is " . $firefox->xvfb());
-	}
 	ok($firefox->application_type(), "\$firefox->application_type() returns " . $firefox->application_type());
 	ok($firefox->marionette_protocol() =~ /^\d+$/smx, "\$firefox->marionette_protocol() returns " . $firefox->marionette_protocol());
 	my $window_type = $firefox->window_type();
@@ -2344,6 +2341,15 @@ SKIP: {
 		skip($skip_message, 15);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with visible set to 1");
+	if ($firefox->xvfb_pid()) {
+		diag("Internal old xvfb pid is " . $firefox->xvfb());
+		diag("Internal xvfb pid is " . $firefox->xvfb_pid());
+		ok($firefox->xvfb_pid(), "Internal xvfb PID is " . $firefox->xvfb_pid());
+		diag("Internal xvfb DISPLAY is " . $firefox->xvfb_display());
+		ok($firefox->xvfb_display(), "Internal xvfb DISPLAY is " . $firefox->xvfb_display());
+		diag("Internal xvfb XAUTHORITY is " . $firefox->xvfb_xauthority());
+		ok($firefox->xvfb_xauthority(), "Internal xvfb XAUTHORITY is " . $firefox->xvfb_xauthority());
+	}
 	my $window_rect;
 	eval {
 		$window_rect = $firefox->window_rect();

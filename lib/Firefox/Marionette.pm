@@ -1770,14 +1770,14 @@ sub _launch {
         && ( $self->_xvfb_exists() )
         && ( $self->_launch_xvfb_if_not_present() ) )
     { # if not MacOS or Win32 and no DISPLAY variable, launch Xvfb if at all possible
-        local $ENV{DISPLAY}    = $self->_xvfb_display();
-        local $ENV{XAUTHORITY} = $self->_xvfb_xauthority();
+        local $ENV{DISPLAY}    = $self->xvfb_display();
+        local $ENV{XAUTHORITY} = $self->xvfb_xauthority();
         local $ENV{TMPDIR}     = $self->_local_firefox_tmp_directory();
         $self->{_firefox_pid} = $self->_launch_unix(@arguments);
     }
     elsif ( $self->{_launched_xvfb_anyway} ) {
-        local $ENV{DISPLAY}    = $self->_xvfb_display();
-        local $ENV{XAUTHORITY} = $self->_xvfb_xauthority();
+        local $ENV{DISPLAY}    = $self->xvfb_display();
+        local $ENV{XAUTHORITY} = $self->xvfb_xauthority();
         local $ENV{TMPDIR}     = $self->_local_firefox_tmp_directory();
         $self->{_firefox_pid} = $self->_launch_unix(@arguments);
     }
@@ -1867,7 +1867,10 @@ sub _xvfb_exists {
 
 sub xvfb {
     my ($self) = @_;
-    return $self->{_xvfb_pid};
+    Carp::carp(
+'**** DEPRECATED METHOD - using xvfb() HAS BEEN REPLACED BY xvfb_pid ****'
+    );
+    return $self->xvfb_pid();
 }
 
 sub _launch_xauth {
@@ -1941,12 +1944,17 @@ sub _launch_xauth {
     return;
 }
 
-sub _xvfb_display {
+sub xvfb_pid {
+    my ($self) = @_;
+    return $self->{_xvfb_pid};
+}
+
+sub xvfb_display {
     my ($self) = @_;
     return ":$self->{_xvfb_display_number}";
 }
 
-sub _xvfb_xauthority {
+sub xvfb_xauthority {
     my ($self) = @_;
     return File::Spec->catfile( $self->{_xvfb_authority_directory},
         'Xauthority' );
@@ -2021,8 +2029,8 @@ sub _launch_xvfb {
           or Firefox::Marionette::Exception->throw(
 "Failed to create directory $self->{_xvfb_authority_directory}:$EXTENDED_OS_ERROR"
           );
-        local $ENV{DISPLAY}    = $self->_xvfb_display();
-        local $ENV{XAUTHORITY} = $self->_xvfb_xauthority();
+        local $ENV{DISPLAY}    = $self->xvfb_display();
+        local $ENV{XAUTHORITY} = $self->xvfb_xauthority();
         if ( $self->_launch_xauth($display_number) ) {
             return 1;
         }
@@ -2712,7 +2720,7 @@ sub _reap {
             if ( ( $ssh->{pid} ) && ( $pid == $ssh->{pid} ) ) {
                 $self->{_child_error} = $CHILD_ERROR;
             }
-            elsif ( ( $self->xvfb() ) && ( $pid == $self->xvfb() ) ) {
+            elsif ( ( $self->xvfb_pid() ) && ( $pid == $self->xvfb_pid() ) ) {
                 $self->{_xvfb_child_error} = $CHILD_ERROR;
                 delete $self->{xvfb_pid};
                 delete $self->{_xvfb_display_number};
@@ -2731,7 +2739,7 @@ sub _reap {
             {
                 $self->{_child_error} = $CHILD_ERROR;
             }
-            elsif ( ( $self->xvfb() ) && ( $pid == $self->xvfb() ) ) {
+            elsif ( ( $self->xvfb_pid() ) && ( $pid == $self->xvfb_pid() ) ) {
                 $self->{_xvfb_child_error} = $CHILD_ERROR;
                 delete $self->{xvfb_pid};
                 delete $self->{_xvfb_display_number};
@@ -6249,7 +6257,7 @@ sub _terminate_process {
 
 sub _terminate_xvfb {
     my ($self) = @_;
-    if ( my $pid = $self->xvfb() ) {
+    if ( my $pid = $self->xvfb_pid() ) {
         my $int_signal = $self->_signal_number('INT');
         while ( kill 0, $pid ) {
             kill $int_signal, $pid;
@@ -8053,9 +8061,17 @@ accepts an optional L<position and size|Firefox::Marionette::Window::Rect> as a 
 
 returns the current window's type.  This should be 'navigator:browser'.
 
-=head2 xvfb
+=head2 xvfb_pid
 
 returns the pid of the xvfb process if it exists.
+
+=head2 xvfb_display
+
+returns the value for the DISPLAY environment variable if one has been generated for the xvfb environment.
+
+=head2 xvfb_xauthority
+
+returns the value for the XAUTHORITY environment variable if one has been generated for the xvfb environment
 
 =head1 REMOTE AUTOMATION OF FIREFOX VIA SSH
 
