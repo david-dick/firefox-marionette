@@ -51,6 +51,8 @@ returns the active element of the current browsing context's document element, i
 
 accepts a single [cookie](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACookie) object as the first parameter and adds it to the current cookie jar.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
 
+This method throws an exception if you try to [add a cookie for a different domain than the current document](https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/InvalidCookieDomain).
+
 ## add\_header
 
 accepts a hash of HTTP headers to include in every future HTTP Request.
@@ -851,6 +853,10 @@ Returns the result of the javascript function.
         # luckily!
     }
 
+    my $search_input = $firefox->find_by_id('search-input');
+
+    $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
+
 The executing javascript is subject to the [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23script) timeout, which, by default is 30 seconds.
 
 ## selfie
@@ -891,7 +897,9 @@ returns the page source of the content document after an attempt has been made t
     use JSON();
     use v5.10;
 
-    say JSON::decode_json(Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->strip())->{version};
+    say JSON::decode_json(Firefox::Marionette->new()->go("https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->strip())->{version};
+
+Note that this method will assume the bytes it receives from the [html](https://metacpan.org/pod/Firefox%3A%3AMarionette%23html) method are UTF-8 encoded and will translate accordingly, throwing an exception in the process if the bytes are not UTF-8 encoded.
 
 ## switch\_to\_frame
 
@@ -959,9 +967,17 @@ accepts an optional [position and size](https://metacpan.org/pod/Firefox%3A%3AMa
 
 returns the current window's type.  This should be 'navigator:browser'.
 
-## xvfb
+## xvfb\_pid
 
 returns the pid of the xvfb process if it exists.
+
+## xvfb\_display
+
+returns the value for the DISPLAY environment variable if one has been generated for the xvfb environment.
+
+## xvfb\_xauthority
+
+returns the value for the XAUTHORITY environment variable if one has been generated for the xvfb environment
 
 # REMOTE AUTOMATION OF FIREFOX VIA SSH
 
