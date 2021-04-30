@@ -2396,7 +2396,7 @@ SKIP: {
 	SKIP: {
 		if ((exists $ENV{XAUTHORITY}) && (defined $ENV{XAUTHORITY}) && ($ENV{XAUTHORITY} =~ /xvfb/smxi)) {
 			skip("Unable to change firefox screen size when xvfb is running", 3);	
-		} elsif ($firefox->xvfb()) {
+		} elsif ($firefox->xvfb_pid()) {
 			skip("Unable to change firefox screen size when xvfb is running", 3);	
 		}
 		local $TODO = "Not entirely stable in firefox";
@@ -2452,7 +2452,7 @@ SKIP: {
 		}
 		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 	} else {
-		my $xvfb_pid = $firefox->xvfb();
+		my $xvfb_pid = $firefox->xvfb_pid();
 		while($firefox->alive()) {
 			diag("Killing PID " . $capabilities->moz_process_id() . " with a signal " . $signals_by_name{TERM});
 			sleep 1; 
