@@ -1896,6 +1896,9 @@ SKIP: {
 		if ($major_version < 45) {
 			skip("Firefox below 45 (at least 24) does not support the getContext method", 5);
 		}
+		if (($major_version <= 63) && ($ENV{FIREFOX_VISIBLE})) {
+			skip("Firefox below 63 are having problems with Xvfb", 5);
+		}
 		ok($firefox->bye(sub { $firefox->find_id('search-input') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download'); })->click(), "Clicked on the download link");
 		diag("Clicked download link");
 		while(!$firefox->downloads()) {
