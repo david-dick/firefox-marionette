@@ -74,14 +74,7 @@ sub new {
         }
     }
     if ( $response->error() ) {
-        if (
-            ( $response->error()->{error} eq 'no such element' )
-            || ( $response->error()->{message} =~
-                /^Unable[ ]to[ ]locate[ ]element/smx )
-          )
-        {
-            Firefox::Marionette::Exception::NotFound->throw( $response,
-                $parameters );
+        if ( $response->_check_old_exception_cases( $parameters ) ) {
         }
         elsif ( my $class = $_known_exceptions{ $response->error()->{error} } )
         {
@@ -92,6 +85,29 @@ sub new {
         }
     }
     return $response;
+}
+
+sub _check_old_exception_cases {
+    my ( $self, $parameters ) = @_;
+    if (   ( $self->error()->{error} eq 'no such element' )
+        || ( $self->error()->{message} =~ /^Unable[ ]to[ ]locate[ ]element/smx )
+      )
+    {
+        Firefox::Marionette::Exception::NotFound->throw( $self, $parameters );
+    }
+    elsif (
+        ( $self->error()->{error} eq q[] )
+        && (
+            ( $self->error()->{message} =~ /^Stale[ ]element[ ]reference$/smx )
+            || ( $self->error()->{message} =~
+                /^The[ ]element[ ]reference[ ]is[ ]stale/smx )
+        )
+      )
+    {
+        Firefox::Marionette::Exception::StaleElement->throw( $self,
+            $parameters );
+    }
+    return;
 }
 
 sub type {
