@@ -11,21 +11,21 @@ SYNOPSIS
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         say $firefox->find_tag('title')->property('innerHTML'); # same as $firefox->title();
-
+    
         say $firefox->html();
-
+    
         $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
-
+    
         say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
-
+    
         my $file_handle = $firefox->selfie();
-
+    
         $firefox->find('//button[@name="lucky"]')->click();
-
+    
         $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
 DESCRIPTION
@@ -186,7 +186,7 @@ SUBROUTINES/METHODS
 
  browser_version
 
-    This method returns version of firefox.
+    This method returns the current version of firefox.
 
  bye
 

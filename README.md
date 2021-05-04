@@ -147,7 +147,7 @@ causes the browser to traverse one step backward in the joint history of the cur
 
 ## browser\_version
 
-This method returns version of firefox.
+This method returns the current version of firefox.
 
 ## bye
 
@@ -298,7 +298,7 @@ This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) t
 
 ## developer
 
-returns true if the current version of firefox is a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) (does the minor version number end with an 'b\\d+'?) version.
+returns true if the [current version](https://metacpan.org/pod/Firefox%3A%3AMarionette%23browser_version) of firefox is a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) (does the minor version number end with an 'b\\d+'?) version.
 
 ## dismiss\_alert
 
@@ -890,7 +890,7 @@ creates a new WebDriver session.  It is expected that the caller performs the ne
 
 ## nightly
 
-returns true if the current version of firefox is a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) (does the minor version number end with an 'a1'?)
+returns true if the [current version](https://metacpan.org/pod/Firefox%3A%3AMarionette%23browser_version) of firefox is a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) (does the minor version number end with an 'a1'?)
 
 ## paper\_sizes 
 
