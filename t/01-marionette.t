@@ -1568,6 +1568,12 @@ SKIP: {
 	}
 	ok($count == 1, "Found elements with nested find_by_selector:$count");
 	$count = 0;
+	foreach my $element ($firefox->has_selector('input.home-search-input')) {
+		ok($element->attribute('id'), "Correctly found wantarray element with has_selector");
+		$count += 1;
+	}
+	ok($count == 1, "Found elements with wantarray has_selector:$count");
+	$count = 0;
 	foreach my $element ($firefox->find_by_selector('input.home-search-input')) {
 		ok($element->attribute('id'), "Correctly found wantarray element with find_by_selector");
 		$count += 1;
@@ -1969,6 +1975,8 @@ SKIP: {
 		$link->attribute('href');
 	};
 	ok($@->isa('Firefox::Marionette::Exception::StaleElement') && $@ =~ /stale/smxi, "Correctly throws useful stale element exception");
+	ok($@->error(), "Firefox::Marionette::Exception->error() is callable:" . $@->error());
+	ok($@->trace(), "Firefox::Marionette::Exception->trace() is callable");
 
 	my $alert_text = 'testing alert';
 	SKIP: {
