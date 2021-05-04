@@ -1,5 +1,12 @@
 Revision history for Firefox-Marionette
 
+1.04  Wed May  5 06:42:00 2021
+       Fixing bugs GH#2 to GH#6.
+       Adding xvfb_display and xvfb_authority methods
+       Adding has_* methods
+       Improving documentation
+       Replacing xvfb with xvfb_pid method (xvfb method is deprecated)
+
 1.03  Sat Apr 24 10:38:00 2021
        Cleanups to Makefile including github changes.
        Changes for CPAN Testers in test suite
