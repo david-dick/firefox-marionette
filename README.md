@@ -49,7 +49,7 @@ returns the active element of the current browsing context's document element, i
 
 ## add\_cookie
 
-accepts a single [cookie](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACookie) object as the first parameter and adds it to the current cookie jar.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+accepts a single [cookie](https://metacpan.org/pod/Firefox::Marionette::Cookie) object as the first parameter and adds it to the current cookie jar.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 This method throws an exception if you try to [add a cookie for a different domain than the current document](https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/InvalidCookieDomain).
 
@@ -65,7 +65,7 @@ accepts a hash of HTTP headers to include in every future HTTP Request.
     $firefox->add_header( 'Track-my-automated-tests' => $uuid );
     $firefox->go('https://metacpan.org/');
 
-these headers are added to any existing headers.  To clear headers, see the [delete\_header](https://metacpan.org/pod/Firefox%3A%3AMarionette%23delete_headers) method
+these headers are added to any existing headers.  To clear headers, see the [delete\_header](https://metacpan.org/pod/Firefox::Marionette#delete_headers) method
 
     use Firefox::Marionette();
 
@@ -77,7 +77,7 @@ will only send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP
 
     my $firefox = Firefox::Marionette->new()->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
-by itself, will send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) header that may resemble `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl`. This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+by itself, will send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) header that may resemble `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl`. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## add\_site\_header
 
@@ -91,7 +91,7 @@ accepts a host name and a hash of HTTP headers to include in every future HTTP R
     $firefox->add_site_header( 'metacpan.org', 'Track-my-automated-tests' => $uuid );
     $firefox->go('https://metacpan.org/');
 
-these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the [delete\_site\_header](https://metacpan.org/pod/Firefox%3A%3AMarionette%23delete_site_headers) method
+these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the [delete\_site\_header](https://metacpan.org/pod/Firefox::Marionette#delete_site_headers) method
 
 ## addons
 
@@ -111,13 +111,13 @@ returns the application type for the Marionette protocol.  Should be 'gecko'.
 
 ## async\_script 
 
-accepts a scalar containing a javascript function that is executed in the browser.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+accepts a scalar containing a javascript function that is executed in the browser.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
-The executing javascript is subject to the [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23script) timeout, which, by default is 30 seconds.
+The executing javascript is subject to the [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.
 
 ## attribute 
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and a scalar attribute name as the second parameter.  It returns the initial value of the attribute with the supplied name.  This method will return the initial content, the [property](https://metacpan.org/pod/Firefox%3A%3AMarionette%23property) method will return the current content.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the initial value of the attribute with the supplied name.  This method will return the initial content, the [property](https://metacpan.org/pod/Firefox::Marionette#property) method will return the current content.
 
     use Firefox::Marionette();
 
@@ -129,7 +129,7 @@ accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AEleme
 
 ## await
 
-accepts a subroutine reference as a parameter and then executes the subroutine.  If a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception is thrown, this method will sleep for [sleep\_time\_in\_ms](https://metacpan.org/pod/Firefox%3A%3AMarionette%23sleep_time_in_ms) milliseconds and then execute the subroutine again.  When the subroutine executes successfully, it will return what the subroutine returns.
+accepts a subroutine reference as a parameter and then executes the subroutine.  If a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception is thrown, this method will sleep for [sleep\_time\_in\_ms](https://metacpan.org/pod/Firefox::Marionette#sleep_time_in_ms) milliseconds and then execute the subroutine again.  When the subroutine executes successfully, it will return what the subroutine returns.
 
     use Firefox::Marionette();
 
@@ -143,7 +143,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
 ## back
 
-causes the browser to traverse one step backward in the joint history of the current browsing context.  The browser will wait for the one step backward to complete or the session's [page\_load](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+causes the browser to traverse one step backward in the joint history of the current browsing context.  The browser will wait for the one step backward to complete or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## browser\_version
 
@@ -151,7 +151,7 @@ This method returns the current version of firefox.
 
 ## bye
 
-accepts a subroutine reference as a parameter and then executes the subroutine.  If the subroutine executes successfully, this method will sleep for [sleep\_time\_in\_ms](https://metacpan.org/pod/Firefox%3A%3AMarionette%23sleep_time_in_ms) milliseconds and then execute the subroutine again.  When a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception is thrown, this method will return [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+accepts a subroutine reference as a parameter and then executes the subroutine.  If the subroutine executes successfully, this method will sleep for [sleep\_time\_in\_ms](https://metacpan.org/pod/Firefox::Marionette#sleep_time_in_ms) milliseconds and then execute the subroutine again.  When a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception is thrown, this method will return [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
     use Firefox::Marionette();
 
@@ -165,7 +165,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
 ## capabilities
 
-returns the [capabilities](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities) of the current firefox binary.  You can retrieve [timeouts](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts) or a [proxy](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AProxy) with this method.
+returns the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) of the current firefox binary.  You can retrieve [timeouts](https://metacpan.org/pod/Firefox::Marionette::Timeouts) or a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy) with this method.
 
 ## child\_error
 
@@ -181,11 +181,11 @@ returns identifiers for each open chrome window for tests interested in managing
 
 ## clear
 
-accepts a [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and clears any user supplied input
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and clears any user supplied input
 
 ## click
 
-accepts a [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and sends a 'click' to it.  The browser will wait for any page load to complete or the session's [page\_load](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23page_load) duration to elapse before returning, which, by default is 5 minutes.  The [click](https://metacpan.org/pod/Firefox%3A%3AMarionette%23click) method is also used to choose an option in a select dropdown.
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and sends a 'click' to it.  The browser will wait for any page load to complete or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.  The [click](https://metacpan.org/pod/Firefox::Marionette#click) method is also used to choose an option in a select dropdown.
 
     use Firefox::Marionette();
 
@@ -199,7 +199,7 @@ accepts a [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElemen
 
 ## close\_current\_chrome\_window\_handle
 
-closes the current chrome window (that is the entire window, not just the tabs).  It returns a list of still available chrome window handles. You will need to [switch\_to\_window](https://metacpan.org/pod/Firefox%3A%3AMarionette%23switch_to_window) to use another window.
+closes the current chrome window (that is the entire window, not just the tabs).  It returns a list of still available chrome window handles. You will need to [switch\_to\_window](https://metacpan.org/pod/Firefox::Marionette#switch_to_window) to use another window.
 
 ## close\_current\_window\_handle
 
@@ -219,7 +219,7 @@ accepts a string as the first parameter, which may be either 'content' or 'chrom
 
 ## cookies
 
-returns the [contents](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACookie) of the cookie jar in scalar or list context.
+returns the [contents](https://metacpan.org/pod/Firefox::Marionette::Cookie) of the cookie jar in scalar or list context.
 
     use Firefox::Marionette();
     use v5.10;
@@ -235,7 +235,7 @@ returns the [contents](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACoo
 
 ## css
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and a scalar CSS property name as the second parameter.  It returns the value of the computed style for that property.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar CSS property name as the second parameter.  It returns the value of the computed style for that property.
 
     use Firefox::Marionette();
     use v5.10;
@@ -245,11 +245,11 @@ accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AEleme
 
 ## current\_chrome\_window\_handle 
 
-see [chrome\_window\_handle](https://metacpan.org/pod/Firefox%3A%3AMarionette%23chrome_window_handle).
+see [chrome\_window\_handle](https://metacpan.org/pod/Firefox::Marionette#chrome_window_handle).
 
 ## delete\_cookie
 
-deletes a single cookie by name.  Accepts a scalar containing the cookie name as a parameter.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+deletes a single cookie by name.  Accepts a scalar containing the cookie name as a parameter.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
     use Firefox::Marionette();
 
@@ -264,7 +264,7 @@ deletes a single cookie by name.  Accepts a scalar containing the cookie name as
 
 ## delete\_cookies
 
-here be cookie monsters! This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+here be cookie monsters! This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## delete\_header
 
@@ -277,7 +277,7 @@ accepts a list of HTTP header names to delete from future HTTP Requests.
 
 will remove the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) headers from all future requests
 
-This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## delete\_session
 
@@ -294,11 +294,11 @@ accepts a host name and a list of HTTP headers names to delete from future HTTP 
 
 will remove the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) headers from all future requests to metacpan.org.
 
-This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## developer
 
-returns true if the [current version](https://metacpan.org/pod/Firefox%3A%3AMarionette%23browser_version) of firefox is a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) (does the minor version number end with an 'b\\d+'?) version.
+returns true if the [current version](https://metacpan.org/pod/Firefox::Marionette#browser_version) of firefox is a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) (does the minor version number end with an 'b\\d+'?) version.
 
 ## dismiss\_alert
 
@@ -331,7 +331,7 @@ accepts a filesystem path and returns a matching filehandle.  This is trivial fo
 
 ## downloading
 
-returns true if any files in [downloads](https://metacpan.org/pod/Firefox%3A%3AMarionette%23downloads) end in `.part`
+returns true if any files in [downloads](https://metacpan.org/pod/Firefox::Marionette#downloads) end in `.part`
 
     use Firefox::Marionette();
     use v5.10;
@@ -383,9 +383,9 @@ This utility method executes a command with arguments and returns STDOUT as a ch
 
 ## find
 
-accepts an [xpath expression](https://en.wikipedia.org/wiki/XPath) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that matches this expression.
+accepts an [xpath expression](https://en.wikipedia.org/wiki/XPath) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) that matches this expression.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -399,13 +399,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has](https://metacpan.org/pod/Firefox::Marionette#has) method.
 
 ## find\_id
 
-accepts an [id](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'id' property.
+accepts an [id](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with a matching 'id' property.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -419,13 +419,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_id](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_id) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_id](https://metacpan.org/pod/Firefox::Marionette#has_id) method.
 
 ## find\_name
 
-This method returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'name' property.
+This method returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with a matching 'name' property.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -438,13 +438,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_name](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_name) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_name](https://metacpan.org/pod/Firefox::Marionette#has_name) method.
 
 ## find\_class
 
-accepts a [class name](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'class' property.
+accepts a [class name](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with a matching 'class' property.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -457,13 +457,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_class](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_class) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_class](https://metacpan.org/pod/Firefox::Marionette#has_class) method.
 
 ## find\_selector
 
-accepts a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that matches that selector.
+accepts a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) that matches that selector.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -476,13 +476,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_selector](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_selector) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_selector](https://metacpan.org/pod/Firefox::Marionette#has_selector) method.
 
 ## find\_tag
 
-accepts a [tag name](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with this tag name.
+accepts a [tag name](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with this tag name.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -495,13 +495,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         # do something
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. For the same functionality that returns undef if no elements are found, see the [has\_tag](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_tag) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown. For the same functionality that returns undef if no elements are found, see the [has\_tag](https://metacpan.org/pod/Firefox::Marionette#has_tag) method.
 
 ## find\_link
 
-accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that has a matching link text.
+accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox::Marionette::Element) that has a matching link text.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -514,13 +514,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->click();
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_link](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_link) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_link](https://metacpan.org/pod/Firefox::Marionette#has_link) method.
 
 ## find\_partial
 
-accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that has a partially matching link text.
+accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox::Marionette::Element) that has a partially matching link text.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -533,37 +533,37 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->click();
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_partial](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_partial) method.
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_partial](https://metacpan.org/pod/Firefox::Marionette#has_partial) method.
 
 ## forward
 
-causes the browser to traverse one step forward in the joint history of the current browsing context. The browser will wait for the one step forward to complete or the session's [page\_load](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+causes the browser to traverse one step forward in the joint history of the current browsing context. The browser will wait for the one step forward to complete or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## full\_screen
 
-full screens the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+full screens the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## go
 
-Navigates the current browsing context to the given [URI](https://metacpan.org/pod/URI) and waits for the document to load or the session's [page\_load](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23page_load) duration to elapse before returning, which, by default is 5 minutes.
+Navigates the current browsing context to the given [URI](https://metacpan.org/pod/URI) and waits for the document to load or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new();
     $firefox->go('https://metacpan.org/'); # will only return when metacpan.org is FULLY loaded (including all images / js / css)
 
-To make the [go](https://metacpan.org/pod/Firefox%3A%3AMarionette%23go) method return quicker, you need to set the [page load strategy](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities%23page_load_strategy) [capability](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities) to an appropriate value, such as below;
+To make the [go](https://metacpan.org/pod/Firefox::Marionette#go) method return quicker, you need to set the [page load strategy](https://metacpan.org/pod/Firefox::Marionette::Capabilities#page_load_strategy) [capability](https://metacpan.org/pod/Firefox::Marionette::Capabilities) to an appropriate value, such as below;
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'eager' ));
     $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
-This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## har
 
-returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/HAR_\(file_format\)) of the session.  This function is subject to the [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23script) timeout, which, by default is 30 seconds.  It is also possible for the function to hang (until the [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23script) timeout) if the original [devtools](https://developer.mozilla.org/en-US/docs/Tools) window is closed.  The hashref has been designed to be accepted by the [Archive::Har](https://metacpan.org/pod/Archive%3A%3AHar) module.  This function should be considered experimental.  Feedback welcome.
+returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/HAR_\(file_format\)) of the session.  This function is subject to the [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.  It is also possible for the function to hang (until the [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout) if the original [devtools](https://developer.mozilla.org/en-US/docs/Tools) window is closed.  The hashref has been designed to be accepted by the [Archive::Har](https://metacpan.org/pod/Archive::Har) module.  This function should be considered experimental.  Feedback welcome.
 
     use Firefox::Marionette();
     use Archive::Har();
@@ -585,9 +585,9 @@ returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/
 
 ## has
 
-accepts an [xpath expression](https://en.wikipedia.org/wiki/XPath) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that matches this expression.
+accepts an [xpath expression](https://en.wikipedia.org/wiki/XPath) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) that matches this expression.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -597,13 +597,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find](https://metacpan.org/pod/Firefox::Marionette#find) method.
 
 ## has\_id
 
-accepts an [id](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'id' property.
+accepts an [id](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with a matching 'id' property.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -613,13 +613,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_id](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_id) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_id](https://metacpan.org/pod/Firefox::Marionette#find_id) method.
 
 ## has\_name
 
-This method returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'name' property.
+This method returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with a matching 'name' property.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -628,13 +628,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_name](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_name) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_name](https://metacpan.org/pod/Firefox::Marionette#find_name) method.
 
 ## has\_class
 
-accepts a [class name](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'class' property.
+accepts a [class name](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with a matching 'class' property.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -643,13 +643,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_class](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_class) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_class](https://metacpan.org/pod/Firefox::Marionette#find_class) method.
 
 ## has\_selector
 
-accepts a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that matches that selector.
+accepts a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) that matches that selector.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -658,13 +658,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_selector](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_selector) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_selector](https://metacpan.org/pod/Firefox::Marionette#find_selector) method.
 
 ## has\_tag
 
-accepts a [tag name](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with this tag name.
+accepts a [tag name](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) with this tag name.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -673,13 +673,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         # do something
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_tag](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_tag) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_tag](https://metacpan.org/pod/Firefox::Marionette#find_tag) method.
 
 ## has\_link
 
-accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that has a matching link text.
+accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox::Marionette::Element) that has a matching link text.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -688,13 +688,13 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->click();
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_link](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_link) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_link](https://metacpan.org/pod/Firefox::Marionette#find_link) method.
 
 ## has\_partial
 
-accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that has a partially matching link text.
+accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox::Marionette::Element) that has a partially matching link text.
 
-This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
@@ -703,11 +703,11 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->click();
     }
 
-If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_partial](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_partial) method.
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox::Marionette::Exception::NotFound) exception, see the [find\_partial](https://metacpan.org/pod/Firefox::Marionette#find_partial) method.
 
 ## html
 
-returns the page source of the content document.  This page source can be wrapped in html that firefox provides.  See the [json](https://metacpan.org/pod/Firefox%3A%3AMarionette%23json) method for an alternative when dealing with response content types such as application/json and [strip](https://metacpan.org/pod/Firefox%3A%3AMarionette%23strip) for an alterative when dealing with other non-html content types such as text/plain.
+returns the page source of the content document.  This page source can be wrapped in html that firefox provides.  See the [json](https://metacpan.org/pod/Firefox::Marionette#json) method for an alternative when dealing with response content types such as application/json and [strip](https://metacpan.org/pod/Firefox::Marionette#strip) for an alterative when dealing with other non-html content types such as text/plain.
 
     use Firefox::Marionette();
     use v5.10;
@@ -722,7 +722,7 @@ accepts the following as the first parameter;
 - path to a directory containing [firefox extension source code](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension).  This directory will be packaged up as an unsigned xpi file.
 - path to a top level file (such as [manifest.json](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#manifest.json)) in a directory containing [firefox extension source code](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension).  This directory will be packaged up as an unsigned xpi file.
 
-and an optional true/false second parameter to indicate if the xpi file should be a [temporary extension](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) (just for the existance of this browser instance).  Unsigned xpi files [may only be loaded temporarily](https://wiki.mozilla.org/Add-ons/Extension_Signing) (except for [nightly firefox installations](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)).  It returns the GUID for the addon which may be used as a parameter to the [uninstall](https://metacpan.org/pod/Firefox%3A%3AMarionette%23uninstall) method.
+and an optional true/false second parameter to indicate if the xpi file should be a [temporary extension](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) (just for the existance of this browser instance).  Unsigned xpi files [may only be loaded temporarily](https://wiki.mozilla.org/Add-ons/Extension_Signing) (except for [nightly firefox installations](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)).  It returns the GUID for the addon which may be used as a parameter to the [uninstall](https://metacpan.org/pod/Firefox::Marionette#uninstall) method.
 
     use Firefox::Marionette();
 
@@ -746,7 +746,7 @@ and an optional true/false second parameter to indicate if the xpi file should b
 
 ## interactive
 
-returns true if `document.readyState === "interactive"` or if [loaded](https://metacpan.org/pod/Firefox%3A%3AMarionette%23loaded) is true
+returns true if `document.readyState === "interactive"` or if [loaded](https://metacpan.org/pod/Firefox::Marionette#loaded) is true
 
     use Firefox::Marionette();
 
@@ -759,19 +759,19 @@ returns true if `document.readyState === "interactive"` or if [loaded](https://m
 
 ## is\_displayed
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter.  This method returns true or false depending on if the element is displayed.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element is displayed.
 
 ## is\_enabled
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter.  This method returns true or false depending on if the element is enabled.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element is enabled.
 
 ## is\_selected
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter.  This method returns true or false depending on if the element is selected.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element is selected.
 
 ## json
 
-returns a [JSON](https://metacpan.org/pod/JSON) object that has been parsed from the page source of the content document.  This is a convenience method that wraps the [strip](https://metacpan.org/pod/Firefox%3A%3AMarionette%23strip) method.
+returns a [JSON](https://metacpan.org/pod/JSON) object that has been parsed from the page source of the content document.  This is a convenience method that wraps the [strip](https://metacpan.org/pod/Firefox::Marionette#strip) method.
 
     use Firefox::Marionette();
     use v5.10;
@@ -797,11 +797,11 @@ returns the version for the Marionette protocol.  Current most recent version is
 
 ## maximise
 
-maximises the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+maximises the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## mime\_types
 
-returns a list of MIME types that will be downloaded by firefox and made available from the [downloads](https://metacpan.org/pod/Firefox%3A%3AMarionette%23downloads) method
+returns a list of MIME types that will be downloaded by firefox and made available from the [downloads](https://metacpan.org/pod/Firefox::Marionette#downloads) method
 
     use Firefox::Marionette();
     use v5.10;
@@ -814,14 +814,14 @@ returns a list of MIME types that will be downloaded by firefox and made availab
 
 ## minimise
 
-minimises the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+minimises the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## new
 
 accepts an optional hash as a parameter.  Allowed keys are below;
 
 - addons - should any firefox extensions and themes be available in this session.  This defaults to "0".
-- capabilities - use the supplied [capabilities](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities) object, for example to set whether the browser should [accept insecure certs](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities%23accept_insecure_certs) or whether the browser should use a [proxy](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AProxy).
+- capabilities - use the supplied [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) object, for example to set whether the browser should [accept insecure certs](https://metacpan.org/pod/Firefox::Marionette::Capabilities#accept_insecure_certs) or whether the browser should use a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy).
 - chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, [connections to firefox.settings.services.mozilla.com will still be made](https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13).  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via [/etc/hosts](https://en.wikipedia.org/wiki//etc/hosts).  NOTE: that this option only works when profile\_name/profile is not specified.
 - console - show the [browser console](https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/) when the browser is launched.
 - debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.
@@ -829,22 +829,22 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - firefox - use the specified path to the [Firefox](https://firefox.org/) binary, rather than the default path.
 - height - set the [height](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
 - har - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.  The [HAR Export Trigger](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/) addon will be loaded into the new session automatically, which means that -safe-mode will not be activated for this session AND this functionality will only be available for Firefox 61+.
-- host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox%3A%3AMarionette%23REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
-- implicit - a shortcut to allow directly providing the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeout%23implicit) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
+- host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
+- implicit - a shortcut to allow directly providing the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeout#implicit) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - mime\_types - any MIME types that Firefox will encounter during this session.  MIME types that are not specified will result in a hung browser (the File Download popup will appear).
 - nightly - only allow a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) to be launched.
-- port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox via the specified port.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox%3A%3AMarionette%23REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
-- page\_load - a shortcut to allow directly providing the [page\_load](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23page_load) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
-- profile - create a new profile based on the supplied [profile](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AProfile).  NOTE: firefox ignores any changes made to the profile on the disk while it is running.
-- profile\_name - pick a specific existing profile to automate, rather than creating a new profile.  [Firefox](https://firefox.com) refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the [Firefox::Marionette::Profile::names()](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AProfile%23names) method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running.
+- port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox via the specified port.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
+- page\_load - a shortcut to allow directly providing the [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
+- profile - create a new profile based on the supplied [profile](https://metacpan.org/pod/Firefox::Marionette::Profile).  NOTE: firefox ignores any changes made to the profile on the disk while it is running.
+- profile\_name - pick a specific existing profile to automate, rather than creating a new profile.  [Firefox](https://firefox.com) refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the [Firefox::Marionette::Profile::names()](https://metacpan.org/pod/Firefox::Marionette::Profile#names) method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running.
 - reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
-- script - a shortcut to allow directly providing the [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeout%23script) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
+- script - a shortcut to allow directly providing the [script](https://metacpan.org/pod/Firefox::Marionette::Timeout#script) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - seer - this option is switched off "0" by default.  When it is switched on "1", it will activate the various speculative and pre-fetch options for firefox.  NOTE: that this option only works when profile\_name/profile is not specified.
-- sleep\_time\_in\_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the [await](https://metacpan.org/pod/Firefox%3A%3AMarionette%23await) or [bye](https://metacpan.org/pod/Firefox%3A%3AMarionette%23bye) methods.  This defaults to "1" millisecond.
+- sleep\_time\_in\_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the [await](https://metacpan.org/pod/Firefox::Marionette#await) or [bye](https://metacpan.org/pod/Firefox::Marionette#bye) methods.  This defaults to "1" millisecond.
 - survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 - trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) that will be trusted for this session.  The certificate will be imported by the [NSS certutil](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil) binary.  If this binary does not exist in the [PATH](https://en.wikipedia.org/wiki/PATH_\(variable\)), an exception will be thrown.  For Linux/BSD systems, [NSS certutil](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil) should be available via your package manager.  For OS X and Windows based platforms, it will be more difficult.
-- timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
-- port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox%3A%3AMarionette%23REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
+- timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
+- port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
 - visible - should firefox be visible on the desktop.  This defaults to "0".
 - waterfox - only allow a binary that looks like a [waterfox version](https://www.waterfox.net/) to be launched.
 - width - set the [width](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
@@ -890,7 +890,7 @@ creates a new WebDriver session.  It is expected that the caller performs the ne
 
 ## nightly
 
-returns true if the [current version](https://metacpan.org/pod/Firefox%3A%3AMarionette%23browser_version) of firefox is a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) (does the minor version number end with an 'a1'?)
+returns true if the [current version](https://metacpan.org/pod/Firefox::Marionette#browser_version) of firefox is a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) (does the minor version number end with an 'a1'?)
 
 ## paper\_sizes 
 
@@ -898,7 +898,7 @@ returns a list of all the recognised names for paper sizes, such as A4 or LEGAL.
 
 ## pdf
 
-returns a [File::Temp](https://metacpan.org/pod/File%3A%3ATemp) object containing a PDF encoded version of the current page for printing.
+returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a PDF encoded version of the current page for printing.
 
 accepts a optional hash as the first parameter with the following allowed keys;
 
@@ -908,7 +908,7 @@ accepts a optional hash as the first parameter with the following allowed keys;
 - print\_background - Print background graphics.  Boolean value.  Defaults to false. 
 - raw - rather than a file handle containing the PDF, the binary PDF will be returned.
 - scale - Scale of the webpage rendering.  Defaults to 1.
-- size - The desired size (width and height) of the pdf, specified by name.  See the page key for an alternative and the [paper\_sizes](https://metacpan.org/pod/Firefox%3A%3AMarionette%23paper_sizes) method for a list of accepted page size names. 
+- size - The desired size (width and height) of the pdf, specified by name.  See the page key for an alternative and the [paper\_sizes](https://metacpan.org/pod/Firefox::Marionette#paper_sizes) method for a list of accepted page size names. 
 - shrink\_to\_fit - Whether or not to override page size as defined by CSS.  Boolean value.  Defaults to true. 
 
     use Firefox::Marionette();
@@ -924,7 +924,7 @@ accepts a optional hash as the first parameter with the following allowed keys;
 
 ## property
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the [attribute](https://metacpan.org/pod/Firefox%3A%3AMarionette%23attribute) method will return the initial content.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the [attribute](https://metacpan.org/pod/Firefox::Marionette#attribute) method will return the initial content.
 
     use Firefox::Marionette();
 
@@ -944,11 +944,11 @@ Marionette will stop accepting new connections before ending the current session
 
 ## rect
 
-accepts a [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and returns the current [position and size](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement%3A%3ARect) of the [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement)
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and returns the current [position and size](https://metacpan.org/pod/Firefox::Marionette::Element::Rect) of the [element](https://metacpan.org/pod/Firefox::Marionette::Element)
 
 ## refresh
 
-refreshes the current page.  The browser will wait for the page to completely refresh or the session's [page\_load](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+refreshes the current page.  The browser will wait for the page to completely refresh or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## screen\_orientation
 
@@ -963,7 +963,7 @@ accepts a scalar containing a javascript function body that is executed in the b
 - line - Line in the client's program where this script is evaluated.
 - new - Forces the script to be evaluated in a fresh sandbox.  Note that if it is undefined, the script will normally be evaluted in a fresh sandbox.
 - sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object if `new` is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluted in a sandbox with elevated system privileges, equivalent to chrome space.
-- timeout - A timeout to override the default [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23script) timeout, which, by default is 30 seconds.
+- timeout - A timeout to override the default [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.
 
 Returns the result of the javascript function.
 
@@ -979,23 +979,23 @@ Returns the result of the javascript function.
 
     $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
-The executing javascript is subject to the [script](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23script) timeout, which, by default is 30 seconds.
+The executing javascript is subject to the [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.
 
 ## selfie
 
-returns a [File::Temp](https://metacpan.org/pod/File%3A%3ATemp) object containing a lossless PNG image screenshot.  If an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) is passed as a parameter, the screenshot will be restricted to the element.  
+returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a lossless PNG image screenshot.  If an [element](https://metacpan.org/pod/Firefox::Marionette::Element) is passed as a parameter, the screenshot will be restricted to the element.  
 
-If an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) is not passed as a parameter and the current [context](https://metacpan.org/pod/Firefox%3A%3AMarionette%23context) is 'chrome', a screenshot of the current viewport will be returned.
+If an [element](https://metacpan.org/pod/Firefox::Marionette::Element) is not passed as a parameter and the current [context](https://metacpan.org/pod/Firefox::Marionette#context) is 'chrome', a screenshot of the current viewport will be returned.
 
-If an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) is not passed as a parameter and the current [context](https://metacpan.org/pod/Firefox%3A%3AMarionette%23context) is 'content', a screenshot of the current frame will be returned.
+If an [element](https://metacpan.org/pod/Firefox::Marionette::Element) is not passed as a parameter and the current [context](https://metacpan.org/pod/Firefox::Marionette#context) is 'content', a screenshot of the current frame will be returned.
 
-The parameters after the [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) parameter are taken to be a optional hash with the following allowed keys;
+The parameters after the [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter are taken to be a optional hash with the following allowed keys;
 
 - hash - return a SHA256 hex encoded digest of the PNG image rather than the image itself
-- full - take a screenshot of the whole document unless the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) parameter has been supplied.
+- full - take a screenshot of the whole document unless the first [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter has been supplied.
 - raw - rather than a file handle containing the screenshot, the binary PNG image will be returned.
-- scroll - scroll to the [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) supplied
-- highlights - a reference to a list containing [elements](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) to draw a highlight around.  Not available in [Firefox 70](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/70#WebDriver_conformance_Marionette) onwards.
+- scroll - scroll to the [element](https://metacpan.org/pod/Firefox::Marionette::Element) supplied
+- highlights - a reference to a list containing [elements](https://metacpan.org/pod/Firefox::Marionette::Element) to draw a highlight around.  Not available in [Firefox 70](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/70#WebDriver_conformance_Marionette) onwards.
 
 ## send\_alert\_text
 
@@ -1003,7 +1003,7 @@ sends keys to the input field of a currently displayed modal message box
 
 ## sleep\_time\_in\_ms
 
-accepts a new time to sleep in [await](https://metacpan.org/pod/Firefox%3A%3AMarionette%23await) or [bye](https://metacpan.org/pod/Firefox%3A%3AMarionette%23bye) methods and returns the previous time.  The default time is "1" millisecond.
+accepts a new time to sleep in [await](https://metacpan.org/pod/Firefox::Marionette#await) or [bye](https://metacpan.org/pod/Firefox::Marionette#bye) methods and returns the previous time.  The default time is "1" millisecond.
 
     use Firefox::Marionette();
 
@@ -1013,7 +1013,7 @@ accepts a new time to sleep in [await](https://metacpan.org/pod/Firefox%3A%3AMar
 
 ## strip
 
-returns the page source of the content document after an attempt has been made to remove typical firefox html wrappers of non html content types such as text/plain and application/json.  See the [json](https://metacpan.org/pod/Firefox%3A%3AMarionette%23json) method for an alternative when dealing with response content types such as application/json and [html](https://metacpan.org/pod/Firefox%3A%3AMarionette%23html) for an alterative when dealing with html content types.  This is a convenience method that wraps the [html](https://metacpan.org/pod/Firefox%3A%3AMarionette%23html) method.
+returns the page source of the content document after an attempt has been made to remove typical firefox html wrappers of non html content types such as text/plain and application/json.  See the [json](https://metacpan.org/pod/Firefox::Marionette#json) method for an alternative when dealing with response content types such as application/json and [html](https://metacpan.org/pod/Firefox::Marionette#html) for an alterative when dealing with html content types.  This is a convenience method that wraps the [html](https://metacpan.org/pod/Firefox::Marionette#html) method.
 
     use Firefox::Marionette();
     use JSON();
@@ -1021,11 +1021,11 @@ returns the page source of the content document after an attempt has been made t
 
     say JSON::decode_json(Firefox::Marionette->new()->go("https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->strip())->{version};
 
-Note that this method will assume the bytes it receives from the [html](https://metacpan.org/pod/Firefox%3A%3AMarionette%23html) method are UTF-8 encoded and will translate accordingly, throwing an exception in the process if the bytes are not UTF-8 encoded.
+Note that this method will assume the bytes it receives from the [html](https://metacpan.org/pod/Firefox::Marionette#html) method are UTF-8 encoded and will translate accordingly, throwing an exception in the process if the bytes are not UTF-8 encoded.
 
 ## switch\_to\_frame
 
-accepts a [frame](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as a parameter and switches to it within the current window.
+accepts a [frame](https://metacpan.org/pod/Firefox::Marionette::Element) as a parameter and switches to it within the current window.
 
 ## switch\_to\_parent\_frame
 
@@ -1033,19 +1033,19 @@ set the current browsing context for future commands to the parent of the curren
 
 ## switch\_to\_window
 
-accepts a window handle (either the result of [window\_handles](https://metacpan.org/pod/Firefox%3A%3AMarionette%23window_handles) or a window name as a parameter and switches focus to this window.
+accepts a window handle (either the result of [window\_handles](https://metacpan.org/pod/Firefox::Marionette#window_handles) or a window name as a parameter and switches focus to this window.
 
 ## tag\_name
 
-accepts a [Firefox::Marionette::Element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) object as the first parameter and returns the relevant tag name.  For example 'a' or 'input'.
+accepts a [Firefox::Marionette::Element](https://metacpan.org/pod/Firefox::Marionette::Element) object as the first parameter and returns the relevant tag name.  For example 'a' or 'input'.
 
 ## text
 
-accepts a [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and returns the text that is contained by that element (if any)
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and returns the text that is contained by that element (if any)
 
 ## timeouts
 
-returns the current [timeouts](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts) for page loading, searching, and scripts.
+returns the current [timeouts](https://metacpan.org/pod/Firefox::Marionette::Timeouts) for page loading, searching, and scripts.
 
 ## title
 
@@ -1053,11 +1053,11 @@ returns the current title of the window.
 
 ## type
 
-accepts an [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) as the first parameter and a string as the second parameter.  It sends the string to the specified [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) in the current page, such as filling out a text box. This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a string as the second parameter.  It sends the string to the specified [element](https://metacpan.org/pod/Firefox::Marionette::Element) in the current page, such as filling out a text box. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## uninstall
 
-accepts the GUID for the addon to uninstall.  The GUID is returned when from the [install](https://metacpan.org/pod/Firefox%3A%3AMarionette%23install) method.  This method returns [itself](https://metacpan.org/pod/Firefox%3A%3AMarionette) to aid in chaining methods.
+accepts the GUID for the addon to uninstall.  The GUID is returned when from the [install](https://metacpan.org/pod/Firefox::Marionette#install) method.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
     use Firefox::Marionette();
 
@@ -1083,7 +1083,7 @@ returns a list of top-level browsing contexts. On desktop this typically corresp
 
 ## window\_rect
 
-accepts an optional [position and size](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AWindow%3A%3ARect) as a parameter, sets the current browser window to that position and size and returns the previous [position, size and state](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AWindow%3A%3ARect) of the browser window.  If no parameter is supplied, it returns the current  [position, size and state](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AWindow%3A%3ARect) of the browser window.
+accepts an optional [position and size](https://metacpan.org/pod/Firefox::Marionette::Window::Rect) as a parameter, sets the current browser window to that position and size and returns the previous [position, size and state](https://metacpan.org/pod/Firefox::Marionette::Window::Rect) of the browser window.  If no parameter is supplied, it returns the current  [position, size and state](https://metacpan.org/pod/Firefox::Marionette::Window::Rect) of the browser window.
 
 ## window\_type
 
@@ -1134,11 +1134,11 @@ This module uses [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaste
 
 - `Failed to correctly setup the Firefox process`
 
-    The module was unable to retrieve a session id and capabilities from Firefox when it requests a [new\_session](https://metacpan.org/pod/Firefox%3A%3AMarionette%23new_session) as part of the initial setup of the connection to Firefox.
+    The module was unable to retrieve a session id and capabilities from Firefox when it requests a [new\_session](https://metacpan.org/pod/Firefox::Marionette#new_session) as part of the initial setup of the connection to Firefox.
 
 - `Failed to correctly determined the Firefox process id through the initial connection capabilities`
 
-    The module was found that firefox is reporting through it's [Capabilities](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities%23moz_process_id) object a different process id than this module was using.  This is probably a bug in this module's logic.  Please report as described in the BUGS AND LIMITATIONS section below.
+    The module was found that firefox is reporting through it's [Capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities#moz_process_id) object a different process id than this module was using.  This is probably a bug in this module's logic.  Please report as described in the BUGS AND LIMITATIONS section below.
 
 - `'%s --version' did not produce output that could be parsed.  Assuming modern Marionette is available:%s`
 
@@ -1226,7 +1226,7 @@ This module uses [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaste
 
 - `%s method requires a Firefox::Marionette::Element parameter`
 
-    This function was called incorrectly by your code.  Please supply a [Firefox::Marionette::Element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) parameter when calling this function.
+    This function was called incorrectly by your code.  Please supply a [Firefox::Marionette::Element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter when calling this function.
 
 - `Failed to write to temporary file:%s`
 
@@ -1251,7 +1251,7 @@ This module uses [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaste
 # CONFIGURATION AND ENVIRONMENT
 
 Firefox::Marionette requires no configuration files or environment variables.  It will however use the DISPLAY and XAUTHORITY environment variables to try to connect to an X Server.
-It will also use the HTTP\_PROXY, HTTPS\_PROXY, FTP\_PROXY and ALL\_PROXY environment variables as defaults if the session [capabilities](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ACapabilities) do not specify proxy information.
+It will also use the HTTP\_PROXY, HTTPS\_PROXY, FTP\_PROXY and ALL\_PROXY environment variables as defaults if the session [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) do not specify proxy information.
 
 # DEPENDENCIES
 
@@ -1281,10 +1281,10 @@ Please report any bugs or feature requests to
 # SEE ALSO
 
 - [MozRepl](https://metacpan.org/pod/MozRepl)
-- [Selenium::Firefox](https://metacpan.org/pod/Selenium%3A%3AFirefox)
-- [Firefox::Application](https://metacpan.org/pod/Firefox%3A%3AApplication)
-- [Mozilla::Mechanize](https://metacpan.org/pod/Mozilla%3A%3AMechanize)
-- [Gtk2::MozEmbed](https://metacpan.org/pod/Gtk2%3A%3AMozEmbed)
+- [Selenium::Firefox](https://metacpan.org/pod/Selenium::Firefox)
+- [Firefox::Application](https://metacpan.org/pod/Firefox::Application)
+- [Mozilla::Mechanize](https://metacpan.org/pod/Mozilla::Mechanize)
+- [Gtk2::MozEmbed](https://metacpan.org/pod/Gtk2::MozEmbed)
 
 # AUTHOR
 
@@ -1311,7 +1311,7 @@ Copyright (c) 2020, David Dick `<ddick@cpan.org>`. All rights reserved.
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See ["perlartistic" in perlartistic](https://metacpan.org/pod/perlartistic#perlartistic).
 
-The [Firefox::Marionette::Extension::HarExportTrigger](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AExtension%3A%3AHarExportTrigger) module includes the [HAR Export Trigger](https://github.com/firefox-devtools/har-export-trigger)
+The [Firefox::Marionette::Extension::HarExportTrigger](https://metacpan.org/pod/Firefox::Marionette::Extension::HarExportTrigger) module includes the [HAR Export Trigger](https://github.com/firefox-devtools/har-export-trigger)
 extension which is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/).
 
 # DISCLAIMER OF WARRANTY
