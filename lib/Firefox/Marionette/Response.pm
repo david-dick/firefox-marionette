@@ -24,7 +24,7 @@ my %_known_exceptions = (
 );
 
 sub new {
-    my ( $class, $message, $parameters ) = @_;
+    my ( $class, $message, $parameters, $options ) = @_;
     my $response;
     if ( ref $message eq 'ARRAY' ) {
         $response = bless {
@@ -74,7 +74,7 @@ sub new {
         }
     }
     if ( $response->error() ) {
-        if ( $response->_check_old_exception_cases( $parameters ) ) {
+        if ( $response->_check_old_exception_cases( $parameters, $options ) ) {
         }
         elsif ( my $class = $_known_exceptions{ $response->error()->{error} } )
         {
@@ -88,12 +88,19 @@ sub new {
 }
 
 sub _check_old_exception_cases {
-    my ( $self, $parameters ) = @_;
+    my ( $self, $parameters, $options ) = @_;
     if (   ( $self->error()->{error} eq 'no such element' )
         || ( $self->error()->{message} =~ /^Unable[ ]to[ ]locate[ ]element/smx )
       )
     {
-        Firefox::Marionette::Exception::NotFound->throw( $self, $parameters );
+        if ( $options->{return_undef_if_no_such_element} ) {
+            $self->{ignored_exception} = 1;
+            return 1;
+        }
+        else {
+            Firefox::Marionette::Exception::NotFound->throw( $self,
+                $parameters );
+        }
     }
     elsif (
         ( $self->error()->{error} eq q[] )
@@ -108,6 +115,11 @@ sub _check_old_exception_cases {
             $parameters );
     }
     return;
+}
+
+sub ignored_exception {
+    my ($self) = @_;
+    return $self->{ignored_exception};
 }
 
 sub type {
@@ -185,6 +197,10 @@ returns the error of the response or undef.
 =head2 result
 
 returns the result value.
+
+=head2 ignored_exception
+
+returns if the response should have generated an exception but was instructed not to.
 
 =head1 DIAGNOSTICS
 

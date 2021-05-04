@@ -1,11 +1,14 @@
 NAME
+
     Firefox::Marionette - Automate the Firefox browser with the Marionette
     protocol
 
 VERSION
+
     Version 1.03
 
 SYNOPSIS
+
         use Firefox::Marionette();
         use v5.10;
 
@@ -26,16 +29,19 @@ SYNOPSIS
         $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
 DESCRIPTION
+
     This is a client module to automate the Mozilla Firefox browser via the
     Marionette protocol
-    <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
-    >
+    <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol>
 
 SUBROUTINES/METHODS
-  accept_alert
+
+ accept_alert
+
     accepts a currently displayed modal message box
 
-  accept_connections
+ accept_connections
+
     Enables or disables accepting new socket connections. By calling this
     method with false the server will not accept any further connections,
     but existing connections will not be forcible closed. Use true to
@@ -44,26 +50,28 @@ SUBROUTINES/METHODS
     Please note that when closing the connection via the client you can
     end-up in a non-recoverable state if it hasn't been enabled before.
 
-  active_element
+ active_element
+
     returns the active element of the current browsing context's document
     element, if the document element is non-null.
 
-  add_cookie
-    accepts a single cookie object as the first parameter and adds it to the
-    current cookie jar. This method returns itself to aid in chaining
+ add_cookie
+
+    accepts a single cookie object as the first parameter and adds it to
+    the current cookie jar. This method returns itself to aid in chaining
     methods.
 
     This method throws an exception if you try to add a cookie for a
     different domain than the current document
-    <https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/InvalidCo
-    okieDomain>.
+    <https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/InvalidCookieDomain>.
 
-  add_header
+ add_header
+
     accepts a hash of HTTP headers to include in every future HTTP Request.
 
         use Firefox::Marionette();
         use UUID();
-
+    
         my $firefox = Firefox::Marionette->new();
         my $uuid = UUID::uuid();
         $firefox->add_header( 'Track-my-automated-tests' => $uuid );
@@ -73,30 +81,31 @@ SUBROUTINES/METHODS
     the delete_header method
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->delete_header( 'Accept' )->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
     will only send out an Accept
     <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept>
-    header that looks like "Accept: text/perl".
+    header that looks like Accept: text/perl.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->add_header( 'Accept' => 'text/perl' )->go('https://metacpan.org/');
 
     by itself, will send out an Accept
     <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept>
-    header that may resemble "Accept:
-    text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0
-    .8, text/perl". This method returns itself to aid in chaining methods.
+    header that may resemble Accept:
+    text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8,
+    text/perl. This method returns itself to aid in chaining methods.
 
-  add_site_header
+ add_site_header
+
     accepts a host name and a hash of HTTP headers to include in every
     future HTTP Request that is being sent to that particular host.
 
         use Firefox::Marionette();
         use UUID();
-
+    
         my $firefox = Firefox::Marionette->new();
         my $uuid = UUID::uuid();
         $firefox->add_site_header( 'metacpan.org', 'Track-my-automated-tests' => $uuid );
@@ -106,71 +115,81 @@ SUBROUTINES/METHODS
     metacpan.org site, but no other site. To clear site headers, see the
     delete_site_header method
 
-  addons
+ addons
+
     returns if pre-existing addons (extensions/themes) are allowed to run.
     This will be true for Firefox versions less than 55, as -safe-mode
     cannot be automated.
 
-  alert_text
+ alert_text
+
     Returns the message shown in a currently displayed modal message box
 
-  alive
-    This method returns true or false depending on if the Firefox process is
-    still running.
+ alive
 
-  application_type
+    This method returns true or false depending on if the Firefox process
+    is still running.
+
+ application_type
+
     returns the application type for the Marionette protocol. Should be
     'gecko'.
 
-  async_script
+ async_script
+
     accepts a scalar containing a javascript function that is executed in
     the browser. This method returns itself to aid in chaining methods.
 
     The executing javascript is subject to the script timeout, which, by
     default is 30 seconds.
 
-  attribute
-    accepts an element as the first parameter and a scalar attribute name as
-    the second parameter. It returns the initial value of the attribute with
-    the supplied name. This method will return the initial content, the
-    property method will return the current content.
+ attribute
+
+    accepts an element as the first parameter and a scalar attribute name
+    as the second parameter. It returns the initial value of the attribute
+    with the supplied name. This method will return the initial content,
+    the property method will return the current content.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         my $element = $firefox->find_id('search_input');
         !defined $element->attribute('value') or die "attribute is not defined!");
         $element->type('Test::More');
         !defined $element->attribute('value') or die "attribute is still not defined!");
 
-  await
+ await
+
     accepts a subroutine reference as a parameter and then executes the
     subroutine. If a not found exception is thrown, this method will sleep
-    for sleep_time_in_ms milliseconds and then execute the subroutine again.
-    When the subroutine executes successfully, it will return what the
-    subroutine returns.
+    for sleep_time_in_ms milliseconds and then execute the subroutine
+    again. When the subroutine executes successfully, it will return what
+    the subroutine returns.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5)->go('https://metacpan.org/');
-
+    
         $firefox->find_id('search-input')->type('Test::More');
-
+    
         $firefox->find_name('lucky')->click();
-
+    
         $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
-  back
-    causes the browser to traverse one step backward in the joint history of
-    the current browsing context. The browser will wait for the one step
+ back
+
+    causes the browser to traverse one step backward in the joint history
+    of the current browsing context. The browser will wait for the one step
     backward to complete or the session's page_load duration to elapse
     before returning, which, by default is 5 minutes. This method returns
     itself to aid in chaining methods.
 
-  browser_version
+ browser_version
+
     This method returns version of firefox.
 
-  bye
+ bye
+
     accepts a subroutine reference as a parameter and then executes the
     subroutine. If the subroutine executes successfully, this method will
     sleep for sleep_time_in_ms milliseconds and then execute the subroutine
@@ -178,38 +197,44 @@ SUBROUTINES/METHODS
     itself to aid in chaining methods.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         $firefox->find_id('search-input')->type('Test::More');
-
+    
         $firefox->find_name('lucky')->click();
-
+    
         $firefox->bye(sub { $firefox->find_name('lucky') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
-  capabilities
-    returns the capabilities of the current firefox binary. You can retrieve
-    timeouts or a proxy with this method.
+ capabilities
 
-  child_error
+    returns the capabilities of the current firefox binary. You can
+    retrieve timeouts or a proxy with this method.
+
+ child_error
+
     This method returns the $? (CHILD_ERROR) for the Firefox process, or
     undefined if the process has not yet exited.
 
-  chrome_window_handle
-    returns an server-assigned integer identifiers for the current chrome
-    window that uniquely identifies it within this Marionette instance. This
-    can be used to switch to this window at a later point. This corresponds
-    to a window that may itself contain tabs.
+ chrome_window_handle
 
-  chrome_window_handles
+    returns an server-assigned integer identifiers for the current chrome
+    window that uniquely identifies it within this Marionette instance.
+    This can be used to switch to this window at a later point. This
+    corresponds to a window that may itself contain tabs.
+
+ chrome_window_handles
+
     returns identifiers for each open chrome window for tests interested in
     managing a set of chrome windows and tabs separately.
 
-  clear
+ clear
+
     accepts a element as the first parameter and clears any user supplied
     input
 
-  click
+ click
+
     accepts a element as the first parameter and sends a 'click' to it. The
     browser will wait for any page load to complete or the session's
     page_load duration to elapse before returning, which, by default is 5
@@ -217,7 +242,7 @@ SUBROUTINES/METHODS
     dropdown.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new(visible => 1)->go('https://ebay.com');
         my $select = $firefox->find_tag('select');
         foreach my $option ($select->find_tag('option')) {
@@ -226,34 +251,38 @@ SUBROUTINES/METHODS
             }
         }
 
-  close_current_chrome_window_handle
+ close_current_chrome_window_handle
+
     closes the current chrome window (that is the entire window, not just
     the tabs). It returns a list of still available chrome window handles.
     You will need to switch_to_window to use another window.
 
-  close_current_window_handle
+ close_current_window_handle
+
     closes the current window/tab. It returns a list of still available
     window/tab handles.
 
-  context
+ context
+
     accepts a string as the first parameter, which may be either 'content'
     or 'chrome'. It returns the context type that is Marionette's current
     target for browsing context scoped commands.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new();
         my $old_context = $firefox->context('chrome');
         $firefox->script(...); # running script in chrome context
         $firefox->context($old_context);
 
-  cookies
+ cookies
+
     returns the contents of the cookie jar in scalar or list context.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://github.com');
         foreach my $cookie ($firefox->cookies()) {
             if (defined $cookie->same_site()) {
@@ -263,27 +292,30 @@ SUBROUTINES/METHODS
             }
         }
 
-  css
-    accepts an element as the first parameter and a scalar CSS property name
-    as the second parameter. It returns the value of the computed style for
-    that property.
+ css
+
+    accepts an element as the first parameter and a scalar CSS property
+    name as the second parameter. It returns the value of the computed
+    style for that property.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         say $firefox->find_id('search-input')->css('height');
 
-  current_chrome_window_handle
+ current_chrome_window_handle
+
     see chrome_window_handle.
 
-  delete_cookie
+ delete_cookie
+
     deletes a single cookie by name. Accepts a scalar containing the cookie
     name as a parameter. This method returns itself to aid in chaining
     methods.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://github.com');
         foreach my $cookie ($firefox->cookies()) {
             warn "Cookie " . $cookie->name() . " is being deleted";
@@ -293,15 +325,18 @@ SUBROUTINES/METHODS
             die "Should be no cookies here now";
         }
 
-  delete_cookies
+ delete_cookies
+
     here be cookie monsters! This method returns itself to aid in chaining
     methods.
 
-  delete_header
-    accepts a list of HTTP header names to delete from future HTTP Requests.
+ delete_header
+
+    accepts a list of HTTP header names to delete from future HTTP
+    Requests.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new();
         $firefox->delete_header( 'User-Agent', 'Accept', 'Accept-Encoding' );
 
@@ -310,20 +345,22 @@ SUBROUTINES/METHODS
     Accept
     <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> and
     Accept-Encoding
-    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encodi
-    ng> headers from all future requests
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding>
+    headers from all future requests
 
     This method returns itself to aid in chaining methods.
 
-  delete_session
+ delete_session
+
     deletes the current WebDriver session.
 
-  delete_site_header
+ delete_site_header
+
     accepts a host name and a list of HTTP headers names to delete from
     future HTTP Requests.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new();
         $firefox->delete_header( 'metacpan.org', 'User-Agent', 'Accept', 'Accept-Encoding' );
 
@@ -332,121 +369,132 @@ SUBROUTINES/METHODS
     Accept
     <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> and
     Accept-Encoding
-    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encodi
-    ng> headers from all future requests to metacpan.org.
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding>
+    headers from all future requests to metacpan.org.
 
     This method returns itself to aid in chaining methods.
 
-  developer
+ developer
+
     returns true if the current version of firefox is a developer edition
     <https://www.mozilla.org/en-US/firefox/developer/> (does the minor
     version number end with an 'b\d+'?) version.
 
-  dismiss_alert
+ dismiss_alert
+
     dismisses a currently displayed modal message box
 
-  download
+ download
+
     accepts a filesystem path and returns a matching filehandle. This is
-    trivial for locally running firefox, but sufficiently complex to justify
-    the method for a remote firefox running over ssh.
+    trivial for locally running firefox, but sufficiently complex to
+    justify the method for a remote firefox running over ssh.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new( host => '10.1.2.3' )->go('https://metacpan.org/');
-
+    
         $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
-
+    
         $firefox->find('//button[@name="lucky"]')->click();
-
+    
         $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
-
+    
         while(!$firefox->downloads()) { sleep 1 }
-
+    
         foreach my $path ($firefox->downloads()) {
-
+    
             my $handle = $firefox->download($path);
-
+    
             # do something with downloaded file handle
-
+    
         }
 
-  downloading
-    returns true if any files in downloads end in ".part"
+ downloading
+
+    returns true if any files in downloads end in .part
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
-
+    
         $firefox->find('//button[@name="lucky"]')->click();
-
+    
         $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
-
+    
         while(!$firefox->downloads()) { sleep 1 }
-
+    
         while($firefox->downloading()) { sleep 1 }
-
+    
         foreach my $path ($firefox->downloads()) {
             say $path;
         }
 
-  downloads
+ downloads
+
     returns a list of file paths (including partial downloads) of downloads
     during this Firefox session.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
-
+    
         $firefox->find('//button[@name="lucky"]')->click();
-
+    
         $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
-
+    
         while(!$firefox->downloads()) { sleep 1 }
-
+    
         foreach my $path ($firefox->downloads()) {
             say $path;
         }
 
-  error_message
+ error_message
+
     This method returns a human readable error message describing how the
     Firefox process exited (assuming it started okay). On Win32 platforms
     this information is restricted to exit code.
 
-  execute
-    This utility method executes a command with arguments and returns STDOUT
-    as a chomped string. It is a simple method only intended for the
+ execute
+
+    This utility method executes a command with arguments and returns
+    STDOUT as a chomped string. It is a simple method only intended for the
     Firefox::Marionette::* modules.
 
-  find
-    accepts an xpath expression <https://en.wikipedia.org/wiki/XPath> as the
-    first parameter and returns the first element that matches this
+ find
+
+    accepts an xpath expression <https://en.wikipedia.org/wiki/XPath> as
+    the first parameter and returns the first element that matches this
     expression.
 
     This method is subject to the implicit timeout, which, by default is 0
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         $firefox->find('//input[@id="search-input"]')->type('Test::More');
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find('//input[@id="search-input"]')) {
             $element->type('Test::More');
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has method.
 
-  find_id
+ find_id
+
     accepts an id
     <https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id>
     as the first parameter and returns the first element with a matching
@@ -456,61 +504,70 @@ SUBROUTINES/METHODS
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         $firefox->find_id('search-input')->type('Test::More');
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_id('search-input')) {
             $element->type('Test::More');
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_id method.
 
-  find_name
+ find_name
+
     This method returns the first element with a matching 'name' property.
 
     This method is subject to the implicit timeout, which, by default is 0
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_name('q')->type('Test::More');
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_name('q')) {
             $element->type('Test::More');
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_name method.
 
-  find_class
+ find_class
+
     accepts a class name
-    <https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/cla
-    ss> as the first parameter and returns the first element with a matching
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class>
+    as the first parameter and returns the first element with a matching
     'class' property.
 
     This method is subject to the implicit timeout, which, by default is 0
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_class('form-control home-search-input')->type('Test::More');
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_class('form-control home-search-input')) {
             $element->type('Test::More');
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_class method.
 
-  find_selector
+ find_selector
+
     accepts a CSS Selector
     <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors> as the
     first parameter and returns the first element that matches that
@@ -520,19 +577,22 @@ SUBROUTINES/METHODS
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_selector('input.home-search-input')->type('Test::More');
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_selector('input.home-search-input')) {
             $element->type('Test::More');
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_selector method.
 
-  find_tag
+ find_tag
+
     accepts a tag name
     <https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName> as
     the first parameter and returns the first element with this tag name.
@@ -541,19 +601,22 @@ SUBROUTINES/METHODS
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         my $element = $firefox->find_tag('input');
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_tag('input')) {
             # do something
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_tag method.
 
-  find_link
+ find_link
+
     accepts a text string as the first parameter and returns the first link
     element that has a matching link text.
 
@@ -561,19 +624,22 @@ SUBROUTINES/METHODS
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_link('API')->click();
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_link('API')) {
             $element->click();
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_link method.
 
-  find_partial
+ find_partial
+
     accepts a text string as the first parameter and returns the first link
     element that has a partially matching link text.
 
@@ -581,36 +647,41 @@ SUBROUTINES/METHODS
     seconds.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_partial('AP')->click();
-
+    
         # OR in list context 
-
+    
         foreach my $element ($firefox->find_partial('AP')) {
             $element->click();
         }
 
-    If no elements are found, a not found exception will be thrown.
+    If no elements are found, a not found exception will be thrown. For the
+    same functionality that returns undef if no elements are found, see the
+    has_partial method.
 
-  forward
+ forward
+
     causes the browser to traverse one step forward in the joint history of
     the current browsing context. The browser will wait for the one step
-    forward to complete or the session's page_load duration to elapse before
-    returning, which, by default is 5 minutes. This method returns itself to
-    aid in chaining methods.
+    forward to complete or the session's page_load duration to elapse
+    before returning, which, by default is 5 minutes. This method returns
+    itself to aid in chaining methods.
 
-  full_screen
+ full_screen
+
     full screens the firefox window. This method returns itself to aid in
     chaining methods.
 
-  go
+ go
+
     Navigates the current browsing context to the given URI and waits for
     the document to load or the session's page_load duration to elapse
     before returning, which, by default is 5 minutes.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new();
         $firefox->go('https://metacpan.org/'); # will only return when metacpan.org is FULLY loaded (including all images / js / css)
 
@@ -618,13 +689,14 @@ SUBROUTINES/METHODS
     strategy capability to an appropriate value, such as below;
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'eager' ));
         $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
     This method returns itself to aid in chaining methods.
 
-  har
+ har
+
     returns a hashref representing the http archive
     <https://en.wikipedia.org/wiki/HAR_(file_format)> of the session. This
     function is subject to the script timeout, which, by default is 30
@@ -637,89 +709,249 @@ SUBROUTINES/METHODS
         use Firefox::Marionette();
         use Archive::Har();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new(visible => 1, debug => 1, har => 1);
-
+    
         $firefox->go("http://metacpan.org/");
-
+    
         $firefox->find('//input[@id="search-input"]')->type('Test::More');
         $firefox->find_name('lucky')->click();
-
+    
         my $har = Archive::Har->new();
         $har->hashref($firefox->har());
-
+    
         foreach my $entry ($har->entries()) {
             say $entry->request()->url() . " spent " . $entry->timings()->connect() . " ms establishing a TCP connection";
         }
 
-  html
-    returns the page source of the content document. This page source can be
-    wrapped in html that firefox provides. See the json method for an
+ has
+
+    accepts an xpath expression <https://en.wikipedia.org/wiki/XPath> as
+    the first parameter and returns the first element that matches this
+    expression.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    
+        if (my $element = $firefox->has('//input[@id="search-input"]')) {
+            $element->type('Test::More');
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find method.
+
+ has_id
+
+    accepts an id
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id>
+    as the first parameter and returns the first element with a matching
+    'id' property.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    
+        if (my $element = $firefox->has_id('search-input')) {
+            $element->type('Test::More');
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_id
+    method.
+
+ has_name
+
+    This method returns the first element with a matching 'name' property.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->has_name('q')) {
+            $element->type('Test::More');
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_name
+    method.
+
+ has_class
+
+    accepts a class name
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class>
+    as the first parameter and returns the first element with a matching
+    'class' property.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->has_class('form-control home-search-input')) {
+            $element->type('Test::More');
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_class
+    method.
+
+ has_selector
+
+    accepts a CSS Selector
+    <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors> as the
+    first parameter and returns the first element that matches that
+    selector.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->has_selector('input.home-search-input')) {
+            $element->type('Test::More');
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_selector
+    method.
+
+ has_tag
+
+    accepts a tag name
+    <https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName> as
+    the first parameter and returns the first element with this tag name.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->has_tag('input')) {
+            # do something
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_tag
+    method.
+
+ has_link
+
+    accepts a text string as the first parameter and returns the first link
+    element that has a matching link text.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->has_link('API')) {
+            $element->click();
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_link
+    method.
+
+ has_partial
+
+    accepts a text string as the first parameter and returns the first link
+    element that has a partially matching link text.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->find_partial('AP')) {
+            $element->click();
+        }
+
+    If no elements are found, this method will return undef. For the same
+    functionality that throws a not found exception, see the find_partial
+    method.
+
+ html
+
+    returns the page source of the content document. This page source can
+    be wrapped in html that firefox provides. See the json method for an
     alternative when dealing with response content types such as
     application/json and strip for an alterative when dealing with other
     non-html content types such as text/plain.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         say Firefox::Marionette->new()->go('https://metacpan.org/')->html();
 
-  install
+ install
+
     accepts the following as the first parameter;
 
-    *   path to an xpi file
-        <https://developer.mozilla.org/en-US/docs/Mozilla/XPI>.
+      * path to an xpi file
+      <https://developer.mozilla.org/en-US/docs/Mozilla/XPI>.
 
-    *   path to a directory containing firefox extension source code
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensi
-        ons/Your_first_WebExtension>. This directory will be packaged up as
-        an unsigned xpi file.
+      * path to a directory containing firefox extension source code
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension>.
+      This directory will be packaged up as an unsigned xpi file.
 
-    *   path to a top level file (such as manifest.json
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensi
-        ons/Anatomy_of_a_WebExtension#manifest.json>) in a directory
-        containing firefox extension source code
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensi
-        ons/Your_first_WebExtension>. This directory will be packaged up as
-        an unsigned xpi file.
+      * path to a top level file (such as manifest.json
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#manifest.json>)
+      in a directory containing firefox extension source code
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension>.
+      This directory will be packaged up as an unsigned xpi file.
 
     and an optional true/false second parameter to indicate if the xpi file
     should be a temporary extension
-    <https://extensionworkshop.com/documentation/develop/temporary-installat
-    ion-in-firefox/> (just for the existance of this browser instance).
-    Unsigned xpi files may only be loaded temporarily
-    <https://wiki.mozilla.org/Add-ons/Extension_Signing> (except for nightly
-    firefox installations
+    <https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/>
+    (just for the existance of this browser instance). Unsigned xpi files
+    may only be loaded temporarily
+    <https://wiki.mozilla.org/Add-ons/Extension_Signing> (except for
+    nightly firefox installations
     <https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly>). It
     returns the GUID for the addon which may be used as a parameter to the
     uninstall method.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new();
-
+    
         my $extension_id = $firefox->install('/full/path/to/gnu_terry_pratchett-0.4-an+fx.xpi');
-
+    
         # OR downloading and installing source code
-
+    
         system { 'git' } 'git', 'clone', 'https://github.com/kkapsner/CanvasBlocker.git';
-
+    
         if ($firefox->nightly()) {
-
+    
             $extension_id = $firefox->install('./CanvasBlocker'); # permanent install for unsigned packages in nightly firefox
-
+    
         } else {
-
+    
             $extension_id = $firefox->install('./CanvasBlocker', 1); # temp install for normal firefox
-
+    
         }
 
-  interactive
-    returns true if "document.readyState === "interactive"" or if loaded is
+ interactive
+
+    returns true if document.readyState === "interactive" or if loaded is
     true
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_id('search_input')->type('Type::More');
         $firefox->find('//button[@name="lucky"]')->click();
@@ -727,33 +959,38 @@ SUBROUTINES/METHODS
             # redirecting to Test::More page
         }
 
-  is_displayed
+ is_displayed
+
     accepts an element as the first parameter. This method returns true or
     false depending on if the element is displayed.
 
-  is_enabled
+ is_enabled
+
     accepts an element as the first parameter. This method returns true or
     false depending on if the element is enabled.
 
-  is_selected
+ is_selected
+
     accepts an element as the first parameter. This method returns true or
     false depending on if the element is selected.
 
-  json
+ json
+
     returns a JSON object that has been parsed from the page source of the
     content document. This is a convenience method that wraps the strip
     method.
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         say Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->json()->{version};
 
-  loaded
-    returns true if "document.readyState === "complete""
+ loaded
+
+    returns true if document.readyState === "complete"
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_id('search_input')->type('Type::More');
         $firefox->find('//button[@name="lucky"]')->click();
@@ -761,174 +998,179 @@ SUBROUTINES/METHODS
             # redirecting to Test::More page
         }
 
-  marionette_protocol
+ marionette_protocol
+
     returns the version for the Marionette protocol. Current most recent
     version is '3'.
 
-  maximise
+ maximise
+
     maximises the firefox window. This method returns itself to aid in
     chaining methods.
 
-  mime_types
-    returns a list of MIME types that will be downloaded by firefox and made
-    available from the downloads method
+ mime_types
+
+    returns a list of MIME types that will be downloaded by firefox and
+    made available from the downloads method
 
         use Firefox::Marionette();
         use v5.10;
-
+    
         my $firefox = Firefox::Marionette->new(mime_types => [ 'application/pkcs10' ])
-
+    
         foreach my $mime_type ($firefox->mime_types()) {
             say $mime_type;
         }
 
-  minimise
+ minimise
+
     minimises the firefox window. This method returns itself to aid in
     chaining methods.
 
-  new
+ new
+
     accepts an optional hash as a parameter. Allowed keys are below;
 
-    *   addons - should any firefox extensions and themes be available in
-        this session. This defaults to "0".
+      * addons - should any firefox extensions and themes be available in
+      this session. This defaults to "0".
 
-    *   capabilities - use the supplied capabilities object, for example to
-        set whether the browser should accept insecure certs or whether the
-        browser should use a proxy.
+      * capabilities - use the supplied capabilities object, for example to
+      set whether the browser should accept insecure certs or whether the
+      browser should use a proxy.
 
-    *   chatty - Firefox is extremely chatty on the network, including
-        checking for the lastest malware/phishing sites, updates to
-        firefox/etc. This option is therefore off ("0") by default, however,
-        it can be switched on ("1") if required. Even with chatty switched
-        off, connections to firefox.settings.services.mozilla.com will still
-        be made <https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.
-        The only way to prevent this seems to be to set
-        firefox.settings.services.mozilla.com to 127.0.0.1 via /etc/hosts
-        <https://en.wikipedia.org/wiki//etc/hosts>. NOTE: that this option
-        only works when profile_name/profile is not specified.
+      * chatty - Firefox is extremely chatty on the network, including
+      checking for the lastest malware/phishing sites, updates to
+      firefox/etc. This option is therefore off ("0") by default, however,
+      it can be switched on ("1") if required. Even with chatty switched
+      off, connections to firefox.settings.services.mozilla.com will still
+      be made <https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.
+      The only way to prevent this seems to be to set
+      firefox.settings.services.mozilla.com to 127.0.0.1 via /etc/hosts
+      <https://en.wikipedia.org/wiki//etc/hosts>. NOTE: that this option
+      only works when profile_name/profile is not specified.
 
-    *   console - show the browser console
-        <https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/>
-        when the browser is launched.
+      * console - show the browser console
+      <https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/>
+      when the browser is launched.
 
-    *   debug - should firefox's debug to be available via STDERR. This
-        defaults to "0". Any ssh connections will also be printed to STDERR.
+      * debug - should firefox's debug to be available via STDERR. This
+      defaults to "0". Any ssh connections will also be printed to STDERR.
 
-    *   developer - only allow a developer edition
-        <https://www.mozilla.org/en-US/firefox/developer/> to be launched.
+      * developer - only allow a developer edition
+      <https://www.mozilla.org/en-US/firefox/developer/> to be launched.
 
-    *   firefox - use the specified path to the Firefox
-        <https://firefox.org/> binary, rather than the default path.
+      * firefox - use the specified path to the Firefox
+      <https://firefox.org/> binary, rather than the default path.
 
-    *   height - set the height
-        <http://kb.mozillazine.org/Command_line_arguments#List_of_command_li
-        ne_arguments_.28incomplete.29> of the initial firefox window
+      * height - set the height
+      <http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
+      of the initial firefox window
 
-    *   har - begin the session with the devtools
-        <https://developer.mozilla.org/en-US/docs/Tools> window opened in a
-        separate window. The HAR Export Trigger
-        <https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/>
-        addon will be loaded into the new session automatically, which means
-        that -safe-mode will not be activated for this session AND this
-        functionality will only be available for Firefox 61+.
+      * har - begin the session with the devtools
+      <https://developer.mozilla.org/en-US/docs/Tools> window opened in a
+      separate window. The HAR Export Trigger
+      <https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/>
+      addon will be loaded into the new session automatically, which means
+      that -safe-mode will not be activated for this session AND this
+      functionality will only be available for Firefox 61+.
 
-    *   host - use ssh <https://man.openbsd.org/ssh.1> to create and
-        automate firefox on the specified host. See REMOTE AUTOMATION OF
-        FIREFOX VIA SSH.
+      * host - use ssh <https://man.openbsd.org/ssh.1> to create and
+      automate firefox on the specified host. See REMOTE AUTOMATION OF
+      FIREFOX VIA SSH.
 
-    *   implicit - a shortcut to allow directly providing the implicit
-        timeout, instead of needing to use timeouts from the capabilities
-        parameter. Overrides all longer ways.
+      * implicit - a shortcut to allow directly providing the implicit
+      timeout, instead of needing to use timeouts from the capabilities
+      parameter. Overrides all longer ways.
 
-    *   mime_types - any MIME types that Firefox will encounter during this
-        session. MIME types that are not specified will result in a hung
-        browser (the File Download popup will appear).
+      * mime_types - any MIME types that Firefox will encounter during this
+      session. MIME types that are not specified will result in a hung
+      browser (the File Download popup will appear).
 
-    *   nightly - only allow a nightly release
-        <https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> to
-        be launched.
+      * nightly - only allow a nightly release
+      <https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> to
+      be launched.
 
-    *   port - if the "host" parameter is also set, use ssh
-        <https://man.openbsd.org/ssh.1> to create and automate firefox via
-        the specified port. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
+      * port - if the "host" parameter is also set, use ssh
+      <https://man.openbsd.org/ssh.1> to create and automate firefox via
+      the specified port. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
 
-    *   page_load - a shortcut to allow directly providing the page_load
-        timeout, instead of needing to use timeouts from the capabilities
-        parameter. Overrides all longer ways.
+      * page_load - a shortcut to allow directly providing the page_load
+      timeout, instead of needing to use timeouts from the capabilities
+      parameter. Overrides all longer ways.
 
-    *   profile - create a new profile based on the supplied profile. NOTE:
-        firefox ignores any changes made to the profile on the disk while it
-        is running.
+      * profile - create a new profile based on the supplied profile. NOTE:
+      firefox ignores any changes made to the profile on the disk while it
+      is running.
 
-    *   profile_name - pick a specific existing profile to automate, rather
-        than creating a new profile. Firefox <https://firefox.com> refuses
-        to allow more than one instance of a profile to run at the same
-        time. Profile names can be obtained by using the
-        Firefox::Marionette::Profile::names() method. NOTE: firefox ignores
-        any changes made to the profile on the disk while it is running.
+      * profile_name - pick a specific existing profile to automate, rather
+      than creating a new profile. Firefox <https://firefox.com> refuses to
+      allow more than one instance of a profile to run at the same time.
+      Profile names can be obtained by using the
+      Firefox::Marionette::Profile::names() method. NOTE: firefox ignores
+      any changes made to the profile on the disk while it is running.
 
-    *   reconnect - an experimental parameter to allow a reconnection to
-        firefox that a connection has been discontinued. See the survive
-        parameter.
+      * reconnect - an experimental parameter to allow a reconnection to
+      firefox that a connection has been discontinued. See the survive
+      parameter.
 
-    *   script - a shortcut to allow directly providing the script timeout,
-        instead of needing to use timeouts from the capabilities parameter.
-        Overrides all longer ways.
+      * script - a shortcut to allow directly providing the script timeout,
+      instead of needing to use timeouts from the capabilities parameter.
+      Overrides all longer ways.
 
-    *   seer - this option is switched off "0" by default. When it is
-        switched on "1", it will activate the various speculative and
-        pre-fetch options for firefox. NOTE: that this option only works
-        when profile_name/profile is not specified.
+      * seer - this option is switched off "0" by default. When it is
+      switched on "1", it will activate the various speculative and
+      pre-fetch options for firefox. NOTE: that this option only works when
+      profile_name/profile is not specified.
 
-    *   sleep_time_in_ms - the amount of time (in milliseconds) that this
-        module should sleep when unsuccessfully calling the subroutine
-        provided to the await or bye methods. This defaults to "1"
-        millisecond.
+      * sleep_time_in_ms - the amount of time (in milliseconds) that this
+      module should sleep when unsuccessfully calling the subroutine
+      provided to the await or bye methods. This defaults to "1"
+      millisecond.
 
-    *   survive - if this is set to a true value, firefox will not
-        automatically exit when the object goes out of scope. See the
-        reconnect parameter for an experimental technique for reconnecting.
+      * survive - if this is set to a true value, firefox will not
+      automatically exit when the object goes out of scope. See the
+      reconnect parameter for an experimental technique for reconnecting.
 
-    *   trust - give a path to a root certificate
-        <https://en.wikipedia.org/wiki/Root_certificate> that will be
-        trusted for this session. The certificate will be imported by the
-        NSS certutil
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools
-        /NSS_Tools_certutil> binary. If this binary does not exist in the
-        PATH <https://en.wikipedia.org/wiki/PATH_(variable)>, an exception
-        will be thrown. For Linux/BSD systems, NSS certutil
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools
-        /NSS_Tools_certutil> should be available via your package manager.
-        For OS X and Windows based platforms, it will be more difficult.
+      * trust - give a path to a root certificate
+      <https://en.wikipedia.org/wiki/Root_certificate> that will be trusted
+      for this session. The certificate will be imported by the NSS
+      certutil
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil>
+      binary. If this binary does not exist in the PATH
+      <https://en.wikipedia.org/wiki/PATH_(variable)>, an exception will be
+      thrown. For Linux/BSD systems, NSS certutil should be available via
+      your package manager. For OS X and Windows based platforms, it will
+      be more difficult.
 
-    *   timeouts - a shortcut to allow directly providing a timeout object,
-        instead of needing to use timeouts from the capabilities parameter.
-        Overrides the timeouts provided (if any) in the capabilities
-        parameter.
+      * timeouts - a shortcut to allow directly providing a timeout object,
+      instead of needing to use timeouts from the capabilities parameter.
+      Overrides the timeouts provided (if any) in the capabilities
+      parameter.
 
-    *   port - if the "host" parameter is also set, use ssh
-        <https://man.openbsd.org/ssh.1> to create and automate firefox with
-        the specified user. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
+      * port - if the "host" parameter is also set, use ssh
+      <https://man.openbsd.org/ssh.1> to create and automate firefox with
+      the specified user. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
 
-    *   visible - should firefox be visible on the desktop. This defaults to
-        "0".
+      * visible - should firefox be visible on the desktop. This defaults
+      to "0".
 
-    *   waterfox - only allow a binary that looks like a waterfox version
-        <https://www.waterfox.net/> to be launched.
+      * waterfox - only allow a binary that looks like a waterfox version
+      <https://www.waterfox.net/> to be launched.
 
-    *   width - set the width
-        <http://kb.mozillazine.org/Command_line_arguments#List_of_command_li
-        ne_arguments_.28incomplete.29> of the initial firefox window
+      * width - set the width
+      <http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
+      of the initial firefox window
 
-    This method returns a new "Firefox::Marionette" object, connected to an
+    This method returns a new Firefox::Marionette object, connected to an
     instance of firefox <https://firefox.com>. In a non MacOS/Win32/Cygwin
     environment, if necessary (no DISPLAY variable can be found and the
     visible parameter to the new method has been set to true) and possible
-    (Xvfb can be executed successfully), this method will also automatically
-    start an Xvfb <https://en.wikipedia.org/wiki/Xvfb> instance.
+    (Xvfb can be executed successfully), this method will also
+    automatically start an Xvfb <https://en.wikipedia.org/wiki/Xvfb>
+    instance.
 
         use Firefox::Marionette();
-
+    
         my $remote_darwin_firefox = Firefox::Marionette->new(
                          debug => 1,
                          host => '10.1.2.3',
@@ -936,84 +1178,89 @@ SUBROUTINES/METHODS
                          firefox => '/Applications/Firefox.app/Contents/MacOS/firefox'
                                                             ); # start a temporary profile for a remote firefox and load a new CA into the temp profile
         ...
-
+    
         foreach my $profile_name (Firefox::Marionette::Profile->names()) {
             my $firefox_with_existing_profile = Firefox::Marionette->new( profile_name => $profile_name, visible => 1 );
             ...
         }
 
-  new_window
+ new_window
+
     accepts an optional hash as the parameter. Allowed keys are below;
 
-    *   focus - a boolean field representing if the new window be opened in
-        the foreground (focused) or background (not focused). Defaults to
-        false.
+      * focus - a boolean field representing if the new window be opened in
+      the foreground (focused) or background (not focused). Defaults to
+      false.
 
-    *   private - a boolean field representing if the new window should be a
-        private window. Defaults to false.
+      * private - a boolean field representing if the new window should be
+      a private window. Defaults to false.
 
-    *   type - the type of the new window. Can be one of 'tab' or 'window'.
-        Defaults to 'tab'.
+      * type - the type of the new window. Can be one of 'tab' or 'window'.
+      Defaults to 'tab'.
 
     Returns the window handle for the new window.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new();
-
+    
         my $window_handle = $firefox->new_window(type => 'tab');
-
+    
         $firefox->switch_to_window($window_handle);
 
-  new_session
-    creates a new WebDriver session. It is expected that the caller performs
-    the necessary checks on the requested capabilities to be WebDriver
-    conforming. The WebDriver service offered by Marionette does not match
-    or negotiate capabilities beyond type and bounds checks.
+ new_session
 
-  nightly
+    creates a new WebDriver session. It is expected that the caller
+    performs the necessary checks on the requested capabilities to be
+    WebDriver conforming. The WebDriver service offered by Marionette does
+    not match or negotiate capabilities beyond type and bounds checks.
+
+ nightly
+
     returns true if the current version of firefox is a nightly release
     <https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> (does
     the minor version number end with an 'a1'?)
 
-  paper_sizes
+ paper_sizes
+
     returns a list of all the recognised names for paper sizes, such as A4
     or LEGAL.
 
-  pdf
+ pdf
+
     returns a File::Temp object containing a PDF encoded version of the
     current page for printing.
 
     accepts a optional hash as the first parameter with the following
     allowed keys;
 
-    *   landscape - Paper orientation. Boolean value. Defaults to false
+      * landscape - Paper orientation. Boolean value. Defaults to false
 
-    *   margin - A hash describing the margins. The hash may have the
-        following optional keys, 'top', 'left', 'right' and 'bottom'. All
-        these keys are in cm and default to 1 (~0.4 inches)
+      * margin - A hash describing the margins. The hash may have the
+      following optional keys, 'top', 'left', 'right' and 'bottom'. All
+      these keys are in cm and default to 1 (~0.4 inches)
 
-    *   page - A hash describing the page. The hash may have the following
-        keys; 'height' and 'width'. Both keys are in cm and default to US
-        letter size. See the 'size' key.
+      * page - A hash describing the page. The hash may have the following
+      keys; 'height' and 'width'. Both keys are in cm and default to US
+      letter size. See the 'size' key.
 
-    *   print_background - Print background graphics. Boolean value.
-        Defaults to false.
+      * print_background - Print background graphics. Boolean value.
+      Defaults to false.
 
-    *   raw - rather than a file handle containing the PDF, the binary PDF
-        will be returned.
+      * raw - rather than a file handle containing the PDF, the binary PDF
+      will be returned.
 
-    *   scale - Scale of the webpage rendering. Defaults to 1.
+      * scale - Scale of the webpage rendering. Defaults to 1.
 
-    *   size - The desired size (width and height) of the pdf, specified by
-        name. See the page key for an alternative and the paper_sizes method
-        for a list of accepted page size names.
+      * size - The desired size (width and height) of the pdf, specified by
+      name. See the page key for an alternative and the paper_sizes method
+      for a list of accepted page size names.
 
-    *   shrink_to_fit - Whether or not to override page size as defined by
-        CSS. Boolean value. Defaults to true.
+      * shrink_to_fit - Whether or not to override page size as defined by
+      CSS. Boolean value. Defaults to true.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         my $handle = $firefox->pdf();
         foreach my $paper_size ($firefox->paper_sizes()) {
@@ -1023,91 +1270,98 @@ SUBROUTINES/METHODS
                 ...
         }
 
-  property
-    accepts an element as the first parameter and a scalar attribute name as
-    the second parameter. It returns the current value of the property with
-    the supplied name. This method will return the current content, the
-    attribute method will return the initial content.
+ property
+
+    accepts an element as the first parameter and a scalar attribute name
+    as the second parameter. It returns the current value of the property
+    with the supplied name. This method will return the current content,
+    the attribute method will return the initial content.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         my $element = $firefox->find_id('search_input');
         $element->property('value') eq '' or die "Initial property is the empty string";
         $element->type('Test::More');
         $element->property('value') eq 'Test::More' or die "This property should have changed!";
-
+    
         # OR getting the innerHTML property
-
+    
         my $title = $firefox->find_tag('title')->property('innerHTML'); # same as $firefox->title();
 
-  quit
-    Marionette will stop accepting new connections before ending the current
-    session, and finally attempting to quit the application. This method
-    returns the $? (CHILD_ERROR) value for the Firefox process
+ quit
 
-  rect
+    Marionette will stop accepting new connections before ending the
+    current session, and finally attempting to quit the application. This
+    method returns the $? (CHILD_ERROR) value for the Firefox process
+
+ rect
+
     accepts a element as the first parameter and returns the current
     position and size of the element
 
-  refresh
+ refresh
+
     refreshes the current page. The browser will wait for the page to
     completely refresh or the session's page_load duration to elapse before
-    returning, which, by default is 5 minutes. This method returns itself to
-    aid in chaining methods.
+    returning, which, by default is 5 minutes. This method returns itself
+    to aid in chaining methods.
 
-  screen_orientation
+ screen_orientation
+
     returns the current browser orientation. This will be one of the valid
     primary orientation values 'portrait-primary', 'landscape-primary',
     'portrait-secondary', or 'landscape-secondary'. This method is only
     currently available on Android (Fennec).
 
-  script
+ script
+
     accepts a scalar containing a javascript function body that is executed
-    in the browser, and an optional hash as a second parameter. Allowed keys
-    are below;
+    in the browser, and an optional hash as a second parameter. Allowed
+    keys are below;
 
-    *   args - The reference to a list is the arguments passed to the
-        function body.
+      * args - The reference to a list is the arguments passed to the
+      function body.
 
-    *   filename - Filename of the client's program where this script is
-        evaluated.
+      * filename - Filename of the client's program where this script is
+      evaluated.
 
-    *   line - Line in the client's program where this script is evaluated.
+      * line - Line in the client's program where this script is evaluated.
 
-    *   new - Forces the script to be evaluated in a fresh sandbox. Note
-        that if it is undefined, the script will normally be evaluted in a
-        fresh sandbox.
+      * new - Forces the script to be evaluated in a fresh sandbox. Note
+      that if it is undefined, the script will normally be evaluted in a
+      fresh sandbox.
 
-    *   sandbox - Name of the sandbox to evaluate the script in. The sandbox
-        is cached for later re-use on the same window
-        <https://developer.mozilla.org/en-US/docs/Web/API/Window> object if
-        "new" is false. If he parameter is undefined, the script is
-        evaluated in a mutable sandbox. If the parameter is "system", it
-        will be evaluted in a sandbox with elevated system privileges,
-        equivalent to chrome space.
+      * sandbox - Name of the sandbox to evaluate the script in. The
+      sandbox is cached for later re-use on the same window
+      <https://developer.mozilla.org/en-US/docs/Web/API/Window> object if
+      new is false. If he parameter is undefined, the script is evaluated
+      in a mutable sandbox. If the parameter is "system", it will be
+      evaluted in a sandbox with elevated system privileges, equivalent to
+      chrome space.
 
-    *   timeout - A timeout to override the default script timeout, which,
-        by default is 30 seconds.
+      * timeout - A timeout to override the default script timeout, which,
+      by default is 30 seconds.
 
     Returns the result of the javascript function.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
+    
         if ($firefox->script('return window.find("lucky");')) {
             # luckily!
         }
-
+    
         my $search_input = $firefox->find_by_id('search-input');
-
+    
         $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
     The executing javascript is subject to the script timeout, which, by
     default is 30 seconds.
 
-  selfie
+ selfie
+
     returns a File::Temp object containing a lossless PNG image screenshot.
     If an element is passed as a parameter, the screenshot will be
     restricted to the element.
@@ -1121,36 +1375,40 @@ SUBROUTINES/METHODS
     The parameters after the element parameter are taken to be a optional
     hash with the following allowed keys;
 
-    *   hash - return a SHA256 hex encoded digest of the PNG image rather
-        than the image itself
+      * hash - return a SHA256 hex encoded digest of the PNG image rather
+      than the image itself
 
-    *   full - take a screenshot of the whole document unless the first
-        element parameter has been supplied.
+      * full - take a screenshot of the whole document unless the first
+      element parameter has been supplied.
 
-    *   raw - rather than a file handle containing the screenshot, the
-        binary PNG image will be returned.
+      * raw - rather than a file handle containing the screenshot, the
+      binary PNG image will be returned.
 
-    *   scroll - scroll to the element supplied
+      * scroll - scroll to the element supplied
 
-    *   highlights - a reference to a list containing elements to draw a
-        highlight around. Not available in Firefox 70
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/7
-        0#WebDriver_conformance_Marionette> onwards.
+      * highlights - a reference to a list containing elements to draw a
+      highlight around. Not available in Firefox 70
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/70#WebDriver_conformance_Marionette>
+      onwards.
 
-  send_alert_text
-    sends keys to the input field of a currently displayed modal message box
+ send_alert_text
 
-  sleep_time_in_ms
+    sends keys to the input field of a currently displayed modal message
+    box
+
+ sleep_time_in_ms
+
     accepts a new time to sleep in await or bye methods and returns the
     previous time. The default time is "1" millisecond.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5); # setting default time to 5 milliseconds
-
+    
         my $old_time_in_ms = $firefox->sleep_time_in_ms(8); # setting default time to 8 milliseconds, returning 5 (milliseconds)
 
-  strip
+ strip
+
     returns the page source of the content document after an attempt has
     been made to remove typical firefox html wrappers of non html content
     types such as text/plain and application/json. See the json method for
@@ -1161,112 +1419,130 @@ SUBROUTINES/METHODS
         use Firefox::Marionette();
         use JSON();
         use v5.10;
-
+    
         say JSON::decode_json(Firefox::Marionette->new()->go("https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->strip())->{version};
 
     Note that this method will assume the bytes it receives from the html
     method are UTF-8 encoded and will translate accordingly, throwing an
     exception in the process if the bytes are not UTF-8 encoded.
 
-  switch_to_frame
+ switch_to_frame
+
     accepts a frame as a parameter and switches to it within the current
     window.
 
-  switch_to_parent_frame
+ switch_to_parent_frame
+
     set the current browsing context for future commands to the parent of
     the current browsing context
 
-  switch_to_window
-    accepts a window handle (either the result of window_handles or a window
-    name as a parameter and switches focus to this window.
+ switch_to_window
 
-  tag_name
-    accepts a Firefox::Marionette::Element object as the first parameter and
-    returns the relevant tag name. For example 'a' or 'input'.
+    accepts a window handle (either the result of window_handles or a
+    window name as a parameter and switches focus to this window.
 
-  text
+ tag_name
+
+    accepts a Firefox::Marionette::Element object as the first parameter
+    and returns the relevant tag name. For example 'a' or 'input'.
+
+ text
+
     accepts a element as the first parameter and returns the text that is
     contained by that element (if any)
 
-  timeouts
+ timeouts
+
     returns the current timeouts for page loading, searching, and scripts.
 
-  title
+ title
+
     returns the current title of the window.
 
-  type
+ type
+
     accepts an element as the first parameter and a string as the second
     parameter. It sends the string to the specified element in the current
     page, such as filling out a text box. This method returns itself to aid
     in chaining methods.
 
-  uninstall
+ uninstall
+
     accepts the GUID for the addon to uninstall. The GUID is returned when
     from the install method. This method returns itself to aid in chaining
     methods.
 
         use Firefox::Marionette();
-
+    
         my $firefox = Firefox::Marionette->new();
-
+    
         my $extension_id = $firefox->install('/full/path/to/gnu_terry_pratchett-0.4-an+fx.xpi');
-
+    
         # do something
-
+    
         $firefox->uninstall($extension_id); # not recommended to uninstall this extension IRL.
 
-  uri
-    returns the current URI of current top level browsing context for
-    Desktop. It is equivalent to the javascript "document.location.href"
+ uri
 
-  window_handle
+    returns the current URI of current top level browsing context for
+    Desktop. It is equivalent to the javascript document.location.href
+
+ window_handle
+
     returns the current window's handle. On desktop this typically
     corresponds to the currently selected tab. returns an opaque
     server-assigned identifier to this window that uniquely identifies it
     within this Marionette instance. This can be used to switch to this
     window at a later point.
 
-  window_handles
-    returns a list of top-level browsing contexts. On desktop this typically
-    corresponds to the set of open tabs for browser windows, or the window
-    itself for non-browser chrome windows. Each window handle is assigned by
-    the server and is guaranteed unique, however the return array does not
-    have a specified ordering.
+ window_handles
 
-  window_rect
+    returns a list of top-level browsing contexts. On desktop this
+    typically corresponds to the set of open tabs for browser windows, or
+    the window itself for non-browser chrome windows. Each window handle is
+    assigned by the server and is guaranteed unique, however the return
+    array does not have a specified ordering.
+
+ window_rect
+
     accepts an optional position and size as a parameter, sets the current
     browser window to that position and size and returns the previous
     position, size and state of the browser window. If no parameter is
-    supplied, it returns the current position, size and state of the browser
-    window.
+    supplied, it returns the current position, size and state of the
+    browser window.
 
-  window_type
+ window_type
+
     returns the current window's type. This should be 'navigator:browser'.
 
-  xvfb_pid
+ xvfb_pid
+
     returns the pid of the xvfb process if it exists.
 
-  xvfb_display
+ xvfb_display
+
     returns the value for the DISPLAY environment variable if one has been
     generated for the xvfb environment.
 
-  xvfb_xauthority
+ xvfb_xauthority
+
     returns the value for the XAUTHORITY environment variable if one has
     been generated for the xvfb environment
 
 REMOTE AUTOMATION OF FIREFOX VIA SSH
-        use Firefox::Marionette();
 
+        use Firefox::Marionette();
+    
         my $firefox = Firefox::Marionette->new( host => 'remote.example.org', debug => 1 );
         $firefox->go('https://metacpan.org/');
-
-        # OR specify a different user to login as ...
     
+        # OR specify a different user to login as ...
+        
         my $firefox = Firefox::Marionette->new( host => 'remote.example.org', user => 'R2D2', debug => 1 );
         $firefox->go('https://metacpan.org/');
-
-        # OR specify a different port to connect to
     
+        # OR specify a different port to connect to
+        
         my $firefox = Firefox::Marionette->new( host => 'remote.example.org', port => 2222, debug => 1 );
         $firefox->go('https://metacpan.org/');
 
@@ -1274,13 +1550,14 @@ REMOTE AUTOMATION OF FIREFOX VIA SSH
     Firefox on a remote node. It has been tested against a number of
     operating systems, including recent version of Windows 10 or Windows
     Server 2019
-    <https://docs.microsoft.com/en-us/windows-server/administration/openssh/
-    openssh_install_firstuse>, OS X, and Linux and BSD distributions. It
-    expects to be able to login to the remote node via public key
-    authentication. It can be further secured via the command
+    <https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse>,
+    OS X, and Linux and BSD distributions. It expects to be able to login
+    to the remote node via public key authentication. It can be further
+    secured via the command
     <https://man.openbsd.org/sshd#command=_command_> option in the OpenSSH
     <https://www.openssh.com/> authorized_keys
-    <https://man.openbsd.org/sshd#AUTHORIZED_KEYS_FILE_FORMAT> file such as;
+    <https://man.openbsd.org/sshd#AUTHORIZED_KEYS_FILE_FORMAT> file such
+    as;
 
         no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
 
@@ -1290,153 +1567,183 @@ REMOTE AUTOMATION OF FIREFOX VIA SSH
     When using ssh, Firefox::Marionette will attempt to pass the TMPDIR
     <https://en.wikipedia.org/wiki/TMPDIR> environment variable across the
     ssh connection to make cleanups easier. In order to allow this, the
-    AcceptEnv <https://man.openbsd.org/sshd_config#AcceptEnv> setting in the
-    remote sshd configuration <https://man.openbsd.org/sshd_config> should
-    be set to allow TMPDIR, which will look like;
+    AcceptEnv <https://man.openbsd.org/sshd_config#AcceptEnv> setting in
+    the remote sshd configuration should be set to allow TMPDIR, which will
+    look like;
 
         AcceptEnv TMPDIR
 
     This module uses ControlMaster
     <https://man.openbsd.org/ssh_config#ControlMaster> functionality when
-    using ssh <https://man.openbsd.org/ssh>, for a useful speedup of
-    executing remote commands. Unfortunately, when using ssh to move from a
-    cygwin <https://gcc.gnu.org/wiki/SSH_connection_caching>, Windows 10 or
+    using ssh, for a useful speedup of executing remote commands.
+    Unfortunately, when using ssh to move from a cygwin
+    <https://gcc.gnu.org/wiki/SSH_connection_caching>, Windows 10 or
     Windows Server 2019
-    <https://docs.microsoft.com/en-us/windows-server/administration/openssh/
-    openssh_install_firstuse> node to a remote environment, we cannot use
-    ControlMaster <https://man.openbsd.org/ssh_config#ControlMaster>,
-    because at this time, Windows does not support ControlMaster
+    <https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse>
+    node to a remote environment, we cannot use ControlMaster, because at
+    this time, Windows does not support ControlMaster
     <https://github.com/Microsoft/vscode-remote-release/issues/96> and
     therefore this type of automation is still possible, but slower than
     other client platforms.
 
 DIAGNOSTICS
-    "Failed to correctly setup the Firefox process"
-        The module was unable to retrieve a session id and capabilities from
-        Firefox when it requests a new_session as part of the initial setup
-        of the connection to Firefox.
 
-    "Failed to correctly determined the Firefox process id through the
-    initial connection capabilities"
-        The module was found that firefox is reporting through it's
-        Capabilities object a different process id than this module was
-        using. This is probably a bug in this module's logic. Please report
-        as described in the BUGS AND LIMITATIONS section below.
+    Failed to correctly setup the Firefox process
 
-    "'%s --version' did not produce output that could be parsed. Assuming
-    modern Marionette is available:%s"
-        The Firefox binary did not produce a version number that could be
-        recognised as a Firefox version number.
+      The module was unable to retrieve a session id and capabilities from
+      Firefox when it requests a new_session as part of the initial setup
+      of the connection to Firefox.
 
-    "Failed to create process from '%s':%s"
-        The module was to start Firefox process in a Win32 environment.
-        Something is seriously wrong with your environment.
+    Failed to correctly determined the Firefox process id through the
+    initial connection capabilities
 
-    "Failed to redirect %s to %s:%s"
-        The module was unable to redirect a file handle's output. Something
-        is seriously wrong with your environment.
+      The module was found that firefox is reporting through it's
+      Capabilities object a different process id than this module was
+      using. This is probably a bug in this module's logic. Please report
+      as described in the BUGS AND LIMITATIONS section below.
 
-    "Failed to exec %s:%s"
-        The module was unable to run the Firefox binary. Check the path is
-        correct and the current user has execute permissions.
+    '%s --version' did not produce output that could be parsed. Assuming
+    modern Marionette is available:%s
 
-    "Failed to fork:%s"
-        The module was unable to fork itself, prior to executing a command.
-        Check the current "ulimit" for max number of user processes.
+      The Firefox binary did not produce a version number that could be
+      recognised as a Firefox version number.
 
-    "Failed to open directory '%s':%s"
-        The module was unable to open a directory. Something is seriously
-        wrong with your environment.
+    Failed to create process from '%s':%s
 
-    "Failed to close directory '%s':%s"
-        The module was unable to close a directory. Something is seriously
-        wrong with your environment.
+      The module was to start Firefox process in a Win32 environment.
+      Something is seriously wrong with your environment.
 
-    "Failed to open '%s' for writing:%s"
-        The module was unable to create a file in your temporary directory.
-        Maybe your disk is full?
+    Failed to redirect %s to %s:%s
 
-    "Failed to open temporary file for writing:%s"
-        The module was unable to create a file in your temporary directory.
-        Maybe your disk is full?
+      The module was unable to redirect a file handle's output. Something
+      is seriously wrong with your environment.
 
-    "Failed to close '%s':%s"
-        The module was unable to close a file in your temporary directory.
-        Maybe your disk is full?
+    Failed to exec %s:%s
 
-    "Failed to close temporary file:%s"
-        The module was unable to close a file in your temporary directory.
-        Maybe your disk is full?
+      The module was unable to run the Firefox binary. Check the path is
+      correct and the current user has execute permissions.
 
-    "Failed to create temporary directory:%s"
-        The module was unable to create a directory in your temporary
-        directory. Maybe your disk is full?
+    Failed to fork:%s
 
-    "Failed to clear the close-on-exec flag on a temporary file:%s"
-        The module was unable to call fcntl using F_SETFD for a file in your
-        temporary directory. Something is seriously wrong with your
-        environment.
+      The module was unable to fork itself, prior to executing a command.
+      Check the current ulimit for max number of user processes.
 
-    "Failed to seek to start of temporary file:%s"
-        The module was unable to seek to the start of a file in your
-        temporary directory. Something is seriously wrong with your
-        environment.
+    Failed to open directory '%s':%s
 
-    "Failed to create a socket:%s"
-        The module was unable to even create a socket. Something is
-        seriously wrong with your environment.
+      The module was unable to open a directory. Something is seriously
+      wrong with your environment.
 
-    "Failed to connect to %s on port %d:%s"
-        The module was unable to connect to the Marionette port. This is
-        probably a bug in this module's logic. Please report as described in
-        the BUGS AND LIMITATIONS section below.
+    Failed to close directory '%s':%s
 
-    "Firefox killed by a %s signal (%d)"
-        Firefox crashed after being hit with a signal.
+      The module was unable to close a directory. Something is seriously
+      wrong with your environment.
 
-    "Firefox exited with a %d"
-        Firefox has exited with an error code
+    Failed to open '%s' for writing:%s
 
-    "Failed to bind socket:%s"
-        The module was unable to bind a socket to any port. Something is
-        seriously wrong with your environment.
+      The module was unable to create a file in your temporary directory.
+      Maybe your disk is full?
 
-    "Failed to close random socket:%s"
-        The module was unable to close a socket without any reads or writes
-        being performed on it. Something is seriously wrong with your
-        environment.
+    Failed to open temporary file for writing:%s
 
-    "moz:headless has not been determined correctly"
-        The module was unable to correctly determine whether Firefox is
-        running in "headless" or not. This is probably a bug in this
-        module's logic. Please report as described in the BUGS AND
-        LIMITATIONS section below.
+      The module was unable to create a file in your temporary directory.
+      Maybe your disk is full?
 
-    "%s method requires a Firefox::Marionette::Element parameter"
-        This function was called incorrectly by your code. Please supply a
-        Firefox::Marionette::Element parameter when calling this function.
+    Failed to close '%s':%s
 
-    "Failed to write to temporary file:%s"
-        The module was unable to write to a file in your temporary
-        directory. Maybe your disk is full?
+      The module was unable to close a file in your temporary directory.
+      Maybe your disk is full?
 
-    "Failed to close socket to firefox:%s"
-        The module was unable to even close a socket. Something is seriously
-        wrong with your environment.
+    Failed to close temporary file:%s
 
-    "Failed to send request to firefox:%s"
-        The module was unable to perform a syswrite on the socket connected
-        to firefox. Maybe firefox crashed?
+      The module was unable to close a file in your temporary directory.
+      Maybe your disk is full?
 
-    "Failed to read size of response from socket to firefox:%s"
-        The module was unable to read from the socket connected to firefox.
-        Maybe firefox crashed?
+    Failed to create temporary directory:%s
 
-    "Failed to read response from socket to firefox:%s"
-        The module was unable to read from the socket connected to firefox.
-        Maybe firefox crashed?
+      The module was unable to create a directory in your temporary
+      directory. Maybe your disk is full?
+
+    Failed to clear the close-on-exec flag on a temporary file:%s
+
+      The module was unable to call fcntl using F_SETFD for a file in your
+      temporary directory. Something is seriously wrong with your
+      environment.
+
+    Failed to seek to start of temporary file:%s
+
+      The module was unable to seek to the start of a file in your
+      temporary directory. Something is seriously wrong with your
+      environment.
+
+    Failed to create a socket:%s
+
+      The module was unable to even create a socket. Something is seriously
+      wrong with your environment.
+
+    Failed to connect to %s on port %d:%s
+
+      The module was unable to connect to the Marionette port. This is
+      probably a bug in this module's logic. Please report as described in
+      the BUGS AND LIMITATIONS section below.
+
+    Firefox killed by a %s signal (%d)
+
+      Firefox crashed after being hit with a signal.
+
+    Firefox exited with a %d
+
+      Firefox has exited with an error code
+
+    Failed to bind socket:%s
+
+      The module was unable to bind a socket to any port. Something is
+      seriously wrong with your environment.
+
+    Failed to close random socket:%s
+
+      The module was unable to close a socket without any reads or writes
+      being performed on it. Something is seriously wrong with your
+      environment.
+
+    moz:headless has not been determined correctly
+
+      The module was unable to correctly determine whether Firefox is
+      running in "headless" or not. This is probably a bug in this module's
+      logic. Please report as described in the BUGS AND LIMITATIONS section
+      below.
+
+    %s method requires a Firefox::Marionette::Element parameter
+
+      This function was called incorrectly by your code. Please supply a
+      Firefox::Marionette::Element parameter when calling this function.
+
+    Failed to write to temporary file:%s
+
+      The module was unable to write to a file in your temporary directory.
+      Maybe your disk is full?
+
+    Failed to close socket to firefox:%s
+
+      The module was unable to even close a socket. Something is seriously
+      wrong with your environment.
+
+    Failed to send request to firefox:%s
+
+      The module was unable to perform a syswrite on the socket connected
+      to firefox. Maybe firefox crashed?
+
+    Failed to read size of response from socket to firefox:%s
+
+      The module was unable to read from the socket connected to firefox.
+      Maybe firefox crashed?
+
+    Failed to read response from socket to firefox:%s
+
+      The module was unable to read from the socket connected to firefox.
+      Maybe firefox crashed?
 
 CONFIGURATION AND ENVIRONMENT
+
     Firefox::Marionette requires no configuration files or environment
     variables. It will however use the DISPLAY and XAUTHORITY environment
     variables to try to connect to an X Server. It will also use the
@@ -1445,48 +1752,54 @@ CONFIGURATION AND ENVIRONMENT
     information.
 
 DEPENDENCIES
+
     Firefox::Marionette requires the following non-core Perl modules
 
-    *   JSON
+      * JSON
 
-    *   URI
+      * URI
 
 INCOMPATIBILITIES
-    None reported. Always interested in any products with marionette support
-    that this module could be patched to work with.
+
+    None reported. Always interested in any products with marionette
+    support that this module could be patched to work with.
 
 BUGS AND LIMITATIONS
+
     Currently the following Marionette methods have not been implemented;
 
-    *   WebDriver:ReleaseAction
+      * WebDriver:ReleaseAction
 
-    *   WebDriver:PerformActions
+      * WebDriver:PerformActions
 
-    *   WebDriver:SetScreenOrientation
+      * WebDriver:SetScreenOrientation
 
     No bugs have been reported.
 
     Please report any bugs or feature requests to
-    "bug-firefox-marionette@rt.cpan.org", or through the web interface at
-    <http://rt.cpan.org>.
+    bug-firefox-marionette@rt.cpan.org, or through the web interface at
+    http://rt.cpan.org.
 
 SEE ALSO
-    *   MozRepl
 
-    *   Selenium::Firefox
+      * MozRepl
 
-    *   Firefox::Application
+      * Selenium::Firefox
 
-    *   Mozilla::Mechanize
+      * Firefox::Application
 
-    *   Gtk2::MozEmbed
+      * Mozilla::Mechanize
+
+      * Gtk2::MozEmbed
 
 AUTHOR
-    David Dick "<ddick@cpan.org>"
+
+    David Dick <ddick@cpan.org>
 
 ACKNOWLEDGEMENTS
-    Thanks to the entire Mozilla organisation for a great browser and to the
-    team behind Marionette for providing an interface for automation.
+
+    Thanks to the entire Mozilla organisation for a great browser and to
+    the team behind Marionette for providing an interface for automation.
 
     Thanks to Jan Odvarko <http://www.softwareishard.com/blog/about/> for
     creating the HAR Export Trigger
@@ -1496,42 +1809,41 @@ ACKNOWLEDGEMENTS
     Thanks also to the authors of the documentation in the following
     sources;
 
-    *   Marionette Protocol
-        <https://firefox-source-docs.mozilla.org/testing/marionette/marionet
-        te/index.html>
+      * Marionette Protocol
+      <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html>
 
-    *   Marionette Documentation
-        <https://firefox-source-docs.mozilla.org/testing/marionette/marionet
-        te/index.html>
+      * Marionette Documentation
+      <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html>
 
-    *   Marionette driver.js
-        <https://hg.mozilla.org/mozilla-central/file/tip/testing/marionette/
-        driver.js>
+      * Marionette driver.js
+      <https://hg.mozilla.org/mozilla-central/file/tip/testing/marionette/driver.js>
 
-    *   about:config <http://kb.mozillazine.org/About:config_entries>
+      * about:config <http://kb.mozillazine.org/About:config_entries>
 
-    *   nsIPrefService interface
-        <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Referen
-        ce/Interface/nsIPrefService>
+      * nsIPrefService interface
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIPrefService>
 
 LICENSE AND COPYRIGHT
-    Copyright (c) 2020, David Dick "<ddick@cpan.org>". All rights reserved.
+
+    Copyright (c) 2020, David Dick <ddick@cpan.org>. All rights reserved.
 
     This module is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself. See "perlartistic" in perlartistic.
+    under the same terms as Perl itself. See "perlartistic" in
+    perlartistic.
 
-    The Firefox::Marionette::Extension::HarExportTrigger module includes the
-    HAR Export Trigger
-    <https://github.com/firefox-devtools/har-export-trigger> extension which
-    is licensed under the Mozilla Public License 2.0
+    The Firefox::Marionette::Extension::HarExportTrigger module includes
+    the HAR Export Trigger
+    <https://github.com/firefox-devtools/har-export-trigger> extension
+    which is licensed under the Mozilla Public License 2.0
     <https://www.mozilla.org/en-US/MPL/2.0/>.
 
 DISCLAIMER OF WARRANTY
+
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-    FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-    OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-    PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-    EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT
+    WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER
+    PARTIES PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND,
+    EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
     WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
     ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
     YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL

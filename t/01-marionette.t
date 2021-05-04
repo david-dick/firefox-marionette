@@ -1388,7 +1388,7 @@ SKIP: {
 		if ((!$autofocus) && ($major_version < 50)) {
 			chomp $@;
 			diag("The property method is not supported for $major_version.$minor_version.$patch_version:$@");
-			skip("The property method is not supported for $major_version.$minor_version.$patch_version", 3);
+			skip("The property method is not supported for $major_version.$minor_version.$patch_version", 4);
 		}
 		ok($autofocus, "The value of the autofocus property is '$autofocus'");
 		ok($firefox->find_by_class('main-content')->find('//input[@id="search-input"]')->property('id') eq 'search-input', "Correctly found nested element with find");
@@ -1407,6 +1407,12 @@ SKIP: {
 	}
 	ok($count == 1, "Found elements with nested find:$count");
 	$count = 0;
+	foreach my $element ($firefox->has_class('main-content')->has('//input[@id="search-input"]')) {
+		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with has");
+		$count += 1;
+	}
+	ok($count == 1, "Found elements with nested find:$count");
+	$count = 0;
 	foreach my $element ($firefox->find('//input[@id="search-input"]')) {
 		ok($element->attribute('id') eq 'search-input', "Correctly found element with wantarray find");
 		$count += 1;
@@ -1414,11 +1420,15 @@ SKIP: {
 	ok($count == 1, "Found elements with wantarray find:$count");
 	ok($firefox->find('search-input', 'id')->attribute('id') eq 'search-input', "Correctly found element when searching by id");
 	ok($firefox->find('search-input', BY_ID())->attribute('id') eq 'search-input', "Correctly found element when searching by id");
+	ok($firefox->has('search-input', BY_ID())->attribute('id') eq 'search-input', "Correctly found element for default has");
 	ok($firefox->list_by_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with list_by_id");
 	ok($firefox->find_by_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with find_by_id");
 	ok($firefox->find_by_class('main-content')->find_by_id('search-input')->attribute('id') eq 'search-input', "Correctly found nested element with find_by_id");
 	ok($firefox->find_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with find_id");
+	ok($firefox->has_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with has_id");
+	ok(!defined $firefox->has_id('search-input-totally-not-there-EVER'), "Correctly returned undef with has_id for a non existant element");
 	ok($firefox->find_class('main-content')->find_id('search-input')->attribute('id') eq 'search-input', "Correctly found nested element with find_id");
+	ok($firefox->has_class('main-content')->has_id('search-input')->attribute('id') eq 'search-input', "Correctly found nested element with has_id");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->list_by_id('search-input')) {
 		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with list_by_id");
@@ -1449,7 +1459,10 @@ SKIP: {
 	ok($firefox->find_by_name('q')->attribute('id') eq 'search-input', "Correctly found element with find_by_name");
 	ok($firefox->find_by_class('main-content')->find_by_name('q')->attribute('id') eq 'search-input', "Correctly found nested element with find_by_name");
 	ok($firefox->find_name('q')->attribute('id') eq 'search-input', "Correctly found element with find_name");
+	ok($firefox->has_name('q')->attribute('id') eq 'search-input', "Correctly found element with has_name");
+	ok(!defined $firefox->has_name('q-definitely-not-exists'), "Correctly returned undef for has_name and a missing element");
 	ok($firefox->find_class('main-content')->find_name('q')->attribute('id') eq 'search-input', "Correctly found nested element with find_name");
+	ok($firefox->has_class('main-content')->has_name('q')->attribute('id') eq 'search-input', "Correctly found nested element with has_name");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->list_by_name('q')) {
 		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with list_by_name");
@@ -1480,7 +1493,9 @@ SKIP: {
 	ok($firefox->find_by_tag('input')->attribute('id'), "Correctly found element with find_by_tag");
 	ok($firefox->find_by_class('main-content')->find_by_tag('input')->attribute('id'), "Correctly found nested element with find_by_tag");
 	ok($firefox->find_tag('input')->attribute('id'), "Correctly found element with find_tag");
+	ok($firefox->has_tag('input')->attribute('id'), "Correctly found element with has_tag");
 	ok($firefox->find_class('main-content')->find_tag('input')->attribute('id'), "Correctly found nested element with find_tag");
+	ok($firefox->has_class('main-content')->has_tag('input')->attribute('id'), "Correctly found nested element with has_tag");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->list_by_tag('input')) {
 		ok($element->attribute('id'), "Correctly found nested element with list_by_tag");
@@ -1512,6 +1527,8 @@ SKIP: {
 	ok($firefox->find_by_class('main-content')->find_by_class('form-control home-search-input')->attribute('id'), "Correctly found nested element with find_by_class");
 	ok($firefox->find_class('form-control home-search-input')->attribute('id'), "Correctly found element with find_class");
 	ok($firefox->find_class('main-content')->find_class('form-control home-search-input')->attribute('id'), "Correctly found nested element with find_class");
+	ok($firefox->has_class('main-content')->has_class('form-control home-search-input')->attribute('id'), "Correctly found nested element with has_class");
+	ok(!defined $firefox->has_class('main-content')->has_class('absolutely-can-never-exist-in-any-universe-seriously-10'), "Correctly returned undef for nested element with has_class for a missing class");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->list_by_class('form-control home-search-input')) {
 		ok($element->attribute('id'), "Correctly found nested element with list_by_class");
@@ -1537,6 +1554,7 @@ SKIP: {
 	ok($firefox->find_by_class('main-content')->find_by_selector('input.home-search-input')->attribute('id'), "Correctly found nested element with find_by_selector");
 	ok($firefox->find_selector('input.home-search-input')->attribute('id'), "Correctly found element with find_selector");
 	ok($firefox->find_class('main-content')->find_selector('input.home-search-input')->attribute('id'), "Correctly found nested element with find_selector");
+	ok($firefox->has_class('main-content')->has_selector('input.home-search-input')->attribute('id'), "Correctly found nested element with has_selector");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->list_by_selector('input.home-search-input')) {
 		ok($element->attribute('id'), "Correctly found nested element with list_by_selector");
@@ -1574,6 +1592,7 @@ SKIP: {
 		ok($result, "Correctly found nested element with find_by_link");
 	}
 	ok($firefox->find_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_link");
+	ok($firefox->has_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with has_link");
 	TODO: {
 		local $TODO = $major_version == 45 ? "Nested find_link can break for $major_version.$minor_version.$patch_version" : undef;
 		my $result;
@@ -1581,6 +1600,10 @@ SKIP: {
 			$result = $firefox->find_class('container-fluid')->find_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx;
 		};
 		ok($result, "Correctly found nested element with find_link");
+		eval {
+			$result = $firefox->has_class('container-fluid')->has_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx;
+		};
+		ok($result, "Correctly found nested element with has_link");
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('navbar navbar-default')->list_by_link('API')) {
@@ -1638,7 +1661,9 @@ SKIP: {
 	ok($firefox->find_by_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_by_partial");
 	ok($firefox->find_by_class('container-fluid')->find_by_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with find_by_partial");
 	ok($firefox->find_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_partial");
+	ok($firefox->has_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with has_partial");
 	ok($firefox->find_class('container-fluid')->find_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with find_partial");
+	ok($firefox->has_class('container-fluid')->has_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with has_partial");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('container-fluid')->list_by_partial('AP')) {
 		if ($count == 0) {

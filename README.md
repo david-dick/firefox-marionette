@@ -399,7 +399,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has) method.
 
 ## find\_id
 
@@ -419,7 +419,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_id](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_id) method.
 
 ## find\_name
 
@@ -438,7 +438,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_name](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_name) method.
 
 ## find\_class
 
@@ -457,7 +457,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_class](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_class) method.
 
 ## find\_selector
 
@@ -476,7 +476,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->type('Test::More');
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_selector](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_selector) method.
 
 ## find\_tag
 
@@ -495,7 +495,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         # do something
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. For the same functionality that returns undef if no elements are found, see the [has\_tag](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_tag) method.
 
 ## find\_link
 
@@ -514,7 +514,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->click();
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_link](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_link) method.
 
 ## find\_partial
 
@@ -533,7 +533,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AM
         $element->click();
     }
 
-If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown. 
+If no elements are found, a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception will be thrown.  For the same functionality that returns undef if no elements are found, see the [has\_partial](https://metacpan.org/pod/Firefox%3A%3AMarionette%23has_partial) method.
 
 ## forward
 
@@ -582,6 +582,128 @@ returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/
     foreach my $entry ($har->entries()) {
         say $entry->request()->url() . " spent " . $entry->timings()->connect() . " ms establishing a TCP connection";
     }
+
+## has
+
+accepts an [xpath expression](https://en.wikipedia.org/wiki/XPath) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that matches this expression.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    if (my $element = $firefox->has('//input[@id="search-input"]')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find) method.
+
+## has\_id
+
+accepts an [id](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'id' property.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    if (my $element = $firefox->has_id('search-input')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_id](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_id) method.
+
+## has\_name
+
+This method returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'name' property.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->has_name('q')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_name](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_name) method.
+
+## has\_class
+
+accepts a [class name](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with a matching 'class' property.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->has_class('form-control home-search-input')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_class](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_class) method.
+
+## has\_selector
+
+accepts a [CSS Selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that matches that selector.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->has_selector('input.home-search-input')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_selector](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_selector) method.
+
+## has\_tag
+
+accepts a [tag name](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) as the first parameter and returns the first [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) with this tag name.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->has_tag('input')) {
+        # do something
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_tag](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_tag) method.
+
+## has\_link
+
+accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that has a matching link text.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->has_link('API')) {
+        $element->click();
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_link](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_link) method.
+
+## has\_partial
+
+accepts a text string as the first parameter and returns the first link [element](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AElement) that has a partially matching link text.
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3ATimeouts%23implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->find_partial('AP')) {
+        $element->click();
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a [not found](https://metacpan.org/pod/Firefox%3A%3AMarionette%3A%3AException%3A%3ANotFound) exception, see the [find\_partial](https://metacpan.org/pod/Firefox%3A%3AMarionette%23find_partial) method.
 
 ## html
 

@@ -281,6 +281,46 @@ sub find_partial {
     return $self->browser()->find_partial( $value, $self );
 }
 
+sub has {
+    my ( $self, $value, $using, $from ) = @_;
+    return $self->browser()->has( $value, $using, $self );
+}
+
+sub has_id {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_id( $value, $self );
+}
+
+sub has_name {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_name( $value, $self );
+}
+
+sub has_tag {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_tag( $value, $self );
+}
+
+sub has_class {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_class( $value, $self );
+}
+
+sub has_selector {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_selector( $value, $self );
+}
+
+sub has_link {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_link( $value, $self );
+}
+
+sub has_partial {
+    my ( $self, $value, $from ) = @_;
+    return $self->browser()->has_partial( $value, $self );
+}
+
 1;    # Magic true value required at end of module
 __END__
 
@@ -430,6 +470,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
         $element->type('Test::More');
     }
 
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has|Firefox::Marionette::Element#has> method.
+
 =head2 find_id
 
 accepts an L<id|https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id> as the first parameter and returns the first L<element|Firefox::Marionette::Element> with a matching 'id' property.
@@ -450,6 +492,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     foreach my $element ($div->find_id('search-input')) {
         $element->type('Test::More');
     }
+
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has_id|Firefox::Marionette::Element#has_id> method.
 
 =head2 find_name
 
@@ -472,6 +516,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
         $element->type('Test::More');
     }
 
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has_name|Firefox::Marionette::Element#has_name> method.
+
 =head2 find_class
 
 accepts a L<class name|https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class> as the first parameter and returns the first L<element|Firefox::Marionette::Element> with a matching 'class' property.
@@ -492,6 +538,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     foreach my $element ($div->find_class('form-control home-search-input')) {
         $element->type('Test::More');
     }
+
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has_class|Firefox::Marionette::Element#has_class> method.
 
 =head2 find_selector
 
@@ -514,6 +562,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
         $element->type('Test::More');
     }
 
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has_selector|Firefox::Marionette::Element#has_selector> method.
+
 =head2 find_tag
 
 accepts a L<tag name|https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName> as the first parameter and returns the first L<element|Firefox::Marionette::Element> with this tag name.
@@ -534,6 +584,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     foreach my $element ($div->find_tag('input')) {
         # do something
     }
+
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown. For the same functionality that returns undef if no elements are found, see the L<has_tag|Firefox::Marionette::Element#has_tag> method.
 
 =head2 find_link
 
@@ -556,6 +608,8 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
         $element->click();
     }
 
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has_link|Firefox::Marionette::Element#has_link> method.
+
 =head2 find_partial
 
 accepts a text string as the first parameter and returns the first link L<element|Firefox::Marionette::Element> that has a partially matching link text.
@@ -576,6 +630,144 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     foreach my $element ($div->find_partial('AP')) {
         $element->click();
     }
+
+If no elements are found, a L<not found|Firefox::Marionette::Exception::NotFound> exception will be thrown.  For the same functionality that returns undef if no elements are found, see the L<has_partial|Firefox::Marionette::Element#has_partial> method.
+
+=head2 has
+
+accepts an L<xpath expression|https://en.wikipedia.org/wiki/XPath> as the first parameter and returns the first L<element|Firefox::Marionette::Element> that matches this expression.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('main-content');
+    if (my $element = $div->has('//input[@id="search-input"]')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find|Firefox::Marionette::Element#find> method.
+
+=head2 has_id
+
+accepts an L<id|https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/id> as the first parameter and returns the first L<element|Firefox::Marionette::Element> with a matching 'id' property.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('main-content');
+    if (my $element = $div->has_id('search-input')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_id|Firefox::Marionette::Element#find_id> method.
+
+=head2 has_name
+
+This method returns the first L<element|Firefox::Marionette::Element> with a matching 'name' property.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('main-content');
+    if (my $element = $div->has_name('q')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_name|Firefox::Marionette::Element#find_name> method.
+
+=head2 has_class
+
+accepts a L<class name|https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/class> as the first parameter and returns the first L<element|Firefox::Marionette::Element> with a matching 'class' property.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('main-content');
+    if (my $element = $div->has_class('form-control home-search-input')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_class|Firefox::Marionette::Element#find_class> method.
+
+=head2 has_selector
+
+accepts a L<CSS Selector|https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors> as the first parameter and returns the first L<element|Firefox::Marionette::Element> that matches that selector.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('main-content');
+    if (my $element = $div->has_selector('input.home-search-input')) {
+        $element->type('Test::More');
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_selector|Firefox::Marionette::Element#find_selector> method.
+
+=head2 has_tag
+
+accepts a L<tag name|https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName> as the first parameter and returns the first L<element|Firefox::Marionette::Element> with this tag name.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('main-content');
+    if (my $element = $div->has_tag('input');
+        # do something
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_tag|Firefox::Marionette::Element#find_tag> method.
+
+=head2 has_link
+
+accepts a text string as the first parameter and returns the first link L<element|Firefox::Marionette::Element> that has a matching link text.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('container-fluid');
+    if (my $element = $div->has_link('API')->click();
+        $element->click();
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_link|Firefox::Marionette::Element#find_link> method.
+
+=head2 has_partial
+
+accepts a text string as the first parameter and returns the first link L<element|Firefox::Marionette::Element> that has a partially matching link text.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    my $div = $firefox->find_class('container-fluid');
+    if (my $element = $div->has_partial('AP')->click();
+        $element->click();
+    }
+
+If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_partial|Firefox::Marionette::Element#find_partial> method.
 
 =head1 DIAGNOSTICS
 
