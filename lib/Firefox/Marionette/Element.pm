@@ -349,17 +349,17 @@ This module handles the implementation of a Firefox Element using the Marionette
 
 =head1 SUBROUTINES/METHODS
 
-=head2 new
+=head2 attribute 
 
-returns a new L<element|Firefox::Marionette::Element>.
-
-=head2 uuid
-
-returns the browser generated UUID connected with this L<element|Firefox::Marionette::Element>.
+accepts a scalar name a parameter.  It returns the initial value of the attribute with the supplied name. Compare with the current value returned by L<property|Firefox::Marionette::Element#property> method.
 
 =head2 browser
 
 returns the L<browser|Firefox::Marionette> connected with the L<element|Firefox::Marionette::Element>.
+
+=head2 clear
+
+clears any user supplied input from the L<element|Firefox::Marionette::Element>
 
 =head2 click
 
@@ -375,79 +375,9 @@ sends a 'click' to the L<element|Firefox::Marionette::Element>.  The browser wil
         }
     }
 
-=head2 clear
-
-clears any user supplied input from the L<element|Firefox::Marionette::Element>
-
-=head2 text
-
-returns the text that is contained by that L<element|Firefox::Marionette::Element> (if any)
-
-=head2 tag_name
-
-returns the relevant tag name.  For example 'a' or 'input'.
-
-=head2 rect
-
-returns the current L<position and size|Firefox::Marionette::Element::Rect> of the L<element|Firefox::Marionette::Element>
-
-=head2 send_keys
-
-*** DEPRECATED - see L<type|Firefox::Marionette::Element#type>. ***
-
-=head2 type
-
-accepts a scalar string as a parameter.  It sends the string to this L<element|Firefox::Marionette::Element>, such as filling out a text box. This method returns L<the browser|Firefox::Marionette> to aid in chaining methods.
-
-=head2 switch_to_shadow_root
-
-switches to this element's L<shadow root|https://www.w3.org/TR/shadow-dom/>
-
-=head2 switch_to_frame
-
-switches to this frame within the current window.
-
-=head2 attribute 
-
-accepts a scalar name a parameter.  It returns the initial value of the attribute with the supplied name. Compare with the current value returned by L<property|Firefox::Marionette::Element#property> method.
-
-=head2 property
-
-accepts a scalar name a parameter.  It returns the current value of the property with the supplied name. Compare with the initial value returned by L<attribute|Firefox::Marionette::Element#attribute> method.
-
 =head2 css
 
 accepts a scalar CSS property name as a parameter.  It returns the value of the computed style for that property.
-
-=head2 selfie
-
-returns a L<File::Temp|File::Temp> object containing a lossless PNG image screenshot of the L<element|Firefox::Marionette::Element>.
-
-accepts the following optional parameters as a hash;
-
-=over 4
-
-=item * hash - return a SHA256 hex encoded digest of the PNG image rather than the image itself
-
-=item * full - take a screenshot of the whole document unless the first L<element|Firefox::Marionette::Element> parameter has been supplied.
-
-=item * scroll - scroll to the L<element|Firefox::Marionette::Element> supplied
-
-=item * highlights - a reference to a list containing L<elements|Firefox::Marionette::Element> to draw a highlight around
-
-=back
-
-=head2 is_enabled
-
-returns true or false if the element is enabled.
-
-=head2 is_selected
-
-returns true or false if the element is selected.
-
-=head2 is_displayed
-
-returns true or false if the element is displayed.
 
 =head2 find
 
@@ -768,6 +698,76 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     }
 
 If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_partial|Firefox::Marionette::Element#find_partial> method.
+
+=head2 is_enabled
+
+returns true or false if the element is enabled.
+
+=head2 is_selected
+
+returns true or false if the element is selected.
+
+=head2 is_displayed
+
+returns true or false if the element is displayed.
+
+=head2 new
+
+returns a new L<element|Firefox::Marionette::Element>.
+
+=head2 property
+
+accepts a scalar name a parameter.  It returns the current value of the property with the supplied name. Compare with the initial value returned by L<attribute|Firefox::Marionette::Element#attribute> method.
+
+=head2 rect
+
+returns the current L<position and size|Firefox::Marionette::Element::Rect> of the L<element|Firefox::Marionette::Element>
+
+=head2 send_keys
+
+*** DEPRECATED - see L<type|Firefox::Marionette::Element#type>. ***
+
+=head2 selfie
+
+returns a L<File::Temp|File::Temp> object containing a lossless PNG image screenshot of the L<element|Firefox::Marionette::Element>.
+
+accepts the following optional parameters as a hash;
+
+=over 4
+
+=item * hash - return a SHA256 hex encoded digest of the PNG image rather than the image itself
+
+=item * full - take a screenshot of the whole document unless the first L<element|Firefox::Marionette::Element> parameter has been supplied.
+
+=item * scroll - scroll to the L<element|Firefox::Marionette::Element> supplied
+
+=item * highlights - a reference to a list containing L<elements|Firefox::Marionette::Element> to draw a highlight around
+
+=back
+
+=head2 switch_to_frame
+
+switches to this frame within the current window.
+
+=head2 switch_to_shadow_root
+
+switches to this element's L<shadow root|https://www.w3.org/TR/shadow-dom/>
+
+=head2 tag_name
+
+returns the relevant tag name.  For example 'a' or 'input'.
+
+=head2 text
+
+returns the text that is contained by that L<element|Firefox::Marionette::Element> (if any)
+
+=head2 type
+
+accepts a scalar string as a parameter.  It sends the string to this L<element|Firefox::Marionette::Element>, such as filling out a text box. This method returns L<the browser|Firefox::Marionette> to aid in chaining methods.
+
+=head2 uuid
+
+returns the browser generated UUID connected with this L<element|Firefox::Marionette::Element>.
 
 =head1 DIAGNOSTICS
 
