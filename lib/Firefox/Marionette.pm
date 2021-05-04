@@ -7237,7 +7237,7 @@ causes the browser to traverse one step backward in the joint history of the cur
 
 =head2 browser_version
 
-This method returns version of firefox.
+This method returns the current version of firefox.
 
 =head2 bye
 
@@ -7388,7 +7388,7 @@ This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 developer
 
-returns true if the current version of firefox is a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> (does the minor version number end with an 'b\d+'?) version.
+returns true if the L<current version|Firefox::Marionette#browser_version> of firefox is a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> (does the minor version number end with an 'b\d+'?) version.
 
 =head2 dismiss_alert
 
@@ -8023,7 +8023,7 @@ creates a new WebDriver session.  It is expected that the caller performs the ne
 
 =head2 nightly
 
-returns true if the current version of firefox is a L<nightly release|https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> (does the minor version number end with an 'a1'?)
+returns true if the L<current version|Firefox::Marionette#browser_version> of firefox is a L<nightly release|https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> (does the minor version number end with an 'a1'?)
 
 =head2 paper_sizes 
 
