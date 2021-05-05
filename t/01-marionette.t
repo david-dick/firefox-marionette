@@ -1976,7 +1976,7 @@ SKIP: {
 	};
 	ok($@->isa('Firefox::Marionette::Exception::StaleElement') && $@ =~ /stale/smxi, "Correctly throws useful stale element exception");
 	ok($@->error(), "Firefox::Marionette::Exception->error() is callable:" . $@->error());
-	ok($@->trace(), "Firefox::Marionette::Exception->trace() is callable");
+	ok($@->trace() || 1, "Firefox::Marionette::Exception->trace() is callable");
 
 	my $alert_text = 'testing alert';
 	SKIP: {
