@@ -2181,13 +2181,14 @@ SKIP: {
 			diag("\$capabilities->proxy is not supported for remote hosts");
 			skip("\$capabilities->proxy is not supported for remote hosts", 3);
 		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
-			my $json_document = '{ "id": "5", "value": "sömething"}';
+			my $json_document = Encode::decode('UTF-8', '{ "id": "5", "value": "sömething"}');
 			my $txt_document = 'This is ordinary text';
 			if (my $pid = fork) {
 				$firefox->go($daemon->url() . '?format=JSON');
 				ok($firefox->strip() eq $json_document, "Correctly retrieved JSON document");
 				diag($firefox->strip());
 				ok($firefox->json()->{id} == 5, "Correctly parsed JSON document");
+				ok(Encode::encode('UTF-8', $firefox->json()->{value}, 1) eq "sömething", "Correctly parsed UTF-8 JSON field");
 				$firefox->go($daemon->url() . '?format=txt');
 				ok($firefox->strip() eq $txt_document, "Correctly retrieved TXT document");
 				diag($firefox->strip());
@@ -2213,7 +2214,7 @@ SKIP: {
 									my ($headers, $response);
 									if ($request->uri() =~ /format=JSON/) {
 										$headers = HTTP::Headers->new('Content-Type', 'application/json; charset=utf-8');
-										$response = HTTP::Response->new(200, "OK", $headers, $json_document);
+										$response = HTTP::Response->new(200, "OK", $headers, Encode::encode('UTF-8', $json_document, 1));
 									} elsif ($request->uri() =~ /format=txt/) {
 										$headers = HTTP::Headers->new('Content-Type', 'text/plain');
 										$response = HTTP::Response->new(200, "OK", $headers, $txt_document);

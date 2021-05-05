@@ -6455,13 +6455,13 @@ sub script {
 sub json {
     my ($self) = @_;
     my $content = $self->strip();
-    return JSON::decode_json($content);
+    my $json   = JSON->new()->decode($content);
+    return $json;
 }
 
 sub strip {
     my ($self) = @_;
     my $content = $self->html();
-    $content = Encode::encode( 'UTF-8', $content, 1 );
     my $head_regex   = qr/<head><link[^>]+><\/head>/smx;
     my $script_regex = qr/(?:<script[^>]+><\/script>)?/smx;
     my $header       = qr/<html[^>]*>$script_regex$head_regex<body><pre>/smx;
