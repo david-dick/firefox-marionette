@@ -1975,8 +1975,10 @@ SKIP: {
 		$link->attribute('href');
 	};
 	ok($@->isa('Firefox::Marionette::Exception::StaleElement') && $@ =~ /stale/smxi, "Correctly throws useful stale element exception");
-	ok($@->error(), "Firefox::Marionette::Exception->error() is callable:" . $@->error());
-	ok($@->trace() || 1, "Firefox::Marionette::Exception->trace() is callable");
+	ok($@->status() || 1, "Firefox::Marionette::Exception::Response->status() is callable:" . $@->status() || q[]);
+	ok($@->message(), "Firefox::Marionette::Exception::Response->message() is callable:" . $@->message());
+	ok($@->error() || 1, "Firefox::Marionette::Exception::Response->error() is callable:" . $@->error() || q[]);
+	ok($@->trace() || 1, "Firefox::Marionette::Exception::Response->trace() is callable");
 
 	my $alert_text = 'testing alert';
 	SKIP: {
