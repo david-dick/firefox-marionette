@@ -512,6 +512,12 @@ SKIP: {
 	my $capabilities = $firefox->capabilities();
 	ok(1, "\$capabilities->proxy() " . defined $capabilities->proxy() ? "shows an existing proxy setup" : "is undefined");
 	diag("Browser version is " . $capabilities->browser_version());
+	if ($firefox->nightly()) {
+		diag($capabilities->browser_version() . " is a nightly release");
+	}
+	if ($firefox->developer()) {
+		diag($capabilities->browser_version() . " is a developer release");
+	}
 	($major_version, $minor_version, $patch_version) = split /[.]/smx, $capabilities->browser_version();
 	if (!defined $minor_version) {
 		$minor_version = '';
@@ -1411,7 +1417,11 @@ SKIP: {
 		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with has");
 		$count += 1;
 	}
-	ok($count == 1, "Found elements with nested find:$count");
+	$count = 0;
+	foreach my $element ($firefox->has_class('main-content')->has('//input[@id="not-an-element-at-all-or-ever"]')) {
+		$count += 1;
+	}
+	ok($count == 0, "Found no elements with nested has:$count");
 	$count = 0;
 	foreach my $element ($firefox->find('//input[@id="search-input"]')) {
 		ok($element->attribute('id') eq 'search-input', "Correctly found element with wantarray find");
@@ -1913,6 +1923,7 @@ SKIP: {
 	}
 	ok($firefox->script('return true;', %additional), "javascript command 'return true' executes successfully");
 	ok($firefox->script('return true', timeout => 10_000, new => 1, %additional), "javascript command 'return true' (using timeout and new (true) as parameters)");
+	ok($firefox->script('return true', scriptTimeout => 20_000, newSandbox => 0, %additional), "javascript command 'return true' (using scriptTimeout and newSandbox (false) as parameters)");
 	my $cookie = Firefox::Marionette::Cookie->new(name => 'BonusCookie', value => 'who really cares about privacy', expiry => time + 500000);
 	ok($firefox->add_cookie($cookie), "\$firefox->add_cookie() adds a Firefox::Marionette::Cookie without a domain");
 	$cookie = Firefox::Marionette::Cookie->new(name => 'BonusSessionCookie', value => 'will go away anyway');
@@ -1975,9 +1986,9 @@ SKIP: {
 		$link->attribute('href');
 	};
 	ok($@->isa('Firefox::Marionette::Exception::StaleElement') && $@ =~ /stale/smxi, "Correctly throws useful stale element exception");
-	ok($@->status() || 1, "Firefox::Marionette::Exception::Response->status() is callable:" . $@->status() || q[]);
+	ok($@->status() || 1, "Firefox::Marionette::Exception::Response->status() is callable:" . ($@->status() || q[]));
 	ok($@->message(), "Firefox::Marionette::Exception::Response->message() is callable:" . $@->message());
-	ok($@->error() || 1, "Firefox::Marionette::Exception::Response->error() is callable:" . $@->error() || q[]);
+	ok($@->error() || 1, "Firefox::Marionette::Exception::Response->error() is callable:" . ($@->error() || q[]));
 	ok($@->trace() || 1, "Firefox::Marionette::Exception::Response->trace() is callable");
 
 	my $alert_text = 'testing alert';
