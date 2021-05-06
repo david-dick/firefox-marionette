@@ -6632,7 +6632,7 @@ sub sleep_time_in_ms {
 sub bye {
     my ( $self, $code ) = @_;
     my $found = 1;
-    while ( !$found ) {
+    while ($found) {
         eval { &{$code} } and do {
             Time::HiRes::sleep(
                 $self->sleep_time_in_ms() / _MILLISECONDS_IN_ONE_SECOND() );
