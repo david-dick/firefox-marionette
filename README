@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    Version 1.04
+    Version 1.05
 
 SYNOPSIS
 
@@ -962,17 +962,29 @@ SUBROUTINES/METHODS
  is_displayed
 
     accepts an element as the first parameter. This method returns true or
-    false depending on if the element is displayed.
+    false depending on if the element is displayed
+    <https://firefox-source-docs.mozilla.org/testing/marionette/internals/interaction.html#interaction.isElementDisplayed>.
 
  is_enabled
 
     accepts an element as the first parameter. This method returns true or
-    false depending on if the element is enabled.
+    false depending on if the element is enabled
+    <https://w3c.github.io/webdriver/#is-element-enabled>.
 
  is_selected
 
     accepts an element as the first parameter. This method returns true or
-    false depending on if the element is selected.
+    false depending on if the element is selected
+    <https://w3c.github.io/webdriver/#dfn-is-element-selected>. Note that
+    this method only makes sense for checkbox
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox>
+    or radio
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio>
+    inputs or option
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option>
+    elements in a select
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select>
+    dropdown.
 
  json
 
@@ -1444,7 +1456,10 @@ SUBROUTINES/METHODS
  tag_name
 
     accepts a Firefox::Marionette::Element object as the first parameter
-    and returns the relevant tag name. For example 'a' or 'input'.
+    and returns the relevant tag name. For example 'a
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a>' or
+    'input
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input>'.
 
  text
 
@@ -1457,7 +1472,9 @@ SUBROUTINES/METHODS
 
  title
 
-    returns the current title of the window.
+    returns the current title
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title> of
+    the window.
 
  type
 

@@ -4,7 +4,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 # VERSION
 
-Version 1.04
+Version 1.05
 
 # SYNOPSIS
 
@@ -759,15 +759,15 @@ returns true if `document.readyState === "interactive"` or if [loaded](https://m
 
 ## is\_displayed
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element is displayed.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element [is displayed](https://firefox-source-docs.mozilla.org/testing/marionette/internals/interaction.html#interaction.isElementDisplayed).
 
 ## is\_enabled
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element is enabled.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element [is enabled](https://w3c.github.io/webdriver/#is-element-enabled).
 
 ## is\_selected
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element is selected.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element [is selected](https://w3c.github.io/webdriver/#dfn-is-element-selected).  Note that this method only makes sense for [checkbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox) or [radio](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio) inputs or [option](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option) elements in a [select](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select) dropdown.
 
 ## json
 
@@ -1037,7 +1037,7 @@ accepts a window handle (either the result of [window\_handles](https://metacpan
 
 ## tag\_name
 
-accepts a [Firefox::Marionette::Element](https://metacpan.org/pod/Firefox::Marionette::Element) object as the first parameter and returns the relevant tag name.  For example 'a' or 'input'.
+accepts a [Firefox::Marionette::Element](https://metacpan.org/pod/Firefox::Marionette::Element) object as the first parameter and returns the relevant tag name.  For example '[a](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a)' or '[input](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input)'.
 
 ## text
 
@@ -1049,7 +1049,7 @@ returns the current [timeouts](https://metacpan.org/pod/Firefox::Marionette::Tim
 
 ## title
 
-returns the current title of the window.
+returns the current [title](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title) of the window.
 
 ## type
 
