@@ -6453,15 +6453,15 @@ sub script {
 }
 
 sub json {
-    my ($self) = @_;
+    my ($self)  = @_;
     my $content = $self->strip();
-    my $json   = JSON->new()->decode($content);
+    my $json    = JSON->new()->decode($content);
     return $json;
 }
 
 sub strip {
-    my ($self) = @_;
-    my $content = $self->html();
+    my ($self)       = @_;
+    my $content      = $self->html();
     my $head_regex   = qr/<head><link[^>]+><\/head>/smx;
     my $script_regex = qr/(?:<script[^>]+><\/script>)?/smx;
     my $header       = qr/<html[^>]*>$script_regex$head_regex<body><pre>/smx;
@@ -7855,15 +7855,15 @@ returns true if C<document.readyState === "interactive"> or if L<loaded|Firefox:
 
 =head2 is_displayed
 
-accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element is displayed.
+accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element L<is displayed|https://firefox-source-docs.mozilla.org/testing/marionette/internals/interaction.html#interaction.isElementDisplayed>.
 
 =head2 is_enabled
 
-accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element is enabled.
+accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element L<is enabled|https://w3c.github.io/webdriver/#is-element-enabled>.
 
 =head2 is_selected
 
-accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element is selected.
+accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element L<is selected|https://w3c.github.io/webdriver/#dfn-is-element-selected>.  Note that this method only makes sense for L<checkbox|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox> or L<radio|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio> inputs or L<option|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option> elements in a L<select|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select> dropdown.
 
 =head2 json
 
@@ -8198,7 +8198,7 @@ accepts a window handle (either the result of L<window_handles|Firefox::Marionet
 
 =head2 tag_name
 
-accepts a L<Firefox::Marionette::Element|Firefox::Marionette::Element> object as the first parameter and returns the relevant tag name.  For example 'a' or 'input'.
+accepts a L<Firefox::Marionette::Element|Firefox::Marionette::Element> object as the first parameter and returns the relevant tag name.  For example 'L<a|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a>' or 'L<input|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input>'.
 
 =head2 text
 
@@ -8210,7 +8210,7 @@ returns the current L<timeouts|Firefox::Marionette::Timeouts> for page loading, 
 
 =head2 title
 
-returns the current title of the window.
+returns the current L<title|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title> of the window.
 
 =head2 type
 
