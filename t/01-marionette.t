@@ -7,6 +7,7 @@ use MIME::Base64();
 use Test::More;
 use Cwd();
 use Firefox::Marionette qw(:all);
+use Compress::Zlib();
 use Config;
 use HTTP::Daemon();
 use HTTP::Status();
