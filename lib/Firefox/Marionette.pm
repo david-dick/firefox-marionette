@@ -1418,6 +1418,11 @@ sub _search_for_version_in_application_ini {
             my $config =
               Config::INI::Reader->read_handle($application_ini_handle);
             if ( my $app = $config->{App} ) {
+                if ( $app->{SourceRepository} eq
+                    'https://hg.mozilla.org/releases/mozilla-beta' )
+                {
+                    $self->{developer_edition} = 1;
+                }
                 return join q[ ], $app->{Vendor}, $app->{Name}, $app->{Version};
             }
         }
@@ -6698,7 +6703,10 @@ sub await {
 sub developer {
     my ($self) = @_;
     $self->_initialise_version();
-    if (   ( defined $self->{_initial_version} )
+    if ( $self->{developer_edition} ) {
+        return 1;
+    }
+    elsif (( defined $self->{_initial_version} )
         && ( $self->{_initial_version}->{minor} )
         && ( $self->{_initial_version}->{minor} =~ /b\d+$/smx ) )
     {
