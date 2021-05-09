@@ -586,7 +586,9 @@ SKIP: {
 	my $implicit_timeout = 41_001;
 	$new = Firefox::Marionette::Timeouts->new(page_load => $page_timeout, script => $script_timeout, implicit => $implicit_timeout);
 	my $timeouts = $firefox->timeouts($new);
-	ok((ref $timeouts) eq 'Firefox::Marionette::Timeouts', "\$firefox->timeouts() returns a Firefox::Marionette::Timeouts object");
+	ok((ref $timeouts) eq 'Firefox::Marionette::Timeouts', "\$firefox->timeouts(\$new) returns a Firefox::Marionette::Timeouts object");
+	my $timeouts2 = $firefox->timeouts();
+	ok((ref $timeouts2) eq 'Firefox::Marionette::Timeouts', "\$firefox->timeouts() returns a Firefox::Marionette::Timeouts object");
 	ok($timeouts->page_load() == 300_000, "\$timeouts->page_load() is 5 minutes");
 	ok($timeouts->script() == 30_000, "\$timeouts->script() is 30 seconds");
 	ok(defined $timeouts->implicit() && $timeouts->implicit() == 0, "\$timeouts->implicit() is 0 milliseconds");
@@ -1723,22 +1725,12 @@ SKIP: {
 	ok($count == 2, "Found elements with wantarray find_partial:$count");
 	my $css_rule;
 	ok($css_rule = $firefox->find('//input[@id="search-input"]')->css('display'), "The value of the css rule 'display' is '$css_rule'");
-	my $result;
-	ok($result = $firefox->find('//input[@id="search-input"]')->is_enabled() =~ /^[01]$/, "is_enabled returns 0 or 1:$result");
-	eval { $firefox->is_enabled({}) };
-	my $eval_string = "$@";
-	chomp $eval_string;
-	ok((ref $@ eq 'Firefox::Marionette::Exception'), "is_enabled throws exception for bad parameters:$eval_string");
-	ok($result = $firefox->find('//input[@id="search-input"]')->is_displayed() =~ /^[01]$/, "is_displayed returns 0 or 1:$result");
-	eval { $firefox->is_displayed({}) };
-	$eval_string = "$@";
-	chomp $eval_string;
-	ok((ref $@ eq 'Firefox::Marionette::Exception'), "is_displayed throws exception for bad parameters:$eval_string");
-	ok($result = $firefox->find('//input[@id="search-input"]')->is_selected() =~ /^[01]$/, "is_selected returns 0 or 1:$result");
-	eval { $firefox->is_selected({}) };
-	$eval_string = "$@";
-	chomp $eval_string;
-	ok((ref $@ eq 'Firefox::Marionette::Exception'), "is_selected throws exception for bad parameters:$eval_string");
+	my $result = $firefox->find('//input[@id="search-input"]')->is_enabled();
+	ok($result =~ /^[01]$/, "is_enabled returns 0 or 1 for //input[\@id=\"search-input\"]:$result");
+	$result = $firefox->find('//input[@id="search-input"]')->is_displayed();
+	ok($result =~ /^[01]$/, "is_displayed returns 0 or 1 for //input[\@id=\"search-input\"]:$result");
+	$result = $firefox->find('//input[@id="search-input"]')->is_selected();
+	ok($result =~ /^[01]$/, "is_selected returns 0 or 1 for //input[\@id=\"search-input\"]:$result");
 	ok($firefox->find('//input[@id="search-input"]')->clear(), "Clearing the element directly");
 	TODO: {
 		local $TODO = $major_version < 50 ? "property and attribute methods can have different values for empty" : undef;
@@ -1927,11 +1919,23 @@ SKIP: {
 	ok($firefox->script('return true', scriptTimeout => 20_000, newSandbox => 0, %additional), "javascript command 'return true' (using scriptTimeout and newSandbox (false) as parameters)");
 	my $cookie = Firefox::Marionette::Cookie->new(name => 'BonusCookie', value => 'who really cares about privacy', expiry => time + 500000);
 	ok($firefox->add_cookie($cookie), "\$firefox->add_cookie() adds a Firefox::Marionette::Cookie without a domain");
-	$cookie = Firefox::Marionette::Cookie->new(name => 'BonusSessionCookie', value => 'will go away anyway');
+	$cookie = Firefox::Marionette::Cookie->new(name => 'BonusSessionCookie', value => 'will go away anyway', sameSite => 0, httpOnly => 0, secure => 0);
 	ok($firefox->add_cookie($cookie), "\$firefox->add_cookie() adds a Firefox::Marionette::Cookie without expiry");
+	$cookie = Firefox::Marionette::Cookie->new(name => 'StartingCookie', value => 'not sure aböut this', httpOnly => 1, secure => 1, sameSite => 1);
+	ok($firefox->add_cookie($cookie), "\$firefox->add_cookie() adds a Firefox::Marionette::Cookie with a domain");
 	ok($firefox->find_id('search-input')->clear()->find_id('search-input')->type('Test::More'), "Sent 'Test::More' to the 'search-input' field directly to the element");
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 36);
+	}
+	foreach my $name ('click', 'clear', 'is_selected', 'is_enabled', 'is_displayed', 'type', 'tag_name', 'rect', 'text') {
+		eval {
+			$firefox->$name({});
+		};
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->$name() with a hash parameter produces a Firefox::Marionette::Exception exception");
+		eval {
+			$firefox->$name(q[]);
+		};
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->$name() with a non ref parameter produces a Firefox::Marionette::Exception exception");
 	}
 	ok($firefox->find_name('lucky')->click($element), "Clicked the \"I'm Feeling Lucky\" button");
 	diag("Going to Test::More page with a page load strategy of " . ($capabilities->page_load_strategy() || ''));
@@ -1973,6 +1977,18 @@ SKIP: {
 				$bytes_read += length $buffer
 			}
 			ok($bytes_read > 1_000, "Downloaded file is gzipped");
+		}
+	}
+	foreach my $element ($firefox->find_tag('option')) {
+		my $inner_html;
+		eval {
+			$inner_html = $element->property('innerHTML');
+		};
+		if ((defined $inner_html) && ($inner_html eq 'Jump to version')) {
+			$firefox->script('arguments[0].selected = true', args => $element);
+			ok($element->is_selected(), "\$firefox->is_selected() returns true for a selected item");
+			$firefox->script('arguments[0].disabled = true', args => $element);
+			ok(!$element->is_enabled(), "After script disabled element, \$firefox->is_enabled() correctly reflects disabling");
 		}
 	}
 	$firefox->go('http://www.example.com');
@@ -2157,7 +2173,7 @@ SKIP: {
 		$result = undef;
 	}
 	eval {
-		$result = $firefox->accept_connections(0);
+		$result = $firefox->accept_connections(1);
 	};
 	SKIP: {
 		my $exception = "$@";
@@ -2165,6 +2181,8 @@ SKIP: {
 		if ((!$result) && ($major_version < 52)) {
 			skip("Refusing future connections may not be supported in firefox versions less than 52:$exception", 1);
 		}
+		ok($result, "Accepting future connections");
+		$result = $firefox->accept_connections(0);
 		ok($result, "Refusing future connections");
 	}
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
