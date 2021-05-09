@@ -7932,11 +7932,11 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, L<connections to firefox.settings.services.mozilla.com will still be made|https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via L</etc/hosts|https://en.wikipedia.org/wiki//etc/hosts>.  NOTE: that this option only works when profile_name/profile is not specified.
 
-=item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.
+=item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.  This defaults to "0" (off).
 
-=item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.
+=item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).
 
-=item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched.
+=item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched. This defaults to "0" (off).
 
 =item * firefox - use the specified path to the L<Firefox|https://firefox.org/> binary, rather than the default path.
 
@@ -7950,7 +7950,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * mime_types - any MIME types that Firefox will encounter during this session.  MIME types that are not specified will result in a hung browser (the File Download popup will appear).
 
-=item * nightly - only allow a L<nightly release|https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> to be launched.
+=item * nightly - only allow a L<nightly release|https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly> to be launched.  This defaults to "0" (off).
 
 =item * port - if the "host" parameter is also set, use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox via the specified port.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.
 
