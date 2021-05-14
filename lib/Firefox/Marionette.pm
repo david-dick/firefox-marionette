@@ -54,6 +54,7 @@ our $VERSION = '1.05';
 sub _ANYPROCESS                     { return -1 }
 sub _COMMAND                        { return 0 }
 sub _DEFAULT_HOST                   { return 'localhost' }
+sub _DEFAULT_PORT                   { return 2828 }
 sub _MARIONETTE_PROTOCOL_VERSION_3  { return 3 }
 sub _WIN32_ERROR_SHARING_VIOLATION  { return 0x20 }
 sub _NUMBER_OF_MCOOKIE_BYTES        { return 16 }
@@ -1069,6 +1070,8 @@ sub _setup_arguments {
     push @arguments, $self->_check_visible(%parameters);
     if ( $parameters{profile_name} ) {
         $self->{profile_name} = $parameters{profile_name};
+        $self->{profile_path} =
+          Firefox::Marionette::Profile->path( $parameters{profile_name} );
         push @arguments, ( '-P', $self->{profile_name} );
     }
     else {
@@ -3943,6 +3946,11 @@ sub _get_marionette_port {
               or Firefox::Marionette::Exception->throw(
                 "Failed to close '$self->{profile_path}':$EXTENDED_OS_ERROR");
         }
+    }
+    if ( defined $port ) {
+    }
+    else {
+        $port = _DEFAULT_PORT();
     }
     return $port;
 }

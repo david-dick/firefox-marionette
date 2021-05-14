@@ -483,6 +483,35 @@ if (
 	diag("TLS/Network are NOT okay");
 }
 my $skip_message;
+SKIP: {
+	if ($ENV{FIREFOX_HOST}) {
+		skip("No profile testing when the FIREFOX_HOST override is used", 6);
+	}
+	if ($ENV{FIREFOX_BINARY}) {
+		skip("No profile testing when the FIREFOX_BINARY override is used", 6);
+	}
+	if (!$ENV{RELEASE_TESTING}) {
+		skip("No profile testing except for RELEASE_TESTING", 6);
+	}
+	foreach my $name (Firefox::Marionette::Profile->names()) {
+		next unless ($name eq 'throw');
+		($skip_message, $firefox) = start_firefox(0, debug => 1, profile_name => $name );
+		if (!$skip_message) {
+			$at_least_one_success = 1;
+		}
+		if ($skip_message) {
+			skip($skip_message, 6);
+		}
+		ok($firefox, "Firefox loaded with the $name profile");
+		ok($firefox->go('http://example.com'), "firefox with the $name profile loaded example.com");
+		ok($firefox->quit() == 0, "firefox with the $name profile quit successfully");
+		my $profile = Firefox::Marionette::Profile->existing($name);
+		($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile );
+		ok($firefox, "Firefox loaded with a profile copied from $name");
+		ok($firefox->go('http://example.com'), "firefox with the copied profile from $name loaded example.com");
+		ok($firefox->quit() == 0, "firefox with the profile copied from $name quit successfully");
+	}
+}
 ok($profile = Firefox::Marionette::Profile->new(), "Firefox::Marionette::Profile->new() correctly returns a new profile");
 ok(((defined $profile->get_value('marionette.port')) && ($profile->get_value('marionette.port') == 0)), "\$profile->get_value('marionette.port') correctly returns 0");
 ok($profile->set_value('browser.link.open_newwindow', 2), "\$profile->set_value('browser.link.open_newwindow', 2) to force new windows to appear");
