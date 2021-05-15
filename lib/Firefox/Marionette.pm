@@ -5568,6 +5568,137 @@ sub chrome_window_handle {
     return $self->_response_result_value($response);
 }
 
+sub key_down {
+    my ( $self, $key ) = @_;
+    return { type => 'keyDown', value => $key };
+}
+
+sub key_up {
+    my ( $self, $key ) = @_;
+    return { type => 'keyUp', value => $key };
+}
+
+sub pause {
+    my ( $self, $duration ) = @_;
+    return { type => 'pause', duration => $duration };
+}
+
+sub mouse_move {
+    my ( $self, @parameters ) = @_;
+    my %arguments;
+    if ( $parameters[0]->isa('Firefox::Marionette::Element') ) {
+        my $rect = $parameters[0]->rect();
+        $arguments{x} = $rect->pos_x() + ( $rect->width() / 2 );
+        if ( $arguments{x} != int $arguments{x} ) {
+            $arguments{x} = int $arguments{x} + 1;
+        }
+        $arguments{y} = $rect->pos_y() + ( $rect->height() / 2 );
+        if ( $arguments{y} != int $arguments{y} ) {
+            $arguments{y} = int $arguments{y} + 1;
+        }
+    }
+    else {
+        %arguments = @parameters;
+    }
+    return { type => 'pointerMove', pointerType => 'mouse', %arguments };
+}
+
+sub mouse_down {
+    my ( $self, $button ) = @_;
+    return {
+        type        => 'pointerDown',
+        pointerType => 'mouse',
+        button      => ( $button || 0 )
+    };
+}
+
+sub mouse_up {
+    my ( $self, $button ) = @_;
+    return {
+        type        => 'pointerUp',
+        pointerType => 'mouse',
+        button      => ( $button || 0 )
+    };
+}
+
+sub perform {
+    my ( $self, @actions ) = @_;
+    my $message_id = $self->_new_message_id();
+    my $previous_type;
+    my @action_sequence;
+    foreach my $parameter_action (@actions) {
+        my $marionette_action = {};
+        foreach my $key ( sort { $a cmp $b } keys %{$parameter_action} ) {
+            $marionette_action->{$key} = $parameter_action->{$key};
+        }
+        my $type;
+        my %arguments;
+        if (   ( $marionette_action->{type} eq 'keyUp' )
+            || ( $marionette_action->{type} eq 'keyDown' ) )
+        {
+            $type = 'key';
+        }
+        elsif (( $marionette_action->{type} eq 'pointerMove' )
+            || ( $marionette_action->{type} eq 'pointerDown' )
+            || ( $marionette_action->{type} eq 'pointerUp' ) )
+        {
+            $type = 'pointer';
+            %arguments =
+              ( pointerType => delete $marionette_action->{pointerType} );
+        }
+        elsif ( $marionette_action->{type} eq 'pause' ) {
+            if ( defined $previous_type ) {
+                $type = $previous_type;
+            }
+            else {
+                $type = 'none';
+            }
+        }
+        else {
+            Firefox::Marionette::Exception->throw(
+'Unknown action type in sequence.  keyUp, keyDown, pointerMove, pointerDown, pointerUp or pause are the only known types'
+            );
+        }
+        $self->{next_action_sequence_id}++;
+        my $id = $self->{next_action_sequence_id};
+        if ( ( defined $previous_type ) && ( $type eq $previous_type ) ) {
+            push @{ $action_sequence[-1]{actions} }, $marionette_action;
+        }
+        else {
+            push @action_sequence,
+              {
+                type => $type,
+                id   => 'seq' . $id,
+                %arguments, actions => [$marionette_action]
+              };
+        }
+        $previous_type = $type;
+    }
+    $self->_send_request(
+        [
+            _COMMAND(), $message_id,
+            $self->_command('WebDriver:PerformActions'),
+            { actions => \@action_sequence },
+
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return $self;
+}
+
+sub release {
+    my ( $self, @actions ) = @_;
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(), $message_id, $self->_command('WebDriver:ReleaseActions')
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    $self->{next_action_sequence_id} = 0;
+    return $self;
+}
+
 sub chrome_window_handles {
     my ( $self, $element ) = @_;
     my $message_id = $self->_new_message_id();
@@ -6939,8 +7070,9 @@ sub _convert_request_to_old_protocols {
 sub _send_request {
     my ( $self, $object ) = @_;
     $object = $self->_convert_request_to_old_protocols($object);
-    my $json   = JSON->new()->convert_blessed()->encode($object);
-    my $length = length $json;
+    my $encoder = JSON->new()->convert_blessed()->ascii();
+    my $json    = $encoder->encode($object);
+    my $length  = length $json;
     if ( $self->_debug() ) {
         warn ">> $length:$json\n";
     }
@@ -7937,6 +8069,37 @@ returns a L<JSON|JSON> object that has been parsed from the page source of the c
 
     say Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->json()->{version};
 
+=head2 key_down
+
+accepts a parameter describing a key and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with that key being depressed.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                               )->release()->content();
+
+=head2 key_up
+
+accepts a parameter describing a key and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with that key being depressed.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                                 $firefox->pause(20),
+                                 $firefox->key_up('l'),
+                                 $firefox->key_up(CONTROL()
+                               )->content();
+
 =head2 loaded
 
 returns true if C<document.readyState === "complete">
@@ -7974,6 +8137,18 @@ returns a list of MIME types that will be downloaded by firefox and made availab
 =head2 minimise
 
 minimises the firefox window. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 mouse_down
+
+accepts a parameter describing which mouse button the method should apply to (L<left|Firefox::Marionette::Buttons#LEFT>, L<middle|Firefox::Marionette::Buttons#MIDDLE> or L<right|Firefox::Marionette::Buttons#RIGHT>) and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with a mouse button being depressed.
+
+=head2 mouse_move
+
+accepts a L<element|Firefox::Marionette::Element> parameter, or a C<( x => 0, y => 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied L<element|Firefox::Marionette::Element> parameter.
+
+=head2 mouse_up
+
+accepts a parameter describing which mouse button the method should apply to (L<left|Firefox::Marionette::Buttons#LEFT>, L<middle|Firefox::Marionette::Buttons#MIDDLE> or L<right|Firefox::Marionette::Buttons#RIGHT>) and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with a mouse button being released.
 
 =head2 new
  
@@ -8092,6 +8267,10 @@ returns true if the L<current version|Firefox::Marionette#browser_version> of fi
 
 returns a list of all the recognised names for paper sizes, such as A4 or LEGAL.
 
+=head2 pause
+
+accepts a parameter in milliseconds and returns a corresponding action for the L<perform|Firefox::Marionette#perform> method that will cause a pause in the chain of actions given to the L<perform|Firefox::Marionette#perform> method.
+
 =head2 pdf
 
 returns a L<File::Temp|File::Temp> object containing a PDF encoded version of the current page for printing.
@@ -8129,6 +8308,33 @@ accepts a optional hash as the first parameter with the following allowed keys;
             ...
     }
 
+=head2 perform
+
+accepts a list of actions (see L<mouse_up|Firefox::Marionette#mouse_up>, L<mouse_down|Firefox::Marionette#mouse_down>, L<mouse_move|Firefox::Marionette#mouse_move>, L<pause|Firefox::Marionette#pause>, L<key_down|Firefox::Marionette#key_down> and L<key_up|Firefox::Marionette#key_up>) and performs these actions in sequence.  This allows fine control over interactions, including sending right clicks to the browser and sending Control, Alt and other special keys.  The L<release|Firefox::Marionette#release> method will complete outstanding actions (such as L<mouse_up|Firefox::Marionette#mouse_up> or L<key_up|Firefox::Marionette#key_up> actions).
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                                 $firefox->key_up('l'),
+                                 $firefox->key_up(CONTROL()
+                               )->content();
+
+    $firefox->go('https://metacpan.org');
+    my $help_button = $firefox->find_class('btn search-btn help-btn');
+    $firefox->perform(
+			          $firefox->mouse_move($help_button),
+			          $firefox->mouse_down(RIGHT_BUTTON()),
+			          $firefox->pause(4),
+			          $firefox->mouse_up(RIGHT_BUTTON()),
+		);
+
+See the L<release|Firefox::Marionette#release> method for an alternative for manually specifying all the L<mouse_up|Firefox::Marionette#mouse_up> and L<key_up|Firefox::Marionette#key_up> methods
+
 =head2 property
 
 accepts an L<element|Firefox::Marionette::Element> as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the L<attribute|Firefox::Marionette#attribute> method will return the initial content.
@@ -8156,6 +8362,28 @@ accepts a L<element|Firefox::Marionette::Element> as the first parameter and ret
 =head2 refresh
 
 refreshes the current page.  The browser will wait for the page to completely refresh or the session's L<page_load|Firefox::Marionette::Timeouts#page_load> duration to elapse before returning, which, by default is 5 minutes.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 release
+
+completes any outstanding actions issued by the L<perform|Firefox::Marionette#perform> method.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                               )->release()->content();
+
+    $firefox->go('https://metacpan.org');
+    my $help_button = $firefox->find_class('btn search-btn help-btn');
+    $firefox->perform(
+			          $firefox->mouse_move($help_button),
+			          $firefox->mouse_down(RIGHT_BUTTON()),
+			          $firefox->pause(4),
+		)->release();
 
 =head2 screen_orientation
 
@@ -8506,10 +8734,6 @@ Currently the following Marionette methods have not been implemented;
 
 =over
  
-=item * WebDriver:ReleaseAction
-
-=item * WebDriver:PerformActions
-
 =item * WebDriver:SetScreenOrientation
 
 =back

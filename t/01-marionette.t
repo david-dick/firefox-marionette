@@ -2020,6 +2020,96 @@ SKIP: {
 			ok(!$element->is_enabled(), "After script disabled element, \$firefox->is_enabled() correctly reflects disabling");
 		}
 	}
+	$firefox->go('https://metacpan.org');
+	ok(!exists $INC{'Keys.pm'}, "Firefox::Marionette::Keys is not loaded");
+	eval { require Firefox::Marionette::Keys; };
+	ok($@ eq '', "Successfully loaded Firefox::Marionette::Keys");
+	Firefox::Marionette::Keys->import(qw(:all));
+	ok(CANCEL() eq chr 0xE001, "CANCEL() is correct as 0xE001");
+	ok(HELP() eq chr 0xE002, "HELP() is correct as OxE002");
+	ok(BACKSPACE() eq chr 0xE003, "BACKSPACE() is correct as OxE003");
+	ok(TAB() eq chr 0xE004, "TAB() is correct as OxE004");
+	ok(CLEAR() eq chr 0xE005, "CLEAR() is correct as OxE005");
+	ok(ENTER() eq chr 0xE006, "ENTER() is correct as OxE006");
+	ok(SHIFT() eq chr 0xE008, "SHIFT() is correct as OxE008 (Same as SHIFT_LEFT())");
+	ok(SHIFT_LEFT() eq chr 0xE008, "SHIFT_LEFT() is correct as OxE008");
+	ok(CONTROL() eq chr 0xE009, "CONTROL() is correct as OxE009 (Same as CONTROL_LEFT())");
+	ok(CONTROL_LEFT() eq chr 0xE009, "CONTROL_LEFT() is correct as OxE009");
+	ok(ALT() eq chr 0xE00A, "ALT() is correct as OxE00A (Same as ALT_LEFT())");
+	ok(ALT_LEFT() eq chr 0xE00A, "ALT_LEFT() is correct as OxE00A");
+	ok(PAUSE() eq chr 0xE00B, "PAUSE() is correct as OxE00B");
+	ok(ESCAPE() eq chr 0xE00C, "ESCAPE() is correct as OxE00C");
+	ok(SPACE() eq chr 0xE00D, "SPACE() is correct as OxE00D");
+	ok(PAGE_UP() eq chr 0xE00E, "PAGE_UP() is correct as OxE00E");
+	ok(PAGE_DOWN() eq chr 0xE00F, "PAGE_DOWN() is correct as OxE00F");
+	ok(END_KEY() eq chr 0xE010, "END_KEY() is correct as OxE010");
+	ok(HOME() eq chr 0xE011, "HOME() is correct as OxE011");
+	ok(ARROW_LEFT() eq chr 0xE012, "ARROW_LEFT() is correct as OxE012");
+	ok(ARROW_UP() eq chr 0xE013, "ARROW_UP() is correct as OxE013");
+	ok(ARROW_RIGHT() eq chr 0xE014, "ARROW_UP() is correct as OxE014");
+	ok(ARROW_DOWN() eq chr 0xE015, "ARROW_DOWN() is correct as OxE015");
+	ok(INSERT() eq chr 0xE016, "INSERT() is correct as OxE016");
+	ok(DELETE() eq chr 0xE017, "DELETE() is correct as OxE017");
+	ok(F1() eq chr 0xE031, "F1() is correct as OxE031");
+	ok(F2() eq chr 0xE032, "F2() is correct as OxE032");
+	ok(F3() eq chr 0xE033, "F3() is correct as OxE033");
+	ok(F4() eq chr 0xE034, "F4() is correct as OxE034");
+	ok(F5() eq chr 0xE035, "F5() is correct as OxE035");
+	ok(F6() eq chr 0xE036, "F6() is correct as OxE036");
+	ok(F7() eq chr 0xE037, "F7() is correct as OxE037");
+	ok(F8() eq chr 0xE038, "F8() is correct as OxE038");
+	ok(F9() eq chr 0xE039, "F9() is correct as OxE039");
+	ok(F10() eq chr 0xE03A, "F10() is correct as OxE03A");
+	ok(F11() eq chr 0xE03B, "F11() is correct as OxE03B");
+	ok(F12() eq chr 0xE03C, "F12() is correct as OxE03C");
+	ok(META() eq chr 0xE03D, "META() is correct as OxE03D (Same as META_LEFT())");
+	ok(META_LEFT() eq chr 0xE03D, "META_LEFT() is correct as OxE03D");
+	ok(ZENKAKU_HANKAKU() eq chr 0xE040, "ZENKAKU_HANKAKU() is correct as OxE040");
+	ok(SHIFT_RIGHT() eq chr 0xE050, "SHIFT_RIGHT() is correct as OxE050");
+	ok(CONTROL_RIGHT() eq chr 0xE051, "CONTROL_RIGHT() is correct as OxE051");
+	ok(ALT_RIGHT() eq chr 0xE052, "ALT_RIGHT() is correct as OxE052");
+	ok(META_RIGHT() eq chr 0xE053, "META_RIGHT() is correct as OxE053");
+	ok(!exists $INC{'Buttons.pm'}, "Firefox::Marionette::Buttons is not loaded");
+	eval { require Firefox::Marionette::Buttons; };
+	ok($@ eq '', "Successfully loaded Firefox::Marionette::Buttons");
+	Firefox::Marionette::Buttons->import(qw(:all));
+	ok(LEFT_BUTTON() == 0, "LEFT_BUTTON() is correct as O");
+	ok(MIDDLE_BUTTON() == 1, "MIDDLE_BUTTON() is correct as 1");
+	ok(RIGHT_BUTTON() == 2, "RIGHT_BUTTON() is correct as 2");
+	my $help_button = $firefox->find_class('btn search-btn help-btn');
+	ok($help_button, "Found help button on metacpan.org");
+	SKIP: {
+		my $perform_ok;
+		eval {
+			$perform_ok = $firefox->perform(
+						$firefox->key_down('h'),
+						$firefox->pause(2),
+						$firefox->key_up('h'),
+						$firefox->mouse_move($help_button),
+						$firefox->mouse_down(LEFT_BUTTON()),
+						$firefox->pause(1),
+						$firefox->mouse_up(LEFT_BUTTON()),
+						$firefox->key_down(ESCAPE()),
+						$firefox->pause(2),
+						$firefox->key_up(ESCAPE()),
+					);
+		};
+		if ((!$perform_ok) && ($major_version < 60)) {
+			chomp $@;
+			diag("The perform method is not supported for $major_version.$minor_version.$patch_version:$@");
+			skip("The perform method is not supported for $major_version.$minor_version.$patch_version", 5);
+		}
+		ok(ref $perform_ok eq 'Firefox::Marionette', "\$firefox->perform() with a combination of mouse, pause and key actions");
+		my $value = $firefox->find('//input[@id="search-input"]')->property('value');
+		ok($value eq 'h', "\$firefox->find('//input[\@id=\"search-input\"]')->property('value') is equal to 'h' from perform method above:$value");
+		ok($firefox->perform($firefox->pause(2)), "\$firefox->perform() with a single pause action");
+		ok($firefox->perform($firefox->mouse_move(x => 0, y => 0),$firefox->mouse_down(), $firefox->mouse_up()), "\$firefox->perform() with a default mouse button and manual x,y co-ordinates");
+		eval {
+			$firefox->perform({ type => 'unknown' });
+		};
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->perform() throws an exception when passed an unknown action:$@");
+		ok($firefox->release(), "\$firefox->release()");
+	}
 	SKIP: {
 		if ((!$context) && ($major_version < 50)) {
 			chomp $@;

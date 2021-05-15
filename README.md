@@ -809,6 +809,37 @@ returns a [JSON](https://metacpan.org/pod/JSON) object that has been parsed from
 
     say Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->json()->{version};
 
+## key\_down
+
+accepts a parameter describing a key and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with that key being depressed.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                               )->release()->content();
+
+## key\_up
+
+accepts a parameter describing a key and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with that key being depressed.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                                 $firefox->pause(20),
+                                 $firefox->key_up('l'),
+                                 $firefox->key_up(CONTROL()
+                               )->content();
+
 ## loaded
 
 returns true if `document.readyState === "complete"`
@@ -846,6 +877,18 @@ returns a list of MIME types that will be downloaded by firefox and made availab
 ## minimise
 
 minimises the firefox window. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## mouse\_down
+
+accepts a parameter describing which mouse button the method should apply to ([left](https://metacpan.org/pod/Firefox::Marionette::Buttons#LEFT), [middle](https://metacpan.org/pod/Firefox::Marionette::Buttons#MIDDLE) or [right](https://metacpan.org/pod/Firefox::Marionette::Buttons#RIGHT)) and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with a mouse button being depressed.
+
+## mouse\_move
+
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter, or a `( x =` 0, y => 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter.
+
+## mouse\_up
+
+accepts a parameter describing which mouse button the method should apply to ([left](https://metacpan.org/pod/Firefox::Marionette::Buttons#LEFT), [middle](https://metacpan.org/pod/Firefox::Marionette::Buttons#MIDDLE) or [right](https://metacpan.org/pod/Firefox::Marionette::Buttons#RIGHT)) and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with a mouse button being released.
 
 ## new
 
@@ -927,6 +970,10 @@ returns true if the [current version](https://metacpan.org/pod/Firefox::Marionet
 
 returns a list of all the recognised names for paper sizes, such as A4 or LEGAL.
 
+## pause
+
+accepts a parameter in milliseconds and returns a corresponding action for the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that will cause a pause in the chain of actions given to the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method.
+
 ## pdf
 
 returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a PDF encoded version of the current page for printing.
@@ -952,6 +999,33 @@ accepts a optional hash as the first parameter with the following allowed keys;
             print $firefox->pdf(page => { width => 21, height => 27 }, raw => 1);
             ...
     }
+
+## perform
+
+accepts a list of actions (see [mouse\_up](https://metacpan.org/pod/Firefox::Marionette#mouse_up), [mouse\_down](https://metacpan.org/pod/Firefox::Marionette#mouse_down), [mouse\_move](https://metacpan.org/pod/Firefox::Marionette#mouse_move), [pause](https://metacpan.org/pod/Firefox::Marionette#pause), [key\_down](https://metacpan.org/pod/Firefox::Marionette#key_down) and [key\_up](https://metacpan.org/pod/Firefox::Marionette#key_up)) and performs these actions in sequence.  This allows fine control over interactions, including sending right clicks to the browser and sending Control, Alt and other special keys.  The [release](https://metacpan.org/pod/Firefox::Marionette#release) method will complete outstanding actions (such as [mouse\_up](https://metacpan.org/pod/Firefox::Marionette#mouse_up) or [key\_up](https://metacpan.org/pod/Firefox::Marionette#key_up) actions).
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                                 $firefox->key_up('l'),
+                                 $firefox->key_up(CONTROL()
+                               )->content();
+
+    $firefox->go('https://metacpan.org');
+    my $help_button = $firefox->find_class('btn search-btn help-btn');
+    $firefox->perform(
+                                  $firefox->mouse_move($help_button),
+                                  $firefox->mouse_down(RIGHT_BUTTON()),
+                                  $firefox->pause(4),
+                                  $firefox->mouse_up(RIGHT_BUTTON()),
+                );
+
+See the [release](https://metacpan.org/pod/Firefox::Marionette#release) method for an alternative for manually specifying all the [mouse\_up](https://metacpan.org/pod/Firefox::Marionette#mouse_up) and [key\_up](https://metacpan.org/pod/Firefox::Marionette#key_up) methods
 
 ## property
 
@@ -980,6 +1054,28 @@ accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as th
 ## refresh
 
 refreshes the current page.  The browser will wait for the page to completely refresh or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## release
+
+completes any outstanding actions issued by the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Keys qw(:all);
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->chrome()->perform(
+                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down('l'),
+                               )->release()->content();
+
+    $firefox->go('https://metacpan.org');
+    my $help_button = $firefox->find_class('btn search-btn help-btn');
+    $firefox->perform(
+                                  $firefox->mouse_move($help_button),
+                                  $firefox->mouse_down(RIGHT_BUTTON()),
+                                  $firefox->pause(4),
+                )->release();
 
 ## screen\_orientation
 
@@ -1299,8 +1395,6 @@ None reported.  Always interested in any products with marionette support that t
 
 Currently the following Marionette methods have not been implemented;
 
-- WebDriver:ReleaseAction
-- WebDriver:PerformActions
 - WebDriver:SetScreenOrientation
 
 No bugs have been reported.

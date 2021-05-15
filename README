@@ -1035,6 +1035,39 @@ SUBROUTINES/METHODS
     
         say Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->json()->{version};
 
+ key_down
+
+    accepts a parameter describing a key and returns an action for use in
+    the perform method that corresponding with that key being depressed.
+
+        use Firefox::Marionette();
+        use Firefox::Marionette::Keys qw(:all);
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        $firefox->chrome()->perform(
+                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down('l'),
+                                   )->release()->content();
+
+ key_up
+
+    accepts a parameter describing a key and returns an action for use in
+    the perform method that corresponding with that key being depressed.
+
+        use Firefox::Marionette();
+        use Firefox::Marionette::Keys qw(:all);
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        $firefox->chrome()->perform(
+                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down('l'),
+                                     $firefox->pause(20),
+                                     $firefox->key_up('l'),
+                                     $firefox->key_up(CONTROL()
+                                   )->content();
+
  loaded
 
     returns true if document.readyState === "complete"
@@ -1076,6 +1109,26 @@ SUBROUTINES/METHODS
 
     minimises the firefox window. This method returns itself to aid in
     chaining methods.
+
+ mouse_down
+
+    accepts a parameter describing which mouse button the method should
+    apply to (left, middle or right) and returns an action for use in the
+    perform method that corresponding with a mouse button being depressed.
+
+ mouse_move
+
+    accepts a element parameter, or a ( x = 0, y => 0 )> type hash manually
+    describing exactly where to move the mouse to and returns an action for
+    use in the perform method that corresponding with such a mouse
+    movement, either to the specified co-ordinates or to the middle of the
+    supplied element parameter.
+
+ mouse_up
+
+    accepts a parameter describing which mouse button the method should
+    apply to (left, middle or right) and returns an action for use in the
+    perform method that corresponding with a mouse button being released.
 
  new
 
@@ -1278,6 +1331,12 @@ SUBROUTINES/METHODS
     returns a list of all the recognised names for paper sizes, such as A4
     or LEGAL.
 
+ pause
+
+    accepts a parameter in milliseconds and returns a corresponding action
+    for the perform method that will cause a pause in the chain of actions
+    given to the perform method.
+
  pdf
 
     returns a File::Temp object containing a PDF encoded version of the
@@ -1322,6 +1381,39 @@ SUBROUTINES/METHODS
                 ...
         }
 
+ perform
+
+    accepts a list of actions (see mouse_up, mouse_down, mouse_move, pause,
+    key_down and key_up) and performs these actions in sequence. This
+    allows fine control over interactions, including sending right clicks
+    to the browser and sending Control, Alt and other special keys. The
+    release method will complete outstanding actions (such as mouse_up or
+    key_up actions).
+
+        use Firefox::Marionette();
+        use Firefox::Marionette::Keys qw(:all);
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        $firefox->chrome()->perform(
+                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down('l'),
+                                     $firefox->key_up('l'),
+                                     $firefox->key_up(CONTROL()
+                                   )->content();
+    
+        $firefox->go('https://metacpan.org');
+        my $help_button = $firefox->find_class('btn search-btn help-btn');
+        $firefox->perform(
+                                      $firefox->mouse_move($help_button),
+                                      $firefox->mouse_down(RIGHT_BUTTON()),
+                                      $firefox->pause(4),
+                                      $firefox->mouse_up(RIGHT_BUTTON()),
+                    );
+
+    See the release method for an alternative for manually specifying all
+    the mouse_up and key_up methods
+
  property
 
     accepts an element as the first parameter and a scalar attribute name
@@ -1358,6 +1450,28 @@ SUBROUTINES/METHODS
     completely refresh or the session's page_load duration to elapse before
     returning, which, by default is 5 minutes. This method returns itself
     to aid in chaining methods.
+
+ release
+
+    completes any outstanding actions issued by the perform method.
+
+        use Firefox::Marionette();
+        use Firefox::Marionette::Keys qw(:all);
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        $firefox->chrome()->perform(
+                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down('l'),
+                                   )->release()->content();
+    
+        $firefox->go('https://metacpan.org');
+        my $help_button = $firefox->find_class('btn search-btn help-btn');
+        $firefox->perform(
+                                      $firefox->mouse_move($help_button),
+                                      $firefox->mouse_down(RIGHT_BUTTON()),
+                                      $firefox->pause(4),
+                    )->release();
 
  screen_orientation
 
@@ -1824,10 +1938,6 @@ INCOMPATIBILITIES
 BUGS AND LIMITATIONS
 
     Currently the following Marionette methods have not been implemented;
-
-      * WebDriver:ReleaseAction
-
-      * WebDriver:PerformActions
 
       * WebDriver:SetScreenOrientation
 
