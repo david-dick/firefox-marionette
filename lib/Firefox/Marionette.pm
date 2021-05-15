@@ -80,8 +80,8 @@ sub _OLD_PROTOCOL_NAME_INDEX        { return 2 }
 sub _OLD_PROTOCOL_PARAMETERS_INDEX  { return 3 }
 sub _OLD_INITIAL_PACKET_SIZE        { return 66 }
 sub _READ_LENGTH_OF_OPEN3_OUTPUT    { return 50 }
-sub _DEFAULT_WINDOW_WIDTH           { return 1024 }
-sub _DEFAULT_WINDOW_HEIGHT          { return 768 }
+sub _DEFAULT_WINDOW_WIDTH           { return 1920 }
+sub _DEFAULT_WINDOW_HEIGHT          { return 1080 }
 sub _DEFAULT_DEPTH                  { return 24 }
 sub _LOCAL_READ_BUFFER_SIZE         { return 8192 }
 sub _WIN32_PROCESS_INHERIT_FLAGS    { return 0 }
