@@ -160,13 +160,12 @@ sub _download_directory {
     my ($self) = @_;
     my $directory;
     eval {
-        my $context = $self->context();
-        $self->context('chrome');
+        my $context = $self->_context('chrome');
         $directory =
           $self->script( 'let branch = Components.classes["' . q[@]
               . 'mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(""); return branch.getStringPref ? branch.getStringPref("browser.download.downloadDir") : branch.getComplexValue("browser.download.downloadDir", Components.interfaces.nsISupportsString).data;'
           );
-        $self->context($context);
+        $self->_context($context);
     } or do {
         chomp $EVAL_ERROR;
         Carp::carp(
@@ -932,11 +931,11 @@ sub _clean_local_extension_directory {
 
 sub har {
     my ($self)  = @_;
-    my $context = $self->context('content');
+    my $context = $self->_context('content');
     my $log     = $self->script(<<'_JS_');
 return (async function() { return await HAR.triggerExport() })();
 _JS_
-    $self->context($context);
+    $self->_context($context);
     return { log => $log };
 }
 
@@ -4488,7 +4487,7 @@ sub _validate_request_header_merge {
 
 sub _set_headers {
     my ($self) = @_;
-    $self->context('chrome');
+    my $old    = $self->_context('chrome');
     my $script = <<'_JS_';
 (function() {
     let observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -4575,7 +4574,7 @@ _JS_
 }).register();
 _JS_
     $self->script( $self->_compress_script($script) );
-    $self->context('content');
+    $self->_context($old);
     return;
 }
 
@@ -6337,7 +6336,24 @@ sub _terminate_xvfb {
     return;
 }
 
+sub content {
+    my ($self) = @_;
+    $self->_context('content');
+    return $self;
+}
+
+sub chrome {
+    my ($self) = @_;
+    $self->_context('chrome');
+    return $self;
+}
+
 sub context {
+    my ( $self, $new ) = @_;
+    return $self->_context($new);
+}
+
+sub _context {
     my ( $self, $new ) = @_;
     my $message_id = $self->_new_message_id();
     $self->_send_request(
@@ -7277,6 +7293,19 @@ returns the L<capabilities|Firefox::Marionette::Capabilities> of the current fir
 
 This method returns the $? (CHILD_ERROR) for the Firefox process, or undefined if the process has not yet exited.
 
+=head2 chrome
+
+changes the scope of subsequent commands to chrome context.  This allows things like interacting with firefox menu's and buttons outside of the browser window.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->chrome();
+    $firefox->script(...); # running script in chrome context
+    $firefox->content();
+
+See the L<context|Firefox::Marionette#context> method for an alternative methods for changing the context.
+
 =head2 chrome_window_handle
 
 returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.
@@ -7311,6 +7340,19 @@ closes the current chrome window (that is the entire window, not just the tabs).
 
 closes the current window/tab.  It returns a list of still available window/tab handles.
 
+=head2 content
+
+changes the scope of subsequent commands to browsing context.  This is the default for when firefox starts and restricts commands to operating in the browser window only.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->chrome();
+    $firefox->script(...); # running script in chrome context
+    $firefox->content();
+
+See the L<context|Firefox::Marionette#context> method for an alternative methods for changing the context.
+
 =head2 context
 
 accepts a string as the first parameter, which may be either 'content' or 'chrome'.  It returns the context type that is Marionette's current target for browsing context scoped commands.
@@ -7319,9 +7361,14 @@ accepts a string as the first parameter, which may be either 'content' or 'chrom
     use v5.10;
 
     my $firefox = Firefox::Marionette->new();
+    if ($firefox->context() eq 'content') {
+       say "I knew that was going to happen";
+    }
     my $old_context = $firefox->context('chrome');
     $firefox->script(...); # running script in chrome context
     $firefox->context($old_context);
+
+See the L<content|Firefox::Marionette#content> and L<chrome|Firefox::Marionette#chrome> methods for alternative methods for changing the context.
 
 =head2 cookies
 

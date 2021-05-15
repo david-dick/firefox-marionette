@@ -2020,6 +2020,15 @@ SKIP: {
 			ok(!$element->is_enabled(), "After script disabled element, \$firefox->is_enabled() correctly reflects disabling");
 		}
 	}
+	SKIP: {
+		if ((!$context) && ($major_version < 50)) {
+			chomp $@;
+			diag("\$firefox->context is not supported for $major_version.$minor_version.$patch_version:$@");
+			skip("\$firefox->context is not supported for $major_version.$minor_version.$patch_version", 2);
+		}
+		ok($firefox->chrome()->context() eq 'chrome', "Setting and reading context of the browser as 'chrome'");
+		ok($firefox->content()->context() eq 'content', "Setting and reading context of the browser as 'content'");
+	}
 	$firefox->go('http://www.example.com');
 	my $body = $firefox->find("//body");
 	my $outer_html = $firefox->script(q{ return arguments[0].outerHTML;}, args => [$body]);

@@ -171,6 +171,19 @@ returns the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabil
 
 This method returns the $? (CHILD\_ERROR) for the Firefox process, or undefined if the process has not yet exited.
 
+## chrome
+
+changes the scope of subsequent commands to chrome context.  This allows things like interacting with firefox menu's and buttons outside of the browser window.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->chrome();
+    $firefox->script(...); # running script in chrome context
+    $firefox->content();
+
+See the [context](https://metacpan.org/pod/Firefox::Marionette#context) method for an alternative methods for changing the context.
+
 ## chrome\_window\_handle
 
 returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.
@@ -205,6 +218,19 @@ closes the current chrome window (that is the entire window, not just the tabs).
 
 closes the current window/tab.  It returns a list of still available window/tab handles.
 
+## content
+
+changes the scope of subsequent commands to browsing context.  This is the default for when firefox starts and restricts commands to operating in the browser window only.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->chrome();
+    $firefox->script(...); # running script in chrome context
+    $firefox->content();
+
+See the [context](https://metacpan.org/pod/Firefox::Marionette#context) method for an alternative methods for changing the context.
+
 ## context
 
 accepts a string as the first parameter, which may be either 'content' or 'chrome'.  It returns the context type that is Marionette's current target for browsing context scoped commands.
@@ -213,9 +239,14 @@ accepts a string as the first parameter, which may be either 'content' or 'chrom
     use v5.10;
 
     my $firefox = Firefox::Marionette->new();
+    if ($firefox->context() eq 'content') {
+       say "I knew that was going to happen";
+    }
     my $old_context = $firefox->context('chrome');
     $firefox->script(...); # running script in chrome context
     $firefox->context($old_context);
+
+See the [content](https://metacpan.org/pod/Firefox::Marionette#content) and [chrome](https://metacpan.org/pod/Firefox::Marionette#chrome) methods for alternative methods for changing the context.
 
 ## cookies
 
