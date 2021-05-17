@@ -1046,14 +1046,14 @@ SUBROUTINES/METHODS
         my $firefox = Firefox::Marionette->new();
     
         $firefox->chrome()->perform(
-                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down(CONTROL()),
                                      $firefox->key_down('l'),
                                    )->release()->content();
 
  key_up
 
     accepts a parameter describing a key and returns an action for use in
-    the perform method that corresponding with that key being depressed.
+    the perform method that corresponding with that key being released.
 
         use Firefox::Marionette();
         use Firefox::Marionette::Keys qw(:all);
@@ -1061,11 +1061,11 @@ SUBROUTINES/METHODS
         my $firefox = Firefox::Marionette->new();
     
         $firefox->chrome()->perform(
-                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down(CONTROL()),
                                      $firefox->key_down('l'),
                                      $firefox->pause(20),
                                      $firefox->key_up('l'),
-                                     $firefox->key_up(CONTROL()
+                                     $firefox->key_up(CONTROL())
                                    )->content();
 
  loaded
@@ -1118,7 +1118,7 @@ SUBROUTINES/METHODS
 
  mouse_move
 
-    accepts a element parameter, or a ( x = 0, y => 0 )> type hash manually
+    accepts a element parameter, or a ( x => 0, y => 0 ) type hash manually
     describing exactly where to move the mouse to and returns an action for
     use in the perform method that corresponding with such a mouse
     movement, either to the specified co-ordinates or to the middle of the
@@ -1392,14 +1392,15 @@ SUBROUTINES/METHODS
 
         use Firefox::Marionette();
         use Firefox::Marionette::Keys qw(:all);
+        use Firefox::Marionette::Buttons qw(:all);
     
         my $firefox = Firefox::Marionette->new();
     
         $firefox->chrome()->perform(
-                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down(CONTROL()),
                                      $firefox->key_down('l'),
                                      $firefox->key_up('l'),
-                                     $firefox->key_up(CONTROL()
+                                     $firefox->key_up(CONTROL())
                                    )->content();
     
         $firefox->go('https://metacpan.org');
@@ -1457,11 +1458,12 @@ SUBROUTINES/METHODS
 
         use Firefox::Marionette();
         use Firefox::Marionette::Keys qw(:all);
+        use Firefox::Marionette::Buttons qw(:all);
     
         my $firefox = Firefox::Marionette->new();
     
         $firefox->chrome()->perform(
-                                     $firefox->key_down(CONTROL(),
+                                     $firefox->key_down(CONTROL()),
                                      $firefox->key_down('l'),
                                    )->release()->content();
     

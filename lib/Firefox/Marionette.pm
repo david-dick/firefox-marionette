@@ -8079,13 +8079,13 @@ accepts a parameter describing a key and returns an action for use in the L<perf
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                )->release()->content();
 
 =head2 key_up
 
-accepts a parameter describing a key and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with that key being depressed.
+accepts a parameter describing a key and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with that key being released.
 
     use Firefox::Marionette();
     use Firefox::Marionette::Keys qw(:all);
@@ -8093,11 +8093,11 @@ accepts a parameter describing a key and returns an action for use in the L<perf
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                  $firefox->pause(20),
                                  $firefox->key_up('l'),
-                                 $firefox->key_up(CONTROL()
+                                 $firefox->key_up(CONTROL())
                                )->content();
 
 =head2 loaded
@@ -8144,7 +8144,7 @@ accepts a parameter describing which mouse button the method should apply to (L<
 
 =head2 mouse_move
 
-accepts a L<element|Firefox::Marionette::Element> parameter, or a C<( x => 0, y => 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied L<element|Firefox::Marionette::Element> parameter.
+accepts a L<element|Firefox::Marionette::Element> parameter, or a C<( x =E<gt> 0, y =E<gt> 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied L<element|Firefox::Marionette::Element> parameter.
 
 =head2 mouse_up
 
@@ -8314,14 +8314,15 @@ accepts a list of actions (see L<mouse_up|Firefox::Marionette#mouse_up>, L<mouse
 
     use Firefox::Marionette();
     use Firefox::Marionette::Keys qw(:all);
+    use Firefox::Marionette::Buttons qw(:all);
 
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                  $firefox->key_up('l'),
-                                 $firefox->key_up(CONTROL()
+                                 $firefox->key_up(CONTROL())
                                )->content();
 
     $firefox->go('https://metacpan.org');
@@ -8369,11 +8370,12 @@ completes any outstanding actions issued by the L<perform|Firefox::Marionette#pe
 
     use Firefox::Marionette();
     use Firefox::Marionette::Keys qw(:all);
+    use Firefox::Marionette::Buttons qw(:all);
 
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                )->release()->content();
 

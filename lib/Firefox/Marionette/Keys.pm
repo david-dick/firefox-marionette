@@ -119,10 +119,10 @@ Version 1.05
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                  $firefox->key_up('l'),
-                                 $firefox->key_up(CONTROL()
+                                 $firefox->key_up(CONTROL())
                                )->content();
 
 =head1 DESCRIPTION

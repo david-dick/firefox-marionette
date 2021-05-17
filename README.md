@@ -819,13 +819,13 @@ accepts a parameter describing a key and returns an action for use in the [perfo
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                )->release()->content();
 
 ## key\_up
 
-accepts a parameter describing a key and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with that key being depressed.
+accepts a parameter describing a key and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with that key being released.
 
     use Firefox::Marionette();
     use Firefox::Marionette::Keys qw(:all);
@@ -833,11 +833,11 @@ accepts a parameter describing a key and returns an action for use in the [perfo
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                  $firefox->pause(20),
                                  $firefox->key_up('l'),
-                                 $firefox->key_up(CONTROL()
+                                 $firefox->key_up(CONTROL())
                                )->content();
 
 ## loaded
@@ -884,7 +884,7 @@ accepts a parameter describing which mouse button the method should apply to ([l
 
 ## mouse\_move
 
-accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter, or a `( x =` 0, y => 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter.
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter, or a `( x => 0, y => 0 )` type hash manually describing exactly where to move the mouse to and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter.
 
 ## mouse\_up
 
@@ -1006,14 +1006,15 @@ accepts a list of actions (see [mouse\_up](https://metacpan.org/pod/Firefox::Mar
 
     use Firefox::Marionette();
     use Firefox::Marionette::Keys qw(:all);
+    use Firefox::Marionette::Buttons qw(:all);
 
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                  $firefox->key_up('l'),
-                                 $firefox->key_up(CONTROL()
+                                 $firefox->key_up(CONTROL())
                                )->content();
 
     $firefox->go('https://metacpan.org');
@@ -1061,11 +1062,12 @@ completes any outstanding actions issued by the [perform](https://metacpan.org/p
 
     use Firefox::Marionette();
     use Firefox::Marionette::Keys qw(:all);
+    use Firefox::Marionette::Buttons qw(:all);
 
     my $firefox = Firefox::Marionette->new();
 
     $firefox->chrome()->perform(
-                                 $firefox->key_down(CONTROL(),
+                                 $firefox->key_down(CONTROL()),
                                  $firefox->key_down('l'),
                                )->release()->content();
 
