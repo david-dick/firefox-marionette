@@ -18,6 +18,11 @@ my $segv_detected;
 my $at_least_one_success;
 my $terminated;
 
+if ($ENV{FIREFOX_ALARM}) {
+	$SIG{ALRM} = sub { die "Alarm at time exceeded" };
+	alarm 600; # ten minutes is heaps for bulk testing
+}
+
 my $test_time_limit = 90;
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
@@ -266,6 +271,8 @@ sub start_firefox {
 				$skip_message = "Skip tests that depended on firefox starting successfully:$@";
 			}
 		}
+	} elsif ($exception =~ /^Alarm at time exceeded/) {
+		die $exception;
 	} elsif ($exception) {
 		if (($^O eq 'MSWin32') || ($^O eq 'cygwin') || ($^O eq 'darwin')) {
 			diag("Failed to start in $^O:$exception");

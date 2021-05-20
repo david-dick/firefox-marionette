@@ -13,6 +13,7 @@ if (exists $ENV{COUNT}) {
 	$0 = "Test run number $ENV{COUNT}";
 }
 $ENV{RELEASE_TESTING} = 1;
+$ENV{FIREFOX_ALARM} = 1;
 my $cwd = Cwd::cwd();
 our $pid;
 if ($pid = fork) {
