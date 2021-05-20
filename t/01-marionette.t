@@ -82,10 +82,10 @@ sub start_firefox {
 		$parameters{firefox} = $ENV{FIREFOX_BINARY};
 		diag("Overriding firefox binary to $parameters{firefox}");
 	}
-	if (defined $ca_cert_handle) {
-		my $certutil = `certutil --help 2>/dev/null`;
-		if ($? != 0) {
-		} elsif ($launches % 2) {
+	if ($parameters{manual_certificate_add}) {
+		delete $parameters{manual_certificate_add};
+	} elsif (defined $ca_cert_handle) {
+		if ($launches % 2) {
 			diag("Setting trust to list");
 			$parameters{trust} = [ '/dev/fd/' . fileno $ca_cert_handle ];
 		} else {
@@ -702,12 +702,11 @@ SKIP: {
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 } elsif ($ENV{RELEASE_TESTING}) {
 	eval {
-		$ca_cert_handle = File::Temp::tempfile(File::Spec->catfile(File::Spec->tmpdir(), 'firefox_test_ca_private_XXXXXXXXXXX')) or Carp::croak("Failed to open temporary file for writing:$!");
+		$ca_cert_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_cert_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
 		fcntl $ca_cert_handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
-		my $ca_private_key_handle = File::Temp::tempfile(File::Spec->catfile(File::Spec->tmpdir(), 'firefox_test_ca_private_XXXXXXXXXXX')) or Carp::croak("Failed to open temporary file for writing:$!");
-		fcntl $ca_private_key_handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
-		system {'openssl'} 'openssl', 'genrsa', '-out' => '/dev/fd/' . fileno $ca_private_key_handle, 4096 and Carp::croak("Failed to generate a private key:$!");
-		my $ca_config_handle = File::Temp::tempfile(File::Spec->catfile(File::Spec->tmpdir(), 'firefox_test_ca_config_XXXXXXXXXXX')) or Carp::croak("Failed to open temporary file for writing:$!");
+		my $ca_private_key_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_private_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
+		system {'openssl'} 'openssl', 'genrsa', '-out' => $ca_private_key_handle->filename(), 4096 and Carp::croak("Failed to generate a private key:$!");
+		my $ca_config_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_config_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
 		$ca_config_handle->print(<<"_CONFIG_");
 [ req ]
 distinguished_name     = req_distinguished_name
@@ -729,10 +728,10 @@ _CONFIG_
 		fcntl $ca_config_handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
 		system {'openssl'} 'openssl', 'req', '-x509',
 			'-set_serial' => '1',
-			'-config'     => '/dev/fd/' . fileno $ca_config_handle,
+			'-config'     => $ca_config_handle->filename(),
 			'-days'       => 10,
-			'-key'        => '/dev/fd/' . fileno $ca_private_key_handle,
-			'-out'        => '/dev/fd/' . fileno $ca_cert_handle
+			'-key'        => $ca_private_key_handle->filename(),
+			'-out'        => $ca_cert_handle->filename()
 			and Carp::croak("Failed to generate a CA root certificate:$!");
 		1;
 	} or do {
@@ -2426,9 +2425,14 @@ SKIP: {
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
+sub display_name {
+	my ($certificate) = @_;
+	return $certificate->display_name() || $certificate->nickname();
+}
+
 SKIP: {
 	my $proxy_host = 'all.example.org';
-	($skip_message, $firefox) = start_firefox(1, console => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
+	($skip_message, $firefox) = start_firefox(1, manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -2529,6 +2533,109 @@ SKIP: {
 		}
 		$firefox->script(qq[alert('$alert_text')]);
 		ok($firefox->accept_alert(), "\$firefox->accept_alert() accepts alert box");
+	}
+	my @certificates;
+	eval { @certificates = $firefox->certificates(); };
+	SKIP: {
+		if ((scalar @certificates == 0) && ($major_version < 50)) {
+			chomp $@;
+			diag("\$firefox->certificates is not supported for $major_version.$minor_version.$patch_version:$@");
+			skip("\$firefox->certificates is not supported for $major_version.$minor_version.$patch_version", 57);
+		}
+		eval { $firefox->add_certificate( ) };
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->add_certificate(path => \$value) throws an exception if nothing is added");
+		eval { $firefox->add_certificate( path => '/this/does/not/exist' ) };
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->add_certificate(path => \$value) throws an exception if a non existent file is added");
+		eval { $firefox->add_certificate( string => 'this is nonsense' ); };
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->add_certificate(string => \$value) throws an exception if nonsense is added");
+		my $handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_part_cert_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
+		$handle->print(<<'_CERT_') or die "Failed to write to temporary file:$!";
+-----BEGIN CERTIFICATE-----
+MIIFsDC
+_CERT_
+		seek $handle, 0, 0 or Carp::croak("Failed to seek to start of temporary file:$!");
+		eval { $firefox->add_certificate( path => $handle->filename() ); };
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->add_certificate(string => \$value) throws an exception if partial certificate is added");
+		if (defined $ca_cert_handle) {
+			ok($firefox->add_certificate(path => $ca_cert_handle->filename(), trust => ',,,'), "Adding a certificate with no permissions");
+		}
+		my $count = 0;
+		foreach my $certificate (sort { display_name($a) cmp display_name($b) } $firefox->certificates()) {
+			ok($certificate, "Found the " . Encode::encode('UTF-8', display_name($certificate)) . " from the certificate database");
+			ok($firefox->certificate_as_pem($certificate) =~ /BEGIN[ ]CERTIFICATE.*MII.*END[ ]CERTIFICATE\-+\s$/smx, Encode::encode('UTF-8', display_name($certificate)) . " looks like a PEM encoded X.509 certificate");
+			ok(ref $firefox->delete_certificate($certificate) eq 'Firefox::Marionette', "Deleted " . Encode::encode('UTF-8', display_name($certificate)) . " from the certificate database");
+			if ($certificate->is_ca_cert()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is a CA cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT a CA cert");
+			}
+			if ($certificate->is_any_cert()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is any cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT any cert");
+			}
+			if ($certificate->is_unknown_cert()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is an unknown cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT an unknown cert");
+			}
+			if ($certificate->is_built_in_root()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is a built in root cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT a built in root cert");
+			}
+			if ($certificate->is_server_cert()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is a server cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT a server cert");
+			}
+			if ($certificate->is_user_cert()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is a user cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT a user cert");
+			}
+			if ($certificate->is_email_cert()) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is an email cert");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT an email cert");
+			}
+			ok($certificate->issuer_name(), Encode::encode('UTF-8', display_name($certificate)) . " has an issuer_name of " . Encode::encode('UTF-8', $certificate->issuer_name()));
+			ok(defined $certificate->common_name(), Encode::encode('UTF-8', display_name($certificate)) . " has a common_name of " . Encode::encode('UTF-8', $certificate->common_name()));
+			if (defined $certificate->email_address()) {
+				ok($certificate->email_address(), Encode::encode('UTF-8', display_name($certificate)) . " has an email_address of " . $certificate->email_address());
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " does not have a specified email_address");
+			}
+			ok($certificate->sha256_subject_public_key_info_digest(), Encode::encode('UTF-8', display_name($certificate)) . " has a sha256_subject_public_key_info_digest of " . $certificate->sha256_subject_public_key_info_digest());
+			ok(defined $certificate->issuer_organization(), Encode::encode('UTF-8', display_name($certificate)) . " has an issuer_organization of " . Encode::encode('UTF-8', $certificate->issuer_organization()));
+			ok($certificate->db_key(), Encode::encode('UTF-8', display_name($certificate)) . " has a db_key of " . $certificate->db_key());
+			ok($certificate->token_name(), Encode::encode('UTF-8', display_name($certificate)) . " has a token_name of " . Encode::encode('UTF-8', $certificate->token_name()));
+			if (defined $certificate->sha256_fingerprint()) {
+				ok($certificate->sha256_fingerprint(), Encode::encode('UTF-8', display_name($certificate)) . " has a sha256_fingerprint of " . $certificate->sha256_fingerprint());
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " has a sha256_fingerprint of " . $certificate->sha256_fingerprint());
+			}
+			ok($certificate->subject_name(), Encode::encode('UTF-8', display_name($certificate)) . " has a subject_name of " . Encode::encode('UTF-8', $certificate->subject_name()));
+			if (defined $certificate->key_usages()) {
+				ok(defined $certificate->key_usages(), Encode::encode('UTF-8', display_name($certificate)) . " has a key_usages of " . $certificate->key_usages());
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " does not has a key_usage");
+			}
+			ok(defined $certificate->issuer_organization_unit(), Encode::encode('UTF-8', display_name($certificate)) . " has an issuer_organization_unit of " . Encode::encode('UTF-8', $certificate->issuer_organization_unit()));
+			{
+				local $TODO = "Firefox can neglect old certificates.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1710716";
+				ok($certificate->not_valid_after() > time, Encode::encode('UTF-8', display_name($certificate)) . " has a current not_valid_after value of " . localtime $certificate->not_valid_after());
+			}
+			ok($certificate->not_valid_before() < $certificate->not_valid_after(), Encode::encode('UTF-8', display_name($certificate)) . " has a not_valid_before that is before the not_valid_after value");
+			ok($certificate->not_valid_before() < time, Encode::encode('UTF-8', display_name($certificate)) . " has a current not_valid_before value of " . localtime $certificate->not_valid_before());
+			ok($certificate->serial_number(), Encode::encode('UTF-8', display_name($certificate)) . " has a serial_number of " . $certificate->serial_number());
+			ok(defined $certificate->issuer_common_name(), Encode::encode('UTF-8', display_name($certificate)) . " has a issuer_common_name of " . Encode::encode('UTF-8', $certificate->issuer_common_name()));
+			ok(defined $certificate->organization(), Encode::encode('UTF-8', display_name($certificate)) . " has a organization of " . Encode::encode('UTF-8', $certificate->organization()));
+			ok($certificate->sha1_fingerprint(), Encode::encode('UTF-8', display_name($certificate)) . " has a sha1_fingerprint of " . $certificate->sha1_fingerprint());
+			ok(defined $certificate->organizational_unit(), Encode::encode('UTF-8', display_name($certificate)) . " has a organizational_unit of " . Encode::encode('UTF-8', $certificate->organizational_unit()));
+			$count += 1;
+		}
+		ok($count > 0, "There are $count certificates in the firefox database");
 	}
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }

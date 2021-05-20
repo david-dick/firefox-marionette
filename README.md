@@ -47,6 +47,25 @@ Please note that when closing the connection via the client you can end-up in a 
 
 returns the active element of the current browsing context's document element, if the document element is non-null.
 
+## add\_certificate
+
+accepts a hash as a parameter and adds the specified certificate to the Firefox database with the supplied or default trust.  Allowed keys are below;
+
+- path - a file system path to a single [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5).
+- string - a string containg a single [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5)
+- trust - This is the [trustargs](https://www.mankier.com/1/certutil#-t) value for [NSS](https://wiki.mozilla.org/NSS).  If defaults to 'C,,';
+
+    use Firefox::Marionette();
+
+    my $pem_encoded_string = <<'_PEM_';
+    -----BEGIN CERTIFICATE-----
+    MII..
+    -----END CERTIFICATE-----
+    _PEM_
+    my $firefox = Firefox::Marionette->new()->add_certificate(string => $pem_encoded_string);
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## add\_cookie
 
 accepts a single [cookie](https://metacpan.org/pod/Firefox::Marionette::Cookie) object as the first parameter and adds it to the current cookie jar.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
@@ -167,6 +186,38 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
 returns the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) of the current firefox binary.  You can retrieve [timeouts](https://metacpan.org/pod/Firefox::Marionette::Timeouts) or a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy) with this method.
 
+## certificate\_as\_pem
+
+accepts a [certificate stored in the Firefox database](https://metacpan.org/pod/Firefox::Marionette::Certificate) as a parameter and returns a [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5) as a string.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+
+    # Generating a ca-bundle.crt to STDOUT from the current firefox instance
+
+    foreach my $certificate (sort { $a->display_name() cmp $b->display_name } $firefox->certificates()) {
+        if ($certificate->is_ca_cert()) {
+            print '# ' . $certificate->display_name() . "\n" . $firefox->certificate_as_pem($certificate) . "\n";
+        }
+    }
+
+## certificates
+
+returns a list of all known [certificates in the Firefox database](https://metacpan.org/pod/Firefox::Marionette::Certificate).
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    # Sometimes firefox can neglect old certificates.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1710716
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $certificate (grep { $_->is_ca_cert() && $_->not_valid_after() < time } $firefox->certificates()) {
+        say "The " . $certificate->display_name() " . certificate has expired and should be removed";
+    }
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## child\_error
 
 This method returns the $? (CHILD\_ERROR) for the Firefox process, or undefined if the process has not yet exited.
@@ -277,6 +328,25 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
 ## current\_chrome\_window\_handle 
 
 see [chrome\_window\_handle](https://metacpan.org/pod/Firefox::Marionette#chrome_window_handle).
+
+## delete\_certificate
+
+accepts a [certificate stored in the Firefox database](https://metacpan.org/pod/Firefox::Marionette::Certificate) as a parameter and deletes/distrusts the certificate from the Firefox database.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $certificate ($firefox->certificates()) {
+        if ($certificate->is_ca_cert()) {
+            $firefox->delete_certificate($certificate);
+        } else {
+            say "This " . $certificate->display_name() " certificate is NOT a certificate authority, therefore it is not being deleted";
+        }
+    }
+    say "Good luck visiting a HTTPS website!";
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## delete\_cookie
 
@@ -916,7 +986,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - seer - this option is switched off "0" by default.  When it is switched on "1", it will activate the various speculative and pre-fetch options for firefox.  NOTE: that this option only works when profile\_name/profile is not specified.
 - sleep\_time\_in\_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the [await](https://metacpan.org/pod/Firefox::Marionette#await) or [bye](https://metacpan.org/pod/Firefox::Marionette#bye) methods.  This defaults to "1" millisecond.
 - survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
-- trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) that will be trusted for this session.  The certificate will be imported by the [NSS certutil](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil) binary.  If this binary does not exist in the [PATH](https://en.wikipedia.org/wiki/PATH_\(variable\)), an exception will be thrown.  For Linux/BSD systems, [NSS certutil](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil) should be available via your package manager.  For OS X and Windows based platforms, it will be more difficult.
+- trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) encoded as a [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5) that will be trusted for this session.
 - timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
 - port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
 - visible - should firefox be visible on the desktop.  This defaults to "0".
@@ -1422,6 +1492,8 @@ David Dick  `<ddick@cpan.org>`
 Thanks to the entire Mozilla organisation for a great browser and to the team behind Marionette for providing an interface for automation.
 
 Thanks to [Jan Odvarko](http://www.softwareishard.com/blog/about/) for creating the [HAR Export Trigger](https://github.com/firefox-devtools/har-export-trigger) extension for Firefox.
+
+Thanks to [Mike Kaply](https://mike.kaply.com/about/) for his [post](https://mike.kaply.com/2015/02/10/installing-certificates-into-firefox/) describing importing certificates into Firefox.
 
 Thanks also to the authors of the documentation in the following sources;
 

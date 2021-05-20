@@ -9,6 +9,7 @@ use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
 use Firefox::Marionette::Timeouts();
 use Firefox::Marionette::Capabilities();
+use Firefox::Marionette::Certificate();
 use Firefox::Marionette::Profile();
 use Firefox::Marionette::Proxy();
 use Firefox::Marionette::Exception();
@@ -85,6 +86,7 @@ sub _DEFAULT_WINDOW_HEIGHT          { return 1080 }
 sub _DEFAULT_DEPTH                  { return 24 }
 sub _LOCAL_READ_BUFFER_SIZE         { return 8192 }
 sub _WIN32_PROCESS_INHERIT_FLAGS    { return 0 }
+sub _DEFAULT_CERT_TRUST             { return 'C,,' }
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
@@ -796,6 +798,176 @@ sub _compatibility_checks_for_older_marionette {
     return;
 }
 
+sub _strip_pem_prefix_whitespace_and_postfix {
+    my ( $self, $pem_encoded_string ) = @_;
+    my $stripped_certificate;
+    if (   ( $pem_encoded_string =~ s/^\-{5}BEGIN[ ]CERTIFICATE\-{5}\s*//smx )
+        && ( $pem_encoded_string =~ s/\s*\-{5}END[ ]CERTIFICATE\-{5}\s*//smx ) )
+    {
+        $stripped_certificate = join q[], split /\s+/smx, $pem_encoded_string;
+    }
+    else {
+        Firefox::Marionette::Exception->throw(
+            'Certificate must be PEM encoded');
+    }
+    return $stripped_certificate;
+}
+
+sub add_certificate {
+    my ( $self, %parameters ) = @_;
+    my $trust = $parameters{trust} ? $parameters{trust} : _DEFAULT_CERT_TRUST();
+    my $import_certificate;
+    if ( $parameters{string} ) {
+        $import_certificate = $self->_strip_pem_prefix_whitespace_and_postfix(
+            $parameters{string} );
+    }
+    elsif ( $parameters{path} ) {
+        my $pem_encoded_certificate =
+          $self->_read_certificate_from_disk( $parameters{path} );
+        $import_certificate = $self->_strip_pem_prefix_whitespace_and_postfix(
+            $pem_encoded_certificate);
+    }
+    else {
+        Firefox::Marionette::Exception->throw(
+'No certificate has been supplied.  Please use the string or path parameters'
+        );
+    }
+    $self->_import_certificate( $import_certificate, $trust );
+    return $self;
+}
+
+sub _certificate_interface_preamble {
+    my ($self) = @_;
+
+    return <<'_JS_';
+var certificateNew = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB);
+var certificateDatabase = certificateNew;
+try {
+    certificateDatabase = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB2);
+} catch (e) {
+}
+_JS_
+}
+
+sub _import_certificate {
+    my ( $self, $certificate, $trust ) = @_;
+
+    # security/manager/ssl/nsIX509CertDB.idl
+    my $old    = $self->_context('chrome');
+    my $result = $self->script(
+        $self->_compress_script(
+            $self->_certificate_interface_preamble() . <<"_JS_") );
+certificateDatabase.addCertFromBase64("$certificate", "$trust", "");
+_JS_
+    $self->_context($old);
+    return $result;
+}
+
+sub certificate_as_pem {
+    my ( $self, $certificate ) = @_;
+
+    # security/manager/ssl/nsIX509CertDB.idl
+    # security/manager/ssl/nsIX509Cert.idl
+    my $encoded_db_key = URI::Escape::uri_escape( $certificate->db_key() );
+    my $old            = $self->_context('chrome');
+    my $certificate_base64_string = MIME::Base64::encode_base64(
+        (
+            pack 'C*',
+            @{
+                $self->script(
+                    $self->_compress_script(
+                        $self->_certificate_interface_preamble()
+                          . <<"_JS_") ) } ), q[] );
+return certificateDatabase.findCertByDBKey(decodeURIComponent("$encoded_db_key"), {}).getRawDER({});
+_JS_
+    $self->_context($old);
+
+    my $certificate_in_pem_form =
+        "-----BEGIN CERTIFICATE-----\n"
+      . ( join "\n", unpack '(A64)*', $certificate_base64_string )
+      . "\n-----END CERTIFICATE-----\n";
+    return $certificate_in_pem_form;
+}
+
+sub delete_certificate {
+    my ( $self, $certificate ) = @_;
+
+    # security/manager/ssl/nsIX509CertDB.idl
+    my $encoded_db_key = URI::Escape::uri_escape( $certificate->db_key() );
+    my $old            = $self->_context('chrome');
+    my $certificate_base64_string = $self->script(
+        $self->_compress_script(
+            $self->_certificate_interface_preamble() . <<"_JS_") );
+let certificate = certificateDatabase.findCertByDBKey(decodeURIComponent("$encoded_db_key"), {});
+return certificateDatabase.deleteCertificate(certificate);
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
+sub certificates {
+    my ($self)       = @_;
+    my $old          = $self->_context('chrome');
+    my $certificates = $self->script(
+        $self->_compress_script(
+            $self->_certificate_interface_preamble() . <<'_JS_') );
+let result = certificateDatabase.getCerts();
+if (Array.isArray(result)) {
+    return result;
+} else {
+    let certEnum = result.getEnumerator();
+    let certificates = new Array();
+    while(certEnum.hasMoreElements()) {
+        certificates.push(certEnum.getNext().QueryInterface(Components.interfaces.nsIX509Cert));
+    }
+    return certificates;
+}
+_JS_
+    $self->_context($old);
+    my @certificates;
+    foreach my $certificate ( @{$certificates} ) {
+        push @certificates, Firefox::Marionette::Certificate->new($certificate);
+    }
+    return @certificates;
+}
+
+sub _read_certificate_from_disk {
+    my ( $self, $path ) = @_;
+    my $handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
+      or Firefox::Marionette::Exception->throw(
+        "Failed to open certificate '$path' for reading:$EXTENDED_OS_ERROR");
+    my $certificate = q[];
+    my $result;
+    while ( $result = $handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) ) {
+        $certificate .= $buffer;
+    }
+    defined $result
+      or Firefox::Marionette::Exception->throw(
+        "Failed to read from '$path':$EXTENDED_OS_ERROR");
+    $handle->close()
+      or Firefox::Marionette::Exception->throw(
+        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    return $certificate;
+}
+
+sub _read_certificates_from_disk {
+    my ( $self, $trust ) = @_;
+    my @certificates;
+    if ($trust) {
+        if ( ref $trust ) {
+            foreach my $path ( @{$trust} ) {
+                my $certificate = $self->_read_certificate_from_disk($path);
+                push @certificates, $certificate;
+            }
+        }
+        else {
+            my $certificate = $self->_read_certificate_from_disk($trust);
+            push @certificates, $certificate;
+        }
+    }
+    return @certificates;
+}
+
 sub new {
     my ( $class, %parameters ) = @_;
     my $self = $class->_init(%parameters);
@@ -806,11 +978,19 @@ sub new {
         ( $session_id, $capabilities ) = $self->_reconnect(%parameters);
     }
     else {
+        my @certificates =
+          $self->_read_certificates_from_disk( $parameters{trust} );
         @arguments = $self->_setup_arguments(%parameters);
         $self->_launch(@arguments);
         my $socket = $self->_setup_local_connection_to_firefox(@arguments);
         ( $session_id, $capabilities ) =
           $self->_initial_socket_setup( $socket, $parameters{capabilities} );
+        foreach my $certificate (@certificates) {
+            $self->add_certificate(
+                string => $certificate,
+                trust  => _DEFAULT_CERT_TRUST()
+            );
+        }
     }
 
     if ( ($session_id) && ($capabilities) && ( ref $capabilities ) ) {
@@ -1146,49 +1326,8 @@ _RDF_
         if ( $self->{_har} ) {
             push @arguments, '--devtools';
         }
-        if ( $parameters{trust} ) {
-            $self->_add_certificates( $profile_directory, %parameters );
-        }
     }
     return @arguments;
-}
-
-sub _add_certificates {
-    my ( $self, $profile_directory, %parameters ) = @_;
-    my @paths;
-    if ( ref $parameters{trust} ) {
-        @paths = @{ $parameters{trust} };
-    }
-    else {
-        @paths = ( $parameters{trust} );
-    }
-    $self->{_trust_count} ||= 0;
-    foreach my $path (@paths) {
-        $self->{_trust_count} += 1;
-        if ( $self->_ssh() ) {
-            $self->{_cert_directory} = $self->_make_remote_directory(
-                $self->_remote_catfile( $self->{_root_directory}, 'certs' ) );
-            my $remote_path = $self->_remote_catfile( $self->{_cert_directory},
-                'root_ca_' . $self->{_trust_count} . '.cer' );
-            my $handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
-              or Firefox::Marionette::Exception->throw(
-                "Failed to open '$path' for reading:$EXTENDED_OS_ERROR");
-            $self->_put_file_via_scp( $handle, $remote_path, $path );
-            $path = $remote_path;
-        }
-        foreach my $type (qw(dbm sql)) {
-            my $binary    = 'certutil';
-            my @arguments = (
-                '-A',
-                '-d' => $type . q[:] . $profile_directory,
-                '-i' => $path,
-                '-n' => 'Firefox::Marionette Root CA ' . $self->{_trust_count},
-                '-t' => 'TC,,',
-            );
-            $self->execute( $binary, @arguments );
-        }
-    }
-    return;
 }
 
 sub _write_mime_types_via_ssh {
@@ -7301,6 +7440,31 @@ Please note that when closing the connection via the client you can end-up in a 
 
 returns the active element of the current browsing context's document element, if the document element is non-null.
 
+=head2 add_certificate
+
+accepts a hash as a parameter and adds the specified certificate to the Firefox database with the supplied or default trust.  Allowed keys are below;
+
+=over 4
+
+=item * path - a file system path to a single L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5>.
+
+=item * string - a string containg a single L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5>
+
+=item * trust - This is the L<trustargs|https://www.mankier.com/1/certutil#-t> value for L<NSS|https://wiki.mozilla.org/NSS>.  If defaults to 'C,,';
+
+=back
+
+    use Firefox::Marionette();
+
+    my $pem_encoded_string = <<'_PEM_';
+    -----BEGIN CERTIFICATE-----
+    MII..
+    -----END CERTIFICATE-----
+    _PEM_
+    my $firefox = Firefox::Marionette->new()->add_certificate(string => $pem_encoded_string);
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 add_cookie
 
 accepts a single L<cookie|Firefox::Marionette::Cookie> object as the first parameter and adds it to the current cookie jar.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
@@ -7421,6 +7585,38 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
 returns the L<capabilities|Firefox::Marionette::Capabilities> of the current firefox binary.  You can retrieve L<timeouts|Firefox::Marionette::Timeouts> or a L<proxy|Firefox::Marionette::Proxy> with this method.
 
+=head2 certificate_as_pem
+
+accepts a L<certificate stored in the Firefox database|Firefox::Marionette::Certificate> as a parameter and returns a L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5> as a string.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+
+    # Generating a ca-bundle.crt to STDOUT from the current firefox instance
+
+    foreach my $certificate (sort { $a->display_name() cmp $b->display_name } $firefox->certificates()) {
+        if ($certificate->is_ca_cert()) {
+            print '# ' . $certificate->display_name() . "\n" . $firefox->certificate_as_pem($certificate) . "\n";
+        }
+    }
+
+=head2 certificates
+
+returns a list of all known L<certificates in the Firefox database|Firefox::Marionette::Certificate>.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    # Sometimes firefox can neglect old certificates.  See https://bugzilla.mozilla.org/show_bug.cgi?id=1710716
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $certificate (grep { $_->is_ca_cert() && $_->not_valid_after() < time } $firefox->certificates()) {
+        say "The " . $certificate->display_name() " . certificate has expired and should be removed";
+    }
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 child_error
 
 This method returns the $? (CHILD_ERROR) for the Firefox process, or undefined if the process has not yet exited.
@@ -7531,6 +7727,25 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and a 
 =head2 current_chrome_window_handle 
 
 see L<chrome_window_handle|Firefox::Marionette#chrome_window_handle>.
+
+=head2 delete_certificate
+
+accepts a L<certificate stored in the Firefox database|Firefox::Marionette::Certificate> as a parameter and deletes/distrusts the certificate from the Firefox database.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $certificate ($firefox->certificates()) {
+        if ($certificate->is_ca_cert()) {
+            $firefox->delete_certificate($certificate);
+        } else {
+            say "This " . $certificate->display_name() " certificate is NOT a certificate authority, therefore it is not being deleted";
+        }
+    }
+    say "Good luck visiting a HTTPS website!";
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 delete_cookie
 
@@ -8200,7 +8415,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 
-=item * trust - give a path to a L<root certificate|https://en.wikipedia.org/wiki/Root_certificate> that will be trusted for this session.  The certificate will be imported by the L<NSS certutil|https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil> binary.  If this binary does not exist in the L<PATH|https://en.wikipedia.org/wiki/PATH_(variable)>, an exception will be thrown.  For Linux/BSD systems, L<NSS certutil|https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/tools/NSS_Tools_certutil> should be available via your package manager.  For OS X and Windows based platforms, it will be more difficult.
+=item * trust - give a path to a L<root certificate|https://en.wikipedia.org/wiki/Root_certificate> encoded as a L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5> that will be trusted for this session.
 
 =item * timeouts - a shortcut to allow directly providing a L<timeout|Firefox::Marionette::Timeout> object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
 
@@ -8776,6 +8991,8 @@ David Dick  C<< <ddick@cpan.org> >>
 Thanks to the entire Mozilla organisation for a great browser and to the team behind Marionette for providing an interface for automation.
  
 Thanks to L<Jan Odvarko|http://www.softwareishard.com/blog/about/> for creating the L<HAR Export Trigger|https://github.com/firefox-devtools/har-export-trigger> extension for Firefox.
+
+Thanks to L<Mike Kaply|https://mike.kaply.com/about/> for his L<post|https://mike.kaply.com/2015/02/10/installing-certificates-into-firefox/> describing importing certificates into Firefox.
 
 Thanks also to the authors of the documentation in the following sources;
 
