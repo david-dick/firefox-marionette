@@ -1,5 +1,11 @@
 Revision history for Firefox-Marionette
 
+1.06  Sat May 22 17:14:00 2021
+       Adding support for the Firefox certificate database
+       Fixes to loading profiles
+       Increasing default window size to allow older firefoxes to pass test suite
+       Adding perform/release methods for fine grained control of user input
+
 1.05  Thu May  6 22:15:00 2021
        Fixing UTF-8 handling for strip/json methods.
 
