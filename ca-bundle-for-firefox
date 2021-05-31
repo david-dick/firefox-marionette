@@ -1,0 +1,166 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long();
+use English qw( -no_match_vars );
+use Firefox::Marionette();
+use FileHandle();
+use Encode();
+
+our $VERSION = '1.06';
+
+my %options;
+Getopt::Long::GetOptions( \%options, 'help', 'binary:s', 'file:s' );
+if ( $options{help} ) {
+    require Pod::Simple::Text;
+    my $parser = Pod::Simple::Text->new();
+    $parser->parse_from_file($PROGRAM_NAME);
+}
+elsif ( $options{version} ) {
+    print "$VERSION\n"
+      or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+    exit 0;
+}
+my %parameters;
+if ( $options{binary} ) {
+    $parameters{firefox} = $options{binary};
+}
+my $firefox = Firefox::Marionette->new(%parameters);
+
+my $handle      = *{STDOUT};
+my $output_name = 'STDOUT';
+if ( $options{file} ) {
+    $handle = FileHandle->new(
+        $options{file},
+        Fcntl::O_CREAT() | Fcntl::O_WRONLY() | Fcntl::O_EXCL(),
+        Fcntl::S_IRUSR() | Fcntl::S_IWUSR() | Fcntl::S_IRGRP() |
+          Fcntl::S_IROTH()
+    ) or die "Failed to open $options{file} for writing:$EXTENDED_OS_ERROR\n";
+    $output_name = $options{file};
+}
+foreach my $certificate ( sort { $a->display_name() cmp $b->display_name }
+    $firefox->certificates() )
+{
+    if ( $certificate->is_ca_cert() ) {
+        my $output_line = q[# ]
+          . $certificate->display_name() . "\n"
+          . $firefox->certificate_as_pem($certificate) . "\n";
+        $handle->print( Encode::encode( 'UTF-8', $output_line, 1 ) )
+          or die "Failed to print to $output_name:$EXTENDED_OS_ERROR\n";
+    }
+}
+if ( $options{file} ) {
+    $handle->close() or die "Failed to close $output_name:$EXTENDED_OS_ERROR\n";
+}
+
+__END__
+=head1 NAME
+
+ca-bundle-for-firefox - generate the ca-bundle.crt for the current firefox instance
+
+=head1 VERSION
+
+Version 1.06
+
+=head1 USAGE
+
+$ ca-bundle-for-firefox >/etc/pki/tls/certs/ca-bundle.crt
+$ ca-bundle-for-firefox --file current.crt
+$ ca-bundle-for-firefox --binary=/path/to/old/firefox --file old.crt
+$ diff -Naur old.crt current.crt
+
+=head1 DESCRIPTION
+
+This program is intended to generate the ca-bundle.crt file from the Certificate Authorities maintained in firefox.
+
+By default, the only firefox version that may be used will be present in the PATH environment variable.  However, the user may specify a different path with
+the --binary parameter.
+
+=head1 REQUIRED ARGUMENTS
+
+None
+
+=head1 OPTIONS
+
+Option names can be abbreviated to uniqueness and can be stated with singe or double dashes, and option values can be separated from the option name by a space or '=' (as with Getopt::Long). Option names are also case-
+sensitive.
+
+=over 4
+
+=item * --help - This page.
+
+=item * --binary - Use this firefox binary instead of the default firefox instance
+
+=item * --file - Write the Certificate Authority bundle out to this file
+
+=back
+
+=head1 CONFIGURATION
+
+ca-bundle-for-firefox requires no configuration files or environment variables.
+
+=head1 DEPENDENCIES
+
+ca-bundle-for-firefox requires the following non-core Perl modules
+ 
+=over
+ 
+=item *
+L<Pod::Simple::Text|Pod::Simple::Text>
+ 
+=back
+
+=head1 DIAGNOSTICS
+
+None.
+
+=head1 INCOMPATIBILITIES
+
+None known.
+
+=head1 EXIT STATUS
+
+This program will exit with a zero after successfully completing.
+
+=head1 BUGS AND LIMITATIONS
+
+No bugs have been reported.
+
+Please report any bugs or feature requests to
+C<bug-firefox-marionette@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org>.
+
+=head1 AUTHOR
+
+David Dick  C<< <ddick@cpan.org> >>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2020, David Dick C<< <ddick@cpan.org> >>. All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic/perlartistic>.
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.

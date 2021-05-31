@@ -362,7 +362,7 @@ WriteMakefile(
         },
     },
     PL_FILES       => {},
-    EXE_FILES      => ['ssh-auth-cmd-marionette'],
+    EXE_FILES      => [ 'ssh-auth-cmd-marionette', 'ca-bundle-for-firefox', ],
     BUILD_REQUIRES => {
         'Compress::Zlib'  => 0,
         'Cwd'             => 0,
@@ -380,6 +380,7 @@ WriteMakefile(
         'Config'              => 0,
         'Config::INI::Reader' => 0,
         'DirHandle'           => 0,
+        'Encode'              => 0,
         'English'             => 0,
         'Exporter'            => 0,
         'Fcntl'               => 0,

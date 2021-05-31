@@ -256,6 +256,9 @@ SUBROUTINES/METHODS
             }
         }
 
+    The ca-bundle-for-firefox command that is provided as part of this
+    distribution does this.
+
  certificates
 
     returns a list of all known certificates in the Firefox database.

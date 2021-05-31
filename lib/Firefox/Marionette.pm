@@ -7601,6 +7601,8 @@ accepts a L<certificate stored in the Firefox database|Firefox::Marionette::Cert
         }
     }
 
+The L<ca-bundle-for-firefox|ca-bundle-for-firefox> command that is provided as part of this distribution does this.
+
 =head2 certificates
 
 returns a list of all known L<certificates in the Firefox database|Firefox::Marionette::Certificate>.

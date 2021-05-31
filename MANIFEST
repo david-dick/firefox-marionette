@@ -23,6 +23,7 @@ Makefile.PL
 MANIFEST			This list of files
 LICENSE
 README
+ca-bundle-for-firefox
 ssh-auth-cmd-marionette
 t/author/bulk_test.pl
 t/00.load.t

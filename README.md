@@ -202,6 +202,8 @@ accepts a [certificate stored in the Firefox database](https://metacpan.org/pod/
         }
     }
 
+The [ca-bundle-for-firefox](https://metacpan.org/pod/ca-bundle-for-firefox) command that is provided as part of this distribution does this.
+
 ## certificates
 
 returns a list of all known [certificates in the Firefox database](https://metacpan.org/pod/Firefox::Marionette::Certificate).
