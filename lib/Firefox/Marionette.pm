@@ -840,8 +840,8 @@ sub _certificate_interface_preamble {
     my ($self) = @_;
 
     return <<'_JS_';
-var certificateNew = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB);
-var certificateDatabase = certificateNew;
+let certificateNew = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB);
+let certificateDatabase = certificateNew;
 try {
     certificateDatabase = Components.classes["@mozilla.org/security/x509certdb;1"].getService(Components.interfaces.nsIX509CertDB2);
 } catch (e) {
