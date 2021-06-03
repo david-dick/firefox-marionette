@@ -25,11 +25,6 @@ eval {
         require Pod::Simple::Text;
         my $parser = Pod::Simple::Text->new();
         $parser->parse_from_file($PROGRAM_NAME);
-        <<"_USAGE_" or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
-Usage: $PROGRAM_NAME [--help] [--version] [--facility=(LOG_LOCAL0|LOG_LEVEL1|..)] (--allow-binary=\$path_to_firefox_binary) [--force-binary=\$path_to_firefox_binary]
-
-
-_USAGE_
         exit 0;
     }
     elsif ( $options{version} ) {

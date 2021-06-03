@@ -16,6 +16,7 @@ if ( $options{help} ) {
     require Pod::Simple::Text;
     my $parser = Pod::Simple::Text->new();
     $parser->parse_from_file($PROGRAM_NAME);
+    exit 0;
 }
 elsif ( $options{version} ) {
     print "$VERSION\n"
