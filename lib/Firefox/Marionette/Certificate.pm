@@ -102,8 +102,8 @@ sub issuer_organization_unit {
 }
 
 sub _convert_time_to_seconds {
-    my ( $self, $milliseconds ) = @_;
-    my $seconds = substr $milliseconds, 0, _NUMBER_OF_MICROSECOND_DIGITS();
+    my ( $self, $microseconds ) = @_;
+    my $seconds = substr $microseconds, 0, _NUMBER_OF_MICROSECOND_DIGITS();
     return $seconds + 0;
 }
 
