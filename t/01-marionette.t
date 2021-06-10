@@ -2125,12 +2125,11 @@ SKIP: {
 		ok($firefox->chrome()->context() eq 'chrome', "Setting and reading context of the browser as 'chrome'");
 		ok($firefox->content()->context() eq 'content', "Setting and reading context of the browser as 'content'");
 	}
-	$firefox->go('http://www.example.com');
 	my $body = $firefox->find("//body");
 	my $outer_html = $firefox->script(q{ return arguments[0].outerHTML;}, args => [$body]);
-	ok($outer_html =~ /<body>/smx, "Correctly passing found elements into script arguments");
+	ok($outer_html =~ /<body/smx, "Correctly passing found elements into script arguments");
 	$outer_html = $firefox->script(q{ return arguments[0].outerHTML;}, args => $body);
-	ok($outer_html =~ /<body>/smx, "Converts a single argument into an array");
+	ok($outer_html =~ /<body/smx, "Converts a single argument into an array");
 	my $link = $firefox->find('//a');
 	$firefox->script(q{arguments[0].parentNode.removeChild(arguments[0]);}, args => [$link]);
 	eval {
