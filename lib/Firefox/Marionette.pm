@@ -4066,7 +4066,8 @@ sub _get_marionette_port {
     }
     else {
         my $profile_handle =
-          FileHandle->new( $self->{profile_path}, Fcntl::O_RDONLY() )
+             FileHandle->new( $self->{profile_path}, Fcntl::O_RDONLY() )
+          or ( $OS_ERROR == POSIX::ENOENT() )
           or ( ( $OSNAME eq 'MSWin32' )
             && ( $EXTENDED_OS_ERROR == _WIN32_ERROR_SHARING_VIOLATION() ) )
           or Firefox::Marionette::Exception->throw(
