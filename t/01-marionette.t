@@ -1300,7 +1300,7 @@ SKIP: {
 			$screen_orientation = $firefox->screen_orientation();
 			ok($screen_orientation, "\$firefox->screen_orientation() is " . $screen_orientation);
 		} or do {
-			if (($@->isa('Firefox::Marionette::Exception')) && ($@ =~ /(?:Only supported in Fennec|unsupported operation: Only supported on Android).* in .* at line \d+/)) {
+			if (($@->isa('Firefox::Marionette::Exception')) && ($@ =~ /(?:Only supported in Fennec|unsupported operation: Only supported on Android)/)) {
 				local $TODO = "Only supported in Fennec";
 				ok($screen_orientation, "\$firefox->screen_orientation() is " . $screen_orientation);
 			} elsif ($major_version < 60) {
@@ -2804,6 +2804,6 @@ ok(!$@, "File::Temp::newdir is redefined to fail:$@");
 eval { Firefox::Marionette->new(); };
 my $output = "$@";
 chomp $output;
-ok($@->isa('Firefox::Marionette::Exception') && $@ =~ / in .* at line \d+/, "When File::Temp::newdir is forced to fail, a Firefox::Marionette::Exception is thrown:$output");
+ok($@->isa('Firefox::Marionette::Exception'), "When File::Temp::newdir is forced to fail, a Firefox::Marionette::Exception is thrown:$output");
 
 done_testing();
