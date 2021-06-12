@@ -396,6 +396,8 @@ WriteMakefile(
         'Pod::Simple::Text'   => 0,
         'POSIX'               => 0,
         'Socket'              => 0,
+        'Text::CSV_XS'        => 0,
+        'Term::ReadKey'       => 0,
         'Time::HiRes'         => 0,
         'URI'                 => 0,
         'URI::Escape'         => 0,
