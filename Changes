@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.07  Sat Jun 12 21:38:00 2021
+       Adding support for the Firefox Password Manager
+       Fixes to tests for Firefox 89.
+
 1.06  Sat May 22 17:14:00 2021
        Adding support for the Firefox certificate database
        Fixes to loading profiles

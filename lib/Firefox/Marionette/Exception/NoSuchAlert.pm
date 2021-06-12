@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Firefox::Marionette::Exception::Response);
 
-our $VERSION = '1.06';
+our $VERSION = '1.07';
 
 sub throw {
     my ( $class, $response, $parameters ) = @_;
@@ -25,7 +25,7 @@ Firefox::Marionette::Exception::NoSuchAlert - Represents a 'no such alert' excep
 
 =head1 VERSION
 
-Version 1.06
+Version 1.07
 
 =head1 SYNOPSIS
 
