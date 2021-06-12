@@ -6,6 +6,7 @@ lib/Firefox/Marionette/Certificate.pm
 lib/Firefox/Marionette/Cookie.pm
 lib/Firefox/Marionette/Extension/HarExportTrigger.pm
 lib/Firefox/Marionette/Keys.pm
+lib/Firefox/Marionette/Login.pm
 lib/Firefox/Marionette/Profile.pm
 lib/Firefox/Marionette/Proxy.pm
 lib/Firefox/Marionette/Window/Rect.pm
@@ -25,7 +26,9 @@ LICENSE
 README
 ca-bundle-for-firefox
 ssh-auth-cmd-marionette
+firefox-passwords
 t/author/bulk_test.pl
+t/data/logins.json
 t/00.load.t
 t/01-marionette.t
 t/pod-coverage.t

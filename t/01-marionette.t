@@ -450,6 +450,11 @@ foreach my $name (Firefox::Marionette::Profile->names()) {
 }
 ok(1, "Read $count existing profiles");
 diag("This firefox installation has $count existing profiles");
+if (Firefox::Marionette::Profile->default_name()) {
+	ok(1, "Found default profile");
+} else {
+	ok(1, "No default profile");
+}
 my $profile;
 eval {
 	$profile = Firefox::Marionette::Profile->existing();
@@ -744,7 +749,7 @@ SKIP: {
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
 	my $localPort = URI->new($daemon->url())->port();
 	my $proxy = Firefox::Marionette::Proxy->new( http => 'localhost:' . $localPort, https => 'proxy.example.org:4343', ftp => 'ftp.example.org:2121', none => [ 'local.example.org' ], socks => 'socks.example.org:1081' );
-	($skip_message, $firefox) = start_firefox(0, debug => 1, sleep_time_in_ms => 5, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy, moz_headless => 1, strict_file_interactability => 1, accept_insecure_certs => 1, page_load_strategy => 'eager', unhandled_prompt_behavior => 'accept and notify', moz_webdriver_click => 1, moz_accessibility_checks => 1, moz_use_non_spec_compliant_pointer_origin => 1, timeouts => Firefox::Marionette::Timeouts->new(page_load => 54_321, script => 4567, implicit => 6543)));
+	($skip_message, $firefox) = start_firefox(0, sleep_time_in_ms => 5, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy, moz_headless => 1, strict_file_interactability => 1, accept_insecure_certs => 1, page_load_strategy => 'eager', unhandled_prompt_behavior => 'accept and notify', moz_webdriver_click => 1, moz_accessibility_checks => 1, moz_use_non_spec_compliant_pointer_origin => 1, timeouts => Firefox::Marionette::Timeouts->new(page_load => 54_321, script => 4567, implicit => 6543)));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1111,15 +1116,221 @@ SKIP: {
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
-	if (!grep /^accept_insecure_certs$/, $capabilities->enumerate()) {
-		diag("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version());
-		skip("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version(), 2);
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
 	}
-	ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
-	eval { $firefox->go(URI->new("https://untrusted-root.badssl.com/")) };
-	my $exception = "$@";
-	chomp $exception;
-	ok(ref $@ eq 'Firefox::Marionette::Exception::InsecureCertificate', "https://untrusted-root.badssl.com/ threw an exception:$exception");
+	if (grep /^accept_insecure_certs$/, $capabilities->enumerate()) {
+		ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
+		eval { $firefox->go(URI->new("https://untrusted-root.badssl.com/")) };
+		my $exception = "$@";
+		chomp $exception;
+		ok(ref $@ eq 'Firefox::Marionette::Exception::InsecureCertificate', "https://untrusted-root.badssl.com/ threw an exception:$exception");
+	} else {
+		diag("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version());
+	}
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
+	}
+	my $profile_directory = $firefox->profile_directory();
+	ok($profile_directory, "\$firefox->profile_directory() returns $profile_directory");
+	my $possible_logins_path = File::Spec->catfile($profile_directory, 'logins.json');
+	ok(!-e $possible_logins_path, "There is no logins.json file yet");
+	eval { $firefox->fill_login() };
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "Unable to fill in form when no form is present:$@");
+	my $cant_load_github;
+	my $result;
+	eval {
+		$result = $firefox->go('https://github.com/login');
+	};
+	if ($@) {
+		$cant_load_github = 1;
+		diag("\$firefox->go('https://github.com/login') threw an exception:$@");
+	} else {
+		ok($result, "\$firefox loads https://github.com/login");
+	}
+	if (out_of_time()) {
+		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
+	}
+	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
+	my $now = time;
+	my $current_year = (localtime($now))[6];
+	my $pause_login = Firefox::Marionette::Login->new(host => 'https://pause.perl.org', user => 'DDICK', password => 'qwerty', realm => 'PAUSE', user_fieldname => undef);
+	ok($firefox->add_login($pause_login), "\$firefox->add_login() copes with a http auth login");;
+	foreach my $login ($firefox->logins()) {
+		ok($login->host() eq 'https://pause.perl.org', "\$login->host() eq 'https://pause.perl.org'");
+		ok($login->user() eq 'DDICK', "\$login->user() eq 'DDICK'");
+		ok($login->password() eq 'qwerty', "\$login->password() eq 'qwerty'");
+		ok($login->realm() eq 'PAUSE', "\$login->realm() eq 'PAUSE'");
+		ok(!defined $login->user_field(), "\$login->user_field() is undefined");
+		ok(!defined $login->password_field(), "\$login->password_field() is undefined");
+		ok(!defined $login->origin(), "\$login->origin() is undefined");
+		if ((defined $login->guid()) || ($major_version >= 59)) {
+			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+		}
+		if ((defined $login->creation_time()) || ($major_version >= 59)) {
+			my $creation_year = (localtime($login->creation_time()))[6];
+			ok((($creation_year == $current_year) || ($creation_year == $current_year + 1)), "\$login->creation_time() returns a time with the correct year");
+		}
+		if ((defined $login->last_used_time()) || ($major_version >= 59)) {
+			my $last_used_year = (localtime($login->last_used_time()))[6];
+			ok((($last_used_year == $current_year) || ($last_used_year == $current_year + 1)), "\$login->last_used_time() returns a time with the correct year");
+		}
+		if ((defined $login->password_changed_time()) || ($major_version >= 59)) {
+			my $password_changed_year = (localtime($login->password_changed_time()))[6];
+			ok((($password_changed_year == $current_year) || ($password_changed_year == $current_year + 1)), "\$login->password_changed_time() returns a time with the correct year");
+		}
+		if ((defined $login->times_used()) || ($major_version >= 59)) {
+			ok($login->times_used() =~ /^\d+$/smx, "\$login->times_used() is a number");
+		}
+	}
+	ok(scalar $firefox->logins() == 1, "\$firefox->logins() shows the correct number (1) of records");
+	my $github_login = Firefox::Marionette::Login->new(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'login', password_field => 'password');
+	ok($firefox->add_login($github_login), "\$firefox->add_login() copes with a form based login");
+	ok($firefox->delete_login($pause_login), "\$firefox->delete_login() removes the http auth login");
+	foreach my $login ($firefox->logins()) {
+		ok($login->host() eq 'https://github.com', "\$login->host() eq 'https://github.com':" . $login->host());
+		ok($login->user() eq 'ddick@cpan.org', "\$login->user() eq 'ddick\@cpan.org':" . $login->user());
+		ok($login->password() eq 'qwerty', "\$login->password() eq 'qwerty':" . $login->password());
+		ok(!defined $login->realm(), "\$login->realm() is undefined");
+		ok($login->user_field() eq 'login', "\$login->user_field() eq 'login':" . $login->user_field());
+		ok($login->password_field() eq 'password', "\$login->password_field() eq 'password':" . $login->password_field());
+		ok(!defined $login->origin(), "\$login->origin() is not defined");
+		if ((defined $login->guid()) || ($major_version >= 59)) {
+			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+		}
+		if ((defined $login->creation_time()) || ($major_version >= 59)) {
+			my $creation_year = (localtime($login->creation_time()))[6];
+			ok((($creation_year == $current_year) || ($creation_year == $current_year + 1)), "\$login->creation_time() returns a time with the correct year");
+		}
+		if ((defined $login->last_used_time()) || ($major_version >= 59)) {
+			my $last_used_year = (localtime($login->last_used_time()))[6];
+			ok((($last_used_year == $current_year) || ($last_used_year == $current_year + 1)), "\$login->last_used_time() returns a time with the correct year");
+		}
+		if ((defined $login->password_changed_time()) || ($major_version >= 59)) {
+			my $password_changed_year = (localtime($login->password_changed_time()))[6];
+			ok((($password_changed_year == $current_year) || ($password_changed_year == $current_year + 1)), "\$login->password_changed_time() returns a time with the correct year");
+		}
+		if ((defined $login->times_used()) || ($major_version >= 59)) {
+			ok($login->times_used() =~ /^\d+$/smx, "\$login->times_used() is a number");
+		}
+	}
+	my $perlmonks_login = Firefox::Marionette::Login->new(host => 'https://www.perlmonks.org', origin => 'https://www.perlmonks.org', user => 'ddick', password => 'qwerty', user_field => 'user', password_field => 'passwd', creation_time => $now - 20, last_used_time => $now - 10, password_changed_time => $now, password_changed_in_ms => $now * 1000 - 15, times_used => 50);
+	ok($firefox->add_login($perlmonks_login), "\$firefox->add_login() copes with another form based login");
+	ok($firefox->delete_login($github_login), "\$firefox->delete_login() removes the original form based login");
+	foreach my $login ($firefox->logins()) {
+		ok($login->host() eq 'https://www.perlmonks.org', "\$login->host() eq 'https://www.perlmonks.org':" . $login->host());
+		ok($login->user() eq 'ddick', "\$login->user() eq 'ddick':" . $login->user());
+		ok($login->password() eq 'qwerty', "\$login->password() eq 'qwerty':" . $login->password());
+		ok(!defined $login->realm(), "\$login->realm() is undefined");
+		ok($login->user_field() eq 'user', "\$login->user_field() eq 'user':" . $login->user_field());
+		ok($login->password_field() eq 'passwd', "\$login->password_field() eq 'passwd':" . $login->password_field());
+		ok($login->origin() eq 'https://www.perlmonks.org', "\$login->origin() eq 'https://www.perlmonks.org':" . $login->host());
+		if ((defined $login->guid()) || ($major_version >= 59)) {
+			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+		}
+		if ((defined $login->creation_time()) || ($major_version >= 59)) {
+			ok($login->creation_time() == $now - 20, "\$login->last_used_time() returns the assigned time:" . localtime $login->creation_time());
+		}
+		if ((defined $login->last_used_time()) || ($major_version >= 59)) {
+			ok($login->last_used_time() == $now - 10, "\$login->last_used_time() returns the assigned time:" . localtime $login->last_used_time());
+		}
+		if ((defined $login->password_changed_in_ms()) || ($major_version >= 59)) {
+			my $password_changed_year = (localtime($login->password_changed_time()))[6];
+			ok($password_changed_year == $current_year, "\$login->password_changed_time() returns a time with the correct year");
+			ok($login->password_changed_in_ms() == $now * 1000 - 15, "\$login->password_changed_time_in_ms() returns the correct number of milliseconds");
+		}
+		if ((defined $login->times_used()) || ($major_version >= 59)) {
+			ok($login->times_used() == 50, "\$login->times_used() is the assigned number");
+		}
+	}
+	ok($firefox->add_login($github_login), "\$firefox->add_login() copes re-adding the original form based login");
+	ok(!$firefox->pwd_mgr_needs_login(), "\$firefox->pwd_mgr_needs_login() returns false");
+	my @charset = ( 'A' .. 'Z', 'a' .. 'z', 0..9 );
+	my $lock_password;
+	for(1 .. 50) {
+		$lock_password .= $charset[rand scalar @charset];
+	}
+	eval {
+		$firefox->pwd_mgr_lock();
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->pwd_mgr_lock() throws an exception when no password is supplied:" . ref $@);
+	ok($firefox->pwd_mgr_lock($lock_password), "\$firefox->pwd_mgr_lock() sets the primary password");
+	ok($firefox->pwd_mgr_logout(), "\$firefox->pwd_mgr_logout() logs out");
+	ok($firefox->pwd_mgr_needs_login(), "\$firefox->pwd_mgr_needs_login() returns true");
+	my $wrong_password = substr $lock_password, 0, 10;
+	eval {
+		$firefox->pwd_mgr_login($wrong_password);
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->pwd_mgr_login() throws an exception when the wrong password is supplied:" . ref $@);
+	eval {
+		$firefox->pwd_mgr_login();
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->pwd_mgr_login() throws an exception when no password is supplied:" . ref $@);
+	ok($firefox->pwd_mgr_login($lock_password), "\$firefox->pwd_mgr_login() logs in");
+	ok(!$firefox->pwd_mgr_needs_login(), "\$firefox->pwd_mgr_needs_login() returns false");
+	ok($firefox->add_login($pause_login), "\$firefox->add_login() copes with a http auth login");;
+	if (!$cant_load_github) {
+		ok($firefox->fill_login(), "\$firefox->fill_login() works correctly");
+	}
+	ok($firefox->delete_login($github_login), "\$firefox->delete_login() removes the original form based login");
+	ok($firefox->add_login(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'login', password_field => 'password', origin => 'https://github.com'), "\$firefox->add_login() copes with a driectly specified form based login");
+	if (!$cant_load_github) {
+		ok($firefox->fill_login(), "\$firefox->fill_login() works correctly");
+	}
+	ok(scalar $firefox->logins() == 3, "\$firefox->logins() shows the correct number (3) of records");
+	ok($firefox->delete_logins(), "\$firefox->delete_logins() works");
+	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
+	ok($firefox->add_login(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'login', password_field => 'password', origin => 'https://example.com'), "\$firefox->add_login() copes with a driectly specified form based login with an incorrect origin");
+	eval {
+		$firefox->fill_login();
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->fill_logins() throws an exception when it fails to fill the form b/c of the wrong origin:" . ref $@);
+	ok($firefox->delete_logins(), "\$firefox->delete_logins() works");
+	my $github_login_with_wrong_user_field = Firefox::Marionette::Login->new(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'nopewrong', password_field => 'password');
+	ok($firefox->add_login($github_login_with_wrong_user_field), "\$firefox->add_login() copes with a form based login with the incorrect user_field");
+	eval {
+		$firefox->fill_login();
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->fill_logins() throws an exception when it fails to fill the form b/c of the wrong user_field:" . ref $@);
+	ok($firefox->delete_login($github_login_with_wrong_user_field), "\$firefox->delete_login() removes the form based login with the incorrect user_field");
+	my $github_login_with_wrong_password_field = Firefox::Marionette::Login->new(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'login', password_field => 'defintelyincorrect');
+	ok($firefox->add_login($github_login_with_wrong_password_field), "\$firefox->add_login() copes with a form based login with the incorrect password_field");
+	eval {
+		$firefox->fill_login();
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->fill_logins() throws an exception when it fails to fill the form b/c of the wrong password_field:" . ref $@);
+	ok($firefox->delete_login($github_login_with_wrong_password_field), "\$firefox->delete_login() removes the form based login with the incorrect user_field");
+	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
+	ok($firefox->add_login(host => 'https://www.perlmonks.org', origin => 'https://www.perlmonks.org', user => 'ddick', password => 'qwerty', user_field => 'user', password_field => 'passwd', creation_time => $now - 20, last_used_time => $now - 10, password_changed_time => $now, password_changed_in_ms => $now * 1000 - 15, times_used => 50), "\$firefox->add_login() copes with a form based login passed directly to it");
+	foreach my $login ($firefox->logins()) {
+		ok($login->host() eq 'https://www.perlmonks.org', "\$login->host() eq 'https://www.perlmonks.org':" . $login->host());
+		ok($login->user() eq 'ddick', "\$login->user() eq 'ddick':" . $login->user());
+		ok($login->password() eq 'qwerty', "\$login->password() eq 'qwerty':" . $login->password());
+		ok(!defined $login->realm(), "\$login->realm() is undefined");
+		ok($login->user_field() eq 'user', "\$login->user_field() eq 'user':" . $login->user_field());
+		ok($login->password_field() eq 'passwd', "\$login->password_field() eq 'passwd':" . $login->password_field());
+		ok($login->origin() eq 'https://www.perlmonks.org', "\$login->origin() eq 'https://www.perlmonks.org':" . $login->host());
+		if ((defined $login->guid()) || ($major_version >= 59)) {
+			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+		}
+		if ((defined $login->creation_time()) || ($major_version >= 59)) {
+			ok($login->creation_time() == $now - 20, "\$login->last_used_time() returns the assigned time:" . localtime $login->creation_time());
+		}
+		if ((defined $login->last_used_time()) || ($major_version >= 59)) {
+			ok($login->last_used_time() == $now - 10, "\$login->last_used_time() returns the assigned time:" . localtime $login->last_used_time());
+		}
+		if ((defined $login->password_changed_in_ms()) || ($major_version >= 59)) {
+			my $password_changed_year = (localtime($login->password_changed_time()))[6];
+			ok($password_changed_year == $current_year, "\$login->password_changed_time() returns a time with the correct year");
+			ok($login->password_changed_in_ms() == $now * 1000 - 15, "\$login->password_changed_time_in_ms() returns the correct number of milliseconds");
+		}
+		if ((defined $login->times_used()) || ($major_version >= 59)) {
+			ok($login->times_used() == 50, "\$login->times_used() is the assigned number");
+		}
+		ok($firefox->delete_login($login), "\$firefox->delete_login() removes the form based login passed directly");
+	}
+	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
+	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
 SKIP: {
@@ -1134,6 +1345,7 @@ SKIP: {
 		skip("TLS test infrastructure seems compromised", 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	ok(scalar $firefox->logins() == 0, "\$firefox->logins() has no entries:" . scalar $firefox->logins());
         my $testing_header_name = 'X-CPAN-Testing';
         my $testing_header_value = (ref $firefox) . q[ All ] . $Firefox::Marionette::VERSION;
         $firefox->add_header($testing_header_name => $testing_header_value);
@@ -2431,7 +2643,7 @@ sub display_name {
 
 SKIP: {
 	my $proxy_host = 'all.example.org';
-	($skip_message, $firefox) = start_firefox(1, manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
+	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -2439,6 +2651,10 @@ SKIP: {
 		skip($skip_message, 32);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to different values");
+	my $profile_directory = $firefox->profile_directory();
+	ok($profile_directory, "\$firefox->profile_directory() returns $profile_directory");
+	my $possible_logins_path = File::Spec->catfile($profile_directory, 'logins.json');
+	ok(-e $possible_logins_path, "There is a (imported) logins.json file in the profile directory");
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
         ok($capabilities->timeouts()->page_load() == 78_901, "\$firefox->capabilities()->timeouts()->page_load() correctly reflects the timeouts shortcut timeout");

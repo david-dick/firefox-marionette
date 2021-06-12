@@ -8,6 +8,7 @@ use Firefox::Marionette::Cookie();
 use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
 use Firefox::Marionette::Timeouts();
+use Firefox::Marionette::Login();
 use Firefox::Marionette::Capabilities();
 use Firefox::Marionette::Certificate();
 use Firefox::Marionette::Profile();
@@ -798,6 +799,322 @@ sub _compatibility_checks_for_older_marionette {
     return;
 }
 
+sub profile_directory {
+    my ($self) = @_;
+    return $self->{_profile_directory};
+}
+
+sub _pk11_tokendb_interface_preamble {
+    my ($self) = @_;
+    return <<'_JS_';    # security/manager/ssl/nsIPK11Token.idl
+let pk11db = Components.classes["@mozilla.org/security/pk11tokendb;1"].getService(Components.interfaces.nsIPK11TokenDB);
+let token = pk11db.getInternalKeyToken();
+_JS_
+}
+
+sub pwd_mgr_needs_login {
+    my ($self) = @_;
+    my $script = <<'_JS_';
+if (('hasPassword' in token) && (!token.hasPassword)) {
+  return false;
+} else if (('needsLogin' in token) && (!token.needsLogin())) {
+  return false;
+} else if (token.isLoggedIn()) {
+  return false;
+} else {
+  return true;
+}
+_JS_
+    $self->chrome();
+    my $result = $self->script(
+        $self->_compress_script(
+            $self->_pk11_tokendb_interface_preamble() . $script
+        )
+    );
+    $self->content();
+    return $result;
+}
+
+sub pwd_mgr_logout {
+    my ($self) = @_;
+    my $script = <<'_JS_';
+token.logoutAndDropAuthenticatedResources();
+_JS_
+    $self->chrome();
+    $self->script(
+        $self->_compress_script(
+            $self->_pk11_tokendb_interface_preamble() . $script
+        )
+    );
+    $self->content();
+    return $self;
+}
+
+sub pwd_mgr_lock {
+    my ( $self, $password ) = @_;
+    if ( !defined $password ) {
+        Firefox::Marionette::Exception->throw(
+            'Primary Password has not been provided');
+    }
+    my $script = <<'_JS_';
+if (token.needsUserInit) {
+  token.initPassword(arguments[0]);
+} else {
+  token.changePassword("",arguments[0]);
+}
+_JS_
+    $self->chrome();
+    $self->script(
+        $self->_compress_script(
+            $self->_pk11_tokendb_interface_preamble() . $script
+        ),
+        args => [$password]
+    );
+    $self->content();
+    return $self;
+}
+
+sub pwd_mgr_login {
+    my ( $self, $password ) = @_;
+    if ( !defined $password ) {
+        Firefox::Marionette::Exception->throw(
+            'Primary Password has not been provided');
+    }
+    my $script = <<'_JS_';
+if (token.checkPassword(arguments[0])) {
+  return true;
+} else {
+  return false;
+}
+_JS_
+    $self->chrome();
+    if (
+        $self->script(
+            $self->_compress_script(
+                $self->_pk11_tokendb_interface_preamble() . $script
+            ),
+            args => [$password]
+        )
+      )
+    {
+        $self->content();
+    }
+    else {
+        $self->content();
+        Firefox::Marionette::Exception->throw('Incorrect Primary Password');
+    }
+    return $self;
+}
+
+sub _import_profile_paths {
+    my ( $self, %parameters ) = @_;
+    if ( $parameters{import_profile_paths} ) {
+        foreach my $path ( @{ $parameters{import_profile_paths} } ) {
+            my ( $volume, $directories, $name ) = File::Spec->splitpath($path);
+            my $read_handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
+              or Firefox::Marionette::Exception->throw(
+                "Failed to open '$path' for reading:$EXTENDED_OS_ERROR");
+            my $write_path =
+              File::Spec->catfile( $self->{_profile_directory}, $name );
+            my $write_handle = FileHandle->new(
+                $write_path,
+                Fcntl::O_WRONLY() | Fcntl::O_CREAT() | Fcntl::O_EXCL(),
+                Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+              )
+              or Firefox::Marionette::Exception->throw(
+                "Failed to open '$write_path' for writing:$EXTENDED_OS_ERROR");
+            my $result;
+            while ( $result =
+                $read_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) )
+            {
+                $write_handle->print($buffer)
+                  or Firefox::Marionette::Exception->throw(
+                    "Failed to write to '$write_path':$EXTENDED_OS_ERROR");
+            }
+            defined $result
+              or Firefox::Marionette::Exception->throw(
+                "Failed to read from '$path':$EXTENDED_OS_ERROR");
+            $read_handle->close()
+              or Firefox::Marionette::Exception->throw(
+                "Failed to close '$path':$EXTENDED_OS_ERROR");
+            $write_handle->close()
+              or Firefox::Marionette::Exception->throw(
+                "Failed to close '$write_path':$EXTENDED_OS_ERROR");
+        }
+    }
+    return;
+}
+
+sub _login_interface_preamble {
+    my ($self) = @_;
+
+    return <<'_JS_';    # toolkit/components/passwordmgr/nsILoginManager.idl
+let loginManager = Components.classes["@mozilla.org/login-manager;1"].getService(Components.interfaces.nsILoginManager);
+_JS_
+}
+
+sub fill_login {
+    my ($self) = @_;
+
+    my $found;
+    my $browser_uri = URI->new( $self->uri() );
+  FORM: foreach my $form ( $self->find_tag('form') ) {
+        my $action     = $form->attribute('action');
+        my $action_uri = URI->new_abs( $action, $browser_uri );
+        my $old        = $self->_context('chrome');
+        my @logins     = $self->_translate_firefox_logins(
+            @{
+                $self->script(
+                    $self->_compress_script(
+                        $self->_login_interface_preamble()
+                          . <<"_JS_"), args => [ $browser_uri->scheme() . '://' . $browser_uri->host(), $action_uri->scheme() . '://' . $action_uri->host() ] ) } );
+try {
+    return loginManager.findLogins(arguments[0], arguments[1], null);
+} catch (e) {
+    console.log("Unable to use modern loginManager.findLogins methods:" + e);
+    return loginManager.findLogins({}, arguments[0], arguments[1], null);
+}
+_JS_
+        $self->_context($old);
+        foreach my $login (@logins) {
+            if (
+                ( my $user_field = $form->has_name( $login->user_field ) )
+                && ( my $password_field =
+                    $form->has_name( $login->password_field ) )
+              )
+            {
+                $user_field->type( $login->user() );
+                $password_field->type( $login->password() );
+                $found = 1;
+                last FORM;
+            }
+        }
+    }
+    if ( !$found ) {
+        Firefox::Marionette::Exception->throw(
+            "Unable to fill in form on $browser_uri");
+    }
+    return $self;
+}
+
+sub delete_login {
+    my ( $self, $login ) = @_;
+    my $old = $self->_context('chrome');
+    $self->script(
+        $self->_compress_script(
+            $self->_login_interface_preamble()
+              . $self->_define_login_info_from_blessed_user(
+                'loginInfo', $login
+              )
+              . <<"_JS_"), args => [$login] );
+loginManager.removeLogin(loginInfo);
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
+sub delete_logins {
+    my ($self) = @_;
+    my $old = $self->_context('chrome');
+    $self->script(
+        $self->_compress_script(
+            $self->_login_interface_preamble() . <<"_JS_") );
+loginManager.removeAllLogins();
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
+sub _define_login_info_from_blessed_user {
+    my ( $self, $variable_name, $login ) = @_;
+    return <<"_JS_";
+let $variable_name = Components.classes["\@mozilla.org/login-manager/loginInfo;1"].createInstance(Components.interfaces.nsILoginInfo);
+$variable_name.init(arguments[0].host, ("realm" in arguments[0] && arguments[0].realm !== null ? null : arguments[0].origin || ""), arguments[0].realm, arguments[0].user, arguments[0].password, "user_field" in arguments[0] && arguments[0].user_field !== null ? arguments[0].user_field : "", "password_field" in arguments[0] && arguments[0].password_field !== null ? arguments[0].password_field : "");
+_JS_
+}
+
+sub add_login {
+    my ( $self, @parameters ) = @_;
+    my $login;
+    if ( scalar @parameters == 1 ) {
+        $login = $parameters[0];
+    }
+    else {
+        $login = Firefox::Marionette::Login->new(@parameters);
+    }
+    my $old = $self->_context('chrome');
+    $self->script(
+        $self->_compress_script(
+            $self->_login_interface_preamble()
+              . $self->_define_login_info_from_blessed_user(
+                'loginInfo', $login
+              )
+              . <<"_JS_"), args => [$login] ); # xpcom/ds/nsIWritablePropertyBag2.idl
+loginManager.addLogin(loginInfo);
+let loginMetaInfo = Components.classes["\@mozilla.org/hash-property-bag;1"].createInstance(Components.interfaces.nsIWritablePropertyBag2);
+if ("guid" in arguments[0] && arguments[0].guid !== null) {
+	loginMetaInfo.setPropertyAsAUTF8String("guid", arguments[0].guid);
+}
+if ("creation_in_ms" in arguments[0] && arguments[0].creation_in_ms !== null) {
+	loginMetaInfo.setPropertyAsUint64("timeCreated", arguments[0].creation_in_ms);
+}
+if ("last_used_in_ms" in arguments[0] && arguments[0].last_used_in_ms !== null) {
+	loginMetaInfo.setPropertyAsUint64("timeLastUsed", arguments[0].last_used_in_ms);
+}
+if ("password_changed_in_ms" in arguments[0] && arguments[0].password_changed_in_ms !== null) {
+	loginMetaInfo.setPropertyAsUint64("timePasswordChanged", arguments[0].password_changed_in_ms);
+}
+if ("times_used" in arguments[0] && arguments[0].times_used !== null) {
+	loginMetaInfo.setPropertyAsUint64("timesUsed", arguments[0].times_used);
+}
+loginManager.modifyLogin(loginInfo, loginMetaInfo);
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
+sub _translate_firefox_logins {
+    my ( $self, @results ) = @_;
+    return map {
+        Firefox::Marionette::Login->new(
+            host       => $_->{hostname},
+            user       => $_->{username},
+            password   => $_->{password},
+            user_field => $_->{usernameField} eq q[]
+            ? undef
+            : $_->{usernameField},
+            password_field => $_->{passwordField} eq q[] ? undef
+            : $_->{passwordField},
+            realm  => $_->{httpRealm},
+            origin => exists $_->{formActionOrigin}
+            ? (
+                defined $_->{formActionOrigin} && $_->{formActionOrigin} ne q[]
+                ? $_->{formActionOrigin}
+                : undef
+              )
+            : ( defined $_->{formSubmitURL}
+                  && $_->{formSubmitURL} ne q[] ? $_->{formSubmitURL} : undef ),
+            guid                   => $_->{guid},
+            times_used             => $_->{timesUsed},
+            creation_in_ms         => $_->{timeCreated},
+            last_used_in_ms        => $_->{timeLastUsed},
+            password_changed_in_ms => $_->{timePasswordChanged}
+        )
+    } @results;
+}
+
+sub logins {
+    my ($self) = @_;
+    my $old    = $self->_context('chrome');
+    my $result = $self->script(
+        $self->_compress_script(
+            $self->_login_interface_preamble() . <<"_JS_") );
+return loginManager.getAllLogins({});
+_JS_
+    $self->_context($old);
+    return $self->_translate_firefox_logins( @{$result} );
+}
+
 sub _strip_pem_prefix_whitespace_and_postfix {
     my ( $self, $pem_encoded_string ) = @_;
     my $stripped_certificate;
@@ -968,10 +1285,8 @@ sub _read_certificates_from_disk {
     return @certificates;
 }
 
-sub new {
-    my ( $class, %parameters ) = @_;
-    my $self = $class->_init(%parameters);
-    my @arguments;
+sub _launch_and_connect {
+    my ( $self, %parameters ) = @_;
     my ( $session_id, $capabilities );
     if ( $parameters{reconnect} ) {
 
@@ -980,7 +1295,8 @@ sub new {
     else {
         my @certificates =
           $self->_read_certificates_from_disk( $parameters{trust} );
-        @arguments = $self->_setup_arguments(%parameters);
+        my @arguments = $self->_setup_arguments(%parameters);
+        $self->_import_profile_paths(%parameters);
         $self->_launch(@arguments);
         my $socket = $self->_setup_local_connection_to_firefox(@arguments);
         ( $session_id, $capabilities ) =
@@ -992,7 +1308,11 @@ sub new {
             );
         }
     }
+    return ( $session_id, $capabilities );
+}
 
+sub _check_protocol_version_and_pid {
+    my ( $self, $session_id, $capabilities ) = @_;
     if ( ($session_id) && ($capabilities) && ( ref $capabilities ) ) {
     }
     elsif (( $self->marionette_protocol() <= _MARIONETTE_PROTOCOL_VERSION_3() )
@@ -1009,6 +1329,11 @@ sub new {
     else {
         $self->_check_initial_firefox_pid($capabilities);
     }
+    return;
+}
+
+sub _post_launch_checks_and_setup {
+    my ( $self, %parameters ) = @_;
     $self->_write_local_proxy( $self->_ssh() );
     $self->_check_timeout_parameters(%parameters);
     if ( $self->{_har} ) {
@@ -1037,6 +1362,16 @@ sub new {
             "Failed to close '$path':$EXTENDED_OS_ERROR");
         $self->install( $path, 0 );
     }
+    return;
+}
+
+sub new {
+    my ( $class, %parameters ) = @_;
+    my $self = $class->_init(%parameters);
+    my ( $session_id, $capabilities ) = $self->_launch_and_connect(%parameters);
+    $self->_check_protocol_version_and_pid( $session_id, $capabilities );
+    $self->_post_launch_checks_and_setup(%parameters);
+
     return $self;
 }
 
@@ -1249,8 +1584,10 @@ sub _setup_arguments {
     push @arguments, $self->_check_visible(%parameters);
     if ( $parameters{profile_name} ) {
         $self->{profile_name} = $parameters{profile_name};
+        $self->{_profile_directory} =
+          Firefox::Marionette::Profile->directory( $parameters{profile_name} );
         $self->{profile_path} =
-          Firefox::Marionette::Profile->path( $parameters{profile_name} );
+          File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
         push @arguments, ( '-P', $self->{profile_name} );
     }
     else {
@@ -7498,6 +7835,52 @@ will only send out an L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP
 
 by itself, will send out an L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> header that may resemble C<Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl>. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 add_login
+
+accepts a hash of the following keys;
+
+=over 4
+
+=item * host - The origin, not hostname, to which the login applies, for example 'https://www.example.org'.
+
+=item * user - The username for the login.
+
+=item * password - The password for the login.
+
+=item * origin - The origin, not URL, a form-based login L<was submitted to|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action>. For logins obtained from HTML forms, this field is the L<action attribute|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action> from the form element, with the path removed (for example, "https://example.org"). Forms with no action attribute default to submitting to their origin URL, so that is stored here. This field should be omitted (it will be set to undef) for http auth type authentications and "" means to match against any form action.
+
+=item * realm - The HTTP Realm for which the login was requested. When an HTTP server sends a 401 result, the WWW-Authenticate header includes a realm. See L<RFC 2617|https://datatracker.ietf.org/doc/html/rfc2617>.  If the realm is not specified, or it was blank, the hostname is used instead. For HTML form logins, this field is null.
+
+=item * user_field - The name attribute for the username input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+
+=item * password_field - The name attribute for the password input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+
+=back
+
+or a L<Firefox::Marionette::Login|Firefox::Marionette::Login> object as the first parameter and adds the login to the Firefox login database.
+
+    use Firefox::Marionette();
+    use UUID();
+
+    my $firefox = Firefox::Marionette->new();
+
+    # for http auth logins
+
+    my $http_auth_login = Firefox::Marionette::Login->new(host => 'https://pause.perl.org', user => 'AUSER', password => 'qwerty', realm => 'PAUSE');
+    $firefox->add_login($http_auth_login);
+    $firefox->go('https://pause.perl.org/pause/authenquery')->accept_alert(); # this goes to the page and submits the http auth popup
+
+    # for form based login
+
+    $firefox->add_login(host => 'https://github.com', origin => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
+    my $form_login = Firefox::Marionette::Login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+
+    # or just directly
+
+    $firefox->add_login(host => 'https://github.com/login', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 add_site_header
 
 accepts a host name and a hash of HTTP headers to include in every future HTTP Request that is being sent to that particular host.
@@ -7782,6 +8165,34 @@ will remove the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/H
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 delete_login
+
+accepts a L<login|Firefox::Marionette::Login> as a parameter.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login ($firefox->logins()) {
+        if ($login->user() eq 'me@example.org') {
+            $firefox->delete_login($login);
+        }
+    }
+
+will remove the logins with the username matching 'me@example.org'.
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 delete_logins
+
+This method empties the password database.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->delete_logins();
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 delete_session
 
 deletes the current WebDriver session.
@@ -7883,6 +8294,29 @@ This method returns a human readable error message describing how the Firefox pr
 =head2 execute
 
 This utility method executes a command with arguments and returns STDOUT as a chomped string.  It is a simple method only intended for the Firefox::Marionette::* modules.
+
+=head2 fill_login
+
+This method searchs the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins> for an appropriate login for any form on the current page.  The form must match the host, the action attribute and the user and password field names.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $url = 'https://github.com';
+
+    my $user = 'me@example.org';
+
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the $user account when logging into $url:");
+
+    $firefox->add_login(host => $url, user => $user, password => 'qwerty', user_field => 'login', password_field => 'password');
+
+    $firefox->go("$url/login");
+
+    $firefox->fill_login();
 
 =head2 find
 
@@ -8554,6 +8988,10 @@ accepts a list of actions (see L<mouse_up|Firefox::Marionette#mouse_up>, L<mouse
 
 See the L<release|Firefox::Marionette#release> method for an alternative for manually specifying all the L<mouse_up|Firefox::Marionette#mouse_up> and L<key_up|Firefox::Marionette#key_up> methods
 
+=head2 profile_directory
+
+returns the profile directory used by the current instance of firefox.  This is mainly intended for debugging firefox.  Firefox is not designed to cope with these files being altered while firefox is running.
+
 =head2 property
 
 accepts an L<element|Firefox::Marionette::Element> as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the L<attribute|Firefox::Marionette#attribute> method will return the initial content.
@@ -8569,6 +9007,72 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and a 
     # OR getting the innerHTML property
 
     my $title = $firefox->find_tag('title')->property('innerHTML'); # same as $firefox->title();
+
+=head2 pwd_mgr_lock
+
+Accepts a new L<primary password|https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins> and locks the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins> with it.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new();
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+    $firefox->pwd_mgr_lock($password);
+    $firefox->pwd_mgr_logout();
+    # now no-one can access the Password Manager Database without the value in $password
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 pwd_mgr_login
+
+Accepts the L<primary password|https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins> and allows the user to access the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins>.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+    $firefox->pwd_mgr_login($password);
+    ...
+    # access the Password Database.
+    ...
+    $firefox->pwd_mgr_logout();
+    ...
+    # no longer able to access the Password Database.
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 pwd_mgr_logout
+
+Logs the user out of being able to access the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins>.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+    $firefox->pwd_mgr_login($password);
+    ...
+    # access the Password Database.
+    ...
+    $firefox->pwd_mgr_logout();
+    ...
+    # no longer able to access the Password Database.
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 pwd_mgr_needs_login
+
+returns true or false if the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins> has been locked and needs a L<primary password|https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins> to access it.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    if ($firefox->pwd_mgr_needs_login()) {
+      my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+      $firefox->pwd_mgr_login($password);
+    }
 
 =head2 quit
 
@@ -8772,6 +9276,45 @@ returns the value for the DISPLAY environment variable if one has been generated
 =head2 xvfb_xauthority
 
 returns the value for the XAUTHORITY environment variable if one has been generated for the xvfb environment
+
+=head1 AUTOMATING THE FIREFOX PASSWORD MANAGER
+
+This module allows you to login to a website without ever directly handling usernames and password details.  The Password Manager may be preloaded with appropriate passwords and locked, like so;
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'locked' ); # using a pre-built profile called 'locked'
+    if ($firefox->pwd_mgr_needs_login()) {
+        my $new_password = IO::Prompt::prompt(-echo => q[*], 'Enter the password for the locked profile:');
+        $firefox->pwd_mgr_login($password);
+    } else {
+        my $new_password = IO::Prompt::prompt(-echo => q[*], 'Enter the new password for the locked profile:');
+        $firefox->pwd_mgr_lock($password);
+    }
+    ...
+    $firefox->pwd_mgr_logout();
+
+Usernames and passwords (for both HTTP Authentication popups and HTML Form based logins) may be added, viewed and deleted.
+
+    use WebService::HIBP();
+
+    my $hibp = WebService::HIBP->new();
+
+    $firefox->add_login(host => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
+    $firefox->add_login(host => 'https://pause.perl.org', user => 'AUSER', password => 'qwerty', realm => 'PAUSE');
+    ...
+    foreach my $login ($firefox->logins()) {
+        if ($hibp->password($login->password())) { # does NOT send the password to the HIBP webservice
+            warn "HIBP reports that your password for the " . $login->user() " account at " . $login->host() . " has been found in a data breach";
+            $firefox->delete_login($login); # how could this possibly help?
+        }
+    }
+
+And used to fill in login prompts without explicitly knowing the account details.
+
+    $firefox->go('https://pause.perl.org/pause/authenquery')->accept_alert(); # this goes to the page and submits the http auth popup
+
+    $firefox->go('https://github.com/login')->fill_login(); # fill the login and password fields without needing to see them
 
 =head1 REMOTE AUTOMATION OF FIREFOX VIA SSH
 

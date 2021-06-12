@@ -98,6 +98,42 @@ will only send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP
 
 by itself, will send out an [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) header that may resemble `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8, text/perl`. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## add\_login
+
+accepts a hash of the following keys;
+
+- host - The origin, not hostname, to which the login applies, for example 'https://www.example.org'.
+- user - The username for the login.
+- password - The password for the login.
+- origin - The origin, not URL, a form-based login [was submitted to](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action). For logins obtained from HTML forms, this field is the [action attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action) from the form element, with the path removed (for example, "https://example.org"). Forms with no action attribute default to submitting to their origin URL, so that is stored here. This field should be omitted (it will be set to undef) for http auth type authentications and "" means to match against any form action.
+- realm - The HTTP Realm for which the login was requested. When an HTTP server sends a 401 result, the WWW-Authenticate header includes a realm. See [RFC 2617](https://datatracker.ietf.org/doc/html/rfc2617).  If the realm is not specified, or it was blank, the hostname is used instead. For HTML form logins, this field is null.
+- user\_field - The name attribute for the username input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+- password\_field - The name attribute for the password input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+
+or a [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) object as the first parameter and adds the login to the Firefox login database.
+
+    use Firefox::Marionette();
+    use UUID();
+
+    my $firefox = Firefox::Marionette->new();
+
+    # for http auth logins
+
+    my $http_auth_login = Firefox::Marionette::Login->new(host => 'https://pause.perl.org', user => 'AUSER', password => 'qwerty', realm => 'PAUSE');
+    $firefox->add_login($http_auth_login);
+    $firefox->go('https://pause.perl.org/pause/authenquery')->accept_alert(); # this goes to the page and submits the http auth popup
+
+    # for form based login
+
+    $firefox->add_login(host => 'https://github.com', origin => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
+    my $form_login = Firefox::Marionette::Login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+
+    # or just directly
+
+    $firefox->add_login(host => 'https://github.com/login', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## add\_site\_header
 
 accepts a host name and a hash of HTTP headers to include in every future HTTP Request that is being sent to that particular host.
@@ -382,6 +418,34 @@ will remove the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/H
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## delete\_login
+
+accepts a [login](https://metacpan.org/pod/Firefox::Marionette::Login) as a parameter.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login ($firefox->logins()) {
+        if ($login->user() eq 'me@example.org') {
+            $firefox->delete_login($login);
+        }
+    }
+
+will remove the logins with the username matching 'me@example.org'.
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## delete\_logins
+
+This method empties the password database.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->delete_logins();
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## delete\_session
 
 deletes the current WebDriver session.
@@ -483,6 +547,29 @@ This method returns a human readable error message describing how the Firefox pr
 ## execute
 
 This utility method executes a command with arguments and returns STDOUT as a chomped string.  It is a simple method only intended for the Firefox::Marionette::\* modules.
+
+## fill\_login
+
+This method searchs the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins) for an appropriate login for any form on the current page.  The form must match the host, the action attribute and the user and password field names.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $url = 'https://github.com';
+
+    my $user = 'me@example.org';
+
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the $user account when logging into $url:");
+
+    $firefox->add_login(host => $url, user => $user, password => 'qwerty', user_field => 'login', password_field => 'password');
+
+    $firefox->go("$url/login");
+
+    $firefox->fill_login();
 
 ## find
 
@@ -1100,6 +1187,10 @@ accepts a list of actions (see [mouse\_up](https://metacpan.org/pod/Firefox::Mar
 
 See the [release](https://metacpan.org/pod/Firefox::Marionette#release) method for an alternative for manually specifying all the [mouse\_up](https://metacpan.org/pod/Firefox::Marionette#mouse_up) and [key\_up](https://metacpan.org/pod/Firefox::Marionette#key_up) methods
 
+## profile\_directory
+
+returns the profile directory used by the current instance of firefox.  This is mainly intended for debugging firefox.  Firefox is not designed to cope with these files being altered while firefox is running.
+
 ## property
 
 accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the [attribute](https://metacpan.org/pod/Firefox::Marionette#attribute) method will return the initial content.
@@ -1115,6 +1206,72 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
     # OR getting the innerHTML property
 
     my $title = $firefox->find_tag('title')->property('innerHTML'); # same as $firefox->title();
+
+## pwd\_mgr\_lock
+
+Accepts a new [primary password](https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins) and locks the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins) with it.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new();
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+    $firefox->pwd_mgr_lock($password);
+    $firefox->pwd_mgr_logout();
+    # now no-one can access the Password Manager Database without the value in $password
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## pwd\_mgr\_login
+
+Accepts the [primary password](https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins) and allows the user to access the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins).
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+    $firefox->pwd_mgr_login($password);
+    ...
+    # access the Password Database.
+    ...
+    $firefox->pwd_mgr_logout();
+    ...
+    # no longer able to access the Password Database.
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## pwd\_mgr\_logout
+
+Logs the user out of being able to access the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins).
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+    $firefox->pwd_mgr_login($password);
+    ...
+    # access the Password Database.
+    ...
+    $firefox->pwd_mgr_logout();
+    ...
+    # no longer able to access the Password Database.
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## pwd\_mgr\_needs\_login
+
+returns true or false if the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins) has been locked and needs a [primary password](https://support.mozilla.org/en-US/kb/use-primary-password-protect-stored-logins) to access it.
+
+    use Firefox::Marionette();
+    use IO::Prompt();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    if ($firefox->pwd_mgr_needs_login()) {
+      my $password = IO::Prompt::prompt(-echo => q[*], "Please enter the password for the Firefox Password Manager:");
+      $firefox->pwd_mgr_login($password);
+    }
 
 ## quit
 
@@ -1301,6 +1458,45 @@ returns the value for the DISPLAY environment variable if one has been generated
 ## xvfb\_xauthority
 
 returns the value for the XAUTHORITY environment variable if one has been generated for the xvfb environment
+
+# AUTOMATING THE FIREFOX PASSWORD MANAGER
+
+This module allows you to login to a website without ever directly handling usernames and password details.  The Password Manager may be preloaded with appropriate passwords and locked, like so;
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'locked' ); # using a pre-built profile called 'locked'
+    if ($firefox->pwd_mgr_needs_login()) {
+        my $new_password = IO::Prompt::prompt(-echo => q[*], 'Enter the password for the locked profile:');
+        $firefox->pwd_mgr_login($password);
+    } else {
+        my $new_password = IO::Prompt::prompt(-echo => q[*], 'Enter the new password for the locked profile:');
+        $firefox->pwd_mgr_lock($password);
+    }
+    ...
+    $firefox->pwd_mgr_logout();
+
+Usernames and passwords (for both HTTP Authentication popups and HTML Form based logins) may be added, viewed and deleted.
+
+    use WebService::HIBP();
+
+    my $hibp = WebService::HIBP->new();
+
+    $firefox->add_login(host => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
+    $firefox->add_login(host => 'https://pause.perl.org', user => 'AUSER', password => 'qwerty', realm => 'PAUSE');
+    ...
+    foreach my $login ($firefox->logins()) {
+        if ($hibp->password($login->password())) { # does NOT send the password to the HIBP webservice
+            warn "HIBP reports that your password for the " . $login->user() " account at " . $login->host() . " has been found in a data breach";
+            $firefox->delete_login($login); # how could this possibly help?
+        }
+    }
+
+And used to fill in login prompts without explicitly knowing the account details.
+
+    $firefox->go('https://pause.perl.org/pause/authenquery')->accept_alert(); # this goes to the page and submits the http auth popup
+
+    $firefox->go('https://github.com/login')->fill_login(); # fill the login and password fields without needing to see them
 
 # REMOTE AUTOMATION OF FIREFOX VIA SSH
 

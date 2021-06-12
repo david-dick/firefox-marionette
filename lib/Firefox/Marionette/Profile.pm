@@ -63,12 +63,32 @@ sub _read_ini_file {
     return {};
 }
 
+sub default_name {
+    my ($class)               = @_;
+    my $profile_ini_directory = $class->_profile_ini_directory();
+    my $config                = $class->_read_ini_file($profile_ini_directory);
+    foreach my $key (
+        sort { $config->{$a}->{Name} cmp $config->{$b}->{Name} }
+        grep { exists $config->{$_}->{Name} } keys %{$config}
+      )
+    {
+        if ( ( $config->{$key}->{Default} ) && ( $config->{$key}->{Name} ) ) {
+            return $config->{$key}->{Name};
+        }
+    }
+    return;
+}
+
 sub names {
     my ($class)               = @_;
     my $profile_ini_directory = $class->_profile_ini_directory();
     my $config                = $class->_read_ini_file($profile_ini_directory);
     my @names;
-    foreach my $key ( sort { $a cmp $b } keys %{$config} ) {
+    foreach my $key (
+        sort { $config->{$a}->{Name} cmp $config->{$b}->{Name} }
+        grep { exists $config->{$_}->{Name} } keys %{$config}
+      )
+    {
         if ( defined $config->{$key}->{Name} ) {
             push @names, $config->{$key}->{Name};
         }
@@ -77,6 +97,11 @@ sub names {
 }
 
 sub path {
+    my ( $class, $name ) = @_;
+    return File::Spec->catfile( $class->directory($name), 'prefs.js' );
+}
+
+sub directory {
     my ( $class, $name ) = @_;
     my $profile_ini_directory = $class->_profile_ini_directory();
     my $config                = $class->_read_ini_file($profile_ini_directory);
@@ -99,27 +124,27 @@ sub path {
         if ($selected) {
             if ( $config->{$key}->{IsRelative} ) {
                 $path = File::Spec->catfile( $profile_ini_directory,
-                    $config->{$key}->{Path}, 'prefs.js' );
+                    $config->{$key}->{Path} );
             }
             elsif ( $config->{$key}->{Path} ) {
                 $path =
-                  File::Spec->catfile( $config->{$key}->{Path}, 'prefs.js' );
+                  File::Spec->catfile( $config->{$key}->{Path} );
             }
             else {
                 $path =
                   File::Spec->catfile( $profile_ini_directory,
-                    $config->{$key}->{Default}, 'prefs.js' );
+                    $config->{$key}->{Default} );
             }
         }
     }
     if ( ( !$path ) && ( defined $first_key ) ) {
         if ( $config->{$first_key}->{IsRelative} ) {
             $path = File::Spec->catfile( $profile_ini_directory,
-                $config->{$first_key}->{Path}, 'prefs.js' );
+                $config->{$first_key}->{Path} );
         }
         else {
             $path =
-              File::Spec->catfile( $config->{$first_key}->{Path}, 'prefs.js' );
+              File::Spec->catfile( $config->{$first_key}->{Path} );
         }
     }
     return $path;
@@ -471,6 +496,14 @@ returns a new L<profile|Firefox::Marionette::Profile>.
 =head2 names
 
 returns a list of existing profile names that this module can discover on the filesystem.
+
+=head2 default_name
+
+returns the default profile name.
+
+=head2 directory
+
+accepts a profile name and returns the directory path that contains the C<prefs.js> file.
 
 =head2 download_directory
 
