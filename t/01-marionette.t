@@ -2383,7 +2383,7 @@ SKIP: {
 		if (($major_version < 50) && (!defined $accept_dialog)) {
 			skip("Firefox $major_version does not appear to support the \$firefox->send_alert_text() method", 1);
 		}
-		ok($accept_dialog, "\$firefox->accept_dialog() accepts the dialog box");
+		ok($accept_dialog, "\$firefox->accept_dialog() accepts the dialog box:$@");
 	}
 	SKIP: {
 		if ((!$chrome_window_handle_supported) && ($major_version < 50)) {
