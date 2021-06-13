@@ -329,8 +329,15 @@ sub new {
 'services.sync.prefs.sync.privacy.trackingprotection.pbmode.enabled',
             'false', 0
         );
-        $profile->set_value( 'signon.rememberSignons',    'false', 0 );
-        $profile->set_value( 'toolkit.telemetry.enabled', 'false', 0 );
+        $profile->set_value( 'signon.rememberSignons',            'false', 0 );
+        $profile->set_value( 'toolkit.telemetry.archive.enabled', 'false', 0 );
+        $profile->set_value( 'toolkit.telemetry.enabled',         'false', 0 );
+        $profile->set_value( 'toolkit.telemetry.rejected',        'true',  0 );
+        $profile->set_value( 'toolkit.telemetry.server',          q[],     1 );
+        $profile->set_value( 'toolkit.telemetry.unified',         'false', 0 );
+        $profile->set_value( 'toolkit.telemetry.unifiedIsOptIn',  'false', 0 );
+        $profile->set_value( 'toolkit.telemetry.prompted',        '2',     0 );
+        $profile->set_value( 'toolkit.telemetry.rejected',        'true',  0 );
         $profile->set_value( 'toolkit.telemetry.reportingpolicy.firstRun',
             'false', 0 );
         $profile->set_value( 'xpinstall.signatures.required', 'false', 0 );
