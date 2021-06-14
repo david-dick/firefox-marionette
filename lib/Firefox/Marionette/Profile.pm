@@ -172,6 +172,9 @@ sub new {
       ;    # the last folder specified for a download
     $profile->set_value( 'browser.places.importBookmarksHTML',  'true',  0 );
     $profile->set_value( 'browser.reader.detectedFirstArticle', 'true',  0 );
+    $profile->set_value( 'browser.region.network.scan', 'false',  0 );
+    $profile->set_value( 'browser.region.network.url', q[],  0 );
+    $profile->set_value( 'browser.region.update.enabled', 'false',  0 );
     $profile->set_value( 'browser.shell.checkDefaultBrowser',   'false', 0 );
     $profile->set_value( 'browser.showQuitWarning',             'false', 0 );
     $profile->set_value( 'browser.startup.homepage', 'about:blank',      1 );
