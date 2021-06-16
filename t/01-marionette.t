@@ -2381,7 +2381,10 @@ SKIP: {
 	};
 	SKIP: {
 		if (($major_version < 50) && (!defined $accept_dialog)) {
-			skip("Firefox $major_version does not appear to support the \$firefox->send_alert_text() method", 1);
+			skip("Firefox $major_version does not appear to support the \$firefox->accept_dialog() method", 1);
+		} elsif (($major_version == 78) && ($@) && ($@->isa('Firefox::Marionette::Exception::NoSuchAlert'))) {
+			diag("Firefox $major_version has already closed the prompt:$@");
+			skip("Firefox $major_version has already closed the prompt", 1);
 		}
 		ok($accept_dialog, "\$firefox->accept_dialog() accepts the dialog box:$@");
 	}
