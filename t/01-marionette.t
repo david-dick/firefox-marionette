@@ -1633,12 +1633,18 @@ SKIP: {
 		}
 		ok(not(defined $active_frame), "\$firefox->active_frame() is undefined for " . $firefox->uri());
 	}
-	ok($firefox->find('//input[@id="search-input"]', BY_XPATH())->type('Test::More'), "Sent 'Test::More' to the 'search-input' field directly to the element");
+	my $search_box_id;
+	foreach my $element ($firefox->has_tag('input')) {
+		if ((lc $element->attribute('type')) eq 'text') {
+			$search_box_id = $element->attribute('id');
+		}
+	}
+	ok($firefox->find('//input[@id="' . $search_box_id . '"]', BY_XPATH())->type('Test::More'), "Sent 'Test::More' to the '$search_box_id' field directly to the element");
 	my $autofocus;
-	ok($autofocus = $firefox->find_element('//input[@id="search-input"]')->attribute('autofocus'), "The value of the autofocus attribute is '$autofocus'");
+	ok($autofocus = $firefox->find_element('//input[@id="' . $search_box_id . '"]')->attribute('autofocus'), "The value of the autofocus attribute is '$autofocus'");
 	$autofocus = undef;
 	eval {
-		$autofocus = $firefox->find('//input[@id="search-input"]')->property('autofocus');
+		$autofocus = $firefox->find('//input[@id="' . $search_box_id . '"]')->property('autofocus');
 	};
 	SKIP: {
 		if ((!$autofocus) && ($major_version < 50)) {
@@ -1647,24 +1653,24 @@ SKIP: {
 			skip("The property method is not supported for $major_version.$minor_version.$patch_version", 4);
 		}
 		ok($autofocus, "The value of the autofocus property is '$autofocus'");
-		ok($firefox->find_by_class('main-content')->find('//input[@id="search-input"]')->property('id') eq 'search-input', "Correctly found nested element with find");
+		ok($firefox->find_by_class('main-content')->find('//input[@id="' . $search_box_id . '"]')->property('id') eq $search_box_id, "Correctly found nested element with find");
 		ok($firefox->title() eq $firefox->find_tag('title')->property('innerHTML'), "\$firefox->title() is the same as \$firefox->find_tag('title')->property('innerHTML')");
 	}
 	my $count = 0;
-	foreach my $element ($firefox->find_by_class('main-content')->list('//input[@id="search-input"]')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with list");
+	foreach my $element ($firefox->find_by_class('main-content')->list('//input[@id="' . $search_box_id . '"]')) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with list");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested list:$count");
 	$count = 0;
-	foreach my $element ($firefox->find_by_class('main-content')->find('//input[@id="search-input"]')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with find");
+	foreach my $element ($firefox->find_by_class('main-content')->find('//input[@id="' . $search_box_id . '"]')) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with find");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested find:$count");
 	$count = 0;
-	foreach my $element ($firefox->has_class('main-content')->has('//input[@id="search-input"]')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with has");
+	foreach my $element ($firefox->has_class('main-content')->has('//input[@id="' . $search_box_id . '"]')) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with has");
 		$count += 1;
 	}
 	$count = 0;
@@ -1673,77 +1679,77 @@ SKIP: {
 	}
 	ok($count == 0, "Found no elements with nested has:$count");
 	$count = 0;
-	foreach my $element ($firefox->find('//input[@id="search-input"]')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found element with wantarray find");
+	foreach my $element ($firefox->find('//input[@id="' . $search_box_id . '"]')) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found element with wantarray find");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with wantarray find:$count");
-	ok($firefox->find('search-input', 'id')->attribute('id') eq 'search-input', "Correctly found element when searching by id");
-	ok($firefox->find('search-input', BY_ID())->attribute('id') eq 'search-input', "Correctly found element when searching by id");
-	ok($firefox->has('search-input', BY_ID())->attribute('id') eq 'search-input', "Correctly found element for default has");
-	ok($firefox->list_by_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with list_by_id");
-	ok($firefox->find_by_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with find_by_id");
-	ok($firefox->find_by_class('main-content')->find_by_id('search-input')->attribute('id') eq 'search-input', "Correctly found nested element with find_by_id");
-	ok($firefox->find_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with find_id");
-	ok($firefox->has_id('search-input')->attribute('id') eq 'search-input', "Correctly found element with has_id");
+	ok($firefox->find($search_box_id, 'id')->attribute('id') eq $search_box_id, "Correctly found element when searching by id");
+	ok($firefox->find($search_box_id, BY_ID())->attribute('id') eq $search_box_id, "Correctly found element when searching by id");
+	ok($firefox->has($search_box_id, BY_ID())->attribute('id') eq $search_box_id, "Correctly found element for default has");
+	ok($firefox->list_by_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found element with list_by_id");
+	ok($firefox->find_by_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found element with find_by_id");
+	ok($firefox->find_by_class('main-content')->find_by_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found nested element with find_by_id");
+	ok($firefox->find_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found element with find_id");
+	ok($firefox->has_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found element with has_id");
 	ok(!defined $firefox->has_id('search-input-totally-not-there-EVER'), "Correctly returned undef with has_id for a non existant element");
-	ok($firefox->find_class('main-content')->find_id('search-input')->attribute('id') eq 'search-input', "Correctly found nested element with find_id");
-	ok($firefox->has_class('main-content')->has_id('search-input')->attribute('id') eq 'search-input', "Correctly found nested element with has_id");
+	ok($firefox->find_class('main-content')->find_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found nested element with find_id");
+	ok($firefox->has_class('main-content')->has_id($search_box_id)->attribute('id') eq $search_box_id, "Correctly found nested element with has_id");
 	$count = 0;
-	foreach my $element ($firefox->find_by_class('main-content')->list_by_id('search-input')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with list_by_id");
+	foreach my $element ($firefox->find_by_class('main-content')->list_by_id($search_box_id)) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with list_by_id");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested list_by_id:$count");
 	$count = 0;
-	foreach my $element ($firefox->find_by_class('main-content')->find_by_id('search-input')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with find_by_id");
+	foreach my $element ($firefox->find_by_class('main-content')->find_by_id($search_box_id)) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with find_by_id");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested find_by_id:$count");
 	$count = 0;
-	foreach my $element ($firefox->find_class('main-content')->find_id('search-input')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with find_id");
+	foreach my $element ($firefox->find_class('main-content')->find_id($search_box_id)) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with find_id");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested find_id:$count");
 	$count = 0;
-	foreach my $element ($firefox->find_by_id('search-input')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found element with wantarray find_by_id");
+	foreach my $element ($firefox->find_by_id($search_box_id)) {
+		ok($element->attribute('id') eq $search_box_id, "Correctly found element with wantarray find_by_id");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with wantarray find_by_id:$count");
-	ok($firefox->find('q', 'name')->attribute('id') eq 'search-input', "Correctly found element when searching by id");
-	ok($firefox->find('q', BY_NAME())->attribute('id') eq 'search-input', "Correctly found element when searching by id");
-	ok($firefox->list_by_name('q')->attribute('id') eq 'search-input', "Correctly found element with list_by_name");
-	ok($firefox->find_by_name('q')->attribute('id') eq 'search-input', "Correctly found element with find_by_name");
-	ok($firefox->find_by_class('main-content')->find_by_name('q')->attribute('id') eq 'search-input', "Correctly found nested element with find_by_name");
-	ok($firefox->find_name('q')->attribute('id') eq 'search-input', "Correctly found element with find_name");
-	ok($firefox->has_name('q')->attribute('id') eq 'search-input', "Correctly found element with has_name");
+	ok($firefox->find('q', 'name')->attribute('id') eq $search_box_id, "Correctly found element when searching by id");
+	ok($firefox->find('q', BY_NAME())->attribute('id') eq $search_box_id, "Correctly found element when searching by id");
+	ok($firefox->list_by_name('q')->attribute('id') eq $search_box_id, "Correctly found element with list_by_name");
+	ok($firefox->find_by_name('q')->attribute('id') eq $search_box_id, "Correctly found element with find_by_name");
+	ok($firefox->find_by_class('main-content')->find_by_name('q')->attribute('id') eq $search_box_id, "Correctly found nested element with find_by_name");
+	ok($firefox->find_name('q')->attribute('id') eq $search_box_id, "Correctly found element with find_name");
+	ok($firefox->has_name('q')->attribute('id') eq $search_box_id, "Correctly found element with has_name");
 	ok(!defined $firefox->has_name('q-definitely-not-exists'), "Correctly returned undef for has_name and a missing element");
-	ok($firefox->find_class('main-content')->find_name('q')->attribute('id') eq 'search-input', "Correctly found nested element with find_name");
-	ok($firefox->has_class('main-content')->has_name('q')->attribute('id') eq 'search-input', "Correctly found nested element with has_name");
+	ok($firefox->find_class('main-content')->find_name('q')->attribute('id') eq $search_box_id, "Correctly found nested element with find_name");
+	ok($firefox->has_class('main-content')->has_name('q')->attribute('id') eq $search_box_id, "Correctly found nested element with has_name");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->list_by_name('q')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with list_by_name");
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with list_by_name");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested list_by_name:$count");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class('main-content')->find_by_name('q')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found nested element with find_by_name");
+		ok($element->attribute('id') eq $search_box_id, "Correctly found nested element with find_by_name");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with nested find_by_name:$count");
 	$count = 0;
 	foreach my $element ($firefox->find_by_name('q')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found element with wantarray find_by_name");
+		ok($element->attribute('id') eq $search_box_id, "Correctly found element with wantarray find_by_name");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with wantarray find_by_name:$count");
 	$count = 0;
 	foreach my $element ($firefox->find_name('q')) {
-		ok($element->attribute('id') eq 'search-input', "Correctly found element with wantarray find_name");
+		ok($element->attribute('id') eq $search_box_id, "Correctly found element with wantarray find_name");
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with wantarray find_name:$count");
@@ -1971,26 +1977,26 @@ SKIP: {
 	}
 	ok($count == 2, "Found elements with wantarray find_partial:$count");
 	my $css_rule;
-	ok($css_rule = $firefox->find('//input[@id="search-input"]')->css('display'), "The value of the css rule 'display' is '$css_rule'");
-	my $result = $firefox->find('//input[@id="search-input"]')->is_enabled();
-	ok($result =~ /^[01]$/, "is_enabled returns 0 or 1 for //input[\@id=\"search-input\"]:$result");
-	$result = $firefox->find('//input[@id="search-input"]')->is_displayed();
-	ok($result =~ /^[01]$/, "is_displayed returns 0 or 1 for //input[\@id=\"search-input\"]:$result");
-	$result = $firefox->find('//input[@id="search-input"]')->is_selected();
-	ok($result =~ /^[01]$/, "is_selected returns 0 or 1 for //input[\@id=\"search-input\"]:$result");
-	ok($firefox->find('//input[@id="search-input"]')->clear(), "Clearing the element directly");
+	ok($css_rule = $firefox->find('//input[@id="' . $search_box_id . '"]')->css('display'), "The value of the css rule 'display' is '$css_rule'");
+	my $result = $firefox->find('//input[@id="' . $search_box_id . '"]')->is_enabled();
+	ok($result =~ /^[01]$/, "is_enabled returns 0 or 1 for //input[\@id=\"$search_box_id\"]:$result");
+	$result = $firefox->find('//input[@id="' . $search_box_id . '"]')->is_displayed();
+	ok($result =~ /^[01]$/, "is_displayed returns 0 or 1 for //input[\@id=\"$search_box_id\"]:$result");
+	$result = $firefox->find('//input[@id="' . $search_box_id . '"]')->is_selected();
+	ok($result =~ /^[01]$/, "is_selected returns 0 or 1 for //input[\@id=\"$search_box_id\"]:$result");
+	ok($firefox->find('//input[@id="' . $search_box_id . '"]')->clear(), "Clearing the element directly");
 	TODO: {
 		local $TODO = $major_version < 50 ? "property and attribute methods can have different values for empty" : undef;
-		ok((!defined $firefox->find_id('search-input')->attribute('value')) && ($firefox->find_id('search-input')->property('value') eq ''), "Initial property and attribute values are empty for 'search-input'");
+		ok((!defined $firefox->find_id($search_box_id)->attribute('value')) && ($firefox->find_id($search_box_id)->property('value') eq ''), "Initial property and attribute values are empty for $search_box_id");
 	}
-	ok($firefox->find('//input[@id="search-input"]')->send_keys('Test::More'), "Sent 'Test::More' to the 'search-input' field directly to the element");
+	ok($firefox->find('//input[@id="' . $search_box_id . '"]')->send_keys('Test::More'), "Sent 'Test::More' to the '$search_box_id' field directly to the element");
 	TODO: {
 		local $TODO = $major_version < 50 ? "attribute method can have different values for empty" : undef;
-		ok(!defined $firefox->find_id('search-input')->attribute('value'), "attribute for 'search-input' is still not defined ");
+		ok(!defined $firefox->find_id($search_box_id)->attribute('value'), "attribute for '$search_box_id' is still not defined ");
 	}
 	my $property;
 	eval {
-		$property = $firefox->find_id('search-input')->property('value');
+		$property = $firefox->find_id($search_box_id)->property('value');
 	};
 	SKIP: {
 		if ((!$property) && ($major_version < 50)) {
@@ -1998,13 +2004,13 @@ SKIP: {
 			diag("The property method is not supported for $major_version.$minor_version.$patch_version:$@");
 			skip("The property method is not supported for $major_version.$minor_version.$patch_version", 1);
 		}
-		ok($property eq 'Test::More', "property for 'search-input' is now 'Test::More'");
+		ok($property eq 'Test::More', "property for '$search_box_id' is now 'Test::More'");
 	}
-	ok($firefox->find('//input[@id="search-input"]')->clear(), "Clearing the element directly");
-	foreach my $element ($firefox->find_elements('//input[@id="search-input"]')) {
-		ok($firefox->send_keys($element, 'Test::More'), "Sent 'Test::More' to the 'search-input' field via the browser");
+	ok($firefox->find('//input[@id="' . $search_box_id . '"]')->clear(), "Clearing the element directly");
+	foreach my $element ($firefox->find_elements('//input[@id="' . $search_box_id . '"]')) {
+		ok($firefox->send_keys($element, 'Test::More'), "Sent 'Test::More' to the '$search_box_id' field via the browser");
 		ok($firefox->clear($element), "Clearing the element via the browser");
-		ok($firefox->type($element, 'Test::More'), "Sent 'Test::More' to the 'search-input' field via the browser");
+		ok($firefox->type($element, 'Test::More'), "Sent 'Test::More' to the '$search_box_id' field via the browser");
 		last;
 	}
 	my $text = $firefox->find('//button[@name="lucky"]')->text();
@@ -2170,7 +2176,7 @@ SKIP: {
 	ok($firefox->add_cookie($cookie), "\$firefox->add_cookie() adds a Firefox::Marionette::Cookie without expiry");
 	$cookie = Firefox::Marionette::Cookie->new(name => 'StartingCookie', value => 'not sure aböut this', httpOnly => 1, secure => 1, sameSite => 1);
 	ok($firefox->add_cookie($cookie), "\$firefox->add_cookie() adds a Firefox::Marionette::Cookie with a domain");
-	ok($firefox->find_id('search-input')->clear()->find_id('search-input')->type('Test::More'), "Sent 'Test::More' to the 'search-input' field directly to the element");
+	ok($firefox->find_id($search_box_id)->clear()->find_id($search_box_id)->type('Test::More'), "Sent 'Test::More' to the '$search_box_id' field directly to the element");
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 36);
 	}
@@ -2318,8 +2324,8 @@ SKIP: {
 			skip("The perform method is not supported for $major_version.$minor_version.$patch_version", 5);
 		}
 		ok(ref $perform_ok eq 'Firefox::Marionette', "\$firefox->perform() with a combination of mouse, pause and key actions");
-		my $value = $firefox->find('//input[@id="search-input"]')->property('value');
-		ok($value eq 'h', "\$firefox->find('//input[\@id=\"search-input\"]')->property('value') is equal to 'h' from perform method above:$value");
+		my $value = $firefox->find('//input[@id="' . $search_box_id . '"]')->property('value');
+		ok($value eq 'h', "\$firefox->find('//input[\@id=\"$search_box_id\"]')->property('value') is equal to 'h' from perform method above:$value");
 		ok($firefox->perform($firefox->pause(2)), "\$firefox->perform() with a single pause action");
 		ok($firefox->perform($firefox->mouse_move(x => 0, y => 0),$firefox->mouse_down(), $firefox->mouse_up()), "\$firefox->perform() with a default mouse button and manual x,y co-ordinates");
 		eval {
