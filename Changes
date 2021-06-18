@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.08  Fri Jun 18 21:00:00 2021
+       Fixes to tests after HTML changes in metacpan.org and CPAN Tester failures
+
 1.07  Sat Jun 12 21:38:00 2021
        Adding support for the Firefox Password Manager
        Fixes to tests for Firefox 89.
