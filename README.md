@@ -55,6 +55,8 @@ accepts a hash as a parameter and adds the specified certificate to the Firefox 
 - string - a string containg a single [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5)
 - trust - This is the [trustargs](https://www.mankier.com/1/certutil#-t) value for [NSS](https://wiki.mozilla.org/NSS).  If defaults to 'C,,';
 
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
     use Firefox::Marionette();
 
     my $pem_encoded_string = <<'_PEM_';
@@ -63,8 +65,6 @@ accepts a hash as a parameter and adds the specified certificate to the Firefox 
     -----END CERTIFICATE-----
     _PEM_
     my $firefox = Firefox::Marionette->new()->add_certificate(string => $pem_encoded_string);
-
-This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## add\_cookie
 
@@ -102,13 +102,13 @@ by itself, will send out an [Accept](https://developer.mozilla.org/en-US/docs/We
 
 accepts a hash of the following keys;
 
-- host - The origin, not hostname, to which the login applies, for example 'https://www.example.org'.
+- host - The scheme + hostname of the page where the login applies, for example 'https://www.example.org'.
 - user - The username for the login.
 - password - The password for the login.
-- origin - The origin, not URL, a form-based login [was submitted to](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action). For logins obtained from HTML forms, this field is the [action attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action) from the form element, with the path removed (for example, "https://example.org"). Forms with no action attribute default to submitting to their origin URL, so that is stored here. This field should be omitted (it will be set to undef) for http auth type authentications and "" means to match against any form action.
-- realm - The HTTP Realm for which the login was requested. When an HTTP server sends a 401 result, the WWW-Authenticate header includes a realm. See [RFC 2617](https://datatracker.ietf.org/doc/html/rfc2617).  If the realm is not specified, or it was blank, the hostname is used instead. For HTML form logins, this field is null.
-- user\_field - The name attribute for the username input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
-- password\_field - The name attribute for the password input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+- origin - The scheme + hostname that the form-based login [was submitted to](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action).  Forms with no [action attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action) default to submitting to the URL of the page containing the login form, so that is stored here. This field should be omitted (it will be set to undef) for http auth type authentications and "" means to match against any form action.
+- realm - The HTTP Realm for which the login was requested. When an HTTP server sends a 401 result, the WWW-Authenticate header includes a realm. See [RFC 2617](https://datatracker.ietf.org/doc/html/rfc2617).  If the realm is not specified, or it was blank, the hostname is used instead. For HTML form logins, this field should not be specified.
+- user\_field - The name attribute for the username input in a form. Non-form logins should not specify this field.
+- password\_field - The name attribute for the password input in a form. Non-form logins should not specify this field.
 
 or a [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) object as the first parameter and adds the login to the Firefox login database.
 
@@ -130,7 +130,7 @@ or a [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::
 
     # or just directly
 
-    $firefox->add_login(host => 'https://github.com/login', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+    $firefox->add_login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
@@ -1135,8 +1135,6 @@ accepts a parameter in milliseconds and returns a corresponding action for the [
 
 ## pdf
 
-returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a PDF encoded version of the current page for printing.
-
 accepts a optional hash as the first parameter with the following allowed keys;
 
 - landscape - Paper orientation.  Boolean value.  Defaults to false
@@ -1147,6 +1145,8 @@ accepts a optional hash as the first parameter with the following allowed keys;
 - scale - Scale of the webpage rendering.  Defaults to 1.
 - size - The desired size (width and height) of the pdf, specified by name.  See the page key for an alternative and the [paper\_sizes](https://metacpan.org/pod/Firefox::Marionette#paper_sizes) method for a list of accepted page size names. 
 - shrink\_to\_fit - Whether or not to override page size as defined by CSS.  Boolean value.  Defaults to true. 
+
+returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a PDF encoded version of the current page for printing.
 
     use Firefox::Marionette();
 

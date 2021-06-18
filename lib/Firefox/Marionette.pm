@@ -7793,6 +7793,8 @@ accepts a hash as a parameter and adds the specified certificate to the Firefox 
 
 =back
 
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
     use Firefox::Marionette();
 
     my $pem_encoded_string = <<'_PEM_';
@@ -7801,8 +7803,6 @@ accepts a hash as a parameter and adds the specified certificate to the Firefox 
     -----END CERTIFICATE-----
     _PEM_
     my $firefox = Firefox::Marionette->new()->add_certificate(string => $pem_encoded_string);
-
-This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 add_cookie
 
@@ -7842,19 +7842,19 @@ accepts a hash of the following keys;
 
 =over 4
 
-=item * host - The origin, not hostname, to which the login applies, for example 'https://www.example.org'.
+=item * host - The scheme + hostname of the page where the login applies, for example 'https://www.example.org'.
 
 =item * user - The username for the login.
 
 =item * password - The password for the login.
 
-=item * origin - The origin, not URL, a form-based login L<was submitted to|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action>. For logins obtained from HTML forms, this field is the L<action attribute|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action> from the form element, with the path removed (for example, "https://example.org"). Forms with no action attribute default to submitting to their origin URL, so that is stored here. This field should be omitted (it will be set to undef) for http auth type authentications and "" means to match against any form action.
+=item * origin - The scheme + hostname that the form-based login L<was submitted to|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action>.  Forms with no L<action attribute|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action> default to submitting to the URL of the page containing the login form, so that is stored here. This field should be omitted (it will be set to undef) for http auth type authentications and "" means to match against any form action.
 
-=item * realm - The HTTP Realm for which the login was requested. When an HTTP server sends a 401 result, the WWW-Authenticate header includes a realm. See L<RFC 2617|https://datatracker.ietf.org/doc/html/rfc2617>.  If the realm is not specified, or it was blank, the hostname is used instead. For HTML form logins, this field is null.
+=item * realm - The HTTP Realm for which the login was requested. When an HTTP server sends a 401 result, the WWW-Authenticate header includes a realm. See L<RFC 2617|https://datatracker.ietf.org/doc/html/rfc2617>.  If the realm is not specified, or it was blank, the hostname is used instead. For HTML form logins, this field should not be specified.
 
-=item * user_field - The name attribute for the username input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+=item * user_field - The name attribute for the username input in a form. Non-form logins should not specify this field.
 
-=item * password_field - The name attribute for the password input in a form. Non-form logins should specify an empty string (""), which it will default to if not specified.
+=item * password_field - The name attribute for the password input in a form. Non-form logins should not specify this field.
 
 =back
 
@@ -7878,7 +7878,7 @@ or a L<Firefox::Marionette::Login|Firefox::Marionette::Login> object as the firs
 
     # or just directly
 
-    $firefox->add_login(host => 'https://github.com/login', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+    $firefox->add_login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
@@ -8926,8 +8926,6 @@ accepts a parameter in milliseconds and returns a corresponding action for the L
 
 =head2 pdf
 
-returns a L<File::Temp|File::Temp> object containing a PDF encoded version of the current page for printing.
-
 accepts a optional hash as the first parameter with the following allowed keys;
 
 =over 4
@@ -8949,6 +8947,8 @@ accepts a optional hash as the first parameter with the following allowed keys;
 =item * shrink_to_fit - Whether or not to override page size as defined by CSS.  Boolean value.  Defaults to true. 
 
 =back
+
+returns a L<File::Temp|File::Temp> object containing a PDF encoded version of the current page for printing.
 
     use Firefox::Marionette();
 
