@@ -702,6 +702,29 @@ SKIP: {
 	if (!$ENV{FIREFOX_HOST}) {
 		ok((!kill 0, $firefox_pid), "Cannot contact firefox process ($firefox_pid)");
 	}
+	if (!$ENV{FIREFOX_HOST}) {
+		my $name = 'throw';
+		($skip_message, $firefox) = start_firefox(0, debug => 1, har => 1, survive => 1, profile_name => $name );
+		if (!$skip_message) {
+			$at_least_one_success = 1;
+		}
+		if ($skip_message) {
+			skip($skip_message, 8);
+		}
+		ok($firefox, "Firefox has started in Marionette mode with as survivable with a profile_name and har");
+		my $capabilities = $firefox->capabilities();
+		ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
+		my $firefox_pid = $capabilities->moz_process_id();
+		ok($firefox_pid, "Firefox process has a process id of $firefox_pid");
+		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid)");
+		$firefox = undef;
+		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid)");
+		($skip_message, $firefox) = start_firefox(0, debug => 1, reconnect => 1, profile_name => $name);
+		ok($firefox, "Firefox has reconnected in Marionette mode");
+		ok($firefox_pid == $capabilities->moz_process_id(), "Firefox has the same process id");
+		$firefox = undef;
+		ok(!(kill 0, $firefox_pid), "Cannot contact firefox process ($firefox_pid)");
+	}
 }
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {

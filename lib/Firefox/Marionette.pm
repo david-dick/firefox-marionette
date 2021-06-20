@@ -618,7 +618,7 @@ sub _check_for_existing_local_firefox_process {
             }
         }
     }
-    return $port;
+    return $port || _DEFAULT_PORT();
 }
 
 sub _reconnected {
@@ -698,12 +698,23 @@ sub _get_local_reconnect_pid {
             }
             $self->{_initial_version} = $local_proxy->{firefox}->{version};
             $self->{_root_directory}  = $possible_root_directory;
-            $self->{_profile_directory} =
-              File::Spec->catfile( $self->{_root_directory}, 'profile' );
-            $self->{_download_directory} =
-              File::Spec->catfile( $self->{_root_directory}, 'downloads' );
-            $self->{profile_path} =
-              File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
+            if ( $self->{profile_name} ) {
+                $self->{_profile_directory} =
+                  Firefox::Marionette::Profile->directory(
+                    $self->{profile_name} );
+                $self->{profile_path} =
+                  File::Spec->catfile( $self->{_profile_directory},
+                    'prefs.js' );
+            }
+            else {
+                $self->{_profile_directory} =
+                  File::Spec->catfile( $self->{_root_directory}, 'profile' );
+                $self->{_download_directory} =
+                  File::Spec->catfile( $self->{_root_directory}, 'downloads' );
+                $self->{profile_path} =
+                  File::Spec->catfile( $self->{_profile_directory},
+                    'prefs.js' );
+            }
         }
     }
     $temp_handle->close();
@@ -712,6 +723,9 @@ sub _get_local_reconnect_pid {
 
 sub _reconnect {
     my ( $self, %parameters ) = @_;
+    if ( $parameters{profile_name} ) {
+        $self->{profile_name} = $parameters{profile_name};
+    }
     $self->{_reconnected} = 1;
     if ( my $ssh = $self->_ssh() ) {
         if ( my $pid = $self->_firefox_pid() ) {
@@ -2241,7 +2255,7 @@ sub _launch {
         return;
     }
     if ( $self->{survive} ) {
-        $self->{_root_directory}->unlink_on_destroy(0);
+        $self->_root_directory()->unlink_on_destroy(0);
     }
     if ( $OSNAME eq 'MSWin32' ) {
         local $ENV{TMPDIR} = $self->_local_firefox_tmp_directory();
