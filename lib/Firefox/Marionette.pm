@@ -1660,9 +1660,9 @@ _RDF_
         }
         push @arguments,
           ( '-profile', $profile_directory, '--no-remote', '--new-instance' );
-        if ( $self->{_har} ) {
-            push @arguments, '--devtools';
-        }
+    }
+    if ( $self->{_har} ) {
+        push @arguments, '--devtools';
     }
     return @arguments;
 }
