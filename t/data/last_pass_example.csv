@@ -1,0 +1,20 @@
+url,username,password,totp,extra,name,grouping,fav
+http://www.example.com,user@cpan.org,57s9PrkbznnwLCi,,,Name here,Folder here,0
+https://twitter.com/login,user@example.com,57s9PrkbznnwLCi,,,Twitter,Social,0
+http://sn,user,57s9PrkbznnwLCi,,"NoteType:Server
+Language:en-US
+Hostname:example.com
+Username:user
+Password:57s9PrkbznnwLCi
+Notes:",Hostname for SSH,Folder here,0
+http://sn,user,57s9PrkbznnwLCi,,"NoteType:Database
+Language:en-US
+Type:MSSQL
+Hostname:example.com
+Port:1433
+Database:foodb
+Username:user
+Password:57s9PrkbznnwLCi
+SID:SIDME
+Alias:Alias
+Notes:",Database Name,Database Folder,0
