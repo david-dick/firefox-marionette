@@ -88,6 +88,7 @@ sub _DEFAULT_DEPTH                  { return 24 }
 sub _LOCAL_READ_BUFFER_SIZE         { return 8192 }
 sub _WIN32_PROCESS_INHERIT_FLAGS    { return 0 }
 sub _DEFAULT_CERT_TRUST             { return 'C,,' }
+sub _PALEMOON_VERSION_EQUIV         { return 52 }            # very approx guess
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
@@ -1771,7 +1772,12 @@ sub _is_safe_mode_okay {
         )
       )
     {
-        return 1;
+        if ( $self->{pale_moon} ) {
+            return 0;
+        }
+        else {
+            return 1;
+        }
     }
     else {
         return 0;
@@ -1910,8 +1916,11 @@ sub _search_for_version_in_application_ini {
             my $config =
               Config::INI::Reader->read_handle($application_ini_handle);
             if ( my $app = $config->{App} ) {
-                if ( $app->{SourceRepository} eq
-                    'https://hg.mozilla.org/releases/mozilla-beta' )
+                if (
+                    ( $app->{SourceRepository} )
+                    && ( $app->{SourceRepository} eq
+                        'https://hg.mozilla.org/releases/mozilla-beta' )
+                  )
                 {
                     $self->{developer_edition} = 1;
                 }
@@ -1969,18 +1978,25 @@ sub _initialise_version {
             }
             my $browser_regex = join q[|],
               qr/Mozilla[ ]Firefox[ ]/smx,
-              qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx;
-            qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
+              qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
+              qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
             if ( $version_string =~
-                /(?:${browser_regex})${version_regex}[[:alpha:]]*\s*$/smx )
+                /(${browser_regex})${version_regex}[[:alpha:]]*\s*$/smx )
 
 # not anchoring the start of the regex b/c of issues with
 # RHEL6 and dbus crashing with error messages like
 # 'Failed to open connection to "session" message bus: /bin/dbus-launch terminated abnormally without any error message'
             {
-                $self->{_initial_version}->{major} = $1;
-                $self->{_initial_version}->{minor} = $2;
-                $self->{_initial_version}->{patch} = $3;
+                if ( $1 eq 'Moonchild Productions Pale Moon ' ) {
+                    $self->{pale_moon} = 1;
+                    $self->{_initial_version}->{major} =
+                      _PALEMOON_VERSION_EQUIV();
+                }
+                else {
+                    $self->{_initial_version}->{major} = $2;
+                    $self->{_initial_version}->{minor} = $3;
+                    $self->{_initial_version}->{patch} = $4;
+                }
             }
             elsif ( defined $self->{_initial_version} ) {
             }
