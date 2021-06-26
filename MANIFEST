@@ -25,6 +25,7 @@ MANIFEST			This list of files
 LICENSE
 README
 ca-bundle-for-firefox
+check-firefox-certificate-authorities
 ssh-auth-cmd-marionette
 firefox-passwords
 t/author/bulk_test.pl

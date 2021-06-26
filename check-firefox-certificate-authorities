@@ -1,0 +1,160 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long();
+use English qw( -no_match_vars );
+use Firefox::Marionette();
+
+our $VERSION = '1.08';
+
+my %options;
+Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s' );
+if ( $options{help} ) {
+    require Pod::Simple::Text;
+    my $parser = Pod::Simple::Text->new();
+    $parser->parse_from_file($PROGRAM_NAME);
+    exit 0;
+}
+elsif ( $options{version} ) {
+    print "$VERSION\n"
+      or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+    exit 0;
+}
+my %parameters;
+if ( $options{binary} ) {
+    $parameters{firefox} = $options{binary};
+}
+my $firefox   = Firefox::Marionette->new(%parameters);
+my $now       = time;
+my $exit_code = 0;
+foreach my $certificate ( sort { $a->display_name() cmp $b->display_name }
+    $firefox->certificates() )
+{
+    if ( $certificate->is_ca_cert() ) {
+        if ( $certificate->not_valid_after() < $now ) {
+            warn $certificate->display_name()
+              . ' expired on '
+              . ( localtime $certificate->not_valid_after() ) . "\n";
+            $exit_code = 1;
+        }
+        elsif ( $certificate->not_valid_before > $now ) {
+            warn $certificate->display_name()
+              . ' is not valid until '
+              . ( localtime $certificate->not_valid_before() ) . "\n";
+            $exit_code = 1;
+        }
+    }
+}
+$firefox->quit();
+exit $exit_code;
+
+__END__
+=head1 NAME
+
+check-firefox-certificate-authorities - check the CA certificates in firefox for expired certificates
+
+=head1 VERSION
+
+Version 1.08
+
+=head1 USAGE
+
+  $ check-firefox-certificate-authorities 
+
+  $ check-firefox-certificate-authorities --binary=/path/to/new/firefox
+
+=head1 DESCRIPTION
+
+This program is intended to easily check firefox for expired CA certificates.
+
+By default, the only firefox version that may be used will be present in the PATH environment variable.  However, the user may specify a different path with
+the --binary parameter.
+
+It will print out the display name of any CA certificates that are expired or not yet valid and if it finds expired certificates, it will exit with a non-zero exit code.
+
+=head1 REQUIRED ARGUMENTS
+
+None
+
+=head1 OPTIONS
+
+Option names can be abbreviated to uniqueness and can be stated with singe or double dashes, and option values can be separated from the option name by a space or '=' (as with Getopt::Long). Option names are also case-
+sensitive.
+
+=over 4
+
+=item * --help - This page.
+
+=item * --binary - Use this firefox binary instead of the default firefox instance
+
+=back
+
+=head1 CONFIGURATION
+
+check-firefox-certificate-authorities requires no configuration files or environment variables.
+
+=head1 DEPENDENCIES
+
+check-firefox-certificate-authorities requires the following non-core Perl modules
+ 
+=over
+ 
+=item *
+L<Pod::Simple::Text|Pod::Simple::Text>
+ 
+=back
+
+=head1 DIAGNOSTICS
+
+None.
+
+=head1 INCOMPATIBILITIES
+
+None known.
+
+=head1 EXIT STATUS
+
+This program will exit with a zero after successfully completing.
+
+=head1 BUGS AND LIMITATIONS
+
+No bugs have been reported.
+
+Please report any bugs or feature requests to
+C<bug-firefox-marionette@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org>.
+
+=head1 AUTHOR
+
+David Dick  C<< <ddick@cpan.org> >>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2021, David Dick C<< <ddick@cpan.org> >>. All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic/perlartistic>.
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.
