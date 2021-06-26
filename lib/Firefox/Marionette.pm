@@ -1185,11 +1185,13 @@ sub _import_certificate {
     my ( $self, $certificate, $trust ) = @_;
 
     # security/manager/ssl/nsIX509CertDB.idl
-    my $old    = $self->_context('chrome');
-    my $result = $self->script(
+    my $old                 = $self->_context('chrome');
+    my $encoded_certificate = URI::Escape::uri_escape($certificate);
+    my $encoded_trust       = URI::Escape::uri_escape($trust);
+    my $result              = $self->script(
         $self->_compress_script(
             $self->_certificate_interface_preamble() . <<"_JS_") );
-certificateDatabase.addCertFromBase64("$certificate", "$trust", "");
+certificateDatabase.addCertFromBase64(decodeURIComponent("$encoded_certificate"), decodeURIComponent("$encoded_trust"), "");
 _JS_
     $self->_context($old);
     return $result;
