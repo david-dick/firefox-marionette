@@ -703,6 +703,12 @@ SKIP: {
 		ok((!kill 0, $firefox_pid), "Cannot contact firefox process ($firefox_pid)");
 	}
 	if (!$ENV{FIREFOX_HOST}) {
+		if ($ENV{FIREFOX_BINARY}) {
+			skip("No profile testing when the FIREFOX_BINARY override is used", 6);
+		}
+		if (!$ENV{RELEASE_TESTING}) {
+			skip("No profile testing except for RELEASE_TESTING", 6);
+		}
 		my $name = 'throw';
 		($skip_message, $firefox) = start_firefox(0, debug => 1, har => 1, survive => 1, profile_name => $name );
 		if (!$skip_message) {
