@@ -100,10 +100,41 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	} elsif ($old_version ne $entry_version) {
 		die "$old_version does not equal $entry_version for $path_to_binary";
 	}
+	my $count = 0;
 	$ENV{FIREFOX_BINARY} = $path_to_binary;
 	my $reset_time = 600; # 10 minutes
+	if ($entry =~ /^waterfox/smx) {
+		WATERFOX: {
+			local $ENV{WATERFOX} = 1;
+			$count += 1;
+			my $result = system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t';
+			if ($result != 0) {
+				if ($count < 3) {
+					warn "Failed '$^X -MDevel::Cover -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					sleep $reset_time;
+					redo WATERFOX;
+				} else {
+					die "Failed to make $count times";
+				}
+			}
+		}
+		WATERFOX_VIA_FIREFOX: {
+			local $ENV{WATERFOX_VIA_FIREFOX} = 1;
+			$count += 1;
+			my $result = system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t';
+			if ($result != 0) {
+				if ($count < 3) {
+					warn "Failed '$^X -MDevel::Cover -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					sleep $reset_time;
+					redo WATERFOX_VIA_FIREFOX;
+				} else {
+					die "Failed to make $count times";
+				}
+			}
+		}
+	}
 	if (-e $ENV{FIREFOX_BINARY}) {
-		my $count = 0;
+		$count = 0;
 		LOCAL: {
 			$count += 1;
 			my $result = system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t';

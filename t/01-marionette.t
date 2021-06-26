@@ -6,7 +6,8 @@ use Digest::SHA();
 use MIME::Base64();
 use Test::More;
 use Cwd();
-use Firefox::Marionette qw(:all);
+use Firefox::Marionette();
+use Waterfox::Marionette();
 use Compress::Zlib();
 use Config;
 use HTTP::Daemon();
@@ -17,7 +18,15 @@ use IO::Socket::SSL();
 my $segv_detected;
 my $at_least_one_success;
 my $terminated;
+my $class;
 
+if (defined $ENV{WATERFOX}) {
+	$class = 'Waterfox::Marionette';
+	$class->import(qw(:all));
+} else {
+	$class = 'Firefox::Marionette';
+	$class->import(qw(:all));
+}
 if ($ENV{FIREFOX_ALARM}) {
 	$SIG{ALRM} = sub { die "Alarm at time exceeded" };
 	alarm 600; # ten minutes is heaps for bulk testing
@@ -100,6 +109,9 @@ sub start_firefox {
 	}
 	if ($parameters{console}) {
 		$parameters{console} = 1;
+	}
+	if (defined $ENV{WATERFOX_VIA_FIREFOX}) {
+		$parameters{waterfox} = 1;
 	}
         if (defined $ENV{FIREFOX_NIGHTLY}) {
 		$parameters{nightly} = 1;
@@ -226,7 +238,7 @@ sub start_firefox {
 	}
         my $firefox;
 	eval {
-		$firefox = Firefox::Marionette->new(%parameters);
+		$firefox = $class->new(%parameters);
 	};
 	my $exception = $@;
 	chomp $exception;
@@ -262,7 +274,7 @@ sub start_firefox {
 			sleep $time_to_recover;
 			$firefox = undef;
 			eval {
-				$firefox = Firefox::Marionette->new(%parameters);
+				$firefox = $class->new(%parameters);
 			};
 			if ($firefox) {
 				$segv_detected = 1;
@@ -448,6 +460,10 @@ foreach my $name (Firefox::Marionette::Profile->names()) {
 	my $profile = Firefox::Marionette::Profile->existing($name);
 	$count += 1;
 }
+foreach my $name (Waterfox::Marionette::Profile->names()) {
+	my $profile = Waterfox::Marionette::Profile->existing($name);
+	$count += 1;
+}
 ok(1, "Read $count existing profiles");
 diag("This firefox installation has $count existing profiles");
 if (Firefox::Marionette::Profile->default_name()) {
@@ -455,22 +471,31 @@ if (Firefox::Marionette::Profile->default_name()) {
 } else {
 	ok(1, "No default profile");
 }
+if (Waterfox::Marionette::Profile->default_name()) {
+	ok(1, "Found default waterfox profile");
+} else {
+	ok(1, "No default waterfox profile");
+}
 my $profile;
 eval {
-	$profile = Firefox::Marionette::Profile->existing();
+	if ($ENV{WATERFOX}) {
+		$profile = Waterfox::Marionette::Profile->existing();
+	} else {
+		$profile = Firefox::Marionette::Profile->existing();
+	}
 };
 ok(1, "Read existing profile if any");
 my $firefox;
 eval {
-	$firefox = Firefox::Marionette->new(firefox_binary => '/firefox/is/not/here');
+	$firefox = $class->new(firefox_binary => '/firefox/is/not/here');
 };
 chomp $@;
-ok((($@) and (not($firefox))), "Firefox::Marionette->new() threw an exception when launched with an incorrect path to a binary:$@");
+ok((($@) and (not($firefox))), "$class->new() threw an exception when launched with an incorrect path to a binary:$@");
 eval {
-	$firefox = Firefox::Marionette->new(firefox => $^X);
+	$firefox = $class->new(firefox => $^X);
 };
 chomp $@;
-ok((($@) and (not($firefox))), "Firefox::Marionette->new() threw an exception when launched with a path to a non firefox binary:$@");
+ok((($@) and (not($firefox))), "$class->new() threw an exception when launched with a path to a non firefox binary:$@");
 my $tls_tests_ok;
 if ( 
 	!IO::Socket::SSL->new(
@@ -505,7 +530,8 @@ SKIP: {
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("No profile testing except for RELEASE_TESTING", 6);
 	}
-	foreach my $name (Firefox::Marionette::Profile->names()) {
+	my @names = Firefox::Marionette::Profile->names();
+	foreach my $name (@names) {
 		next unless ($name eq 'throw');
 		($skip_message, $firefox) = start_firefox(0, debug => 1, profile_name => $name );
 		if (!$skip_message) {
@@ -517,14 +543,23 @@ SKIP: {
 		ok($firefox, "Firefox loaded with the $name profile");
 		ok($firefox->go('http://example.com'), "firefox with the $name profile loaded example.com");
 		ok($firefox->quit() == 0, "firefox with the $name profile quit successfully");
-		my $profile = Firefox::Marionette::Profile->existing($name);
+		my $profile;
+		if ($ENV{WATERFOX}) {
+			$profile = Waterfox::Marionette::Profile->existing($name);
+		} else {
+			$profile = Firefox::Marionette::Profile->existing($name);
+		}
 		($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile );
 		ok($firefox, "Firefox loaded with a profile copied from $name");
 		ok($firefox->go('http://example.com'), "firefox with the copied profile from $name loaded example.com");
 		ok($firefox->quit() == 0, "firefox with the profile copied from $name quit successfully");
 	}
 }
-ok($profile = Firefox::Marionette::Profile->new(), "Firefox::Marionette::Profile->new() correctly returns a new profile");
+if ($ENV{WATERFOX}) {
+	ok($profile = Waterfox::Marionette::Profile->new(), "Waterfox::Marionette::Profile->new() correctly returns a new profile");
+} else {
+	ok($profile = Firefox::Marionette::Profile->new(), "Firefox::Marionette::Profile->new() correctly returns a new profile");
+}
 ok(((defined $profile->get_value('marionette.port')) && ($profile->get_value('marionette.port') == 0)), "\$profile->get_value('marionette.port') correctly returns 0");
 ok($profile->set_value('browser.link.open_newwindow', 2), "\$profile->set_value('browser.link.open_newwindow', 2) to force new windows to appear");
 ok($profile->set_value('browser.link.open_external', 2), "\$profile->set_value('browser.link.open_external', 2) to force new windows to appear");
@@ -2352,7 +2387,7 @@ SKIP: {
 			diag("The perform method is not supported for $major_version.$minor_version.$patch_version:$@");
 			skip("The perform method is not supported for $major_version.$minor_version.$patch_version", 5);
 		}
-		ok(ref $perform_ok eq 'Firefox::Marionette', "\$firefox->perform() with a combination of mouse, pause and key actions");
+		ok(ref $perform_ok eq $class, "\$firefox->perform() with a combination of mouse, pause and key actions");
 		my $value = $firefox->find('//input[@id="' . $search_box_id . '"]')->property('value');
 		ok($value eq 'h', "\$firefox->find('//input[\@id=\"$search_box_id\"]')->property('value') is equal to 'h' from perform method above:$value");
 		ok($firefox->perform($firefox->pause(2)), "\$firefox->perform() with a single pause action");
@@ -2816,7 +2851,7 @@ _CERT_
 		foreach my $certificate (sort { display_name($a) cmp display_name($b) } $firefox->certificates()) {
 			ok($certificate, "Found the " . Encode::encode('UTF-8', display_name($certificate)) . " from the certificate database");
 			ok($firefox->certificate_as_pem($certificate) =~ /BEGIN[ ]CERTIFICATE.*MII.*END[ ]CERTIFICATE\-+\s$/smx, Encode::encode('UTF-8', display_name($certificate)) . " looks like a PEM encoded X.509 certificate");
-			ok(ref $firefox->delete_certificate($certificate) eq 'Firefox::Marionette', "Deleted " . Encode::encode('UTF-8', display_name($certificate)) . " from the certificate database");
+			ok(ref $firefox->delete_certificate($certificate) eq $class, "Deleted " . Encode::encode('UTF-8', display_name($certificate)) . " from the certificate database");
 			if ($certificate->is_ca_cert()) {
 				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is a CA cert");
 			} else {
@@ -3055,7 +3090,7 @@ SKIP: {
 ok($at_least_one_success, "At least one firefox start worked");
 eval "no warnings; sub File::Temp::newdir { \$! = POSIX::EACCES(); return; } use warnings;";
 ok(!$@, "File::Temp::newdir is redefined to fail:$@");
-eval { Firefox::Marionette->new(); };
+eval { $class->new(); };
 my $output = "$@";
 chomp $output;
 ok($@->isa('Firefox::Marionette::Exception'), "When File::Temp::newdir is forced to fail, a Firefox::Marionette::Exception is thrown:$output");

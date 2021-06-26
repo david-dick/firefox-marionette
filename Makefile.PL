@@ -104,15 +104,18 @@ my %known_win32_preferred_names = (
     'Mozilla Firefox ESR'       => 2,
     'Firefox Developer Edition' => 3,
     Nightly                     => 4,
-    'Waterfox Current'          => 5,
-    Basilisk                    => 6,
-    'Pale Moon'                 => 7,
+    'Waterfox'                  => 5,
+    'Waterfox Current'          => 6,
+    'Waterfox Classic'          => 7,
+    Basilisk                    => 8,
+    'Pale Moon'                 => 9,
 );
 my %_known_win32_organisations = (
     'Mozilla Firefox'           => 'Mozilla',
     'Mozilla Firefox ESR'       => 'Mozilla',
     'Firefox Developer Edition' => 'Mozilla',
     Nightly                     => 'Mozilla',
+    'Waterfox'                  => 'Waterfox',
     'Waterfox Current'          => 'Waterfox',
     'Waterfox Classic'          => 'Waterfox',
     Basilisk                    => 'Mozilla',
@@ -273,7 +276,7 @@ if ($version_string) {
         }
     }
     elsif (
-        $version_string =~ /^Waterfox[ ]Current[ ]\d+[.]\d+[.]\d+[.]\d+\s*/smx )
+        $version_string =~ /^Waterfox[ ]/smx )
     {
     }
     elsif ( $version_string =~ /^Moonchild[ ]/smx ) {

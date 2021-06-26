@@ -15,6 +15,7 @@ use Firefox::Marionette::Profile();
 use Firefox::Marionette::Proxy();
 use Firefox::Marionette::Exception();
 use Firefox::Marionette::Exception::Response();
+use Waterfox::Marionette::Profile();
 use Compress::Zlib();
 use Config::INI::Reader();
 use Archive::Zip();
@@ -1997,6 +1998,7 @@ sub _initialise_version {
             $version_string = $self->_get_version_string($binary);
             my $browser_regex = join q[|],
               qr/Mozilla[ ]Firefox[ ]/smx,
+              qr/Waterfox[ ]Waterfox[ ]/smx,
               qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
               qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
             if ( $version_string =~
@@ -2011,6 +2013,9 @@ sub _initialise_version {
                     $self->{_initial_version}->{major} =
                       _PALEMOON_VERSION_EQUIV();
                 }
+                elsif ( $1 eq 'Waterfox Waterfox ' ) {
+                    $self->{waterfox} = 1;
+                }
                 else {
                     $self->{_initial_version}->{major} = $2;
                     $self->{_initial_version}->{minor} = $3;
@@ -2019,17 +2024,15 @@ sub _initialise_version {
             }
             elsif ( defined $self->{_initial_version} ) {
             }
-            elsif ( $version_string =~
-                /^Waterfox[ ](Current|Classic)[ ]\d{4}[.]\d{2}[.]\d+[.]1/smx )
-            {
-                my ($waterfox_branch) = ($1);
-                if ( $waterfox_branch eq 'Current' ) {
+            elsif ( $version_string =~ /^Waterfox[ ]/smx ) {
+                $self->{waterfox} = 1;
+                if ( $version_string =~ /^Waterfox Classic/smx ) {
                     $self->{_initial_version}->{major} =
-                      _WATERFOX_CURRENT_VERSION_EQUIV();
+                      _WATERFOX_CLASSIC_VERSION_EQUIV();
                 }
                 else {
                     $self->{_initial_version}->{major} =
-                      _WATERFOX_CLASSIC_VERSION_EQUIV();
+                      _WATERFOX_CURRENT_VERSION_EQUIV();
                 }
             }
             else {
@@ -2700,6 +2703,7 @@ sub macos_binary_paths {
         '/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox',
         '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
         '/Applications/Waterfox Current.app/Contents/MacOS/waterfox',
+        '/Applications/Waterfox Classic.app/Contents/MacOS/waterfox',
     );
 }
 
@@ -2708,6 +2712,7 @@ my %_known_win32_organisations = (
     'Mozilla Firefox ESR'       => 'Mozilla',
     'Firefox Developer Edition' => 'Mozilla',
     Nightly                     => 'Mozilla',
+    'Waterfox'                  => 'Waterfox',
     'Waterfox Current'          => 'Waterfox',
     'Waterfox Classic'          => 'Waterfox',
     Basilisk                    => 'Mozilla',
@@ -2726,9 +2731,11 @@ sub win32_product_names {
         'Mozilla Firefox ESR'       => 2,
         'Firefox Developer Edition' => 3,
         Nightly                     => 4,
-        'Waterfox Current'          => 5,
-        Basilisk                    => 6,
-        'Pale Moon'                 => 7,
+        'Waterfox'                  => 5,
+        'Waterfox Current'          => 6,
+        'Waterfox Classic'          => 7,
+        Basilisk                    => 8,
+        'Pale Moon'                 => 9,
     );
     if ( $self->{requested_version} ) {
         if ( $self->{requested_version}->{nightly} ) {
@@ -2753,7 +2760,7 @@ sub win32_product_names {
             foreach
               my $key ( sort { $a cmp $b } keys %known_win32_preferred_names )
             {
-                if ( $key ne 'Waterfox Current' ) {
+                if ( $key !~ /^Waterfox/smx ) {
                     delete $known_win32_preferred_names{$key};
                 }
             }
@@ -3898,7 +3905,12 @@ sub _setup_new_profile {
                 $profile_parameters{$profile_key} = 1;
             }
         }
-        $profile = Firefox::Marionette::Profile->new(%profile_parameters);
+        if ( $self->{waterfox} ) {
+            $profile = Waterfox::Marionette::Profile->new(%profile_parameters);
+        }
+        else {
+            $profile = Firefox::Marionette::Profile->new(%profile_parameters);
+        }
         my $download_directory = $self->{_download_directory};
         if (   ( $self->_remote_uname() )
             && ( $self->_remote_uname() eq 'cygwin' ) )
