@@ -11,7 +11,7 @@ use Encode();
 our $VERSION = '1.08';
 
 my %options;
-Getopt::Long::GetOptions( \%options, 'help', 'binary:s', 'file:s' );
+Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s', 'file:s' );
 if ( $options{help} ) {
     require Pod::Simple::Text;
     my $parser = Pod::Simple::Text->new();
