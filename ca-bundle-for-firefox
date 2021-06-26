@@ -66,10 +66,10 @@ Version 1.08
 
 =head1 USAGE
 
-$ ca-bundle-for-firefox >/etc/pki/tls/certs/ca-bundle.crt
-$ ca-bundle-for-firefox --file current.crt
-$ ca-bundle-for-firefox --binary=/path/to/old/firefox --file old.crt
-$ diff -Naur old.crt current.crt
+  $ ca-bundle-for-firefox >/etc/pki/tls/certs/ca-bundle.crt
+  $ ca-bundle-for-firefox --file current.crt
+  $ ca-bundle-for-firefox --binary=/path/to/old/firefox --file old.crt
+  $ diff -Naur old.crt current.crt
 
 =head1 DESCRIPTION
 
