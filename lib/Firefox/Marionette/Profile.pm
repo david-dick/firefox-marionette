@@ -18,7 +18,7 @@ our $VERSION = '1.08';
 sub _ANY_PORT           { return 0 }
 sub _GETPWUID_DIR_INDEX { return 7 }
 
-sub _profile_ini_directory {
+sub profile_ini_directory {
     my $profile_ini_directory;
     if ( $OSNAME eq 'darwin' ) {
         my $home_directory =
@@ -65,7 +65,7 @@ sub _read_ini_file {
 
 sub default_name {
     my ($class)               = @_;
-    my $profile_ini_directory = $class->_profile_ini_directory();
+    my $profile_ini_directory = $class->profile_ini_directory();
     my $config                = $class->_read_ini_file($profile_ini_directory);
     foreach my $key (
         sort { $config->{$a}->{Name} cmp $config->{$b}->{Name} }
@@ -81,7 +81,7 @@ sub default_name {
 
 sub names {
     my ($class)               = @_;
-    my $profile_ini_directory = $class->_profile_ini_directory();
+    my $profile_ini_directory = $class->profile_ini_directory();
     my $config                = $class->_read_ini_file($profile_ini_directory);
     my @names;
     foreach my $key (
@@ -103,7 +103,7 @@ sub path {
 
 sub directory {
     my ( $class, $name ) = @_;
-    my $profile_ini_directory = $class->_profile_ini_directory();
+    my $profile_ini_directory = $class->profile_ini_directory();
     my $config                = $class->_read_ini_file($profile_ini_directory);
     my $path;
     my $first_key;
@@ -172,9 +172,9 @@ sub new {
       ;    # the last folder specified for a download
     $profile->set_value( 'browser.places.importBookmarksHTML',  'true',  0 );
     $profile->set_value( 'browser.reader.detectedFirstArticle', 'true',  0 );
-    $profile->set_value( 'browser.region.network.scan', 'false',  0 );
-    $profile->set_value( 'browser.region.network.url', q[],  0 );
-    $profile->set_value( 'browser.region.update.enabled', 'false',  0 );
+    $profile->set_value( 'browser.region.network.scan',         'false', 0 );
+    $profile->set_value( 'browser.region.network.url',          q[],     0 );
+    $profile->set_value( 'browser.region.update.enabled',       'false', 0 );
     $profile->set_value( 'browser.shell.checkDefaultBrowser',   'false', 0 );
     $profile->set_value( 'browser.showQuitWarning',             'false', 0 );
     $profile->set_value( 'browser.startup.homepage', 'about:blank',      1 );
@@ -530,6 +530,10 @@ accepts a path as the parameter.  This path should be to a C<prefs.js> file.  Pa
 =head2 path
 
 accepts a profile name and returns the corresponding path to the C<prefs.js> file.
+
+=head2 profile_ini_directory
+
+returns the base directory for profiles.
 
 =head2 save
 

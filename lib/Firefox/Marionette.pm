@@ -395,9 +395,9 @@ sub _setup_ssh_with_reconnect {
                       File::Spec->catfile( $ssh_local_directory,
                         'control.sock' );
                 }
-                $self->{_remote_uname}    = $proxy->{ssh}->{uname};
-                $self->{firefox_binary}   = $proxy->{ssh}->{binary};
-                $self->{_initial_version} = $proxy->{firefox}->{version};
+                $self->{_remote_uname}     = $proxy->{ssh}->{uname};
+                $self->{marionette_binary} = $proxy->{ssh}->{binary};
+                $self->{_initial_version}  = $proxy->{firefox}->{version};
                 $self->_initialise_version();
                 $self->{_ssh_local_directory} = $ssh_local_directory;
                 $self->{_root_directory}      = $proxy->{ssh}->{root};
@@ -506,6 +506,25 @@ sub _adb {
     return $self->{_adb};
 }
 
+sub _get_marionette_parameter {
+    my ( $self, %parameters ) = @_;
+    if ( $parameters{firefox_binary} ) {
+        Carp::carp(
+'**** DEPRECATED - firefox_binary HAS BEEN REPLACED BY marionette ****'
+        );
+        $self->{marionette_binary} = $parameters{firefox_binary};
+    }
+    elsif ( $parameters{firefox} ) {
+        Carp::carp(
+            '**** DEPRECATED - firefox HAS BEEN REPLACED BY marionette ****');
+        $self->{marionette_binary} = $parameters{firefox};
+    }
+    elsif ( $parameters{marionette} ) {
+        $self->{marionette_binary} = $parameters{marionette};
+    }
+    return;
+}
+
 sub _init {
     my ( $class, %parameters ) = @_;
     my $self = bless {}, $class;
@@ -523,15 +542,7 @@ sub _init {
     $self->{extension_index} = 0;
     $self->{debug}           = $parameters{debug};
 
-    if ( $parameters{firefox_binary} ) {
-        Carp::carp(
-            '**** DEPRECATED - firefox_binary HAS BEEN REPLACED BY firefox ****'
-        );
-        $self->{firefox_binary} = $parameters{firefox_binary};
-    }
-    elsif ( $parameters{firefox} ) {
-        $self->{firefox_binary} = $parameters{firefox};
-    }
+    $self->_get_marionette_parameter(%parameters);
     if ( $parameters{console} ) {
         $self->{console} = 1;
     }
@@ -1933,6 +1944,26 @@ sub _search_for_version_in_application_ini {
     return;
 }
 
+sub _get_version_string {
+    my ( $self, $binary ) = @_;
+    my $version_string;
+    if ( $self->_ssh() ) {
+        $version_string = $self->execute( q["] . $binary . q["], '--version' );
+        $version_string =~ s/\r?\n$//smx;
+    }
+    else {
+        if ( $version_string =
+            $self->_search_for_version_in_application_ini($binary) )
+        {
+        }
+        else {
+            $version_string = $self->execute( $binary, '--version' );
+            $version_string =~ s/\r?\n$//smx;
+        }
+    }
+    return $version_string;
+}
+
 sub _initialise_version {
     my ($self) = @_;
     if ( defined $self->{_initial_version} ) {
@@ -1963,21 +1994,7 @@ sub _initialise_version {
             }
         }
         else {
-            if ( $self->_ssh() ) {
-                $version_string =
-                  $self->execute( q["] . $binary . q["], '--version' );
-                $version_string =~ s/\r?\n$//smx;
-            }
-            else {
-                if ( $version_string =
-                    $self->_search_for_version_in_application_ini($binary) )
-                {
-                }
-                else {
-                    $version_string = $self->execute( $binary, '--version' );
-                    $version_string =~ s/\r?\n$//smx;
-                }
-            }
+            $version_string = $self->_get_version_string($binary);
             my $browser_regex = join q[|],
               qr/Mozilla[ ]Firefox[ ]/smx,
               qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
@@ -2661,7 +2678,7 @@ sub _launch_unix {
     return $pid;
 }
 
-sub _search_paths_for_firefox_on_osx {
+sub macos_binary_paths {
     my ($self) = @_;
     if ( $self->{requested_version} ) {
         if ( $self->{requested_version}->{nightly} ) {
@@ -2697,12 +2714,12 @@ my %_known_win32_organisations = (
     'Pale Moon'                 => 'Mozilla',
 );
 
-sub _win32_organisation {
+sub win32_organisation {
     my ( $self, $name ) = @_;
     return $_known_win32_organisations{$name};
 }
 
-sub _known_win32_preferred_names {
+sub win32_product_names {
     my ($self) = @_;
     my %known_win32_preferred_names = (
         'Mozilla Firefox'           => 1,
@@ -2805,10 +2822,10 @@ sub _cygwin_reg_query_value {
     return $value;
 }
 
-sub _get_firefox_from_cygwin_registry_via_ssh {
+sub _get_binary_from_cygwin_registry_via_ssh {
     my ($self) = @_;
     my $binary;
-    my %known_win32_preferred_names = $self->_known_win32_preferred_names();
+    my %known_win32_preferred_names = $self->win32_product_names();
   NAME: foreach my $name (
         sort {
             $known_win32_preferred_names{$a}
@@ -2818,7 +2835,7 @@ sub _get_firefox_from_cygwin_registry_via_ssh {
     {
       ROOT_SUBKEY:
         foreach my $root_subkey (qw(SOFTWARE SOFTWARE/WOW6432Node)) {
-            my $organisation = $self->_win32_organisation($name);
+            my $organisation = $self->win32_organisation($name);
             my $version      = $self->_execute_via_ssh(
                 { ignore_exit_status => 1 },
                 'cat',
@@ -2865,10 +2882,10 @@ sub _get_firefox_from_cygwin_registry_via_ssh {
     return $binary;
 }
 
-sub _get_firefox_from_cygwin_registry {
+sub _get_binary_from_cygwin_registry {
     my ($self) = @_;
     my $binary;
-    my %known_win32_preferred_names = $self->_known_win32_preferred_names();
+    my %known_win32_preferred_names = $self->win32_product_names();
   NAME: foreach my $name (
         sort {
             $known_win32_preferred_names{$a}
@@ -2878,7 +2895,7 @@ sub _get_firefox_from_cygwin_registry {
     {
       ROOT_SUBKEY:
         foreach my $root_subkey (qw(SOFTWARE SOFTWARE/WOW6432Node)) {
-            my $organisation = $self->_win32_organisation($name);
+            my $organisation = $self->win32_organisation($name);
             my $version      = $self->_cygwin_reg_query_value(
                     '/proc/registry/HKEY_LOCAL_MACHINE/'
                   . $root_subkey . q[/]
@@ -2919,10 +2936,10 @@ sub _get_firefox_from_cygwin_registry {
     return $binary;
 }
 
-sub _get_firefox_from_win32_registry_via_ssh {
+sub _get_binary_from_win32_registry_via_ssh {
     my ($self) = @_;
     my $binary;
-    my %known_win32_preferred_names = $self->_known_win32_preferred_names();
+    my %known_win32_preferred_names = $self->win32_product_names();
   NAME: foreach my $name (
         sort {
             $known_win32_preferred_names{$a}
@@ -2933,7 +2950,7 @@ sub _get_firefox_from_win32_registry_via_ssh {
       ROOT_SUBKEY:
         foreach my $root_subkey ( ['SOFTWARE'], [ 'SOFTWARE', 'WOW6432Node' ] )
         {
-            my $organisation = $self->_win32_organisation($name);
+            my $organisation = $self->win32_organisation($name);
             my ($version) = $self->_reg_query_via_ssh(
                 subkey => [ 'HKLM', @{$root_subkey}, $organisation, $name ],
                 name   => 'CurrentVersion'
@@ -2986,10 +3003,10 @@ sub _win32_registry_query_key {
     return $value;
 }
 
-sub _get_firefox_from_local_win32_registry {
+sub _get_binary_from_local_win32_registry {
     my ($self) = @_;
     my $binary;
-    my %known_win32_preferred_names = $self->_known_win32_preferred_names();
+    my %known_win32_preferred_names = $self->win32_product_names();
   NAME: foreach my $name (
         sort {
             $known_win32_preferred_names{$a}
@@ -2999,7 +3016,7 @@ sub _get_firefox_from_local_win32_registry {
     {
       ROOT_SUBKEY:
         foreach my $root_subkey (qw(SOFTWARE SOFTWARE\\WOW6432Node)) {
-            my $organisation = $self->_win32_organisation($name);
+            my $organisation = $self->win32_organisation($name);
             my $version      = $self->_win32_registry_query_key(
                 Win32API::Registry::HKEY_LOCAL_MACHINE(),
                 "$root_subkey\\$organisation\\$name",
@@ -3033,9 +3050,9 @@ sub _get_firefox_from_local_win32_registry {
     return $binary;
 }
 
-sub _get_firefox_from_local_osx_filesystem {
+sub _get_binary_from_local_osx_filesystem {
     my ($self) = @_;
-    foreach my $path ( $self->_search_paths_for_firefox_on_osx() ) {
+    foreach my $path ( $self->macos_binary_paths() ) {
         if ( stat $path ) {
             return $path;
         }
@@ -3043,9 +3060,9 @@ sub _get_firefox_from_local_osx_filesystem {
     return;
 }
 
-sub _get_firefox_from_remote_osx_filesystem {
+sub _get_binary_from_remote_osx_filesystem {
     my ($self) = @_;
-    foreach my $path ( $self->_search_paths_for_firefox_on_osx() ) {
+    foreach my $path ( $self->macos_binary_paths() ) {
         foreach my $result ( split /\n/smx,
             $self->execute( 'ls', '-1', q["] . $path . q["] ) )
         {
@@ -3081,30 +3098,30 @@ sub _get_remote_binary {
     my ($self) = @_;
     my $binary;
     if ( $self->_remote_uname() eq 'MSWin32' ) {
-        if ( !$self->{firefox_binary_from_registry} ) {
-            $self->{firefox_binary_from_registry} =
-              $self->_get_firefox_from_win32_registry_via_ssh();
+        if ( !$self->{binary_from_registry} ) {
+            $self->{binary_from_registry} =
+              $self->_get_binary_from_win32_registry_via_ssh();
         }
-        if ( $self->{firefox_binary_from_registry} ) {
-            $binary = $self->{firefox_binary_from_registry};
+        if ( $self->{binary_from_registry} ) {
+            $binary = $self->{binary_from_registry};
         }
     }
     elsif ( $self->_remote_uname() eq 'darwin' ) {
-        if ( !$self->{firefox_binary_from_osx_filesystem} ) {
-            $self->{firefox_binary_from_osx_filesystem} =
-              $self->_get_firefox_from_remote_osx_filesystem();
+        if ( !$self->{binary_from_osx_filesystem} ) {
+            $self->{binary_from_osx_filesystem} =
+              $self->_get_binary_from_remote_osx_filesystem();
         }
-        if ( $self->{firefox_binary_from_osx_filesystem} ) {
-            $binary = $self->{firefox_binary_from_osx_filesystem};
+        if ( $self->{binary_from_osx_filesystem} ) {
+            $binary = $self->{binary_from_osx_filesystem};
         }
     }
     elsif ( $self->_remote_uname() eq 'cygwin' ) {
-        if ( !$self->{firefox_binary_from_cygwin_registry} ) {
-            $self->{firefox_binary_from_cygwin_registry} =
-              $self->_get_firefox_from_cygwin_registry_via_ssh();
+        if ( !$self->{binary_from_cygwin_registry} ) {
+            $self->{binary_from_cygwin_registry} =
+              $self->_get_binary_from_cygwin_registry_via_ssh();
         }
-        if ( $self->{firefox_binary_from_cygwin_registry} ) {
-            $binary = $self->{firefox_binary_from_cygwin_registry};
+        if ( $self->{binary_from_cygwin_registry} ) {
+            $binary = $self->{binary_from_cygwin_registry};
         }
     }
     return $binary;
@@ -3114,26 +3131,25 @@ sub _get_local_binary {
     my ($self) = @_;
     my $binary;
     if ( $OSNAME eq 'MSWin32' ) {
-        if ( !$self->{firefox_binary_from_registry} ) {
-            $self->{firefox_binary_from_registry} =
-              $self->_get_firefox_from_local_win32_registry();
+        if ( !$self->{binary_from_registry} ) {
+            $self->{binary_from_registry} =
+              $self->_get_binary_from_local_win32_registry();
         }
-        if ( $self->{firefox_binary_from_registry} ) {
-            $binary =
-              Win32::GetShortPathName( $self->{firefox_binary_from_registry} );
+        if ( $self->{binary_from_registry} ) {
+            $binary = Win32::GetShortPathName( $self->{binary_from_registry} );
         }
     }
     elsif ( $OSNAME eq 'darwin' ) {
-        if ( !$self->{firefox_binary_from_osx_filesystem} ) {
-            $self->{firefox_binary_from_osx_filesystem} =
-              $self->_get_firefox_from_local_osx_filesystem();
+        if ( !$self->{binary_from_osx_filesystem} ) {
+            $self->{binary_from_osx_filesystem} =
+              $self->_get_binary_from_local_osx_filesystem();
         }
-        if ( $self->{firefox_binary_from_osx_filesystem} ) {
-            $binary = $self->{firefox_binary_from_osx_filesystem};
+        if ( $self->{binary_from_osx_filesystem} ) {
+            $binary = $self->{binary_from_osx_filesystem};
         }
     }
     elsif ( $OSNAME eq 'cygwin' ) {
-        my $cygwin_binary = $self->_get_firefox_from_cygwin_registry();
+        my $cygwin_binary = $self->_get_binary_from_cygwin_registry();
         if ( defined $cygwin_binary ) {
             $binary = $self->execute( 'cygpath', '-s', '-m', $cygwin_binary );
         }
@@ -3141,11 +3157,15 @@ sub _get_local_binary {
     return $binary;
 }
 
+sub default_binary_name {
+    return 'firefox';
+}
+
 sub _binary {
     my ($self) = @_;
-    my $binary = 'firefox';
-    if ( $self->{firefox_binary} ) {
-        $binary = $self->{firefox_binary};
+    my $binary = $self->default_binary_name();
+    if ( $self->{marionette_binary} ) {
+        $binary = $self->{marionette_binary};
     }
     elsif ( $self->_ssh() ) {
         if ( my $remote_binary = $self->_get_remote_binary() ) {
@@ -7980,6 +8000,10 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
 causes the browser to traverse one step backward in the joint history of the current browsing context.  The browser will wait for the one step backward to complete or the session's L<page_load|Firefox::Marionette::Timeouts#page_load> duration to elapse before returning, which, by default is 5 minutes.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 default_binary_name
+
+just returns the string 'firefox'.  Only of interest when sub-classing.
+
 =head2 browser_version
 
 This method returns the current version of firefox.
@@ -8798,6 +8822,10 @@ returns true if C<document.readyState === "complete">
         # redirecting to Test::More page
     }
 
+=head2 macos_binary_paths
+
+returns a list of filesystem paths that this module will check for binaries that it can automate when running on L<MacOS|https://en.wikipedia.org/wiki/MacOS>.  Only of interest when sub-classing.
+
 =head2 marionette_protocol
 
 returns the version for the Marionette protocol.  Current most recent version is '3'.
@@ -9281,6 +9309,14 @@ accepts the GUID for the addon to uninstall.  The GUID is returned when from the
 =head2 uri
 
 returns the current L<URI|URI> of current top level browsing context for Desktop.  It is equivalent to the javascript C<document.location.href>
+
+=head2 win32_organisation
+
+accepts a parameter of a Win32 product name and returns the matching organisation.  Only of interest when sub-classing.
+
+=head2 win32_product_names
+
+returns a hash of known Windows product names (such as 'Mozilla Firefox') with priority orders.  The lower the priority will determine the order that this module will check for the existance of this product.  Only of interest when sub-classing.
 
 =head2 window_handle
 
