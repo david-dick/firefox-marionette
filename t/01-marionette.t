@@ -1357,7 +1357,7 @@ SKIP: {
 }
 
 SKIP: {
-	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
+	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
