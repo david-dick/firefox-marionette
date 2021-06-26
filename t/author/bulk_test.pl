@@ -69,7 +69,7 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	}
 }
 warn "Den is correct";
-foreach my $entry (reverse sort { $a cmp $b } @entries) {
+ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	my $entry_version;
 	if ($entry =~ /^waterfox/smx) {
 	} elsif ($entry eq 'firefox-nightly') {
@@ -110,6 +110,9 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 			if ($result != 0) {
 				if ($count < 3) {
 					warn "Failed '$^X -MDevel::Cover -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
+						next ENTRY;
+					}
 					sleep $reset_time;
 					redo LOCAL;
 				} else {
@@ -126,6 +129,9 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 			if ($result != 0) {
 				if ($count < 3) {
 					warn "Failed '$bash_command' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
+						next ENTRY;
+					}
 					sleep $reset_time;
 					redo SSH;
 				} else {
@@ -142,6 +148,9 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 			if ($result != 0) {
 				if ($count < 3) {
 					warn "Failed '$bash_command' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
+						next ENTRY;
+					}
 					sleep $reset_time;
 					redo REMOTE_VISIBLE;
 				} else {
