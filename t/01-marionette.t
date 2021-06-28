@@ -80,6 +80,7 @@ sub out_of_time {
 my $launches = 0;
 my $ca_cert_handle;
 my $metacpan_ca_cert_handle;
+my $guid_regex = qr/[a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}/smx;
 
 my ($major_version, $minor_version, $patch_version); 
 sub start_firefox {
@@ -1514,7 +1515,12 @@ SKIP: {
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 246);
 	}
-	ok($firefox->window_handle() =~ /^\d+$/, "\$firefox->window_handle() is an integer:" . $firefox->window_handle());
+	my $first_window_handle = $firefox->window_handle();
+	if ($major_version < 90) {
+		ok($first_window_handle =~ /^\d+$/, "\$firefox->window_handle() is an integer:" . $first_window_handle);
+	} else {
+		ok($first_window_handle =~ /^$guid_regex$/smx, "\$firefox->window_handle() is a GUID:" . $first_window_handle);
+	}
 	my $chrome_window_handle_supported;
 	eval {
 		$chrome_window_handle_supported = $firefox->chrome_window_handle();
@@ -1526,7 +1532,11 @@ SKIP: {
 			diag("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version");
 			skip("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version", 1);
 		}
-		ok($chrome_window_handle_supported =~ /^\d+$/, "\$firefox->chrome_window_handle() is an integer:" . $firefox->chrome_window_handle());
+		if ($major_version < 90) {
+			ok($chrome_window_handle_supported =~ /^\d+$/, "\$firefox->chrome_window_handle() is an integer:" . $chrome_window_handle_supported);
+		} else {
+			ok($chrome_window_handle_supported =~ /^$guid_regex$/smx, "\$firefox->chrome_window_handle() is a GUID:" . $chrome_window_handle_supported);
+		}
 	}
         ok($firefox->capabilities()->timeouts()->script() == 5432, "\$firefox->capabilities()->timeouts()->script() correctly reflects the scripts shortcut timeout:" . $firefox->capabilities()->timeouts()->script());
 	SKIP: {
@@ -1534,7 +1544,11 @@ SKIP: {
 			diag("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version");
 			skip("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version", 2);
 		}
-		ok($firefox->chrome_window_handle() == $firefox->current_chrome_window_handle(), "\$firefox->chrome_window_handle() is equal to \$firefox->current_chrome_window_handle()");
+		if ($major_version < 90) {
+			ok($firefox->chrome_window_handle() == $firefox->current_chrome_window_handle(), "\$firefox->chrome_window_handle() is equal to \$firefox->current_chrome_window_handle()");
+		} else {
+			ok($firefox->chrome_window_handle() eq $firefox->current_chrome_window_handle(), "\$firefox->chrome_window_handle() is equal to \$firefox->current_chrome_window_handle()");
+		}
 		ok(scalar $firefox->chrome_window_handles() == 1, "There is one window/tab open at the moment");
 	}
 	ok(scalar $firefox->window_handles() == 1, "There is one actual window open at the moment");
@@ -1546,12 +1560,20 @@ SKIP: {
 		}
 		($original_chrome_window_handle) = $firefox->chrome_window_handles();
 		foreach my $handle ($firefox->chrome_window_handles()) {
-			ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+			if ($major_version < 90) {
+				ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+			} else {
+				ok($handle =~ /^$guid_regex$/, "\$firefox->chrome_window_handles() returns a list of GUIDs:" . $handle);
+			}
 		}
 	}
 	my ($original_window_handle) = $firefox->window_handles();
 	foreach my $handle ($firefox->window_handles()) {
-		ok($handle =~ /^\d+$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
+		if ($major_version < 90) {
+			ok($handle =~ /^\d+$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
+		} else {
+			ok($handle =~ /^$guid_regex$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
+		}
 	}
 	ok(not($firefox->script('window.open("https://duckduckgo.com", "_blank");')), "Opening new window to duckduckgo.com via 'window.open' script");
 	ok(scalar $firefox->window_handles() == 2, "There are two actual windows open at the moment");
@@ -1563,8 +1585,12 @@ SKIP: {
 		}
 		ok(scalar $firefox->chrome_window_handles() == 2, "There are two windows/tabs open at the moment");
 		foreach my $handle ($firefox->chrome_window_handles()) {
-			ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
-			if ($handle != $original_chrome_window_handle) {
+			if ($major_version < 90) {
+				ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+			} else {
+				ok($handle =~ /^$guid_regex$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+			}
+			if ($handle ne $original_chrome_window_handle) {
 				$new_chrome_window_handle = $handle;
 			}
 		}
@@ -1572,8 +1598,12 @@ SKIP: {
 	}
 	my $new_window_handle;
 	foreach my $handle ($firefox->window_handles()) {
-		ok($handle =~ /^\d+$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
-		if ($handle != $original_window_handle) {
+		if ($major_version < 90) {
+			ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+		} else {
+			ok($handle =~ /^$guid_regex$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+		}
+		if ($handle ne $original_window_handle) {
 			$new_window_handle = $handle;
 		}
 	}
@@ -1650,7 +1680,11 @@ SKIP: {
 		}
 		foreach my $handle ($firefox->close_current_chrome_window_handle()) {
 			local $TODO = $major_version < 52 ? "\$firefox->close_current_chrome_window_handle() can return a undef value for versions less than 52" : undef;
-			ok(defined $handle && $handle == $new_chrome_window_handle, "Closed original window, which means the remaining chrome window handle should be $new_chrome_window_handle:" . ($handle || ''));
+			if ($major_version < 90) {
+				ok(defined $handle && $handle == $new_chrome_window_handle, "Closed original window, which means the remaining chrome window handle should be $new_chrome_window_handle:" . ($handle || ''));
+			} else {
+				ok(defined $handle && $handle eq $new_chrome_window_handle, "Closed original window, which means the remaining chrome window handle should be $new_chrome_window_handle:" . ($handle || ''));
+			}
 		}
 	}
 	ok($firefox->switch_to_window($new_window_handle), "\$firefox->switch_to_window() used to move back to the original window");
@@ -2471,7 +2505,12 @@ SKIP: {
 			diag("\$firefox->current_chrome_window_handle is not supported for $major_version.$minor_version.$patch_version");
 			skip("\$firefox->current_chrome_window_handle is not supported for $major_version.$minor_version.$patch_version", 1);
 		}
-		ok($firefox->current_chrome_window_handle() =~ /^\d+$/, "Returned the current chrome window handle as an integer");
+		my $current_chrome_window_handle = $firefox->current_chrome_window_handle();
+		if ($major_version < 90) {
+			ok($current_chrome_window_handle =~ /^\d+$/, "Returned the current chrome window handle as an integer");
+		} else {
+			ok($current_chrome_window_handle =~ /^$guid_regex$/smx, "Returned the current chrome window handle as a GUID");
+		}
 	}
 	$capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
