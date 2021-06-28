@@ -90,6 +90,7 @@ sub _LOCAL_READ_BUFFER_SIZE         { return 8192 }
 sub _WIN32_PROCESS_INHERIT_FLAGS    { return 0 }
 sub _DEFAULT_CERT_TRUST             { return 'C,,' }
 sub _PALEMOON_VERSION_EQUIV         { return 52 }            # very approx guess
+sub _MAX_VERSION_FOR_FTP_PROXY      { return 89 }
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
@@ -4518,8 +4519,17 @@ sub _request_proxy {
         $build->{proxyAutoconfigUrl} = $proxy->pac()->as_string();
     }
     if ( $proxy->ftp() ) {
-        $build->{proxyType} ||= 'manual';
-        $build->{ftpProxy} = $proxy->ftp();
+        my ( $major, $minor, $patch ) = split /[.]/smx,
+          $self->browser_version();
+        if ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) {
+            $build->{proxyType} ||= 'manual';
+            $build->{ftpProxy} = $proxy->ftp();
+        }
+        else {
+            Carp::carp(
+'**** FTP proxying is no longer supported, ignoring this request ****'
+            );
+        }
     }
     if ( $proxy->http() ) {
         $build->{proxyType} ||= 'manual';
@@ -4569,7 +4579,12 @@ sub _convert_proxy_before_request {
 sub _proxy_from_env {
     my ($self) = @_;
     my $build;
-    foreach my $key (qw(ftp all https http)) {
+    my @keys = (qw(all https http));
+    my ( $major, $minor, $patch ) = split /[.]/smx, $self->browser_version();
+    if ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) {
+        unshift @keys, qw(ftp);
+    }
+    foreach my $key (@keys) {
         my $full_name = $key . '_proxy';
         if ( $ENV{$full_name} ) {
         }
