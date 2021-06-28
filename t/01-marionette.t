@@ -1238,7 +1238,7 @@ SKIP: {
 		ok(!defined $login->password_field(), "\$login->password_field() is undefined");
 		ok(!defined $login->origin(), "\$login->origin() is undefined");
 		if ((defined $login->guid()) || ($major_version >= 59)) {
-			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+			ok($login->guid() =~ /^[{]$guid_regex[}]$/smx, "\$login->guid() is a UUID");
 		}
 		if ((defined $login->creation_time()) || ($major_version >= 59)) {
 			my $creation_year = (localtime($login->creation_time()))[6];
@@ -1269,7 +1269,7 @@ SKIP: {
 		ok($login->password_field() eq 'password', "\$login->password_field() eq 'password':" . $login->password_field());
 		ok(!defined $login->origin(), "\$login->origin() is not defined");
 		if ((defined $login->guid()) || ($major_version >= 59)) {
-			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+			ok($login->guid() =~ /^[{]$guid_regex[}]$/smx, "\$login->guid() is a UUID");
 		}
 		if ((defined $login->creation_time()) || ($major_version >= 59)) {
 			my $creation_year = (localtime($login->creation_time()))[6];
@@ -1299,7 +1299,7 @@ SKIP: {
 		ok($login->password_field() eq 'passwd', "\$login->password_field() eq 'passwd':" . $login->password_field());
 		ok($login->origin() eq 'https://www.perlmonks.org', "\$login->origin() eq 'https://www.perlmonks.org':" . $login->host());
 		if ((defined $login->guid()) || ($major_version >= 59)) {
-			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+			ok($login->guid() =~ /^[{]$guid_regex[}]$/smx, "\$login->guid() is a UUID");
 		}
 		if ((defined $login->creation_time()) || ($major_version >= 59)) {
 			ok($login->creation_time() == $now - 20, "\$login->last_used_time() returns the assigned time:" . localtime $login->creation_time());
@@ -1384,7 +1384,7 @@ SKIP: {
 		ok($login->password_field() eq 'passwd', "\$login->password_field() eq 'passwd':" . $login->password_field());
 		ok($login->origin() eq 'https://www.perlmonks.org', "\$login->origin() eq 'https://www.perlmonks.org':" . $login->host());
 		if ((defined $login->guid()) || ($major_version >= 59)) {
-			ok($login->guid() =~ /^[{][a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}[}]$/smx, "\$login->guid() is a UUID");
+			ok($login->guid() =~ /^[{]$guid_regex[}]$/smx, "\$login->guid() is a UUID");
 		}
 		if ((defined $login->creation_time()) || ($major_version >= 59)) {
 			ok($login->creation_time() == $now - 20, "\$login->last_used_time() returns the assigned time:" . localtime $login->creation_time());
