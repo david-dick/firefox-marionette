@@ -365,7 +365,7 @@ WriteMakefile(
         },
     },
     PL_FILES       => {},
-    EXE_FILES      => [ 'ssh-auth-cmd-marionette', 'ca-bundle-for-firefox', ],
+    EXE_FILES      => [ 'ssh-auth-cmd-marionette', 'ca-bundle-for-firefox', 'check-firefox-certificate-authorities', 'firefox-passwords' ],
     BUILD_REQUIRES => {
         'Compress::Zlib'  => 0,
         'Cwd'             => 0,
