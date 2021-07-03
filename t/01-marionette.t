@@ -2981,8 +2981,14 @@ sub check_for_window {
 	my ($firefox, $window_handle) = @_;
 	if (defined $window_handle) {
 		foreach my $existing_handle ($firefox->window_handles()) {
-			if ($existing_handle == $window_handle) {
-				return 1;
+			if ($major_version < 90) {
+				if ($existing_handle == $window_handle) {
+					return 1;
+				}
+			} else {
+				if ($existing_handle eq $window_handle) {
+					return 1;
+				}
 			} 
 		}
 	}
