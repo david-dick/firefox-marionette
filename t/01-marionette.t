@@ -81,6 +81,7 @@ my $launches = 0;
 my $ca_cert_handle;
 my $metacpan_ca_cert_handle;
 my $guid_regex = qr/[a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}/smx;
+my @old_binary_keys = (qw(firefox_binary firefox marionette));;
 
 my ($major_version, $minor_version, $patch_version); 
 sub start_firefox {
@@ -89,8 +90,10 @@ sub start_firefox {
 		die "Caught a signal";
 	}
 	if ($ENV{FIREFOX_BINARY}) {
-		$parameters{firefox} = $ENV{FIREFOX_BINARY};
-		diag("Overriding firefox binary to $parameters{firefox}");
+		my $key = shift @old_binary_keys;
+		$key ||= 'binary';
+		$parameters{$key} = $ENV{FIREFOX_BINARY};
+		diag("Overriding firefox binary to $parameters{$key}");
 	}
 	if ($parameters{manual_certificate_add}) {
 		delete $parameters{manual_certificate_add};
@@ -488,12 +491,12 @@ eval {
 ok(1, "Read existing profile if any");
 my $firefox;
 eval {
-	$firefox = $class->new(firefox_binary => '/firefox/is/not/here');
+	$firefox = $class->new(binary => '/firefox/is/not/here');
 };
 chomp $@;
 ok((($@) and (not($firefox))), "$class->new() threw an exception when launched with an incorrect path to a binary:$@");
 eval {
-	$firefox = $class->new(firefox => $^X);
+	$firefox = $class->new(binary => $^X);
 };
 chomp $@;
 ok((($@) and (not($firefox))), "$class->new() threw an exception when launched with a path to a non firefox binary:$@");

@@ -510,19 +510,16 @@ sub _adb {
 
 sub _get_marionette_parameter {
     my ( $self, %parameters ) = @_;
-    if ( $parameters{firefox_binary} ) {
-        Carp::carp(
-'**** DEPRECATED - firefox_binary HAS BEEN REPLACED BY marionette ****'
-        );
-        $self->{marionette_binary} = $parameters{firefox_binary};
+    foreach my $deprecated_key (qw(firefox_binary firefox marionette)) {
+        if ( $parameters{$deprecated_key} ) {
+            Carp::carp(
+"**** DEPRECATED - $deprecated_key HAS BEEN REPLACED BY binary ****"
+            );
+            $self->{marionette_binary} = $parameters{$deprecated_key};
+        }
     }
-    elsif ( $parameters{firefox} ) {
-        Carp::carp(
-            '**** DEPRECATED - firefox HAS BEEN REPLACED BY marionette ****');
-        $self->{marionette_binary} = $parameters{firefox};
-    }
-    elsif ( $parameters{marionette} ) {
-        $self->{marionette_binary} = $parameters{marionette};
+    if ( $parameters{binary} ) {
+        $self->{marionette_binary} = $parameters{binary};
     }
     return;
 }
@@ -8898,6 +8895,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * addons - should any firefox extensions and themes be available in this session.  This defaults to "0".
 
+=item * binary - use the specified path to the L<Firefox|https://firefox.org/> binary, rather than the default path.
+
 =item * capabilities - use the supplied L<capabilities|Firefox::Marionette::Capabilities> object, for example to set whether the browser should L<accept insecure certs|Firefox::Marionette::Capabilities#accept_insecure_certs> or whether the browser should use a L<proxy|Firefox::Marionette::Proxy>.
 
 =item * chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, L<connections to firefox.settings.services.mozilla.com will still be made|https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via L</etc/hosts|https://en.wikipedia.org/wiki//etc/hosts>.  NOTE: that this option only works when profile_name/profile is not specified.
@@ -8907,8 +8906,6 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).
 
 =item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched. This defaults to "0" (off).
-
-=item * firefox - use the specified path to the L<Firefox|https://firefox.org/> binary, rather than the default path.
 
 =item * height - set the L<height|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> of the initial firefox window
 

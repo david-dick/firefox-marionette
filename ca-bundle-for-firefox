@@ -25,7 +25,7 @@ elsif ( $options{version} ) {
 }
 my %parameters;
 if ( $options{binary} ) {
-    $parameters{firefox} = $options{binary};
+    $parameters{binary} = $options{binary};
 }
 my $firefox = Firefox::Marionette->new(%parameters);
 
