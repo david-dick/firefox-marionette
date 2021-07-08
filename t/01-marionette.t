@@ -2465,41 +2465,6 @@ SKIP: {
 	ok($@->error() || 1, "Firefox::Marionette::Exception::Response->error() is callable:" . ($@->error() || q[]));
 	ok($@->trace() || 1, "Firefox::Marionette::Exception::Response->trace() is callable");
 
-	my $alert_text = 'testing alert';
-	SKIP: {
-		if ($major_version < 50) {
-			skip("Firefox $major_version may hang when executing \$firefox->script(qq[alert(...)])", 2);
-		}
-		$firefox->script(qq[alert('$alert_text')]);
-		ok($firefox->alert_text() eq $alert_text, "\$firefox->alert_text() correctly detects alert text");
-		ok($firefox->dismiss_alert(), "\$firefox->dismiss_alert() dismisses alert box");
-	}
-	my $version = $capabilities->browser_version();
-	my ($major_version, $minor_version, $patch_version) = split /[.]/, $version;
-	ok($firefox->async_script(qq[prompt("Please enter your name", "John Cole");]), "Started async script containing a prompt");
-	my $send_alert_text;
-	eval {
-		$send_alert_text = $firefox->await(sub { $firefox->send_alert_text("Roland Grelewicz"); });
-	};
-	SKIP: {
-		if (($major_version < 50) && (!defined $send_alert_text)) {
-			skip("Firefox $major_version does not appear to support the \$firefox->send_alert_text() method", 1);
-		}
-		ok($send_alert_text, "\$firefox->send_alert_text() sends alert text:$@");
-	}
-	my $accept_dialog;
-	eval {
-		$accept_dialog = $firefox->accept_dialog();
-	};
-	SKIP: {
-		if (($major_version < 50) && (!defined $accept_dialog)) {
-			skip("Firefox $major_version does not appear to support the \$firefox->accept_dialog() method", 1);
-		} elsif (($major_version == 78) && ($@) && ($@->isa('Firefox::Marionette::Exception::NoSuchAlert'))) {
-			diag("Firefox $major_version has already closed the prompt:$@");
-			skip("Firefox $major_version has already closed the prompt", 1);
-		}
-		ok($accept_dialog, "\$firefox->accept_dialog() accepts the dialog box:$@");
-	}
 	SKIP: {
 		if ((!$chrome_window_handle_supported) && ($major_version < 50)) {
 			diag("\$firefox->current_chrome_window_handle is not supported for $major_version.$minor_version.$patch_version");
@@ -2751,6 +2716,41 @@ SKIP: {
 			skip("No forking available for $^O", 3);
 			diag("No forking available for $^O");
 		}
+	}
+	my $alert_text = 'testing alert';
+	SKIP: {
+		if ($major_version < 50) {
+			skip("Firefox $major_version may hang when executing \$firefox->script(qq[alert(...)])", 2);
+		}
+		$firefox->script(qq[alert('$alert_text')]);
+		ok($firefox->alert_text() eq $alert_text, "\$firefox->alert_text() correctly detects alert text");
+		ok($firefox->dismiss_alert(), "\$firefox->dismiss_alert() dismisses alert box");
+	}
+	my $version = $capabilities->browser_version();
+	my ($major_version, $minor_version, $patch_version) = split /[.]/, $version;
+	ok($firefox->async_script(qq[prompt("Please enter your name", "John Cole");]), "Started async script containing a prompt");
+	my $send_alert_text;
+	eval {
+		$send_alert_text = $firefox->await(sub { $firefox->send_alert_text("Roland Grelewicz"); });
+	};
+	SKIP: {
+		if (($major_version < 50) && (!defined $send_alert_text)) {
+			skip("Firefox $major_version does not appear to support the \$firefox->send_alert_text() method", 1);
+		}
+		ok($send_alert_text, "\$firefox->send_alert_text() sends alert text:$@");
+	}
+        my $accept_dialog;
+	eval {
+		$accept_dialog = $firefox->accept_dialog();
+	};
+	SKIP: {
+		if (($major_version < 50) && (!defined $accept_dialog)) {
+			skip("Firefox $major_version does not appear to support the \$firefox->accept_dialog() method", 1);
+		} elsif (($major_version == 78) && ($@) && ($@->isa('Firefox::Marionette::Exception::NoSuchAlert'))) {
+			diag("Firefox $major_version has already closed the prompt:$@");
+			skip("Firefox $major_version has already closed the prompt", 1);
+		}
+		ok($accept_dialog, "\$firefox->accept_dialog() accepts the dialog box:$@");
 	}
 	local $TODO = $major_version == 60 ? "Not entirely stable in firefox 60" : q[];
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
