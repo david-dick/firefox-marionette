@@ -20,6 +20,7 @@ lib/Firefox/Marionette/Exception/StaleElement.pm
 lib/Firefox/Marionette/Exception/NoSuchAlert.pm
 lib/Firefox/Marionette/Response.pm
 lib/Firefox/Marionette/Timeouts.pm
+lib/Firefox/Marionette/UpdateStatus.pm
 lib/Waterfox/Marionette.pm
 lib/Waterfox/Marionette/Profile.pm
 Makefile.PL
