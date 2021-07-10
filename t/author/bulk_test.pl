@@ -26,13 +26,16 @@ if ($pid = fork) {
 	exit 1;
 }
 system { 'cover' } 'cover', '-delete' and die "Failed to 'cover' for " . ($ENV{FIREFOX_BINARY} || 'firefox');
-system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
-{
-	local $ENV{FIREFOX_HOST} = 'localhost';
-	warn "Remote Firefox for " . ($ENV{FIREFOX_BINARY} || 'firefox');
-	system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
-}
 my $path = File::Spec->catdir(File::HomeDir::my_home(), 'den');
+my $initial_upgrade_package = 'firefox-52.0esr.tar.bz2';
+my $initial_upgrade_directory = 'firefox-upgrade';
+sub setup_upgrade {
+	if (-e "$path/$initial_upgrade_package") {
+		my $result = system "rm -Rf $path/firefox && rm -Rf $path/$initial_upgrade_directory && tar --directory $path -jxf $path/$initial_upgrade_package && mv $path/firefox $path/$initial_upgrade_directory";
+		$result == 0 or die "Failed to setup $initial_upgrade_directory";
+	}
+}
+setup_upgrade();
 my $handle = DirHandle->new($path) or die "Failed to find firefox den at $path";
 my @entries;
 while(my $entry = $handle->read()) {
@@ -47,6 +50,7 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 		($entry_version) = ($1);
 	} elsif ($entry eq 'firefox-nightly') {
 	} elsif ($entry eq 'firefox-developer') {
+	} elsif ($entry eq 'firefox-upgrade') {
 	} elsif ($entry =~ /^waterfox/smx) {
 	} else {
 		die "Unrecognised entry '$entry' in $path";
@@ -54,6 +58,7 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	if ($entry =~ /^waterfox/smx) {
 	} elsif ($entry eq 'firefox-nightly') {
 	} elsif ($entry eq 'firefox-developer') {
+	} elsif ($entry eq 'firefox-upgrade') {
 	} else {
 		my $path_to_binary = File::Spec->catfile($path, $entry, 'firefox');
 		my $old_version;
@@ -69,11 +74,14 @@ foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	}
 }
 warn "Den is correct";
+my %old_versions;
+my %paths_to_binary;
 ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	my $entry_version;
 	if ($entry =~ /^waterfox/smx) {
 	} elsif ($entry eq 'firefox-nightly') {
 	} elsif ($entry eq 'firefox-developer') {
+	} elsif ($entry eq 'firefox-upgrade') {
 	} elsif ($entry =~ /^firefox\-([\d.]+)(?:esr|a\d+)?$/smx) {
 		($entry_version) = ($1);
 	} else {
@@ -85,6 +93,7 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	} else {
 		$path_to_binary = File::Spec->catfile($path, $entry, 'firefox');
 	}
+	$paths_to_binary{$entry} = $path_to_binary;
 	my $old_version;
 	my $old_output = `$path_to_binary --version 2>/dev/null`;
 	if ($entry =~ /^waterfox/smx) {
@@ -97,10 +106,22 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	if ($entry =~ /^waterfox/smx) {
 	} elsif ($entry eq 'firefox-nightly') {
 	} elsif ($entry eq 'firefox-developer') {
+	} elsif ($entry eq 'firefox-upgrade') {
 	} elsif ($old_version ne $entry_version) {
 		die "$old_version does not equal $entry_version for $path_to_binary";
 	}
+	$old_versions{$entry} = $old_version;
+}
+system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
+{
+	local $ENV{FIREFOX_HOST} = 'localhost';
+	warn "Remote Firefox for " . ($ENV{FIREFOX_BINARY} || 'firefox');
+	system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
+}
+ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
+	my $old_version = $old_versions{$entry};
 	my $count = 0;
+	my $path_to_binary = $paths_to_binary{$entry};
 	$ENV{FIREFOX_BINARY} = $path_to_binary;
 	my $reset_time = 600; # 10 minutes
 	if ($entry =~ /^waterfox/smx) {
@@ -151,6 +172,9 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 				}
 			}
 		}
+		if ($entry eq 'firefox-upgrade') {
+			setup_upgrade();
+		}
 		my $bash_command = 'cd ' . Cwd::cwd() . '; RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X -MDevel::Cover -Ilib t/01-marionette.t";
 		$count = 0;
 		SSH: {
@@ -169,6 +193,9 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 					die "Failed to remote cover for $ENV{FIREFOX_BINARY} $count times"; 
 				}
 			}
+		}
+		if ($entry eq 'firefox-upgrade') {
+			setup_upgrade();
 		}
 		$bash_command = 'cd ' . Cwd::cwd() . '; RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X -MDevel::Cover -Ilib t/01-marionette.t";
 		$count = 0;
@@ -199,7 +226,10 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	} else {
 		die "$path_to_binary new '$new_output' could not be parsed";
 	}
-	if ($old_version ne $new_version) {
+	if ($entry eq 'firefox-nightly') {
+	} elsif ($entry eq 'firefox-developer') {
+	} elsif ($entry eq 'firefox-upgrade') {
+	} elsif ($old_version ne $new_version) {
 		die "$old_version changed to $new_version for $path_to_binary";
 	}
 }

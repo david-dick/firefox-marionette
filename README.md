@@ -1316,6 +1316,18 @@ completes any outstanding actions issued by the [perform](https://metacpan.org/p
                                   $firefox->pause(4),
                 )->release();
 
+## restart
+
+restarts the browser.  After the restart, [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) should be restored.  The same profile settings should be applied, but the current state of the browser (such as the [uri](https://metacpan.org/pod/Firefox::Marionette#uri) will be reset (like after a normal browser restart).  This method is primarily intended for use by the [update](https://metacpan.org/pod/Firefox::Marionette#update) method.  Not sure if this is useful by itself.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->restart(); # but why?
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## screen\_orientation
 
 returns the current browser orientation.  This will be one of the valid primary orientation values 'portrait-primary', 'landscape-primary', 'portrait-secondary', or 'landscape-secondary'.  This method is only currently available on Android (Fennec).
@@ -1420,6 +1432,27 @@ returns the current [title](https://developer.mozilla.org/en-US/docs/Web/HTML/El
 ## type
 
 accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a string as the second parameter.  It sends the string to the specified [element](https://metacpan.org/pod/Firefox::Marionette::Element) in the current page, such as filling out a text box. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## update
+
+queries the Update Services and applies any available updates.  [Restarts](https://metacpan.org/pod/Firefox::Marionette#restart) the browser if necessary to complete the update.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $update = $firefox->update();
+
+    while($update->successful()) {
+        $update = $firefox->update();
+    }
+
+    say "Updated to " . $update->display_version() . " - Build ID " . $update->build_id();
+
+    $firefox->quit();
+
+returns a [status](https://metacpan.org/pod/Firefox::Marionette::UpdateStatus) object that contains useful information about any updates that occurred.
 
 ## uninstall
 

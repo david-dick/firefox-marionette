@@ -15,6 +15,7 @@ use Firefox::Marionette::Profile();
 use Firefox::Marionette::Proxy();
 use Firefox::Marionette::Exception();
 use Firefox::Marionette::Exception::Response();
+use Firefox::Marionette::UpdateStatus();
 use Waterfox::Marionette::Profile();
 use Compress::Zlib();
 use Config::INI::Reader();
@@ -36,6 +37,7 @@ use File::stat();
 use FileHandle();
 use MIME::Base64();
 use DirHandle();
+use XML::Parser();
 use Carp();
 use Config;
 use base qw(Exporter);
@@ -208,7 +210,7 @@ sub download {
 }
 
 sub _directory_listing_via_ssh {
-    my ( $self, $directory ) = @_;
+    my ( $self, $directory, $short ) = @_;
     my $binary    = 'ls';
     my @arguments = ( '-1', "\"$directory\"" );
 
@@ -217,28 +219,39 @@ sub _directory_listing_via_ssh {
         @arguments = ( '/B', $directory );
     }
     my @entries;
-    foreach my $entry ( split /\r?\n/smx,
-        $self->_execute_via_ssh( {}, $binary, @arguments ) )
-    {
-        push @entries, $self->_remote_catfile( $directory, $entry );
+    my $entries = $self->_execute_via_ssh( {}, $binary, @arguments );
+    if ( defined $entries ) {
+        foreach my $entry ( split /\r?\n/smx, $entries ) {
+            if ($short) {
+                push @entries, $entry;
+            }
+            else {
+                push @entries, $self->_remote_catfile( $directory, $entry );
+            }
+        }
     }
     return @entries;
 }
 
 sub _directory_listing {
-    my ( $self, $directory ) = @_;
+    my ( $self, $directory, $short ) = @_;
     my @entries;
     if ( my $ssh = $self->_ssh() ) {
-        @entries = $self->_directory_listing_via_ssh($directory);
+        @entries = $self->_directory_listing_via_ssh( $directory, $short );
     }
     else {
         my $handle = DirHandle->new($directory)
           or Firefox::Marionette::Exception->throw(
             "Failed to open directory '$directory':$EXTENDED_OS_ERROR");
-        while ( my $entry = $handle->read() ) {
+        while ( length( my $entry = $handle->read() ) ) {
             next if ( $entry eq File::Spec->updir() );
             next if ( $entry eq File::Spec->curdir() );
-            push @entries, File::Spec->catfile( $directory, $entry );
+            if ($short) {
+                push @entries, $entry;
+            }
+            else {
+                push @entries, File::Spec->catfile( $directory, $entry );
+            }
         }
         $handle->close()
           or Firefox::Marionette::Exception->throw(
@@ -277,18 +290,8 @@ sub _read_possible_proxy_path {
     my $local_proxy_handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
       or return;
     my $result;
-    my $search_contents;
-    while ( $result =
-        $local_proxy_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) )
-    {
-        $search_contents .= $buffer;
-    }
-    defined $result
-      or Firefox::Marionette::Exception->throw(
-        "Failed to read from '$path':$EXTENDED_OS_ERROR");
-    $local_proxy_handle->close()
-      or Firefox::Marionette::Exception->throw(
-        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    my $search_contents =
+      $self->_read_and_close_handle( $local_proxy_handle, $path );
     my $local_proxy = JSON::decode_json($search_contents);
     return $local_proxy;
 }
@@ -524,9 +527,22 @@ sub _get_marionette_parameter {
     return;
 }
 
+sub _store_restart_parameters {
+    my ( $self, %parameters ) = @_;
+    $self->{_restart_parameters} = { restart => 1 };
+    foreach my $key ( sort { $a cmp $b } keys %parameters ) {
+        next if ( $key eq 'profile' );
+        next if ( $key eq 'capabilities' );
+        next if ( $key eq 'timeout' );
+        $self->{_restart_parameters}->{$key} = $parameters{$key};
+    }
+    return;
+}
+
 sub _init {
     my ( $class, %parameters ) = @_;
     my $self = bless {}, $class;
+    $self->_store_restart_parameters(%parameters);
     $self->{last_message_id}  = 0;
     $self->{creation_pid}     = $PROCESS_ID;
     $self->{sleep_time_in_ms} = $parameters{sleep_time_in_ms};
@@ -793,7 +809,8 @@ sub _reconnect {
     my $sock_addr = $self->_get_sock_addr( $host, $port );
     connect $socket, $sock_addr
       or Firefox::Marionette::Exception->throw(
-        "Failed to connect to remote Firefox process:$EXTENDED_OS_ERROR");
+"Failed to re-connect to Firefox process at '$host:$port':$EXTENDED_OS_ERROR"
+      );
     $self->{_socket} = $socket;
     my $initial_response = $self->_read_from_socket();
     $self->{marionette_protocol} = $initial_response->{marionetteProtocol};
@@ -1140,6 +1157,289 @@ _JS_
     return $self->_translate_firefox_logins( @{$result} );
 }
 
+sub _binary_directory {
+    my ($self) = @_;
+    my $binary = $self->_binary();
+    my ( $volume, $directories ) = File::Spec->splitpath($binary);
+    my $binary_directory = File::Spec->catdir( $volume, $directories );
+    return $binary_directory;
+}
+
+sub _most_recent_updates_index {
+    my ($self) = @_;
+    if ( defined $self->{_cached_per_instance}->{_most_recent_updates_index} ) {
+
+    }
+    else {
+        my $binary_directory = $self->_binary_directory();
+        my $found_updates_directory;
+        foreach my $entry ( $self->_directory_listing( $binary_directory, 1 ) )
+        {
+            if ( $entry eq 'updates' ) {
+                $found_updates_directory = 1;
+            }
+        }
+        if ($found_updates_directory) {
+            my $updates_path =
+              File::Spec->catfile( $binary_directory, 'updates' );
+            my @entries;
+            foreach my $entry ( $self->_directory_listing( $updates_path, 1 ) )
+            {
+                if ( $entry =~ /^(\d{1,10})$/smx ) {
+                    push @entries, $1;
+                }
+            }
+            my @sorted_entries = reverse sort { $a <=> $b } @entries;
+            $self->{_cached_per_instance}->{_most_recent_updates_index} =
+              shift @sorted_entries;
+        }
+    }
+    return $self->{_cached_per_instance}->{_most_recent_updates_index};
+}
+
+sub _most_recent_updates_status_path {
+    my ( $self, $index ) = @_;
+    if (
+        defined(
+            my $most_recent_updates_index = $self->_most_recent_updates_index()
+        )
+      )
+    {
+        my $binary_directory = $self->_binary_directory();
+        return File::Spec->catfile( $binary_directory, 'updates',
+            $most_recent_updates_index, 'update.status' );
+    }
+    return;
+}
+
+sub _wait_for_updating_to_finish {
+    my ($self) = @_;
+    delete $self->{_cached_per_instance}->{_most_recent_updates_index};
+    my $count = 1;
+    my $updating;
+    while ($count) {
+        $count = 0;
+        if (
+            defined(
+                my $most_recent_updates_index =
+                  $self->_most_recent_updates_index()
+            )
+          )
+        {
+            my $binary_directory = $self->_binary_directory();
+            my $most_recent_update_directory =
+              File::Spec->catfile( $binary_directory, 'updates',
+                $most_recent_updates_index );
+            foreach my $entry (
+                $self->_directory_listing( $most_recent_update_directory, 1 ) )
+            {
+                $count += 1;
+            }
+        }
+        if ($count) {
+            $updating = 1;
+            sleep 1;
+        }
+    }
+    if ($updating) {
+        sleep 1;
+    }
+    return;
+}
+
+sub _get_update_status {
+    my ($self) = @_;
+    my $updates_status_path = $self->_most_recent_updates_status_path();
+    if ($updates_status_path) {
+        my $updates_status_handle;
+        if ( $self->_ssh() ) {
+            $updates_status_handle =
+              $self->_get_file_via_scp( $updates_status_path,
+                'update.status file' );
+        }
+        else {
+            $updates_status_handle =
+              FileHandle->new( $updates_status_path, Fcntl::O_RDONLY() );
+        }
+        if ($updates_status_handle) {
+            return $self->_read_and_close_handle( $updates_status_handle,
+                $updates_status_path );
+        }
+        elsif ( $OS_ERROR == POSIX::ENOENT() ) {
+        }
+        else {
+            Firefox::Marionette::Exception->throw(
+"Failed to open $updates_status_path for reading:$EXTENDED_OS_ERROR"
+            );
+        }
+    }
+    return;
+}
+
+sub _wait_for_any_background_update_status {
+    my ($self) = @_;
+    my $update_status = $self->_get_update_status();
+    while ( ( defined $update_status ) && ( $update_status eq 'applying' ) ) {
+        sleep 1;
+        $update_status = $self->_get_update_status();
+    }
+    return;
+}
+
+sub restart {
+    my ($self)       = @_;
+    my $capabilities = $self->capabilities();
+    my $timeouts     = $self->timeouts();
+    if ( $self->_session_id() ) {
+        $self->_quit_over_marionette();
+        delete $self->{session_id};
+    }
+    else {
+        $self->_terminate_marionette_process();
+    }
+    $self->_wait_for_any_background_update_status();
+    foreach my $key (
+        qw(marionette_protocol application_type _firefox_pid last_message_id _child_error)
+      )
+    {
+        delete $self->{$key};
+    }
+    if ( my $ssh = $self->_ssh() ) {
+        delete $ssh->{ssh_local_tcp_socket};
+    }
+    delete $self->{_cached_per_instance};
+    $self->_get_version();
+    my @arguments =
+      $self->_setup_arguments( %{ $self->{_restart_parameters} } );
+    $self->_launch(@arguments);
+    my $socket = $self->_setup_local_connection_to_firefox(@arguments);
+    my $session_id;
+    ( $session_id, $capabilities ) =
+      $self->_initial_socket_setup( $socket, $capabilities );
+    $self->_check_protocol_version_and_pid( $session_id, $capabilities );
+    $self->_post_launch_checks_and_setup($timeouts);
+    return $self;
+}
+
+sub update {
+    my ($self) = @_;
+    my $old = $self->_context('chrome');
+
+    # toolkit/mozapps/update/nsIUpdateService.idl
+    my $update_parameters = $self->script( $self->_compress_script(<<'_JS_') );
+let branch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("app.update.");
+let disabledForTesting = branch.getBoolPref("disabledForTesting");
+branch.setBoolPref("disabledForTesting", false);
+let updateManager = new Promise((resolve, reject) => {
+  var updateStatus = {};
+  if ("@mozilla.org/updates/update-manager;1" in Components.classes) {
+    let PREF_APP_UPDATE_CANCELATIONS_OSX = "app.update.cancelations.osx";
+    let PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS_OSX)) {
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
+    }
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_ELEVATE_NEVER)) {
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_ELEVATE_NEVER);
+    }
+    let updateService = Components.classes["@mozilla.org/updates/update-service;1"].getService(Components.interfaces.nsIApplicationUpdateService);
+    let latestUpdate = null;
+    if (!updateService.canCheckForUpdates) {
+      updateStatus["updateStatusCode"] = 'CANNOT_CHECK_FOR_UPDATES';
+      reject(updateStatus);
+    }
+    if (!updateService.canApplyUpdates) {
+      updateStatus["updateStatusCode"] = 'CANNOT_APPLY_UPDATES';
+      reject(updateStatus);
+    }
+    let updateChecker = Components.classes["@mozilla.org/updates/update-checker;1"].createInstance(Components.interfaces.nsIUpdateChecker);
+    if (updateChecker.stopCurrentCheck) {
+      updateChecker.stopCurrentCheck();
+    }
+    let updateServiceListener = {
+      onCheckComplete: (request, updates) => {
+        for (let i = 0; i < updates.length; i++) {
+          latestUpdate = update = updates[i];
+        }
+        updateStatus["numberOfUpdates"] = updates.length;
+        if (latestUpdate === null) {
+          updateStatus["updateStatusCode"] = 'NO_UPDATES_AVAILABLE';
+          reject(updateStatus);
+        } else {
+          for (key in latestUpdate) {
+            if (typeof latestUpdate[key] !== 'function') {
+              updateStatus[key] = latestUpdate[key];
+            }
+          }
+          let result = updateService.downloadUpdate(latestUpdate, false);
+          let updateProcessor = Components.classes["@mozilla.org/updates/update-processor;1"].createInstance(Components.interfaces.nsIUpdateProcessor);
+          updateProcessor.processUpdate(latestUpdate);
+
+          function nowPending() {
+            updateStatus["state"] = latestUpdate.state;
+            updateStatus["statusText"] = latestUpdate.statusText;
+            if (latestUpdate.state == 'pending') {
+              updateStatus["updateStatusCode"] = 'SUCCESSFUL_UPDATE';
+              resolve(updateStatus);
+            } else {
+              setTimeout(function() { nowPending() }, 500);
+            }
+          }
+          setTimeout(function() { nowPending() }, 500);
+        }
+      },
+      onError: (request, update) => {
+        updateStatus["updateStatusCode"] = 'UPDATE_SERVER_ERROR';
+        reject(updateStatus);
+      },
+      QueryInterface: (ChromeUtils.generateQI ? ChromeUtils.generateQI([Components.interfaces.nsIUpdateCheckListener]) : XPCOMUtils.generateQI([Components.interfaces.nsIUpdateCheckListener])),
+    };
+    updateChecker.checkForUpdates(updateServiceListener, true);
+  } else {
+    updateStatus["updateStatusCode"] = 'UPDATE_MANAGER_DISABLED';
+    reject(updateStatus);
+  }
+});
+let updateStatus = (async function() {
+  return await updateManager.then(function(updateStatus) { return updateStatus }, function(updateStatus) { return updateStatus });
+})();
+branch.setBoolPref("disabledForTesting", disabledForTesting);
+return updateStatus;
+_JS_
+    $self->_context($old);
+    my %mapping = (
+        updateStatusCode   => 'update_status_code',
+        installDate        => 'install_date',
+        statusText         => 'status_text',
+        appVersion         => 'app_version',
+        displayVersion     => 'display_version',
+        promptWaitTime     => 'prompt_wait_time',
+        buildID            => 'build_id',
+        previousAppVersion => 'previous_app_version',
+        patchCount         => 'patch_count',
+        serviceURL         => 'service_url',
+        selectedPatch      => 'selected_patch',
+        numberOfUpdates    => 'number_of_updates',
+        detailsURL         => 'details_url',
+        elevationFailure   => 'elevation_failure',
+        isCompleteUpdate   => 'is_complete_update',
+        errorCode          => 'error_code',
+        state              => 'update_state',
+    );
+
+    foreach my $key ( sort { $a cmp $b } keys %{$update_parameters} ) {
+        if ( defined $mapping{$key} ) {
+            $update_parameters->{ $mapping{$key} } =
+              delete $update_parameters->{$key};
+        }
+    }
+    my $update_status =
+      Firefox::Marionette::UpdateStatus->new( %{$update_parameters} );
+    if ( $update_status->successful() ) {
+        $self->restart();
+    }
+    return $update_status;
+}
+
 sub _strip_pem_prefix_whitespace_and_postfix {
     my ( $self, $pem_encoded_string ) = @_;
     my $stripped_certificate;
@@ -1280,17 +1580,7 @@ sub _read_certificate_from_disk {
     my $handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
       or Firefox::Marionette::Exception->throw(
         "Failed to open certificate '$path' for reading:$EXTENDED_OS_ERROR");
-    my $certificate = q[];
-    my $result;
-    while ( $result = $handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) ) {
-        $certificate .= $buffer;
-    }
-    defined $result
-      or Firefox::Marionette::Exception->throw(
-        "Failed to read from '$path':$EXTENDED_OS_ERROR");
-    $handle->close()
-      or Firefox::Marionette::Exception->throw(
-        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    my $certificate = $self->_read_and_close_handle( $handle, $path );
     return $certificate;
 }
 
@@ -1360,9 +1650,9 @@ sub _check_protocol_version_and_pid {
 }
 
 sub _post_launch_checks_and_setup {
-    my ( $self, %parameters ) = @_;
+    my ( $self, $timeouts ) = @_;
     $self->_write_local_proxy( $self->_ssh() );
-    $self->_check_timeout_parameters(%parameters);
+    $self->timeouts($timeouts);
     if ( $self->{_har} ) {
         $self->_build_local_extension_directory();
         my $path = File::Spec->catfile(
@@ -1397,8 +1687,8 @@ sub new {
     my $self = $class->_init(%parameters);
     my ( $session_id, $capabilities ) = $self->_launch_and_connect(%parameters);
     $self->_check_protocol_version_and_pid( $session_id, $capabilities );
-    $self->_post_launch_checks_and_setup(%parameters);
-
+    my $timeouts = $self->_build_timeout_from_parameters(%parameters);
+    $self->_post_launch_checks_and_setup($timeouts);
     return $self;
 }
 
@@ -1481,8 +1771,9 @@ _JS_
     return { log => $log };
 }
 
-sub _check_timeout_parameters {
+sub _build_timeout_from_parameters {
     my ( $self, %parameters ) = @_;
+    my $timeouts;
     if (   ( defined $parameters{implicit} )
         || ( defined $parameters{page_load} )
         || ( defined $parameters{script} ) )
@@ -1499,18 +1790,16 @@ sub _check_timeout_parameters {
           defined $parameters{implicit}
           ? $parameters{implicit}
           : _DEFAULT_IMPLICIT_TIMEOUT();
-        $self->timeouts(
-            Firefox::Marionette::Timeouts->new(
-                page_load => $page_load,
-                script    => $script,
-                implicit  => $implicit,
-            )
+        $timeouts = Firefox::Marionette::Timeouts->new(
+            page_load => $page_load,
+            script    => $script,
+            implicit  => $implicit,
         );
     }
     elsif ( $parameters{timeouts} ) {
-        $self->timeouts( $parameters{timeouts} );
+        $timeouts = $parameters{timeouts};
     }
-    return;
+    return $timeouts;
 }
 
 sub _check_addons {
@@ -1609,7 +1898,14 @@ sub _setup_arguments {
     }
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
-    if ( $parameters{profile_name} ) {
+    if ( $parameters{restart} ) {
+        push @arguments,
+          (
+            '-profile',    $self->{_profile_directory},
+            '--no-remote', '--new-instance'
+          );
+    }
+    elsif ( $parameters{profile_name} ) {
         $self->{profile_name} = $parameters{profile_name};
         $self->{_profile_directory} =
           Firefox::Marionette::Profile->directory( $parameters{profile_name} );
@@ -1916,10 +2212,53 @@ sub _execute_via_ssh {
     return $output;
 }
 
+sub _read_and_close_handle {
+    my ( $self, $handle, $path ) = @_;
+    my $content;
+    my $result;
+    while ( $result = $handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) ) {
+        $content .= $buffer;
+    }
+    defined $result
+      or Firefox::Marionette::Exception->throw(
+        "Failed to read from '$path':$EXTENDED_OS_ERROR");
+    $handle->close()
+      or Firefox::Marionette::Exception->throw(
+        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    return $content;
+}
+
 sub _search_for_version_in_application_ini {
     my ( $self, $binary ) = @_;
     if ( File::Spec->file_name_is_absolute($binary) ) {
         my ( $volume, $directories ) = File::Spec->splitpath($binary);
+        my $active_update_path =
+          File::Spec->catdir( $volume, $directories, 'active-update.xml' );
+        my $active_update_handle =
+          FileHandle->new( $active_update_path, Fcntl::O_RDONLY() );
+        my $active_update_version;
+        if ($active_update_handle) {
+            my $active_update_contents =
+              $self->_read_and_close_handle( $active_update_handle,
+                $active_update_path );
+            my $parser = XML::Parser->new();
+            $parser->setHandlers(
+                Start => sub {
+                    my ( $p, $element, %attributes ) = @_;
+                    if ( $element eq 'update' ) {
+                        $active_update_version = $attributes{appVersion};
+                    }
+                },
+            );
+            $parser->parse($active_update_contents);
+        }
+        elsif ( $OS_ERROR == POSIX::ENOENT() ) {
+        }
+        else {
+            Firefox::Marionette::Exception->throw(
+"Failed to open $active_update_path for reading:$EXTENDED_OS_ERROR"
+            );
+        }
         my $application_ini_path =
           File::Spec->catfile( $volume, $directories, 'application.ini' );
         my $application_ini_handle =
@@ -1936,7 +2275,8 @@ sub _search_for_version_in_application_ini {
                 {
                     $self->{developer_edition} = 1;
                 }
-                return join q[ ], $app->{Vendor}, $app->{Name}, $app->{Version};
+                return join q[ ], $app->{Vendor}, $app->{Name},
+                  $active_update_version || $app->{Version};
             }
         }
     }
@@ -1968,79 +2308,84 @@ sub _initialise_version {
     if ( defined $self->{_initial_version} ) {
     }
     else {
-        my $binary = $self->_binary();
-        $self->{binary} = $binary;
-        my $version_string;
-        my $version_regex = qr/(\d+)[.](\d+(?:\w\d+)?)(?:[.](\d+))*/smx;
-        if ( $self->_adb() ) {
-            my $package_name = $self->_adb_initialise();
-            my $dumpsys =
-              $self->execute( 'adb', 'shell', 'dumpsys', 'package',
-                $package_name );
-            my $found;
-            foreach my $line ( split /\r?\n/smx, $dumpsys ) {
-                if ( $line =~ /^[ ]+versionName=$version_regex\s*$/smx ) {
-                    $found                             = 1;
-                    $self->{_initial_version}->{major} = $1;
-                    $self->{_initial_version}->{minor} = $2;
-                    $self->{_initial_version}->{patch} = $3;
-                }
-            }
-            if ( !$found ) {
-                Firefox::Marionette::Exception->throw(
-"'adb shell dumpsys package $package_name' did not produce output that looks like '^[ ]+versionName=\\d+[.]\\d+([.]\\d+)?\\s*\$':$version_string"
-                );
+        $self->_get_version();
+    }
+    return;
+}
+
+sub _get_version {
+    my ($self) = @_;
+    my $binary = $self->_binary();
+    $self->{binary} = $binary;
+    my $version_string;
+    my $version_regex = qr/(\d+)[.](\d+(?:\w\d+)?)(?:[.](\d+))*/smx;
+    if ( $self->_adb() ) {
+        my $package_name = $self->_adb_initialise();
+        my $dumpsys =
+          $self->execute( 'adb', 'shell', 'dumpsys', 'package', $package_name );
+        my $found;
+        foreach my $line ( split /\r?\n/smx, $dumpsys ) {
+            if ( $line =~ /^[ ]+versionName=$version_regex\s*$/smx ) {
+                $found                             = 1;
+                $self->{_initial_version}->{major} = $1;
+                $self->{_initial_version}->{minor} = $2;
+                $self->{_initial_version}->{patch} = $3;
             }
         }
-        else {
-            $version_string = $self->_get_version_string($binary);
-            my $browser_regex = join q[|],
-              qr/Mozilla[ ]Firefox[ ]/smx,
-              qr/Waterfox[ ]Waterfox[ ]/smx,
-              qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
-              qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
-            if ( $version_string =~
-                /(${browser_regex})${version_regex}[[:alpha:]]*\s*$/smx )
+        if ( !$found ) {
+            Firefox::Marionette::Exception->throw(
+"'adb shell dumpsys package $package_name' did not produce output that looks like '^[ ]+versionName=\\d+[.]\\d+([.]\\d+)?\\s*\$':$version_string"
+            );
+        }
+    }
+    else {
+        $version_string = $self->_get_version_string($binary);
+        my $browser_regex = join q[|],
+          qr/Mozilla[ ]Firefox[ ]/smx,
+          qr/Waterfox[ ]Waterfox[ ]/smx,
+          qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
+          qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
+        if ( $version_string =~
+            /(${browser_regex})${version_regex}[[:alpha:]]*\s*$/smx )
 
 # not anchoring the start of the regex b/c of issues with
 # RHEL6 and dbus crashing with error messages like
 # 'Failed to open connection to "session" message bus: /bin/dbus-launch terminated abnormally without any error message'
-            {
-                if ( $1 eq 'Moonchild Productions Pale Moon ' ) {
-                    $self->{pale_moon} = 1;
-                    $self->{_initial_version}->{major} =
-                      _PALEMOON_VERSION_EQUIV();
-                }
-                elsif ( $1 eq 'Waterfox Waterfox ' ) {
-                    $self->{waterfox} = 1;
-                }
-                else {
-                    $self->{_initial_version}->{major} = $2;
-                    $self->{_initial_version}->{minor} = $3;
-                    $self->{_initial_version}->{patch} = $4;
-                }
+        {
+            if ( $1 eq 'Moonchild Productions Pale Moon ' ) {
+                $self->{pale_moon} = 1;
+                $self->{_initial_version}->{major} =
+                  _PALEMOON_VERSION_EQUIV();
             }
-            elsif ( defined $self->{_initial_version} ) {
-            }
-            elsif ( $version_string =~ /^Waterfox[ ]/smx ) {
+            elsif ( $1 eq 'Waterfox Waterfox ' ) {
                 $self->{waterfox} = 1;
-                if ( $version_string =~ /^Waterfox Classic/smx ) {
-                    $self->{_initial_version}->{major} =
-                      _WATERFOX_CLASSIC_VERSION_EQUIV();
-                }
-                else {
-                    $self->{_initial_version}->{major} =
-                      _WATERFOX_CURRENT_VERSION_EQUIV();
-                }
             }
             else {
-                Carp::carp(
-"'$binary --version' did not produce output that could be parsed.  Assuming modern Marionette is available"
-                );
+                $self->{_initial_version}->{major} = $2;
+                $self->{_initial_version}->{minor} = $3;
+                $self->{_initial_version}->{patch} = $4;
             }
         }
-        $self->_validate_any_requested_version( $binary, $version_string );
+        elsif ( defined $self->{_initial_version} ) {
+        }
+        elsif ( $version_string =~ /^Waterfox[ ]/smx ) {
+            $self->{waterfox} = 1;
+            if ( $version_string =~ /^Waterfox Classic/smx ) {
+                $self->{_initial_version}->{major} =
+                  _WATERFOX_CLASSIC_VERSION_EQUIV();
+            }
+            else {
+                $self->{_initial_version}->{major} =
+                  _WATERFOX_CURRENT_VERSION_EQUIV();
+            }
+        }
+        else {
+            Carp::carp(
+"'$binary --version' did not produce output that could be parsed.  Assuming modern Marionette is available"
+            );
+        }
     }
+    $self->_validate_any_requested_version( $binary, $version_string );
     return;
 }
 
@@ -2286,8 +2631,13 @@ sub _local_firefox_tmp_directory {
 
 sub _launch {
     my ( $self, @arguments ) = @_;
+    $self->{_initial_arguments} = [];
+    foreach my $argument (@arguments) {
+        push @{ $self->{_initial_arguments} }, $argument;
+    }
     if ( $self->_ssh() ) {
         $self->{_local_ssh_pid} = $self->_launch_via_ssh(@arguments);
+        $self->_wait_for_updating_to_finish();
         return;
     }
     if ( $self->{survive} ) {
@@ -2320,6 +2670,7 @@ sub _launch {
         local $ENV{TMPDIR} = $self->_local_firefox_tmp_directory();
         $self->{_firefox_pid} = $self->_launch_unix(@arguments);
     }
+    $self->_wait_for_updating_to_finish();
     return;
 }
 
@@ -2505,10 +2856,16 @@ sub _launch_xvfb_if_not_present {
     }
 }
 
-sub _launch_xvfb {
+sub _xvfb_directory {
     my ($self)         = @_;
     my $root_directory = $self->_root_directory();
     my $xvfb_directory = File::Spec->catdir( $root_directory, 'xvfb' );
+    return $xvfb_directory;
+}
+
+sub _launch_xvfb {
+    my ($self) = @_;
+    my $xvfb_directory = $self->_xvfb_directory();
     mkdir $xvfb_directory, Fcntl::S_IRWXU()
       or Firefox::Marionette::Exception->throw(
         "Failed to create directory $xvfb_directory:$EXTENDED_OS_ERROR");
@@ -2804,18 +3161,7 @@ sub _cygwin_reg_query_value {
     my $handle = FileHandle->new( $path, Fcntl::O_RDONLY() );
     my $value;
     if ( defined $handle ) {
-        my $result;
-        while ( $result =
-            $handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) )
-        {
-            $value .= $buffer;
-        }
-        defined $result
-          or Firefox::Marionette::Exception->throw(
-            "Failed to read from '$path':$EXTENDED_OS_ERROR");
-        $handle->close()
-          or Firefox::Marionette::Exception->throw(
-            "Failed to close '$path':$EXTENDED_OS_ERROR");
+        $value = $self->_read_and_close_handle( $handle, $path );
         $value =~ s/\0$//smx;
     }
     elsif ( $EXTENDED_OS_ERROR == POSIX::ENOENT() ) {
@@ -3443,9 +3789,54 @@ sub _ssh_local_path_or_port {
 
 sub _setup_local_socket_via_ssh_with_control_path {
     my ( $self, $ssh_local_path, $localhost, $port ) = @_;
+    if ( $self->{_ssh_port_forwarding}->{$localhost}->{$port} ) {
+        $self->_cancel_port_forwarding_via_ssh_with_control_path();
+    }
+    $self->_start_port_forwarding_via_ssh_with_control_path( $ssh_local_path,
+        $localhost, $port );
+    return;
+}
+
+sub _cancel_port_forwarding_via_ssh_with_control_path {
+    my ($self) = @_;
     if ( my $pid = fork ) {
         waitpid $pid, 0;
         if ( $CHILD_ERROR != 0 ) {
+            Firefox::Marionette::Exception->throw(
+                    'Failed to forward marionette port from '
+                  . $self->_ssh_address() . q[:]
+                  . $self->_error_message( 'ssh', $CHILD_ERROR ) );
+        }
+    }
+    elsif ( defined $pid ) {
+        eval {
+            $self->_ssh_exec( $self->_ssh_parameters(),
+                '-O', 'cancel', $self->_ssh_address() )
+              or Firefox::Marionette::Exception->throw(
+                "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
+        } or do {
+            if ( $self->_debug() ) {
+                chomp $EVAL_ERROR;
+                warn "$EVAL_ERROR\n";
+            }
+        };
+        exit 1;
+    }
+    else {
+        Firefox::Marionette::Exception->throw(
+            "Failed to fork:$EXTENDED_OS_ERROR");
+    }
+    return;
+}
+
+sub _start_port_forwarding_via_ssh_with_control_path {
+    my ( $self, $ssh_local_path, $localhost, $port ) = @_;
+    if ( my $pid = fork ) {
+        waitpid $pid, 0;
+        if ( $CHILD_ERROR == 0 ) {
+            $self->{_ssh_port_forwarding}->{$localhost}->{$port} = 1;
+        }
+        else {
             Firefox::Marionette::Exception->throw(
                     'Failed to forward marionette port from '
                   . $self->_ssh_address() . q[:]
@@ -4683,7 +5074,7 @@ sub new_session {
     else {
         $new = $self->capabilities();
     }
-    $self->{_browser_version} = $new->browser_version();
+    $self->{_cached_per_instance}->{_browser_version} = $new->browser_version();
 
     if ( ( defined $capabilities ) && ( defined $capabilities->timeouts() ) ) {
         $self->timeouts( $capabilities->timeouts() );
@@ -4694,8 +5085,8 @@ sub new_session {
 
 sub browser_version {
     my ($self) = @_;
-    if ( defined $self->{_browser_version} ) {
-        return $self->{_browser_version};
+    if ( defined $self->{_cached_per_instance}->{_browser_version} ) {
+        return $self->{_cached_per_instance}->{_browser_version};
     }
     elsif ( defined $self->{_initial_version} ) {
         return join q[.],
@@ -4725,18 +5116,21 @@ sub _create_capabilities {
     else {
         $parameters->{'moz:headless'} = $headless;
     }
-    if ( !defined $self->{_page_load_timeouts_key} ) {
+    if ( !defined $self->{_cached_per_instance}->{_page_load_timeouts_key} ) {
         if ( $parameters->{timeouts} ) {
             if ( defined $parameters->{timeouts}->{'page load'} ) {
-                $self->{_page_load_timeouts_key} = 'page load';
+                $self->{_cached_per_instance}->{_page_load_timeouts_key} =
+                  'page load';
             }
             else {
-                $self->{_page_load_timeouts_key} = 'pageLoad';
+                $self->{_cached_per_instance}->{_page_load_timeouts_key} =
+                  'pageLoad';
             }
         }
         else {
-            $self->{_no_timeouts_command}    = {};
-            $self->{_page_load_timeouts_key} = 'pageLoad';
+            $self->{_no_timeouts_command} = {};
+            $self->{_cached_per_instance}->{_page_load_timeouts_key} =
+              'pageLoad';
             $self->timeouts(
                 Firefox::Marionette::Timeouts->new(
                     page_load => _DEFAULT_PAGE_LOAD_TIMEOUT(),
@@ -4748,7 +5142,7 @@ sub _create_capabilities {
     }
     elsif ( $self->{_no_timeouts_command} ) {
         $parameters->{timeouts} = {
-            $self->{_page_load_timeouts_key} =>
+            $self->{_cached_per_instance}->{_page_load_timeouts_key} =>
               $self->{_no_timeouts_command}->page_load(),
             script   => $self->{_no_timeouts_command}->script(),
             implicit => $self->{_no_timeouts_command}->implicit(),
@@ -4758,8 +5152,8 @@ sub _create_capabilities {
 
     return Firefox::Marionette::Capabilities->new(
         timeouts => Firefox::Marionette::Timeouts->new(
-            page_load =>
-              $parameters->{timeouts}->{ $self->{_page_load_timeouts_key} },
+            page_load => $parameters->{timeouts}
+              ->{ $self->{_cached_per_instance}->{_page_load_timeouts_key} },
             script   => $parameters->{timeouts}->{script},
             implicit => $parameters->{timeouts}->{implicit},
         ),
@@ -5713,8 +6107,8 @@ sub timeouts {
         );
         my $response = $self->_get_response($message_id);
         $old = Firefox::Marionette::Timeouts->new(
-            page_load =>
-              $response->result()->{ $self->{_page_load_timeouts_key} },
+            page_load => $response->result()
+              ->{ $self->{_cached_per_instance}->{_page_load_timeouts_key} },
             script   => $response->result()->{script},
             implicit => $response->result()->{implicit}
         );
@@ -5770,9 +6164,10 @@ sub timeouts {
                     $message_id,
                     $self->_command('WebDriver:SetTimeouts'),
                     {
-                        $self->{_page_load_timeouts_key} => $new->page_load(),
-                        script                           => $new->script(),
-                        implicit                         => $new->implicit()
+                        $self->{_cached_per_instance}
+                          ->{_page_load_timeouts_key} => $new->page_load(),
+                        script   => $new->script(),
+                        implicit => $new->implicit()
                     }
                 ]
             );
@@ -6993,7 +7388,7 @@ sub _terminate_local_win32_process {
     return;
 }
 
-sub _terminate_process {
+sub _terminate_marionette_process {
     my ($self) = @_;
     if ( $OSNAME eq 'MSWin32' ) {
         $self->_terminate_local_win32_process();
@@ -7004,6 +7399,12 @@ sub _terminate_process {
     elsif ( ( $self->_firefox_pid() ) && ( kill 0, $self->_firefox_pid() ) ) {
         $self->_terminate_local_non_win32_process();
     }
+    return;
+}
+
+sub _terminate_process {
+    my ($self) = @_;
+    $self->_terminate_marionette_process();
     $self->_terminate_xvfb();
     return;
 }
@@ -9194,6 +9595,18 @@ completes any outstanding actions issued by the L<perform|Firefox::Marionette#pe
 			          $firefox->pause(4),
 		)->release();
 
+=head2 restart
+
+restarts the browser.  After the restart, L<capabilities|Firefox::Marionette::Capabilities> should be restored.  The same profile settings should be applied, but the current state of the browser (such as the L<uri|Firefox::Marionette#uri> will be reset (like after a normal browser restart).  This method is primarily intended for use by the L<update|Firefox::Marionette#update> method.  Not sure if this is useful by itself.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->restart(); # but why?
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 screen_orientation
 
 returns the current browser orientation.  This will be one of the valid primary orientation values 'portrait-primary', 'landscape-primary', 'portrait-secondary', or 'landscape-secondary'.  This method is only currently available on Android (Fennec).
@@ -9315,6 +9728,27 @@ returns the current L<title|https://developer.mozilla.org/en-US/docs/Web/HTML/El
 =head2 type
 
 accepts an L<element|Firefox::Marionette::Element> as the first parameter and a string as the second parameter.  It sends the string to the specified L<element|Firefox::Marionette::Element> in the current page, such as filling out a text box. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 update
+
+queries the Update Services and applies any available updates.  L<Restarts|Firefox::Marionette#restart> the browser if necessary to complete the update.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $update = $firefox->update();
+
+    while($update->successful()) {
+        $update = $firefox->update();
+    }
+
+    say "Updated to " . $update->display_version() . " - Build ID " . $update->build_id();
+
+    $firefox->quit();
+
+returns a L<status|Firefox::Marionette::UpdateStatus> object that contains useful information about any updates that occurred.
 
 =head2 uninstall
 

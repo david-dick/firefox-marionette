@@ -413,6 +413,7 @@ WriteMakefile(
               )
             : ()
         ),
+        'XML::Parser'         => 0,
         (
             (
                       $OSNAME ne 'MSWin32'

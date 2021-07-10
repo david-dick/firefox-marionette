@@ -612,6 +612,38 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
+	if (($ENV{RELEASE_TESTING}) && ($major_version >= 52)) {
+		my $update = $firefox->update();
+		ok(ref $update eq 'Firefox::Marionette::UpdateStatus', "\$firefox->update() produces a Firefox::Marionette::UpdateStatus object");
+		diag("Update status code is " . $update->update_status_code());
+		if ($update->successful()) {
+			while ($update->successful()) {
+				ok(1, "Firefox was updated");
+				my $capabilities = $firefox->capabilities();
+				diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown') . " after an update");
+				foreach my $key (qw(app_version build_id channel details_url display_version elevation_failure error_code install_date is_complete_update name number_of_updates patch_count previous_app_version prompt_wait_time selected_patch service_url status_text type unsupported update_state update_status_code)) {
+					if (defined $update->$key()) {
+						if ($key =~ /^(elevation_failure|unsupported|is_complete_update)$/smx) {
+							ok((($update->$key() == 1) || ($update->$key() == 0)), "\$update->$key() produces a boolean:" . $update->$key());
+						} elsif ($key eq 'type') {
+							ok($update->$key() =~ /^(partial|minor|complete)$/smx, "\$update->$key() produces an allowed type:" . $update->$key());
+						} else {
+							ok(1, "\$update->$key() produces a result:" . $update->$key());
+						}
+					} else {
+						ok(1, "\$update->$key() produces undef");
+					}
+				}
+				$update = $firefox->update();
+			}
+		} elsif (defined $update->number_of_updates()) {
+			ok(1, "Firefox was NOT updated");
+			ok($update->number_of_updates() =~ /^\d+$/smx, "There were " . $update->number_of_updates() . " updates available");
+		} else {
+			diag("Unable to determine the number of updates available");
+			ok(1, "Unable to determine the number of updates available");
+		}
+	}
 	ok($firefox->application_type(), "\$firefox->application_type() returns " . $firefox->application_type());
 	ok($firefox->marionette_protocol() =~ /^\d+$/smx, "\$firefox->marionette_protocol() returns " . $firefox->marionette_protocol());
 	my $window_type = $firefox->window_type();
@@ -667,6 +699,13 @@ SKIP: {
 	$new = Firefox::Marionette::Timeouts->new(page_load => $page_timeout, script => $script_timeout, implicit => $implicit_timeout);
 	my $timeouts = $firefox->timeouts($new);
 	ok((ref $timeouts) eq 'Firefox::Marionette::Timeouts', "\$firefox->timeouts(\$new) returns a Firefox::Marionette::Timeouts object");
+	if ($ENV{RELEASE_TESTING}) {
+		$firefox->restart();
+		my $restart_timeouts = $firefox->timeouts();
+		ok($restart_timeouts->page_load() == $page_timeout, "\$timeouts->page_load() is $page_timeout");
+		ok($restart_timeouts->script() == $script_timeout, "\$timeouts->script() is $script_timeout");
+		ok($restart_timeouts->implicit() == $implicit_timeout, "\$timeouts->implicit() is $implicit_timeout");
+	}
 	my $timeouts2 = $firefox->timeouts();
 	ok((ref $timeouts2) eq 'Firefox::Marionette::Timeouts', "\$firefox->timeouts() returns a Firefox::Marionette::Timeouts object");
 	ok($timeouts->page_load() == 300_000, "\$timeouts->page_load() is 5 minutes");

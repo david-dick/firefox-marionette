@@ -1762,6 +1762,22 @@ SUBROUTINES/METHODS
                                       $firefox->pause(4),
                     )->release();
 
+ restart
+
+    restarts the browser. After the restart, capabilities should be
+    restored. The same profile settings should be applied, but the current
+    state of the browser (such as the uri will be reset (like after a
+    normal browser restart). This method is primarily intended for use by
+    the update method. Not sure if this is useful by itself.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        $firefox->restart(); # but why?
+
+    This method returns itself to aid in chaining methods.
+
  screen_orientation
 
     returns the current browser orientation. This will be one of the valid
@@ -1925,6 +1941,29 @@ SUBROUTINES/METHODS
     parameter. It sends the string to the specified element in the current
     page, such as filling out a text box. This method returns itself to aid
     in chaining methods.
+
+ update
+
+    queries the Update Services and applies any available updates. Restarts
+    the browser if necessary to complete the update.
+
+        use Firefox::Marionette();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        my $update = $firefox->update();
+    
+        while($update->successful()) {
+            $update = $firefox->update();
+        }
+    
+        say "Updated to " . $update->display_version() . " - Build ID " . $update->build_id();
+    
+        $firefox->quit();
+
+    returns a status object that contains useful information about any
+    updates that occurred.
 
  uninstall
 
