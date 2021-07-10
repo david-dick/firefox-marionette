@@ -12,7 +12,7 @@ our @EXPORT_OK = qw(
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK, );
 
-our $VERSION = '1.09';
+our $VERSION = '1.10';
 
 sub LEFT_BUTTON   { return 0 }
 sub MIDDLE_BUTTON { return 1 }
@@ -26,7 +26,7 @@ Firefox::Marionette::Buttons - Human readable mouse buttons for the Marionette p
 
 =head1 VERSION
 
-Version 1.09
+Version 1.10
 
 =head1 SYNOPSIS
 

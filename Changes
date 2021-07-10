@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.10  Sun Jul 11 08:15:00 2021
+       Fixing MANIFEST to include UpdateStatus.pm
+
 1.09  Sun Jul 11 08:00:00 2021
        Adding update/restart methods to allow Firefox patching.
        Improving sub-classing support and Waterfox support.
