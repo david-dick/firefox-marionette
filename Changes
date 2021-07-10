@@ -1,5 +1,12 @@
 Revision history for Firefox-Marionette
 
+1.09  Sun Jul 11 08:00:00 2021
+       Adding update/restart methods to allow Firefox patching.
+       Improving sub-classing support and Waterfox support.
+       Adding check-firefox-certificate-authorities
+       Fixes for using profile in GH#10.  Thanks to prozorecJP.
+       Fixes to EXE_FILES in GH#11.  Thanks to bokutin.
+
 1.08  Fri Jun 18 21:00:00 2021
        Fixes to tests after HTML changes in metacpan.org and CPAN Tester failures
 
@@ -9,15 +16,15 @@ Revision history for Firefox-Marionette
 
 1.06  Sat May 22 17:14:00 2021
        Adding support for the Firefox certificate database
-       Fixes to loading profiles
+       Fixes to loading profiles in GH#8. Thanks to stuart-little.
        Increasing default window size to allow older firefoxes to pass test suite
-       Adding perform/release methods for fine grained control of user input
+       Adding perform/release methods for fine grained control of user input in GH#9.  Thanks to stuart-little.
 
 1.05  Thu May  6 22:15:00 2021
        Fixing UTF-8 handling for strip/json methods.
 
 1.04  Wed May  5 06:42:00 2021
-       Fixing bugs GH#2 to GH#6.
+       Fixing bugs GH#2 to GH#6.  Thanks to eserte.
        Adding xvfb_display and xvfb_authority methods
        Adding has_* methods
        Improving documentation
@@ -32,7 +39,7 @@ Revision history for Firefox-Marionette
        Adjustments for github issue tracking.
 
 1.01  Wed Jan 20 18:47:00 2021
-       Fixes to Makefile.PL for Ubuntu to fix GH#1.
+       Fixes to Makefile.PL for Ubuntu to fix GH#1.  Thanks to rai-gaurav.
        Fixes to add_header for Firefox 84.0.1
        Improving documentation
 
