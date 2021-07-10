@@ -200,6 +200,10 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
 causes the browser to traverse one step backward in the joint history of the current browsing context.  The browser will wait for the one step backward to complete or the session's [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) duration to elapse before returning, which, by default is 5 minutes.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## default\_binary\_name
+
+just returns the string 'firefox'.  Only of interest when sub-classing.
+
 ## browser\_version
 
 This method returns the current version of firefox.
@@ -1012,6 +1016,10 @@ returns true if `document.readyState === "complete"`
         # redirecting to Test::More page
     }
 
+## macos\_binary\_paths
+
+returns a list of filesystem paths that this module will check for binaries that it can automate when running on [MacOS](https://en.wikipedia.org/wiki/MacOS).  Only of interest when sub-classing.
+
 ## marionette\_protocol
 
 returns the version for the Marionette protocol.  Current most recent version is '3'.
@@ -1054,12 +1062,12 @@ accepts a parameter describing which mouse button the method should apply to ([l
 accepts an optional hash as a parameter.  Allowed keys are below;
 
 - addons - should any firefox extensions and themes be available in this session.  This defaults to "0".
+- binary - use the specified path to the [Firefox](https://firefox.org/) binary, rather than the default path.
 - capabilities - use the supplied [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) object, for example to set whether the browser should [accept insecure certs](https://metacpan.org/pod/Firefox::Marionette::Capabilities#accept_insecure_certs) or whether the browser should use a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy).
 - chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, [connections to firefox.settings.services.mozilla.com will still be made](https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13).  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via [/etc/hosts](https://en.wikipedia.org/wiki//etc/hosts).  NOTE: that this option only works when profile\_name/profile is not specified.
 - console - show the [browser console](https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/) when the browser is launched.  This defaults to "0" (off).
 - debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).
 - developer - only allow a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) to be launched. This defaults to "0" (off).
-- firefox - use the specified path to the [Firefox](https://firefox.org/) binary, rather than the default path.
 - height - set the [height](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
 - har - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.  The [HAR Export Trigger](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/) addon will be loaded into the new session automatically, which means that -safe-mode will not be activated for this session AND this functionality will only be available for Firefox 61+.
 - host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
@@ -1430,6 +1438,14 @@ accepts the GUID for the addon to uninstall.  The GUID is returned when from the
 ## uri
 
 returns the current [URI](https://metacpan.org/pod/URI) of current top level browsing context for Desktop.  It is equivalent to the javascript `document.location.href`
+
+## win32\_organisation
+
+accepts a parameter of a Win32 product name and returns the matching organisation.  Only of interest when sub-classing.
+
+## win32\_product\_names
+
+returns a hash of known Windows product names (such as 'Mozilla Firefox') with priority orders.  The lower the priority will determine the order that this module will check for the existance of this product.  Only of interest when sub-classing.
 
 ## window\_handle
 
