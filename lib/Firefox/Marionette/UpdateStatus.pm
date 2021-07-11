@@ -314,7 +314,7 @@ returns the amount of time in seconds before prompting the user to apply an upda
 
 returns the currently selected patch for this update.
 
-=head2 service_url - the Update Service that supplied this update.
+=head2 service_url
 
 returns a L<URI|URI> for the Update Service that supplied this update.
 
