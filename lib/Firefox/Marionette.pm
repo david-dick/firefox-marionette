@@ -6536,7 +6536,8 @@ sub mouse_move {
     my ( $self, @parameters ) = @_;
     my %arguments;
     if ( $parameters[0]->isa('Firefox::Marionette::Element') ) {
-        my $rect = $parameters[0]->rect();
+        my $origin = shift @parameters;
+        my $rect   = $origin->rect();
         $arguments{x} = $rect->pos_x() + ( $rect->width() / 2 );
         if ( $arguments{x} != int $arguments{x} ) {
             $arguments{x} = int $arguments{x} + 1;
@@ -6546,8 +6547,9 @@ sub mouse_move {
             $arguments{y} = int $arguments{y} + 1;
         }
     }
-    else {
-        %arguments = @parameters;
+    while (@parameters) {
+        my $key = shift @parameters;
+        $arguments{$key} = shift @parameters;
     }
     return { type => 'pointerMove', pointerType => 'mouse', %arguments };
 }
@@ -6593,7 +6595,8 @@ sub perform {
         {
             $type = 'pointer';
             %arguments =
-              ( pointerType => delete $marionette_action->{pointerType} );
+              ( parameters =>
+                  { pointerType => delete $marionette_action->{pointerType} } );
         }
         elsif ( $marionette_action->{type} eq 'pause' ) {
             if ( defined $previous_type ) {
@@ -9282,7 +9285,17 @@ accepts a parameter describing which mouse button the method should apply to (L<
 
 =head2 mouse_move
 
-accepts a L<element|Firefox::Marionette::Element> parameter, or a C<( x =E<gt> 0, y =E<gt> 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied L<element|Firefox::Marionette::Element> parameter.
+accepts a L<element|Firefox::Marionette::Element> parameter, or a C<( x =E<gt> 0, y =E<gt> 0 )> type hash manually describing exactly where to move the mouse to and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied L<element|Firefox::Marionette::Element> parameter.  Other parameters that may be passed are listed below;
+
+=over 4
+
+=item * origin - the origin of the C(<x =E<gt> 0, y =E<gt> 0)> co-ordinates.  Should be either C<viewport>, C<pointer> or an L<element|Firefox::Marionette::Element>.
+
+=item * duration - Number of milliseconds over which to distribute the move. If not defined, the duration defaults to 0.
+
+=back
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 mouse_up
 
