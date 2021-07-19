@@ -956,32 +956,45 @@ sub _import_profile_paths {
             my $read_handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
               or Firefox::Marionette::Exception->throw(
                 "Failed to open '$path' for reading:$EXTENDED_OS_ERROR");
-            my $write_path =
-              File::Spec->catfile( $self->{_profile_directory}, $name );
-            my $write_handle = FileHandle->new(
-                $write_path,
-                Fcntl::O_WRONLY() | Fcntl::O_CREAT() | Fcntl::O_EXCL(),
-                Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
-              )
-              or Firefox::Marionette::Exception->throw(
-                "Failed to open '$write_path' for writing:$EXTENDED_OS_ERROR");
-            my $result;
-            while ( $result =
-                $read_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) )
-            {
-                $write_handle->print($buffer)
-                  or Firefox::Marionette::Exception->throw(
-                    "Failed to write to '$write_path':$EXTENDED_OS_ERROR");
+            if ( $self->_ssh() ) {
+                $self->_put_file_via_scp(
+                    $read_handle,
+                    $self->_remote_catfile(
+                        $self->{_profile_directory}, $name
+                    ),
+                    $name
+                );
             }
-            defined $result
-              or Firefox::Marionette::Exception->throw(
-                "Failed to read from '$path':$EXTENDED_OS_ERROR");
+            else {
+                my $write_path =
+                  File::Spec->catfile( $self->{_profile_directory}, $name );
+                my $write_handle = FileHandle->new(
+                    $write_path,
+                    Fcntl::O_WRONLY() | Fcntl::O_CREAT() | Fcntl::O_EXCL(),
+                    Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+                  )
+                  or Firefox::Marionette::Exception->throw(
+"Failed to open '$write_path' for writing:$EXTENDED_OS_ERROR"
+                  );
+                my $result;
+                while ( $result =
+                    $read_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() )
+                  )
+                {
+                    $write_handle->print($buffer)
+                      or Firefox::Marionette::Exception->throw(
+                        "Failed to write to '$write_path':$EXTENDED_OS_ERROR");
+                }
+                defined $result
+                  or Firefox::Marionette::Exception->throw(
+                    "Failed to read from '$path':$EXTENDED_OS_ERROR");
+                $write_handle->close()
+                  or Firefox::Marionette::Exception->throw(
+                    "Failed to close '$write_path':$EXTENDED_OS_ERROR");
+            }
             $read_handle->close()
               or Firefox::Marionette::Exception->throw(
                 "Failed to close '$path':$EXTENDED_OS_ERROR");
-            $write_handle->close()
-              or Firefox::Marionette::Exception->throw(
-                "Failed to close '$write_path':$EXTENDED_OS_ERROR");
         }
     }
     return;

@@ -2805,7 +2805,7 @@ sub display_name {
 
 SKIP: {
 	my $proxy_host = 'all.example.org';
-	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
+	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json', 't/data/key4.db' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -2816,7 +2816,10 @@ SKIP: {
 	my $profile_directory = $firefox->profile_directory();
 	ok($profile_directory, "\$firefox->profile_directory() returns $profile_directory");
 	my $possible_logins_path = File::Spec->catfile($profile_directory, 'logins.json');
-	ok(-e $possible_logins_path, "There is a (imported) logins.json file in the profile directory");
+	unless ($ENV{FIREFOX_HOST}) {
+		ok(-e $possible_logins_path, "There is a (imported) logins.json file in the profile directory");
+	}
+	ok(scalar $firefox->logins() == 1, "\$firefox->logins() shows the correct number (1) of records (including recent import)");
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
         ok($capabilities->timeouts()->page_load() == 78_901, "\$firefox->capabilities()->timeouts()->page_load() correctly reflects the timeouts shortcut timeout");
