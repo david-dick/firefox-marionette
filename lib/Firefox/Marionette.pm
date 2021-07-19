@@ -2791,6 +2791,10 @@ sub _launch_xauth {
     my $binary    = 'xauth';
     my @arguments = ( 'source', '/dev/fd/' . fileno $source_handle );
 
+    if ( $self->_debug() ) {
+        warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
+    }
+
     if ( my $pid = fork ) {
         waitpid $pid, 0;
         if ( $CHILD_ERROR == 0 ) {
@@ -2863,6 +2867,14 @@ sub _xvfb_directory {
     return $xvfb_directory;
 }
 
+sub _debug_xvfb_execution {
+    my ( $self, $binary, @arguments ) = @_;
+    if ( $self->_debug() ) {
+        warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
+    }
+    return;
+}
+
 sub _launch_xvfb {
     my ($self) = @_;
     my $xvfb_directory = $self->_xvfb_directory();
@@ -2901,7 +2913,8 @@ sub _launch_xvfb {
         '-nolisten' => 'tcp',
         '-fbdir'    => $fbdir_directory,
     );
-    my $binary   = $self->_xvfb_binary();
+    my $binary = $self->_xvfb_binary();
+    $self->_debug_xvfb_execution( $binary, @arguments );
     my $dev_null = File::Spec->devnull();
 
     if ( my $pid = fork ) {
