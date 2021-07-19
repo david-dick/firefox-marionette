@@ -193,7 +193,6 @@ sub new {
     $profile->set_value( 'marionette.port',                      _ANY_PORT() );
     $profile->set_value( 'network.http.prompt-temp-redirect',    'false', 0 );
     $profile->set_value( 'network.http.request.max-start-delay', '0',     0 );
-    $profile->set_value( 'privacy.resistFingerprinting',         'true',  0 );
     $profile->set_value( 'security.osclientcerts.autoload',      'true',  0 );
     $profile->set_value( 'signon.autofillForms',                 'false', 0 );
     $profile->set_value( 'signon.rememberSignons',               'false', 0 );
