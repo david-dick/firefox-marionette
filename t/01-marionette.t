@@ -2823,7 +2823,9 @@ SKIP: {
 	unless ($ENV{FIREFOX_HOST}) {
 		ok(-e $possible_logins_path, "There is a (imported) logins.json file in the profile directory");
 	}
-	ok(scalar $firefox->logins() == 1, "\$firefox->logins() shows the correct number (1) of records (including recent import)");
+	if ($major_version > 56) {
+		ok(scalar $firefox->logins() == 1, "\$firefox->logins() shows the correct number (1) of records (including recent import):" . scalar $firefox->logins());
+	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
         ok($capabilities->timeouts()->page_load() == 78_901, "\$firefox->capabilities()->timeouts()->page_load() correctly reflects the timeouts shortcut timeout");
