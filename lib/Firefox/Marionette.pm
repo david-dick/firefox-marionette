@@ -9399,7 +9399,7 @@ This method returns a new C<Firefox::Marionette> object, connected to an instanc
                      debug => 1,
                      host => '10.1.2.3',
                      trust => '/path/to/root_ca.pem',
-                     firefox => '/Applications/Firefox.app/Contents/MacOS/firefox'
+                     binary => '/Applications/Firefox.app/Contents/MacOS/firefox'
                                                         ); # start a temporary profile for a remote firefox and load a new CA into the temp profile
     ...
 
