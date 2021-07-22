@@ -1329,7 +1329,16 @@ SUBROUTINES/METHODS
     describing exactly where to move the mouse to and returns an action for
     use in the perform method that corresponding with such a mouse
     movement, either to the specified co-ordinates or to the middle of the
-    supplied element parameter.
+    supplied element parameter. Other parameters that may be passed are
+    listed below;
+
+      * origin - the origin of the C(<x => 0, y => 0)> co-ordinates. Should
+      be either viewport, pointer or an element.
+
+      * duration - Number of milliseconds over which to distribute the
+      move. If not defined, the duration defaults to 0.
+
+    This method returns itself to aid in chaining methods.
 
  mouse_up
 
@@ -1483,7 +1492,7 @@ SUBROUTINES/METHODS
                          debug => 1,
                          host => '10.1.2.3',
                          trust => '/path/to/root_ca.pem',
-                         firefox => '/Applications/Firefox.app/Contents/MacOS/firefox'
+                         binary => '/Applications/Firefox.app/Contents/MacOS/firefox'
                                                             ); # start a temporary profile for a remote firefox and load a new CA into the temp profile
         ...
     
@@ -2312,6 +2321,8 @@ DEPENDENCIES
       * JSON
 
       * URI
+
+      * XML::Parser
 
 INCOMPATIBILITIES
 

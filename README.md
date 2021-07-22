@@ -1051,7 +1051,12 @@ accepts a parameter describing which mouse button the method should apply to ([l
 
 ## mouse\_move
 
-accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter, or a `( x => 0, y => 0 )` type hash manually describing exactly where to move the mouse to and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter.
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter, or a `( x => 0, y => 0 )` type hash manually describing exactly where to move the mouse to and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with such a mouse movement, either to the specified co-ordinates or to the middle of the supplied [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter.  Other parameters that may be passed are listed below;
+
+- origin - the origin of the C(&lt;x => 0, y => 0)> co-ordinates.  Should be either `viewport`, `pointer` or an [element](https://metacpan.org/pod/Firefox::Marionette::Element).
+- duration - Number of milliseconds over which to distribute the move. If not defined, the duration defaults to 0.
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## mouse\_up
 
@@ -1098,7 +1103,7 @@ This method returns a new `Firefox::Marionette` object, connected to an instance
                      debug => 1,
                      host => '10.1.2.3',
                      trust => '/path/to/root_ca.pem',
-                     firefox => '/Applications/Firefox.app/Contents/MacOS/firefox'
+                     binary => '/Applications/Firefox.app/Contents/MacOS/firefox'
                                                         ); # start a temporary profile for a remote firefox and load a new CA into the temp profile
     ...
 
@@ -1705,6 +1710,7 @@ Firefox::Marionette requires the following non-core Perl modules
 
 - [JSON](https://metacpan.org/pod/JSON)
 - [URI](https://metacpan.org/pod/URI)
+- [XML::Parser](https://metacpan.org/pod/XML::Parser)
 
 # INCOMPATIBILITIES
 

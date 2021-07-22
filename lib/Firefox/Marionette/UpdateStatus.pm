@@ -278,7 +278,7 @@ returns a string to display in the user interface for the version. If you want a
 
 returns a boolean to indicate if an elevation failure has been encountered for this update.
 
-=head2 error_code - 
+=head2 error_code
 
 returns a L<numeric error code|https://hg.mozilla.org/mozilla-central/file/tip/toolkit/mozapps/update/common/updatererrors.h> that conveys additional information about the state of a failed update. If the update is not in the "failed" state the value is zero.
 

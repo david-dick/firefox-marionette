@@ -10049,6 +10049,9 @@ L<JSON|JSON>
  
 =item *
 L<URI|URI>
+
+=item *
+L<XML::Parser|XML::Parser>
  
 =back
 
