@@ -3146,12 +3146,7 @@ SKIP: {
 		alarm 0;
 		ok($maximise, "\$firefox->maximise()");
 	}
-	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} ne 'localhost')) {
-		SKIP: {
-			skip("Not testing dead firefox processes with ssh", 2);	
-		}
-		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
-	} elsif (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_PORT})) {
+	if ($ENV{FIREFOX_HOST}) {
 		SKIP: {
 			skip("Not testing dead firefox processes with ssh", 2);	
 		}
