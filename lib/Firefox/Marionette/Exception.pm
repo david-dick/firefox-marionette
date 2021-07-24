@@ -27,7 +27,7 @@ sub _throw {
 
 sub string {
     my ($self) = @_;
-    return $self->{string};
+    return $self->{string} . qq[\n];
 }
 
 1;    # Magic true value required at end of module
