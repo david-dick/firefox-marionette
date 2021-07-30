@@ -112,11 +112,11 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	}
 	$old_versions{$entry} = $old_version;
 }
-system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
+system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
 {
 	local $ENV{FIREFOX_HOST} = 'localhost';
 	warn "Remote Firefox for " . ($ENV{FIREFOX_BINARY} || 'firefox');
-	system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
+	system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
 }
 ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	my $old_version = $old_versions{$entry};
@@ -128,10 +128,10 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 		WATERFOX: {
 			local $ENV{WATERFOX} = 1;
 			$count += 1;
-			my $result = system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t';
+			my $result = system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t';
 			if ($result != 0) {
 				if ($count < 3) {
-					warn "Failed '$^X -MDevel::Cover -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					warn "Failed '$^X -MDevel::Cover=-silent,1 -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
 					sleep $reset_time;
 					redo WATERFOX;
 				} else {
@@ -142,10 +142,10 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 		WATERFOX_VIA_FIREFOX: {
 			local $ENV{WATERFOX_VIA_FIREFOX} = 1;
 			$count += 1;
-			my $result = system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t';
+			my $result = system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t';
 			if ($result != 0) {
 				if ($count < 3) {
-					warn "Failed '$^X -MDevel::Cover -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					warn "Failed '$^X -MDevel::Cover=-silent,1 -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
 					sleep $reset_time;
 					redo WATERFOX_VIA_FIREFOX;
 				} else {
@@ -158,10 +158,10 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 		$count = 0;
 		LOCAL: {
 			$count += 1;
-			my $result = system { $^X } $^X, '-MDevel::Cover', '-Ilib', 't/01-marionette.t';
+			my $result = system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t';
 			if ($result != 0) {
 				if ($count < 3) {
-					warn "Failed '$^X -MDevel::Cover -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
+					warn "Failed '$^X -MDevel::Cover=-silent,1 -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
 					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
 						next ENTRY;
 					}
@@ -175,7 +175,7 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 		if ($entry eq 'firefox-upgrade') {
 			setup_upgrade();
 		}
-		my $bash_command = 'cd ' . Cwd::cwd() . '; RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X -MDevel::Cover -Ilib t/01-marionette.t";
+		my $bash_command = 'cd ' . Cwd::cwd() . '; RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X -MDevel::Cover=-silent,1 -Ilib t/01-marionette.t";
 		$count = 0;
 		SSH: {
 			$count += 1;
@@ -197,7 +197,7 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 		if ($entry eq 'firefox-upgrade') {
 			setup_upgrade();
 		}
-		$bash_command = 'cd ' . Cwd::cwd() . '; RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X -MDevel::Cover -Ilib t/01-marionette.t";
+		$bash_command = 'cd ' . Cwd::cwd() . '; RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X -MDevel::Cover=-silent,1 -Ilib t/01-marionette.t";
 		$count = 0;
 		REMOTE_VISIBLE: {
 			$count += 1;

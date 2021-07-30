@@ -29,7 +29,7 @@ if (defined $ENV{WATERFOX}) {
 }
 if ($ENV{FIREFOX_ALARM}) {
 	$SIG{ALRM} = sub { die "Alarm at time exceeded" };
-	alarm 600; # ten minutes is heaps for bulk testing
+	alarm 900; # ten minutes is heaps for bulk testing
 }
 
 my $test_time_limit = 90;
