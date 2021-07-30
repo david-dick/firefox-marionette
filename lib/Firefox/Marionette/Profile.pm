@@ -15,7 +15,7 @@ BEGIN {
 }
 our $VERSION = '1.10';
 
-sub _ANY_PORT           { return 0 }
+sub ANY_PORT            { return 0 }
 sub _GETPWUID_DIR_INDEX { return 7 }
 
 sub profile_ini_directory {
@@ -190,7 +190,7 @@ sub new {
     $profile->set_value( 'dom.disable_open_click_delay',         0,        0 );
     $profile->set_value( 'extensions.installDistroAddons',       'false',  0 );
     $profile->set_value( 'focusmanager.testmode',                'true',   0 );
-    $profile->set_value( 'marionette.port',                      _ANY_PORT() );
+    $profile->set_value( 'marionette.port',                      ANY_PORT() );
     $profile->set_value( 'network.http.prompt-temp-redirect',    'false', 0 );
     $profile->set_value( 'network.http.request.max-start-delay', '0',     0 );
     $profile->set_value( 'security.osclientcerts.autoload',      'true',  0 );
@@ -420,12 +420,21 @@ sub get_value {
 
 sub parse {
     my ( $proto, $path ) = @_;
-    my $self = ref $proto ? $proto : bless {}, $proto;
-    $self->{comments} = q[];
-    $self->{keys}     = {};
     my $handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
       or Firefox::Marionette::Exception->throw(
         "Failed to open '$path' for reading:$EXTENDED_OS_ERROR");
+    my $self = $proto->parse_by_handle($handle);
+    close $handle
+      or Firefox::Marionette::Exception->throw(
+        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    return $self;
+}
+
+sub parse_by_handle {
+    my ( $proto, $handle ) = @_;
+    my $self = ref $proto ? $proto : bless {}, $proto;
+    $self->{comments} = q[];
+    $self->{keys}     = {};
     while ( my $line = <$handle> ) {
         chomp $line;
         if (
@@ -450,9 +459,6 @@ sub parse {
             Firefox::Marionette::Exception->throw("Failed to parse '$line'");
         }
     }
-    close $handle
-      or Firefox::Marionette::Exception->throw(
-        "Failed to close '$path':$EXTENDED_OS_ERROR");
     return $self;
 
 }
@@ -499,6 +505,10 @@ This module handles the implementation of a C<prefs.js> Firefox Profile
 
 =head1 SUBROUTINES/METHODS
 
+=head2 ANY_PORT
+
+returns the port number for Firefox to listen on any port (0).
+
 =head2 new
 
 returns a new L<profile|Firefox::Marionette::Profile>.
@@ -526,6 +536,10 @@ accepts a profile name and returns a L<profile|Firefox::Marionette::Profile> obj
 =head2 parse
 
 accepts a path as the parameter.  This path should be to a C<prefs.js> file.  Parses the file and returns it as a L<profile|Firefox::Marionette::Profile>.
+
+=head2 parse_by_handle
+
+accepts a filehandle as the parameter to a C<prefs.js> file.  Parses the file and returns it as a L<profile|Firefox::Marionette::Profile>.
 
 =head2 path
 

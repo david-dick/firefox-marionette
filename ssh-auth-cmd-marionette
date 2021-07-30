@@ -7,6 +7,7 @@ use Fcntl();
 use Symbol();
 use Getopt::Long();
 use English qw( -no_match_vars );
+use File::Spec();
 
 delete $ENV{PATH};
 
@@ -50,6 +51,14 @@ eval {
     }
     my $allowed_binaries = q[(?:]
       . ( join q[|], map { quotemeta } @{ $options{'allow-binary'} } ) . q[)];
+	my @allowed_binary_directories;
+	foreach my $binary (@{$options{'allow-binary'}}) {
+		my ($volume, $directories) = File::Spec->splitpath($binary);
+		push @allowed_binary_directories, File::Spec->catdir($volume, $directories);
+	}
+    my $allowed_binary_directories = q[(?:]
+      . ( join q[|], map { quotemeta } @allowed_binary_directories ) . q[)];
+	my $allowed_binary_directories_regex =  qr/$allowed_binary_directories/smx;
     my $allowed_binary_regex = qr/$allowed_binaries/smx;
     my $sub_directory_regex  = qr/(?:profile|downloads|tmp|addons|certs)/smx;
     my $profile_file_regex =
@@ -57,6 +66,7 @@ eval {
     my $file_regex      = qr/[+\w\-()]{1,255}(?:[.][+\w\-()]{1,255})*/smx;
     my $downloads_regex = qr/downloads\/$file_regex/smx;
     my $ca_name_regex   = qr/Firefox::Marionette[ ]Root[ ]CA/smx;
+    my $version_updates_regex = q[(?:] . ( join q[|], qr/active\-update[.]xml/smx, qr/application[.]ini/smx, qr/updates\/\d+\/update[.]status/smx ) . q[)];
     my $certutil_arguments_regex = join q[],
       qr/[ ]\-A/smx,
       qr/[ ]\-d[ ](?:dbm|sql):$root_dir_regex\/profile/smx,
@@ -95,13 +105,16 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
       qr/echo[ ]"TMP=\\"\$TMP\\""/smx,
       qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex/smx,
       qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex\/$sub_directory_regex/smx,
-      qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/$profile_file_regex"/smx,
-      qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/addons\/$file_regex"/smx,
+      qr/scp[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$profile_file_regex"/smx,
+      qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/(?:addons|profile)\/$file_regex"/smx,
       qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer"/smx,
+      qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?"$allowed_binary_directories\/$version_updates_regex"/smx,
       qr/scp[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$downloads_regex"/smx,
       qr/kill[ ]\-0[ ]\d{1,8}/smx,
-      qr/ps[ ]xwwe/smx,
+      qr/which[ ]$allowed_binary_regex/smx,
+      qr/readlink[ ]\-f[ ]$allowed_binary_regex/smx,
 qr/rm[ ]\-Rf[ ]$root_dir_regex(?:[ ]$quoted_tmp_directory\/Temp\-[\d\-a-f]{1,255})*/smx,
+      qr/ls[ ]-1[ ]"$allowed_binary_directories(?:\/updates(?:\/\d+)?)?"/smx,
       qr/ls[ ]-1[ ]"$root_dir_regex\/downloads"/smx,
       qr/certutil$certutil_arguments_regex/smx,
       qr/"$allowed_binary_regex"$firefox_arguments_regex/smx,

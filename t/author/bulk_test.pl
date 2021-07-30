@@ -118,6 +118,13 @@ system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t' and
 	warn "Remote Firefox for " . ($ENV{FIREFOX_BINARY} || 'firefox');
 	system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
 }
+if (my $entry = $old_versions{'firefox-upgrade'}) {
+	setup_upgrade();
+	local $ENV{FIREFOX_BINARY} = $paths_to_binary{$entry};
+	local $ENV{FIREFOX_HOST} = 'localhost';
+	warn "Remote Firefox for " . $ENV{FIREFOX_BINARY};
+	system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
+}
 ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	my $old_version = $old_versions{$entry};
 	my $count = 0;

@@ -1440,7 +1440,7 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
 
 ## update
 
-queries the Update Services and applies any available updates.  [Restarts](https://metacpan.org/pod/Firefox::Marionette#restart) the browser if necessary to complete the update.
+queries the Update Services and applies any available updates.  [Restarts](https://metacpan.org/pod/Firefox::Marionette#restart) the browser if necessary to complete the update.  This function is experimental and currently has not been successfully tested on Win32 or MacOS.
 
     use Firefox::Marionette();
     use v5.10;

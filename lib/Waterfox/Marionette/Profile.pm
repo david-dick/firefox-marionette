@@ -73,7 +73,7 @@ sub new {
     $profile->set_value( 'dom.disable_open_click_delay',   0,        0 );
     $profile->set_value( 'extensions.installDistroAddons', 'false',  0 );
     $profile->set_value( 'focusmanager.testmode',          'true',   0 );
-    $profile->set_value( 'marionette.port', $class->SUPER::_ANY_PORT() );
+    $profile->set_value( 'marionette.port', $class->SUPER::ANY_PORT() );
     $profile->set_value( 'network.http.prompt-temp-redirect',    'false', 0 );
     $profile->set_value( 'network.http.request.max-start-delay', '0',     0 );
     $profile->set_value( 'security.osclientcerts.autoload',      'true',  0 );
