@@ -229,6 +229,7 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	if ($entry eq 'firefox-nightly') {
 	} elsif ($entry eq 'firefox-developer') {
 	} elsif ($entry eq 'firefox-upgrade') {
+	} elsif ($entry eq 'waterfox') {
 	} elsif ($old_version ne $new_version) {
 		die "$old_version changed to $new_version for $path_to_binary";
 	}
