@@ -77,6 +77,7 @@ sub _MIN_VERSION_FOR_MODERN_EXIT    { return 40 }
 sub _MIN_VERSION_FOR_AUTO_LISTEN    { return 55 }
 sub _MIN_VERSION_FOR_HOSTPORT_PROXY { return 57 }
 sub _MIN_VERSION_FOR_XVFB           { return 12 }
+sub _MIN_VERSION_FOR_LINUX_SANDBOX  { return 90 }
 sub _DEFAULT_SOCKS_VERSION          { return 5 }
 sub _MILLISECONDS_IN_ONE_SECOND     { return 1_000 }
 sub _DEFAULT_PAGE_LOAD_TIMEOUT      { return 300_000 }
@@ -4492,6 +4493,16 @@ sub _setup_new_profile {
         $profile->download_directory($download_directory);
         my $bookmarks_path = $self->_setup_empty_bookmarks();
         $profile->set_value( 'browser.bookmarks.file', $bookmarks_path, 1 );
+        if (
+            !$self->_is_firefox_major_version_at_least(
+                _MIN_VERSION_FOR_LINUX_SANDBOX()
+            )
+          )
+        {
+            $profile->set_value( 'security.sandbox.content.level', 0, 0 )
+              ; # https://wiki.mozilla.org/Security/Sandbox#Customization_Settings
+        }
+
         if ( !$parameters{chatty} ) {
             my $port = $self->_get_local_port_for_profile_urls();
             $profile->set_value( 'media.gmp-manager.url',

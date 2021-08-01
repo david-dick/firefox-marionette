@@ -575,6 +575,9 @@ $profile->set_value('privacy.popups.disable_from_plugin', 0); # no restrictions
 $profile->set_value('security.OCSP.GET.enabled', 'false'); 
 $profile->clear_value('security.OCSP.enabled');  # just testing
 $profile->set_value('security.OCSP.enabled', 0); 
+if ($ENV{FIREFOX_BINARY}) {
+	$profile->set_value('security.sandbox.content.level', 0, 0); # https://wiki.mozilla.org/Security/Sandbox#Customization_Settings
+}
 my $correct_exit_status = 0;
 my $mozilla_pid_support;
 SKIP: {
