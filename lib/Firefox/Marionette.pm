@@ -2393,6 +2393,7 @@ sub _search_for_version_in_application_ini {
             }
         }
         my ( $active_update_handle, $active_update_path );
+        my $active_update_version;
         if ($found_active_update) {
             if ( $self->_ssh() ) {
                 $active_update_path =
@@ -2412,7 +2413,6 @@ sub _search_for_version_in_application_ini {
 "Failed to open $active_update_path for reading:$EXTENDED_OS_ERROR"
                   );
             }
-            my $active_update_version;
             if ($active_update_handle) {
                 my $active_update_contents =
                   $self->_read_and_close_handle( $active_update_handle,
@@ -2428,25 +2428,25 @@ sub _search_for_version_in_application_ini {
                 );
                 $parser->parse($active_update_contents);
             }
-            my $application_ini_path =
-              File::Spec->catfile( $binary_directory, 'application.ini' );
-            my $application_ini_handle =
-              FileHandle->new( $application_ini_path, Fcntl::O_RDONLY() );
-            if ($application_ini_handle) {
-                my $config =
-                  Config::INI::Reader->read_handle($application_ini_handle);
-                if ( my $app = $config->{App} ) {
-                    if (
-                        ( $app->{SourceRepository} )
-                        && ( $app->{SourceRepository} eq
-                            'https://hg.mozilla.org/releases/mozilla-beta' )
-                      )
-                    {
-                        $self->{developer_edition} = 1;
-                    }
-                    return join q[ ], $app->{Vendor}, $app->{Name},
-                      $active_update_version || $app->{Version};
+        }
+        my $application_ini_path =
+          File::Spec->catfile( $binary_directory, 'application.ini' );
+        my $application_ini_handle =
+          FileHandle->new( $application_ini_path, Fcntl::O_RDONLY() );
+        if ($application_ini_handle) {
+            my $config =
+              Config::INI::Reader->read_handle($application_ini_handle);
+            if ( my $app = $config->{App} ) {
+                if (
+                    ( $app->{SourceRepository} )
+                    && ( $app->{SourceRepository} eq
+                        'https://hg.mozilla.org/releases/mozilla-beta' )
+                  )
+                {
+                    $self->{developer_edition} = 1;
                 }
+                return join q[ ], $app->{Vendor}, $app->{Name},
+                  $active_update_version || $app->{Version};
             }
         }
     }
