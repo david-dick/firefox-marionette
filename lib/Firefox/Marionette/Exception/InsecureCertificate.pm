@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw(Firefox::Marionette::Exception::Response);
 
-our $VERSION = '1.10';
+our $VERSION = '1.11';
 
 sub throw {
     my ( $class, $response, $parameters ) = @_;
@@ -25,7 +25,7 @@ Firefox::Marionette::Exception::InsecureCertificate - Represents a 'insecure cer
 
 =head1 VERSION
 
-Version 1.10
+Version 1.11
 
 =head1 SYNOPSIS
 

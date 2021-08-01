@@ -56,7 +56,7 @@ our @EXPORT_OK =
   qw(BY_XPATH BY_ID BY_NAME BY_TAG BY_CLASS BY_SELECTOR BY_LINK BY_PARTIAL);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-our $VERSION = '1.10';
+our $VERSION = '1.11';
 
 sub _ANYPROCESS                     { return -1 }
 sub _COMMAND                        { return 0 }
@@ -632,7 +632,7 @@ sub _init {
           application/vnd.ms-powerpoint.template.macroEnabled.12
           application/vnd.ms-powerpoint.slideshow.macroEnabled.12
           application/vnd.ms-access
-          )
+        )
     ];
     my %known_mime_types;
     foreach my $mime_type ( @{ $self->{mime_types} } ) {
@@ -3074,7 +3074,7 @@ sub _launch_xvfb {
       ? $self->{window_height}
       : _DEFAULT_WINDOW_HEIGHT();
     my $width_height_depth = join q[x], $width, $height, _DEFAULT_DEPTH();
-    my @arguments = (
+    my @arguments          = (
         '-displayfd' => fileno $display_no_handle,
         '-screen'    => '0',
         $width_height_depth,
@@ -8452,7 +8452,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 =head1 VERSION
 
-Version 1.10
+Version 1.11
 
 =head1 SYNOPSIS
 

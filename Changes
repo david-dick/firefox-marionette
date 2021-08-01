@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.11  Sat Jul 31 08:15:00 2021
+       Improving support for update method.
+       Allow firefox-passwords to modify passwords
+       Changes to mouse_move implementation
+
 1.10  Sun Jul 11 08:15:00 2021
        Fixing MANIFEST to include UpdateStatus.pm
 
