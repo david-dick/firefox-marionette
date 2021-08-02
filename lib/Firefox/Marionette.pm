@@ -1497,6 +1497,10 @@ let updateManager = new Promise((resolve, reject) => {
       updateStatus["updateStatusCode"] = 'CANNOT_APPLY_UPDATES';
       reject(updateStatus);
     }
+    if ((updateService.isOtherInstanceHandlingUpdates) && (updateService.isOtherInstanceHandlingUpdates())) {
+      updateStatus["updateStatusCode"] = 'ANOTHER_INSTANCE_IS_HANDLING_UPDATES';
+      reject(updateStatus);
+    }
     let updateChecker = Components.classes["@mozilla.org/updates/update-checker;1"].createInstance(Components.interfaces.nsIUpdateChecker);
     if (updateChecker.stopCurrentCheck) {
       updateChecker.stopCurrentCheck();
@@ -1518,6 +1522,9 @@ let updateManager = new Promise((resolve, reject) => {
           }
           let result = updateService.downloadUpdate(latestUpdate, false);
           let updateProcessor = Components.classes["@mozilla.org/updates/update-processor;1"].createInstance(Components.interfaces.nsIUpdateProcessor);
+          if (updateProcessor.fixUpdateDirectoryPermissions) {
+            updateProcessor.fixUpdateDirectoryPermissions(true);
+          }
           updateProcessor.processUpdate(latestUpdate);
 
           let previousState = null;
