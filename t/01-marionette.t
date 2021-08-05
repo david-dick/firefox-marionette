@@ -581,6 +581,7 @@ if ($ENV{FIREFOX_BINARY}) {
 my $correct_exit_status = 0;
 my $mozilla_pid_support;
 SKIP: {
+	diag("Initial tests");
 	($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile, mime_types => [ 'application/pkcs10', 'application/pdf' ]);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -756,6 +757,7 @@ SKIP: {
 	} elsif (!$ENV{RELEASE_TESTING}) {
 		skip("No survive testing except for RELEASE_TESTING", 8);
 	}
+	diag("Starting new firefox for testing reconnecting");
 	($skip_message, $firefox) = start_firefox(0, debug => 1, survive => 1);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -856,6 +858,7 @@ _CONFIG_
 }
 
 SKIP: {
+	diag("Starting new firefox for testing capabilities and accessing proxies");
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
 	my $localPort = URI->new($daemon->url())->port();
 	my %proxy_parameters = (http => 'localhost:' . $localPort, https => 'proxy.example.org:4343', none => [ 'local.example.org' ], socks => 'socks.example.org:1081');
@@ -1045,6 +1048,7 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing proxies");
 	($skip_message, $firefox) = start_firefox(0, chatty => 1, debug => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('https://proxy.example.org')), moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1068,6 +1072,7 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing proxies again");
 	($skip_message, $firefox) = start_firefox(1, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'proxy.example.org:3128')));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1094,6 +1099,7 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing PDFs");
 	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1221,6 +1227,7 @@ sub centimetres_to_points {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing logins");
 	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1452,6 +1459,7 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing custom headers");
 	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1546,6 +1554,7 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing metacpan and w3schools, with find, downloads, extensions and actions");
 	($skip_message, $firefox) = start_firefox(0, debug => 0, page_load => 600000, script => 5432, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, page_load_strategy => 'eager'));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -2668,6 +2677,7 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing JSON from localhost and alerts");
 	($skip_message, $firefox) = start_firefox(0, visible => 0, debug => 1, implicit => 987654);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -2811,6 +2821,7 @@ sub display_name {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing proxy by argument, capabilities, window switching and certificates");
 	my $proxy_host = 'all.example.org';
 	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json', 't/data/key4.db' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
@@ -3058,6 +3069,7 @@ sub check_for_window {
 }
 
 SKIP: {
+	diag("Starting new firefox for testing \%ENV proxy, min/maxing and killing firefox");
 	local %ENV = %ENV;
 	my $localPort = 8080;
 	$ENV{http_proxy} = 'https://localhost:' . $localPort;
