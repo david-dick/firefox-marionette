@@ -1497,6 +1497,12 @@ let updateManager = new Promise((resolve, reject) => {
       updateStatus["updateStatusCode"] = 'CANNOT_APPLY_UPDATES';
       reject(updateStatus);
     }
+    if (updateService.canUsuallyStageUpdates) {
+      if (!updateService.canStageUpdates) {
+        updateStatus["updateStatusCode"] = 'CANNOT_STAGE_UPDATES';
+        reject(updateStatus);
+      }
+    }
     if ((updateService.isOtherInstanceHandlingUpdates) && (updateService.isOtherInstanceHandlingUpdates())) {
       updateStatus["updateStatusCode"] = 'ANOTHER_INSTANCE_IS_HANDLING_UPDATES';
       reject(updateStatus);
@@ -1507,9 +1513,7 @@ let updateManager = new Promise((resolve, reject) => {
     }
     let updateServiceListener = {
       onCheckComplete: (request, updates) => {
-        for (let i = 0; i < updates.length; i++) {
-          latestUpdate = update = updates[i];
-        }
+        latestUpdate = updateService.selectUpdate(updates, true);
         updateStatus["numberOfUpdates"] = updates.length;
         if (latestUpdate === null) {
           updateStatus["updateStatusCode"] = 'NO_UPDATES_AVAILABLE';
