@@ -2707,7 +2707,7 @@ SKIP: {
 			if (my $pid = fork) {
 				$firefox->go($daemon->url() . '?format=JSON');
 				ok($firefox->strip() eq $json_document, "Correctly retrieved JSON document");
-				diag($firefox->strip());
+				diag(Encode::encode('UTF-8', $firefox->strip(), 1));
 				ok($firefox->json()->{id} == 5, "Correctly parsed JSON document");
 				ok(Encode::encode('UTF-8', $firefox->json()->{value}, 1) eq "sömething", "Correctly parsed UTF-8 JSON field");
 				$firefox->go($daemon->url() . '?format=txt');
