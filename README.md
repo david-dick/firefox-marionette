@@ -1722,11 +1722,7 @@ Currently the following Marionette methods have not been implemented;
 
 - WebDriver:SetScreenOrientation
 
-No bugs have been reported.
-
-Please report any bugs or feature requests to
-`bug-firefox-marionette@rt.cpan.org`, or through the web interface at
-[http://rt.cpan.org](http://rt.cpan.org).
+To report a bug, or view the current list of bugs, please visit [https://github.com/david-dick/firefox-marionette/issues](https://github.com/david-dick/firefox-marionette/issues)
 
 # SEE ALSO
 

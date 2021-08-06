@@ -10291,11 +10291,7 @@ Currently the following Marionette methods have not been implemented;
 
 =back
 
-No bugs have been reported.
-
-Please report any bugs or feature requests to
-C<bug-firefox-marionette@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
+To report a bug, or view the current list of bugs, please visit L<https://github.com/david-dick/firefox-marionette/issues>
 
 =head1 SEE ALSO
 
