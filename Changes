@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.12  Sat Aug  7 09:30 2021
+       Fixing application.ini support
+       diag improvements for tests
+       small changes to update method.
+
 1.11  Sat Jul 31 08:15:00 2021
        Improving support for update method.
        Allow firefox-passwords to modify passwords

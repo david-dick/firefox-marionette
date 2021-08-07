@@ -6,7 +6,7 @@ use Getopt::Long();
 use English qw( -no_match_vars );
 use Firefox::Marionette();
 
-our $VERSION = '1.11';
+our $VERSION = '1.12';
 
 my %options;
 Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s' );
@@ -56,7 +56,7 @@ check-firefox-certificate-authorities - check the CA certificates in firefox for
 
 =head1 VERSION
 
-Version 1.11
+Version 1.12
 
 =head1 USAGE
 
