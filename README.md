@@ -1748,7 +1748,7 @@ Thanks also to the authors of the documentation in the following sources;
 
 - [Marionette Protocol](https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html)
 - [Marionette Documentation](https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html)
-- [Marionette driver.js](https://hg.mozilla.org/mozilla-central/file/tip/testing/marionette/driver.js)
+- [Marionette driver.js](https://hg.mozilla.org/mozilla-central/file/tip/remote/marionette/driver.js)
 - [about:config](http://kb.mozillazine.org/About:config_entries)
 - [nsIPrefService interface](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIPrefService)
 

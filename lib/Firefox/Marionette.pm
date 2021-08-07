@@ -10334,7 +10334,7 @@ Thanks also to the authors of the documentation in the following sources;
 
 =item * L<Marionette Documentation|https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html>
 
-=item * L<Marionette driver.js|https://hg.mozilla.org/mozilla-central/file/tip/testing/marionette/driver.js>
+=item * L<Marionette driver.js|https://hg.mozilla.org/mozilla-central/file/tip/remote/marionette/driver.js>
 
 =item * L<about:config|http://kb.mozillazine.org/About:config_entries>
 
