@@ -16,7 +16,6 @@ sub new {
         if ( $host !~ /:\d+$/smx ) {
             $host .= q[:80];
         }
-        $parameters{ftp}   = $host;
         $parameters{http}  = $host;
         $parameters{https} = $host;
     }
