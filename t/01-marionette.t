@@ -1793,6 +1793,8 @@ SKIP: {
 		}
 		ok(not(defined $active_frame), "\$firefox->active_frame() is undefined for " . $firefox->uri());
 	}
+	my @links = $firefox->links();
+	ok(scalar @links, "Found " . (scalar @links) . " links in metacpan.org");
 	my $search_box_id;
 	foreach my $element ($firefox->has_tag('input')) {
 		if ((lc $element->attribute('type')) eq 'text') {

@@ -527,6 +527,11 @@ sub _adb {
     return $self->{_adb};
 }
 
+sub links {
+    my ( $self, $from ) = @_;
+    return $self->has_tag( 'a', $from );
+}
+
 sub _get_marionette_parameter {
     my ( $self, %parameters ) = @_;
     foreach my $deprecated_key (qw(firefox_binary firefox marionette)) {
@@ -9496,6 +9501,21 @@ returns true if C<document.readyState === "complete">
     while(!$firefox->loaded()) {
         # redirecting to Test::More page
     }
+
+=head2 links
+
+returns a list of all L<links|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a> as L<elements|Firefox::Marionette::Element>.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->links()) {
+        # do something
+    }
+
+If no elements are found, this method will return undef.
 
 =head2 macos_binary_paths
 
