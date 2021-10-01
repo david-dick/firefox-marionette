@@ -8,46 +8,75 @@ use Firefox::Marionette();
 
 our $VERSION = '1.12';
 
-my %options;
-Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s' );
-if ( $options{help} ) {
-    require Pod::Simple::Text;
-    my $parser = Pod::Simple::Text->new();
-    $parser->parse_from_file($PROGRAM_NAME);
-    exit 0;
+sub _NUMBER_OF_SPACES_FOR_CODE_QUOTING_IN_MARKDOWN { return 4 }
+
+sub _write_common_output {
+    my ($certificate) = @_;
+    my $indent = q[ ] x _NUMBER_OF_SPACES_FOR_CODE_QUOTING_IN_MARKDOWN();
+    warn $indent . $certificate->subject_name() . "\n";
+    warn $indent
+      . 'DB Key                   : '
+      . $certificate->db_key() . "\n";
+    warn $indent
+      . 'Valid to                 : '
+      . POSIX::strftime( '%d/%m/%Y', gmtime $certificate->not_valid_after() )
+      . "\n";
+    warn $indent
+      . 'Certificate Serial Number: '
+      . $certificate->serial_number() . "\n";
+    warn $indent
+      . 'SHA-1 Fingerprint        : '
+      . $certificate->sha1_fingerprint() . "\n";
+    warn $indent
+      . 'SHA-256 Fingerprint      : '
+      . $certificate->sha256_fingerprint() . "\n";
+    return;
 }
-elsif ( $options{version} ) {
-    print "$VERSION\n"
-      or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
-    exit 0;
-}
-my %parameters;
-if ( $options{binary} ) {
-    $parameters{binary} = $options{binary};
-}
-my $firefox   = Firefox::Marionette->new(%parameters);
-my $now       = time;
-my $exit_code = 0;
-foreach my $certificate ( sort { $a->display_name() cmp $b->display_name }
-    $firefox->certificates() )
-{
-    if ( $certificate->is_ca_cert() ) {
-        if ( $certificate->not_valid_after() < $now ) {
-            warn $certificate->display_name()
-              . ' expired on '
-              . ( localtime $certificate->not_valid_after() ) . "\n";
-            $exit_code = 1;
-        }
-        elsif ( $certificate->not_valid_before > $now ) {
-            warn $certificate->display_name()
-              . ' is not valid until '
-              . ( localtime $certificate->not_valid_before() ) . "\n";
-            $exit_code = 1;
+
+MAIN: {
+    my %options;
+    Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s' );
+    if ( $options{help} ) {
+        require Pod::Simple::Text;
+        my $parser = Pod::Simple::Text->new();
+        $parser->parse_from_file($PROGRAM_NAME);
+        exit 0;
+    }
+    elsif ( $options{version} ) {
+        print "$VERSION\n"
+          or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+        exit 0;
+    }
+    my %parameters;
+    if ( $options{binary} ) {
+        $parameters{binary} = $options{binary};
+    }
+    my $firefox   = Firefox::Marionette->new(%parameters);
+    my $now       = time;
+    my $exit_code = 0;
+    foreach my $certificate ( sort { $a->display_name() cmp $b->display_name }
+        $firefox->certificates() )
+    {
+        if ( $certificate->is_ca_cert() ) {
+            if ( $certificate->not_valid_after() < $now ) {
+                warn $certificate->display_name()
+                  . ' expired on '
+                  . ( localtime $certificate->not_valid_after() ) . "\n";
+                _write_common_output($certificate);
+                $exit_code = 1;
+            }
+            elsif ( $certificate->not_valid_before > $now ) {
+                warn $certificate->display_name()
+                  . ' is not valid until '
+                  . ( localtime $certificate->not_valid_before() ) . "\n";
+                _write_common_output($certificate);
+                $exit_code = 1;
+            }
         }
     }
+    $firefox->quit();
+    exit $exit_code;
 }
-$firefox->quit();
-exit $exit_code;
 
 __END__
 =head1 NAME
