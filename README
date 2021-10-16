@@ -1281,6 +1281,24 @@ SUBROUTINES/METHODS
             # redirecting to Test::More page
         }
 
+ links
+
+    returns a list of all links
+    <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a> as
+    elements.
+
+    This method is subject to the implicit timeout, which, by default is 0
+    seconds.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+        if (my $element = $firefox->links()) {
+            # do something
+        }
+
+    If no elements are found, this method will return undef.
+
  macos_binary_paths
 
     returns a list of filesystem paths that this module will check for

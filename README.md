@@ -1016,6 +1016,21 @@ returns true if `document.readyState === "complete"`
         # redirecting to Test::More page
     }
 
+## links
+
+returns a list of all [links](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a) as [elements](https://metacpan.org/pod/Firefox::Marionette::Element).
+
+This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeouts#implicit) timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $element = $firefox->links()) {
+        # do something
+    }
+
+If no elements are found, this method will return undef.
+
 ## macos\_binary\_paths
 
 returns a list of filesystem paths that this module will check for binaries that it can automate when running on [MacOS](https://en.wikipedia.org/wiki/MacOS).  Only of interest when sub-classing.
