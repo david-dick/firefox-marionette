@@ -2152,7 +2152,7 @@ _RDF_
         push @arguments,
           ( '-profile', $profile_directory, '--no-remote', '--new-instance' );
     }
-    if ( $self->{_har} ) {
+    if ( ( $self->{_har} ) || ( $parameters{devtools} ) ) {
         push @arguments, '--devtools';
     }
     return @arguments;
@@ -9587,6 +9587,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).
 
 =item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched. This defaults to "0" (off).
+
+=item * devtools - begin the session with the L<devtools|https://developer.mozilla.org/en-US/docs/Tools> window opened in a separate window.
 
 =item * height - set the L<height|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> of the initial firefox window
 

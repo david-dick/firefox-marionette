@@ -1049,7 +1049,7 @@ SKIP: {
 
 SKIP: {
 	diag("Starting new firefox for testing proxies");
-	($skip_message, $firefox) = start_firefox(0, chatty => 1, debug => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('https://proxy.example.org')), moz_headless => 1));
+	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, debug => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('https://proxy.example.org')), moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}

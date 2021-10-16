@@ -1401,6 +1401,10 @@ SUBROUTINES/METHODS
       <https://www.mozilla.org/en-US/firefox/developer/> to be launched.
       This defaults to "0" (off).
 
+      * devtools - begin the session with the devtools
+      <https://developer.mozilla.org/en-US/docs/Tools> window opened in a
+      separate window.
+
       * height - set the height
       <http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
       of the initial firefox window
