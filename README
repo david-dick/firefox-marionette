@@ -1425,6 +1425,10 @@ SUBROUTINES/METHODS
       timeout, instead of needing to use timeouts from the capabilities
       parameter. Overrides all longer ways.
 
+      * kiosk - start the browser in kiosk
+      <https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode>
+      mode.
+
       * mime_types - any MIME types that Firefox will encounter during this
       session. MIME types that are not specified will result in a hung
       browser (the File Download popup will appear).

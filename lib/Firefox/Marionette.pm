@@ -2155,6 +2155,9 @@ _RDF_
     if ( ( $self->{_har} ) || ( $parameters{devtools} ) ) {
         push @arguments, '--devtools';
     }
+    if ( $parameters{kiosk} ) {
+        push @arguments, '--kiosk';
+    }
     return @arguments;
 }
 
@@ -9597,6 +9600,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * host - use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox on the specified host.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.
 
 =item * implicit - a shortcut to allow directly providing the L<implicit|Firefox::Marionette::Timeout#implicit> timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
+
+=item * kiosk - start the browser in L<kiosk|https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode> mode.
 
 =item * mime_types - any MIME types that Firefox will encounter during this session.  MIME types that are not specified will result in a hung browser (the File Download popup will appear).
 
