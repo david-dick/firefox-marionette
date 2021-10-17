@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.13  Sun Oct 17 20:45 2021
+       Adding devtools, kiosk parameters to the new method
+       Adding links method
+       more debug for check-firefox-certificate-authorities
+
 1.12  Sat Aug  7 09:30 2021
        Fixing application.ini support
        diag improvements for tests
