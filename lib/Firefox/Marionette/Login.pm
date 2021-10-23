@@ -131,7 +131,7 @@ Firefox::Marionette::Login - Represents a login from the Firefox Password Manage
 
 =head1 VERSION
 
-Version 1.05
+Version 1.13
 
 =head1 SYNOPSIS
 
