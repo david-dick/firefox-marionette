@@ -405,6 +405,7 @@ WriteMakefile(
         'Time::HiRes'         => 0,
         'URI'                 => 0,
         'URI::Escape'         => 0,
+        'URI::URL'            => 0,
         (
             $OSNAME eq 'MSWin32'
             ? (

@@ -1792,6 +1792,36 @@ SKIP: {
 	}
 	my @links = $firefox->links();
 	ok(scalar @links, "Found " . (scalar @links) . " links in metacpan.org");
+	foreach my $link (@links) {
+		if (defined $link->url()) {
+			ok($link->url(), "Link from metacpan.org has a url of " . $link->url());
+		}
+		if (my $text = $link->text()) {
+			ok($link->text(), "Link from metacpan.org has text of " . $text);
+		}
+		if ($link->name()) {
+			ok($link->name(), "Link from metacpan.org has name of " . $link->name());
+		}
+		if (defined $link->tag()) {
+			ok($link->tag(), "Link from metacpan.org has a tag of " . $link->tag());
+		}
+		if (defined $link->base()) {
+			ok($link->base(), "Link from metacpan.org has a base of " . $link->base());
+		}
+		if ($link->URI()) {
+			ok($link->URI() && $link->URI()->isa('URI::URL'), "Link from metacpan.org has a URI of " . $link->URI());
+		}
+		if ($link->url_abs()) {
+			ok($link->url_abs(), "Link from metacpan.org has a url_abs of " . $link->url_abs());
+		}
+		my %attributes = $link->attrs();
+		my $count = 0;
+		foreach my $key (sort { $a cmp $b } keys %attributes) {
+			ok($key, "Link from metacpan.org has a attribute called '" . $key . "' with a value of '" . $attributes{$key} . "'");
+			$count += 1;
+		}
+		ok($count, "Link from metacpan.org has $count attributes");
+	}
 	my $search_box_id;
 	foreach my $element ($firefox->has_tag('input')) {
 		if ((lc $element->attribute('type')) eq 'text') {
@@ -2817,6 +2847,93 @@ SKIP: {
 	}
 	local $TODO = $major_version == 60 ? "Not entirely stable in firefox 60" : q[];
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+}
+
+SKIP: {
+	if ($ENV{RELEASE_TESTING}) {
+		diag("Starting new firefox for testing links");
+		($skip_message, $firefox) = start_firefox(0, visible => 0, debug => 1);
+		if (!$skip_message) {
+			$at_least_one_success = 1;
+		}
+		if ($skip_message) {
+			skip($skip_message, 8);
+		}
+		ok($firefox, "Firefox has started in Marionette mode with visible set to 0");
+		my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
+		SKIP: {
+			if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} ne 'localhost')) {
+				diag("\$capabilities->proxy is not supported for remote hosts");
+				skip("\$capabilities->proxy is not supported for remote hosts", 3);
+			} elsif (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_PORT})) {
+				diag("\$capabilities->proxy is not supported for remote hosts");
+				skip("\$capabilities->proxy is not supported for remote hosts", 3);
+			} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
+				if (my $pid = fork) {
+					$firefox->go($daemon->url() . '?links');
+					foreach my $link ($firefox->links()) {
+						if (defined $link->text()) {
+							ok(defined $link->text(), "Link text is defined as " . $link->text());
+						} else {
+							ok(1, "Link text is not defined");
+						}
+					}
+					while(kill 0, $pid) {
+						kill $signals_by_name{TERM}, $pid;
+						sleep 1;
+						waitpid $pid, POSIX::WNOHANG();
+					}
+				} elsif (defined $pid) {
+					eval {
+						local $SIG{ALRM} = sub { die "alarm during links server\n" };
+						alarm 40;
+						$0 = "[Test HTTP Links Server for " . getppid . "]";
+						while (my $connection = $daemon->accept()) {
+							diag("Accepted connection");
+							if (my $child = fork) {
+								waitpid $child, 0;
+							} elsif (defined $child) {
+								eval {
+									local $SIG{ALRM} = sub { die "alarm during links server accept\n" };
+									alarm 40;
+									if (my $request = $connection->get_request()) {
+										diag("Got request (pid: $$) for " . $request->uri());
+										my $headers = HTTP::Headers->new('Content-Type', 'text/html');
+										my $response = HTTP::Response->new(200, "OK", $headers, '<!DOCTYPE html><html lang="en-AU"><head><title>Test</title></head><body><a href="http://example.com/"></a></body></html>');
+										$connection->send_response($response);
+									}
+									$connection->close;
+									diag("Connection closed (pid: $$)");
+									$connection = undef;
+									exit 0;
+								} or do {
+									chomp $@;
+									diag("Caught exception in links server accept:$@");
+								};
+								diag("Connection error");
+								exit 1;
+							} else {
+								diag("Failed to fork connection:$!");
+								die "Failed to fork:$!";
+							}
+						}
+					} or do {
+						chomp $@;
+						diag("Caught exception in links server:$@");
+					};
+					exit 1;
+				} else {
+					diag("Failed to fork http proxy:$!");
+					die "Failed to fork:$!";
+				}
+			} else {
+				skip("No forking available for $^O", 3);
+				diag("No forking available for $^O");
+			}
+		}
+		local $TODO = $major_version == 60 ? "Not entirely stable in firefox 60" : q[];
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 sub display_name {

@@ -6,6 +6,7 @@ lib/Firefox/Marionette/Certificate.pm
 lib/Firefox/Marionette/Cookie.pm
 lib/Firefox/Marionette/Extension/HarExportTrigger.pm
 lib/Firefox/Marionette/Keys.pm
+lib/Firefox/Marionette/Link.pm
 lib/Firefox/Marionette/Login.pm
 lib/Firefox/Marionette/Profile.pm
 lib/Firefox/Marionette/Proxy.pm

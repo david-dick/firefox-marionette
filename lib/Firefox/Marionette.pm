@@ -8,6 +8,7 @@ use Firefox::Marionette::Cookie();
 use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
 use Firefox::Marionette::Timeouts();
+use Firefox::Marionette::Link();
 use Firefox::Marionette::Login();
 use Firefox::Marionette::Capabilities();
 use Firefox::Marionette::Certificate();
@@ -530,7 +531,8 @@ sub _adb {
 
 sub links {
     my ( $self, $from ) = @_;
-    return $self->has_tag( 'a', $from );
+    return map { bless $_, 'Firefox::Marionette::Link' }
+      map { $self->has_tag( $_, $from ) } qw(a area frame iframe meta);
 }
 
 sub _get_marionette_parameter {
