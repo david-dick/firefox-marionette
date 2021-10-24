@@ -8,6 +8,7 @@ use Firefox::Marionette::Cookie();
 use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
 use Firefox::Marionette::Timeouts();
+use Firefox::Marionette::Image();
 use Firefox::Marionette::Link();
 use Firefox::Marionette::Login();
 use Firefox::Marionette::Capabilities();
@@ -527,6 +528,12 @@ sub _ssh {
 sub _adb {
     my ($self) = @_;
     return $self->{_adb};
+}
+
+sub images {
+    my ( $self, $from ) = @_;
+    return grep { $_->url() } map { bless $_, 'Firefox::Marionette::Image' }
+      map { $self->has_tag( $_, $from ) } qw(img input);
 }
 
 sub links {

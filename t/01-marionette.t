@@ -1822,6 +1822,37 @@ SKIP: {
 		}
 		ok($count, "Link from metacpan.org has $count attributes");
 	}
+	my @images = $firefox->images();
+	foreach my $image (@images) {
+		ok($image->url(), "Image from metacpan.org has a url of " . $image->url());
+		ok($image->height(), "Image from metacpan.org has height of " . $image->height());
+		ok($image->width(), "Image from metacpan.org has width of " . $image->width());
+		if ($image->alt()) {
+			ok($image->alt(), "Image from metacpan.org has alt of " . $image->alt());
+		}
+		if ($image->name()) {
+			ok($image->name(), "Image from metacpan.org has name of " . $image->name());
+		}
+		if (defined $image->tag()) {
+			ok($image->tag() =~ /^(image|input)$/smx, "Image from metacpan.org has a tag of " . $image->tag());
+		}
+		if (defined $image->base()) {
+			ok($image->base(), "Image from metacpan.org has a base of " . $image->base());
+		}
+		if ($image->URI()) {
+			ok($image->URI() && $image->URI()->isa('URI::URL'), "Image from metacpan.org has a URI of " . $image->URI());
+		}
+		if ($image->url_abs()) {
+			ok($image->url_abs(), "Image from metacpan.org has a url_abs of " . $image->url_abs());
+		}
+		my %attributes = $image->attrs();
+		my $count = 0;
+		foreach my $key (sort { $a cmp $b } keys %attributes) {
+			ok($key, "Image from metacpan.org has a attribute called '" . $key . "' with a value of '" . $attributes{$key} . "'");
+			$count += 1;
+		}
+		ok($count, "Image from metacpan.org has $count attributes");
+	}
 	my $search_box_id;
 	foreach my $element ($firefox->has_tag('input')) {
 		if ((lc $element->attribute('type')) eq 'text') {
@@ -2851,7 +2882,7 @@ SKIP: {
 
 SKIP: {
 	if ($ENV{RELEASE_TESTING}) {
-		diag("Starting new firefox for testing links");
+		diag("Starting new firefox for testing images and links");
 		($skip_message, $firefox) = start_firefox(0, visible => 0, debug => 1);
 		if (!$skip_message) {
 			$at_least_one_success = 1;
@@ -2870,7 +2901,10 @@ SKIP: {
 				skip("\$capabilities->proxy is not supported for remote hosts", 3);
 			} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 				if (my $pid = fork) {
-					$firefox->go($daemon->url() . '?links');
+					$firefox->go($daemon->url() . '?links_and_images');
+					foreach my $image ($firefox->images()) {
+						ok($image->tag(), "Image tag is defined as " . $image->tag());
+					}
 					foreach my $link ($firefox->links()) {
 						if (defined $link->text()) {
 							ok(defined $link->text(), "Link text is defined as " . $link->text());
@@ -2885,21 +2919,27 @@ SKIP: {
 					}
 				} elsif (defined $pid) {
 					eval {
-						local $SIG{ALRM} = sub { die "alarm during links server\n" };
+						local $SIG{ALRM} = sub { die "alarm during links and images server\n" };
 						alarm 40;
-						$0 = "[Test HTTP Links Server for " . getppid . "]";
+						$0 = "[Test HTTP Links and Images Server for " . getppid . "]";
 						while (my $connection = $daemon->accept()) {
 							diag("Accepted connection");
 							if (my $child = fork) {
 								waitpid $child, 0;
 							} elsif (defined $child) {
 								eval {
-									local $SIG{ALRM} = sub { die "alarm during links server accept\n" };
+									local $SIG{ALRM} = sub { die "alarm during links and images server accept\n" };
 									alarm 40;
 									if (my $request = $connection->get_request()) {
 										diag("Got request (pid: $$) for " . $request->uri());
-										my $headers = HTTP::Headers->new('Content-Type', 'text/html');
-										my $response = HTTP::Response->new(200, "OK", $headers, '<!DOCTYPE html><html lang="en-AU"><head><title>Test</title></head><body><a href="http://example.com/"></a></body></html>');
+										my ($headers, $response);
+										if ($request->uri() =~ /image[.]png/) {
+											$headers = HTTP::Headers->new('Content-Type', 'image/png');
+											$response = HTTP::Response->new(200, "OK", $headers, MIME::Base64::decode_base64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP48Gr6fwAIsANxwk14sgAAAABJRU5ErkJggg=="));
+										} else {
+											$headers = HTTP::Headers->new('Content-Type', 'text/html');
+											$response = HTTP::Response->new(200, "OK", $headers, '<!DOCTYPE html><html lang="en-AU"><head><title>Test</title></head><body><form action="/submit"><input type="image" alt="no idea" src="/image.png"></form><a href="http://example.com/"></a></body></html>');
+										}
 										$connection->send_response($response);
 									}
 									$connection->close;
@@ -2908,7 +2948,7 @@ SKIP: {
 									exit 0;
 								} or do {
 									chomp $@;
-									diag("Caught exception in links server accept:$@");
+									diag("Caught exception in links and images server accept:$@");
 								};
 								diag("Connection error");
 								exit 1;
@@ -2919,7 +2959,7 @@ SKIP: {
 						}
 					} or do {
 						chomp $@;
-						diag("Caught exception in links server:$@");
+						diag("Caught exception in links and images server:$@");
 					};
 					exit 1;
 				} else {
