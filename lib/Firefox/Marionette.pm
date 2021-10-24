@@ -26,6 +26,7 @@ use IPC::Open3();
 use Socket();
 use English qw( -no_match_vars );
 use POSIX();
+use Scalar::Util();
 use File::Find();
 use File::Path();
 use File::Spec();
@@ -5255,9 +5256,11 @@ sub _new_session_parameters {
     my $parameters = {};
     $parameters->{capabilities}->{requiredCapabilities} =
       {};    # for Mozilla 50 (and below???)
-    if (   ( defined $capabilities )
-        && ( ref $capabilities )
-        && ( ref $capabilities eq 'Firefox::Marionette::Capabilities' ) )
+    if (
+        $self->_is_marionette_object(
+            $capabilities, 'Firefox::Marionette::Capabilities'
+        )
+      )
     {
         my $actual   = {};
         my %booleans = (
@@ -5788,12 +5791,21 @@ sub _compress_script {
     return $script;
 }
 
+sub _is_marionette_object {
+    my ( $self, $element, $class ) = @_;
+    if ( ( Scalar::Util::blessed($element) && ( $element->isa($class) ) ) ) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
 sub is_selected {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -5821,9 +5833,8 @@ sub _response_result_value {
 sub is_enabled {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -5846,9 +5857,8 @@ sub is_enabled {
 sub is_displayed {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -5878,9 +5888,8 @@ sub send_keys {
 sub type {
     my ( $self, $element, $text ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -6177,9 +6186,8 @@ sub cookies {
 sub tag_name {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -6240,9 +6248,8 @@ sub window_rect {
 sub rect {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -6273,9 +6280,8 @@ sub rect {
 sub text {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -6297,9 +6303,8 @@ sub text {
 sub clear {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -6321,9 +6326,8 @@ sub clear {
 sub click {
     my ( $self, $element ) = @_;
     if (
-        !(
-               ( ref $element )
-            && ( ref $element eq 'Firefox::Marionette::Element' )
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
         )
       )
     {
@@ -6681,8 +6685,11 @@ sub selfie {
     my $message_id = $self->_new_message_id();
     my $parameters = {};
     my %extra;
-    if (   ( ref $element )
-        && ( ref $element eq 'Firefox::Marionette::Element' ) )
+    if (
+        $self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
+        )
+      )
     {
         $parameters = { id => $element->uuid() };
         %extra      = @remaining;
@@ -6789,7 +6796,12 @@ sub pause {
 sub mouse_move {
     my ( $self, @parameters ) = @_;
     my %arguments;
-    if ( $parameters[0]->isa('Firefox::Marionette::Element') ) {
+    if (
+        $self->_is_marionette_object(
+            $parameters[0], 'Firefox::Marionette::Element'
+        )
+      )
+    {
         my $origin = shift @parameters;
         my $rect   = $origin->rect();
         $arguments{x} = $rect->pos_x() + ( $rect->width() / 2 );

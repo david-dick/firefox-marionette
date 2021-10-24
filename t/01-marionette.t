@@ -2339,6 +2339,7 @@ SKIP: {
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 36);
 	}
+	my $dummy_object = bless {}, 'What::is::this::object';
 	foreach my $name ('click', 'clear', 'is_selected', 'is_enabled', 'is_displayed', 'type', 'tag_name', 'rect', 'text') {
 		eval {
 			$firefox->$name({});
@@ -2348,6 +2349,10 @@ SKIP: {
 			$firefox->$name(q[]);
 		};
 		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->$name() with a non ref parameter produces a Firefox::Marionette::Exception exception");
+		eval {
+			$firefox->$name($dummy_object);
+		};
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->$name() with a non Element blessed parameter produces a Firefox::Marionette::Exception exception");
 	}
 	ok($firefox->find_name('lucky')->click($element), "Clicked the \"I'm Feeling Lucky\" button");
 	diag("Going to Test::More page with a page load strategy of " . ($capabilities->page_load_strategy() || ''));
