@@ -2938,7 +2938,7 @@ SKIP: {
 											$response = HTTP::Response->new(200, "OK", $headers, MIME::Base64::decode_base64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP48Gr6fwAIsANxwk14sgAAAABJRU5ErkJggg=="));
 										} else {
 											$headers = HTTP::Headers->new('Content-Type', 'text/html');
-											$response = HTTP::Response->new(200, "OK", $headers, '<!DOCTYPE html><html lang="en-AU"><head><title>Test</title></head><body><form action="/submit"><input type="image" alt="no idea" src="/image.png"></form><a href="http://example.com/"></a></body></html>');
+											$response = HTTP::Response->new(200, "OK", $headers, '<!DOCTYPE html><html lang="en-AU"><head><title>Test</title><meta/></head><body><form action="/submit"><input type="image" alt="no idea" src="/image.png"></form><a href="http://example.com/"></a></body></html>');
 										}
 										$connection->send_response($response);
 									}

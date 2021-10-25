@@ -18,8 +18,10 @@ sub text {
     my ($self) = @_;
     my $text = $self->browser()
       ->script( 'return arguments[0].innerText;', args => [$self] );
-    $text =~ s/^\s*//smx;
-    $text =~ s/\s*$//smx;
+    if ( defined $text ) {
+        $text =~ s/^\s*//smx;
+        $text =~ s/\s*$//smx;
+    }
     return $text;
 }
 
