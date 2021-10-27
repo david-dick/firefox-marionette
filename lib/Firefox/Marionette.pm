@@ -9412,6 +9412,31 @@ returns the page source of the content document.  This page source can be wrappe
 
     say Firefox::Marionette->new()->go('https://metacpan.org/')->html();
 
+=head2 images
+
+returns a list of all of the following elements;
+
+=over 4
+
+=item * L<img|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img>
+
+=item * L<image inputs|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/image>
+
+=back
+
+as L<Firefox::Marionette::Image|Firefox::Marionette::Image> objects.
+
+This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    if (my $link = $firefox->images()) {
+        say "Found a image with width " . $image->width() . "px and height " . $image->height() . "px from " . $image->URL();
+    }
+
+If no elements are found, this method will return undef.
+
 =head2 install
 
 accepts the following as the first parameter;
@@ -9528,15 +9553,33 @@ returns true if C<document.readyState === "complete">
 
 =head2 links
 
-returns a list of all L<links|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a> as L<elements|Firefox::Marionette::Element>.
+returns a list of all of the following elements;
+
+=over 4
+
+=item * L<anchor|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a>
+
+=item * L<area|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/area>
+
+=item * L<frame|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/frame>
+
+=item * L<iframe|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe>
+
+=item * L<meta|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta>
+
+=back
+
+as L<Firefox::Marionette::Link|Firefox::Marionette::Link> objects.
 
 This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit> timeout, which, by default is 0 seconds.
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    if (my $element = $firefox->links()) {
-        # do something
+    if (my $link = $firefox->links()) {
+        if ($link->tag() eq 'a') {
+            warn "Found a hyperlink to " . $link->URL();
+        }
     }
 
 If no elements are found, this method will return undef.
