@@ -78,7 +78,7 @@ __END__
 
 =head1 NAME
 
-Firefox::Marionette::Image - Represents a link from the links method
+Firefox::Marionette::Image - Represents an image from the images method
 
 =head1 VERSION
 
@@ -96,7 +96,7 @@ Version 1.14
 
 =head1 DESCRIPTION
 
-This module is a super class of L<Firefox::Marionette::Element|Firefox::Marionete::Element> designed to be compatible with L<WWW::Mechanize::Image|WWW::Mechanize::Image>.
+This module is a super class of L<Firefox::Marionette::Element|Firefox::Marionette::Element> designed to be compatible with L<WWW::Mechanize::Image|WWW::Mechanize::Image>.
 
 =head1 SUBROUTINES/METHODS
 

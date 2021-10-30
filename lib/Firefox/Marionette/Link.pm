@@ -89,7 +89,7 @@ Version 1.14
 
 =head1 DESCRIPTION
 
-This module is a super class of L<Firefox::Marionette::Element|Firefox::Marionete::Element> designed to be compatible with L<WWW::Mechanize::Link|WWW::Mechanize::Link>.
+This module is a super class of L<Firefox::Marionette::Element|Firefox::Marionette::Element> designed to be compatible with L<WWW::Mechanize::Link|WWW::Mechanize::Link>.
 
 =head1 SUBROUTINES/METHODS
 
