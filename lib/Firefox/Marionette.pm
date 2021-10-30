@@ -100,6 +100,7 @@ sub _DEFAULT_CERT_TRUST             { return 'C,,' }
 sub _PALEMOON_VERSION_EQUIV         { return 52 }            # very approx guess
 sub _MAX_VERSION_FOR_FTP_PROXY      { return 89 }
 sub _DEFAULT_UPDATE_TIMEOUT         { return 300 }           # 5 minutes
+sub _MIN_VERSION_NO_CHROME_CALLS    { return 94 }
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
@@ -6758,33 +6759,65 @@ sub selfie {
 
 sub current_chrome_window_handle {
     my ($self) = @_;
-    my $message_id = $self->_new_message_id();
-    $self->_send_request(
-        [
-            _COMMAND(), $message_id,
-            $self->_command('WebDriver:GetCurrentChromeWindowHandle')
-        ]
+    Carp::carp(
+'**** DEPRECATED METHOD - using current_chrome_window_handle() HAS BEEN REPLACED BY window_handle() wrapped with appropriate context() calls ****'
     );
-    my $response = $self->_get_response($message_id);
-    if (   ( defined $response->{result}->{ok} )
-        && ( $response->{result}->{ok} ) )
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_NO_CHROME_CALLS()
+        )
+      )
     {
-        $response = $self->_get_response($message_id);
+        my $old      = $self->context('chrome');
+        my $response = $self->window_handle();
+        $self->context($old);
+        return $response;
     }
-    return $self->_response_result_value($response);
+    else {
+        my $message_id = $self->_new_message_id();
+        $self->_send_request(
+            [
+                _COMMAND(), $message_id,
+                $self->_command('WebDriver:GetCurrentChromeWindowHandle')
+            ]
+        );
+        my $response = $self->_get_response($message_id);
+        if (   ( defined $response->{result}->{ok} )
+            && ( $response->{result}->{ok} ) )
+        {
+            $response = $self->_get_response($message_id);
+        }
+        return $self->_response_result_value($response);
+    }
 }
 
 sub chrome_window_handle {
     my ($self) = @_;
-    my $message_id = $self->_new_message_id();
-    $self->_send_request(
-        [
-            _COMMAND(), $message_id,
-            $self->_command('WebDriver:GetChromeWindowHandle')
-        ]
+    Carp::carp(
+'**** DEPRECATED METHOD - using chrome_window_handle() HAS BEEN REPLACED BY window_handle() wrapped with appropriate context() calls ****'
     );
-    my $response = $self->_get_response($message_id);
-    return $self->_response_result_value($response);
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_NO_CHROME_CALLS()
+        )
+      )
+    {
+        my $old      = $self->context('chrome');
+        my $response = $self->window_handle();
+        $self->context($old);
+        return $response;
+    }
+    else {
+        my $message_id = $self->_new_message_id();
+        $self->_send_request(
+            [
+                _COMMAND(), $message_id,
+                $self->_command('WebDriver:GetChromeWindowHandle')
+            ]
+        );
+        my $response = $self->_get_response($message_id);
+        return $self->_response_result_value($response);
+    }
 }
 
 sub key_down {
@@ -6928,19 +6961,36 @@ sub release {
 
 sub chrome_window_handles {
     my ( $self, $element ) = @_;
-    my $message_id = $self->_new_message_id();
-    $self->_send_request(
-        [
-            _COMMAND(), $message_id,
-            $self->_command('WebDriver:GetChromeWindowHandles')
-        ]
+    Carp::carp(
+'**** DEPRECATED METHOD - using chrome_window_handles() HAS BEEN REPLACED BY window_handles() wrapped with appropriate context() calls ****'
     );
-    my $response = $self->_get_response($message_id);
-    if ( $self->marionette_protocol() == _MARIONETTE_PROTOCOL_VERSION_3() ) {
-        return @{ $response->result() };
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_NO_CHROME_CALLS()
+        )
+      )
+    {
+        my $old      = $self->context('chrome');
+        my @response = $self->window_handles();
+        $self->context($old);
+        return @response;
     }
     else {
-        return @{ $response->result()->{value} };
+        my $message_id = $self->_new_message_id();
+        $self->_send_request(
+            [
+                _COMMAND(), $message_id,
+                $self->_command('WebDriver:GetChromeWindowHandles')
+            ]
+        );
+        my $response = $self->_get_response($message_id);
+        if ( $self->marionette_protocol() == _MARIONETTE_PROTOCOL_VERSION_3() )
+        {
+            return @{ $response->result() };
+        }
+        else {
+            return @{ $response->result()->{value} };
+        }
     }
 }
 
@@ -8781,14 +8831,6 @@ changes the scope of subsequent commands to chrome context.  This allows things 
 
 See the L<context|Firefox::Marionette#context> method for an alternative methods for changing the context.
 
-=head2 chrome_window_handle
-
-returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.
-
-=head2 chrome_window_handles
-
-returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.
-
 =head2 clear
 
 accepts a L<element|Firefox::Marionette::Element> as the first parameter and clears any user supplied input
@@ -8870,10 +8912,6 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and a 
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     say $firefox->find_id('search-input')->css('height');
-
-=head2 current_chrome_window_handle 
-
-see L<chrome_window_handle|Firefox::Marionette#chrome_window_handle>.
 
 =head2 delete_certificate
 

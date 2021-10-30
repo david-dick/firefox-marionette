@@ -277,14 +277,6 @@ changes the scope of subsequent commands to chrome context.  This allows things 
 
 See the [context](https://metacpan.org/pod/Firefox::Marionette#context) method for an alternative methods for changing the context.
 
-## chrome\_window\_handle
-
-returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.
-
-## chrome\_window\_handles
-
-returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.
-
 ## clear
 
 accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and clears any user supplied input
@@ -366,10 +358,6 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     say $firefox->find_id('search-input')->css('height');
-
-## current\_chrome\_window\_handle 
-
-see [chrome\_window\_handle](https://metacpan.org/pod/Firefox::Marionette#chrome_window_handle).
 
 ## delete\_certificate
 

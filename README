@@ -357,18 +357,6 @@ SUBROUTINES/METHODS
     See the context method for an alternative methods for changing the
     context.
 
- chrome_window_handle
-
-    returns an server-assigned integer identifiers for the current chrome
-    window that uniquely identifies it within this Marionette instance.
-    This can be used to switch to this window at a later point. This
-    corresponds to a window that may itself contain tabs.
-
- chrome_window_handles
-
-    returns identifiers for each open chrome window for tests interested in
-    managing a set of chrome windows and tabs separately.
-
  clear
 
     accepts a element as the first parameter and clears any user supplied
@@ -466,10 +454,6 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         say $firefox->find_id('search-input')->css('height');
-
- current_chrome_window_handle
-
-    see chrome_window_handle.
 
  delete_certificate
 
