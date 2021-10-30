@@ -1650,9 +1650,9 @@ SKIP: {
 	my $new_window_handle;
 	foreach my $handle ($firefox->window_handles()) {
 		if ($major_version < 90) {
-			ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+			ok($handle =~ /^\d+$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
 		} else {
-			ok($handle =~ /^$guid_regex$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+			ok($handle =~ /^$guid_regex$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
 		}
 		if ($handle ne $original_window_handle) {
 			$new_window_handle = $handle;
