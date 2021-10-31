@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.16  Sun Oct 31 17:46 2021
+       Fixes to update for Firefox 94. Thanks to prozorecJP.
+       Small fixes for Win32 CPAN Tester failures.
+
 1.15  Sun Oct 31 17:46 2021
        Updates for Firefox 94
 

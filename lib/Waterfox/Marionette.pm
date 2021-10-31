@@ -11,7 +11,7 @@ our @EXPORT_OK =
   qw(BY_XPATH BY_ID BY_NAME BY_TAG BY_CLASS BY_SELECTOR BY_LINK BY_PARTIAL);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-our $VERSION = '1.15';
+our $VERSION = '1.16';
 
 sub default_binary_name {
     return 'waterfox';
@@ -54,7 +54,7 @@ Waterfox::Marionette - Automate the Waterfox browser with the Marionette protoco
 
 =head1 VERSION
 
-Version 1.15
+Version 1.16
 
 =head1 SYNOPSIS
 

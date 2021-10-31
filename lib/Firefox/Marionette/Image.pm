@@ -6,7 +6,7 @@ use URI::URL();
 
 use base qw(Firefox::Marionette::Element);
 
-our $VERSION = '1.15';
+our $VERSION = '1.16';
 
 sub url {
     my ($self) = @_;
@@ -82,7 +82,7 @@ Firefox::Marionette::Image - Represents an image from the images method
 
 =head1 VERSION
 
-Version 1.15
+Version 1.16
 
 =head1 SYNOPSIS
 
