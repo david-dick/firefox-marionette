@@ -357,6 +357,22 @@ SUBROUTINES/METHODS
     See the context method for an alternative methods for changing the
     context.
 
+ chrome_window_handle
+
+    returns an server-assigned integer identifiers for the current chrome
+    window that uniquely identifies it within this Marionette instance.
+    This can be used to switch to this window at a later point. This
+    corresponds to a window that may itself contain tabs. This method is
+    replaced by window_handle and appropriate context calls for Firefox 94
+    and after.
+
+ chrome_window_handles
+
+    returns identifiers for each open chrome window for tests interested in
+    managing a set of chrome windows and tabs separately. This method is
+    replaced by window_handles and appropriate context calls for Firefox 94
+    and after.
+
  clear
 
     accepts a element as the first parameter and clears any user supplied
@@ -454,6 +470,10 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         say $firefox->find_id('search-input')->css('height');
+
+ current_chrome_window_handle
+
+    see chrome_window_handle.
 
  delete_certificate
 
@@ -1971,6 +1991,16 @@ SUBROUTINES/METHODS
     accepts a window handle (either the result of window_handles or a
     window name as a parameter and switches focus to this window.
 
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new();
+        $firefox->version
+        my $original_window_uuid = $firefox->window_handle();
+        $firefox->new_window( type => 'tab' );
+        $firefox->new_window( type => 'window' );
+        $firefox->switch_to_window($original_window_uuid);
+        $firefox->go('https://metacpan.org');
+
  tag_name
 
     accepts a Firefox::Marionette::Element object as the first parameter
@@ -2067,6 +2097,12 @@ SUBROUTINES/METHODS
     within this Marionette instance. This can be used to switch to this
     window at a later point.
 
+        use Firefox::Marionette();
+        use 5.010;
+    
+        my $firefox = Firefox::Marionette->new();
+        my $original_window_uuid = $firefox->window_handle();
+
  window_handles
 
     returns a list of top-level browsing contexts. On desktop this
@@ -2074,6 +2110,16 @@ SUBROUTINES/METHODS
     the window itself for non-browser chrome windows. Each window handle is
     assigned by the server and is guaranteed unique, however the return
     array does not have a specified ordering.
+
+        use Firefox::Marionette();
+        use 5.010;
+    
+        my $firefox = Firefox::Marionette->new();
+        my $original_window_uuid = $firefox->window_handle();
+        $firefox->new_window( type => 'tab' );
+        $firefox->new_window( type => 'window' );
+        say "There are " . $firefox->window_handles() . " tabs open in total";
+        say "Across " . $firefox->chrome()->window_handles()->content() . " chrome windows";
 
  window_rect
 
