@@ -127,6 +127,7 @@ if (my $entry = $old_versions{'firefox-upgrade'}) {
 		system { $^X } $^X, '-MDevel::Cover=-silent,1', '-Ilib', 't/01-marionette.t' and die "Failed to 'make'";
 	}
 }
+my $firefox_nightly_failed;
 ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 	my $old_version = $old_versions{$entry};
 	my $count = 0;
@@ -171,7 +172,8 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 			if ($result != 0) {
 				if ($count < 3) {
 					warn "Failed '$^X -MDevel::Cover=-silent,1 -Ilib t/01-marionette' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
-					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
+					if ($entry eq 'firefox-nightly') {
+						$firefox_nightly_failed = 1;
 						next ENTRY;
 					}
 					sleep $reset_time;
@@ -193,7 +195,8 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 			if ($result != 0) {
 				if ($count < 3) {
 					warn "Failed '$bash_command' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
-					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
+					if ($entry eq 'firefox-nightly') {
+						$firefox_nightly_failed = 1;
 						next ENTRY;
 					}
 					sleep $reset_time;
@@ -215,7 +218,8 @@ ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
 			if ($result != 0) {
 				if ($count < 3) {
 					warn "Failed '$bash_command' " . localtime . ".  Sleeping for $reset_time seconds for $path_to_binary";
-					if (($entry eq 'firefox-nightly') || ($entry eq 'firefox-developer')) {
+					if ($entry eq 'firefox-nightly') {
+						$firefox_nightly_failed = 1;
 						next ENTRY;
 					}
 					sleep $reset_time;
@@ -250,6 +254,11 @@ while (kill 0, $pid) {
 undef $pid;
 chdir $cwd or die "Failed to chdir to '$cwd':$!";
 system { 'cover' } 'cover' and die "Failed to 'cover' for $ENV{FIREFOX_BINARY}";
+if ($firefox_nightly_failed) {
+	warn "Firefox Nightly failed to complete successfully\n";
+} else {
+	warn "Firefox Nightly PASSED successfully\n";
+}
 
 END {
 	if (defined $pid) {
