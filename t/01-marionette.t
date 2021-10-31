@@ -1550,6 +1550,7 @@ SKIP: {
 	}
 }
 
+my $bad_network_behaviour;
 SKIP: {
 	diag("Starting new firefox for testing metacpan and w3schools, with find, downloads, extensions and actions");
 	($skip_message, $firefox) = start_firefox(0, debug => 0, page_load => 600000, script => 5432, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, page_load_strategy => 'eager'));
@@ -1761,6 +1762,7 @@ SKIP: {
 		} else {
 			diag("\$firefox->capabilities()->proxy() is not supported for " . $firefox->capabilities()->browser_version());
 		}
+		$bad_network_behaviour = 1;
 		diag("Skipping metacpan tests as loading $metacpan_uri sent firefox to $uri");
 		skip("Skipping metacpan tests as loading $metacpan_uri sent firefox to $uri", 223);
 	}
@@ -2982,6 +2984,10 @@ sub display_name {
 }
 
 SKIP: {
+	if ($bad_network_behaviour) {
+		diag("Skipping proxy by argument, capabilities, window switching and certificates tests because these tests fail when metacpan connections are re-routed above");
+		skip("Skipping proxy by argument, capabilities, window switching and certificates tests because these tests fail when metacpan connections are re-routed above", 32);
+	}
 	diag("Starting new firefox for testing proxy by argument, capabilities, window switching and certificates");
 	my $proxy_host = 'all.example.org';
 	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json', 't/data/key4.db' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
