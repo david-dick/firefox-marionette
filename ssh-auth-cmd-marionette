@@ -13,7 +13,7 @@ delete $ENV{PATH};
 
 local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin';
 
-our $VERSION = '1.14';
+our $VERSION = '1.15';
 
 my $binary  = 'firefox';
 my $ident   = 'ssh-auth-cmd-marionette';
@@ -209,7 +209,7 @@ ssh-auth-cmd-marionette - ssh ~/.ssh/authorized_keys command for Firefox::Marion
 
 =head1 VERSION
 
-Version 1.14
+Version 1.15
 
 =head1 USAGE
 

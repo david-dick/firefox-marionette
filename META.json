@@ -67,6 +67,6 @@
       }
    },
    "release_status" : "unstable",
-   "version" : "1.14",
+   "version" : "1.15",
    "x_serialization_backend" : "JSON::PP version 4.04"
 }
