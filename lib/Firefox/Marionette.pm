@@ -6759,15 +6759,15 @@ sub selfie {
 
 sub current_chrome_window_handle {
     my ($self) = @_;
-    Carp::carp(
-'**** DEPRECATED METHOD - using current_chrome_window_handle() HAS BEEN REPLACED BY window_handle() wrapped with appropriate context() calls ****'
-    );
     if (
         $self->_is_firefox_major_version_at_least(
             _MIN_VERSION_NO_CHROME_CALLS()
         )
       )
     {
+        Carp::carp(
+'**** DEPRECATED METHOD - using current_chrome_window_handle() HAS BEEN REPLACED BY window_handle() wrapped with appropriate context() calls ****'
+        );
         my $old      = $self->context('chrome');
         my $response = $self->window_handle();
         $self->context($old);
@@ -6793,15 +6793,15 @@ sub current_chrome_window_handle {
 
 sub chrome_window_handle {
     my ($self) = @_;
-    Carp::carp(
-'**** DEPRECATED METHOD - using chrome_window_handle() HAS BEEN REPLACED BY window_handle() wrapped with appropriate context() calls ****'
-    );
     if (
         $self->_is_firefox_major_version_at_least(
             _MIN_VERSION_NO_CHROME_CALLS()
         )
       )
     {
+        Carp::carp(
+'**** DEPRECATED METHOD - using chrome_window_handle() HAS BEEN REPLACED BY window_handle() wrapped with appropriate context() calls ****'
+        );
         my $old      = $self->context('chrome');
         my $response = $self->window_handle();
         $self->context($old);
@@ -6961,15 +6961,15 @@ sub release {
 
 sub chrome_window_handles {
     my ( $self, $element ) = @_;
-    Carp::carp(
-'**** DEPRECATED METHOD - using chrome_window_handles() HAS BEEN REPLACED BY window_handles() wrapped with appropriate context() calls ****'
-    );
     if (
         $self->_is_firefox_major_version_at_least(
             _MIN_VERSION_NO_CHROME_CALLS()
         )
       )
     {
+        Carp::carp(
+'**** DEPRECATED METHOD - using chrome_window_handles() HAS BEEN REPLACED BY window_handles() wrapped with appropriate context() calls ****'
+        );
         my $old      = $self->context('chrome');
         my @response = $self->window_handles();
         $self->context($old);
