@@ -8,6 +8,13 @@ use base qw(Firefox::Marionette::Element);
 
 our $VERSION = '1.16';
 
+sub new {
+    my ( $class, $element ) = @_;
+    my $self = $element;
+    bless $self, $class;
+    return $self;
+}
+
 sub url {
     my ($self) = @_;
     my %attributes = $self->attrs();
@@ -119,6 +126,10 @@ returns the image height
 =head2 name
 
 returns the name attribute, if any.
+
+=head2 new
+
+accepts an L<element|Firefox::Marionette::Element> as a parameter and returns an L<image|Firefox::Marionette::Image> object
 
 =head2 tag
 

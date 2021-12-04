@@ -8,6 +8,13 @@ use base qw(Firefox::Marionette::Element);
 
 our $VERSION = '1.16';
 
+sub new {
+    my ( $class, $element ) = @_;
+    my $self = $element;
+    bless $self, $class;
+    return $self;
+}
+
 sub url {
     my ($self) = @_;
     my %attributes = $self->attrs();
@@ -104,6 +111,10 @@ returns the base url to which all links are relative.
 =head2 name
 
 returns the name attribute, if any.
+
+=head2 new
+
+accepts an L<element|Firefox::Marionette::Element> as a parameter and returns a L<link|Firefox::Marionette::Link> object
 
 =head2 tag
 

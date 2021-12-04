@@ -533,20 +533,17 @@ sub _adb {
 
 sub images {
     my ( $self, $from ) = @_;
-    return grep { $_->url() } map { bless $_, 'Firefox::Marionette::Image' }
-       $self->has(
-            '//*[self::img or self::input]', undef,
-            $from
-        );
+    return grep { $_->url() }
+      map       { Firefox::Marionette::Image->new($_) }
+      $self->has( '//*[self::img or self::input]', undef, $from );
 }
 
 sub links {
     my ( $self, $from ) = @_;
-    return map { bless $_, 'Firefox::Marionette::Link' }
-       $self->has(
-            '//*[self::a or self::area or self::frame or self::iframe or self::meta]', undef,
-            $from
-        );
+    return map { Firefox::Marionette::Link->new($_) } $self->has(
+'//*[self::a or self::area or self::frame or self::iframe or self::meta]',
+        undef, $from
+    );
 }
 
 sub _get_marionette_parameter {
