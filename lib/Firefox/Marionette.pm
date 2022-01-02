@@ -2330,7 +2330,7 @@ sub execute {
         return $return_code;
     }
     else {
-        if ( $self->_debug() ) {
+        if ( $self->debug() ) {
             warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
         }
         my ( $writer, $reader, $error );
@@ -2613,9 +2613,13 @@ sub _validate_any_requested_version {
     return;
 }
 
-sub _debug {
-    my ($self) = @_;
-    return $self->{debug};
+sub debug {
+    my ( $self, $new ) = @_;
+    my $old = $self->{debug};
+    if ( defined $new ) {
+        $self->{debug} = $new;
+    }
+    return $old;
 }
 
 sub _visible {
@@ -2727,7 +2731,7 @@ sub _start_win32_process {
     my ( $self, $binary, @arguments ) = @_;
     my $full_path    = $self->_get_full_short_path_for_win32_binary($binary);
     my $command_line = _quoting_for_cmd_exe( $binary, @arguments );
-    if ( $self->_debug() ) {
+    if ( $self->debug() ) {
         warn q[** ] . $command_line . "\n";
     }
     my $local_stdout = $self->_save_stdout();
@@ -2804,7 +2808,7 @@ sub _launch_via_ssh {
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
             } or do {
-                if ( $self->_debug() ) {
+                if ( $self->debug() ) {
                     chomp $EVAL_ERROR;
                     warn "$EVAL_ERROR\n";
                 }
@@ -2938,7 +2942,7 @@ sub _xvfb_exists {
               or Firefox::Marionette::Exception->throw(
                 "Failed to exec '$binary':$EXTENDED_OS_ERROR");
         } or do {
-            if ( $self->_debug() ) {
+            if ( $self->debug() ) {
                 chomp $EVAL_ERROR;
                 warn "$EVAL_ERROR\n";
             }
@@ -2992,7 +2996,7 @@ sub _launch_xauth {
     my $binary    = 'xauth';
     my @arguments = ( 'source', '/dev/fd/' . fileno $source_handle );
 
-    if ( $self->_debug() ) {
+    if ( $self->debug() ) {
         warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
     }
 
@@ -3007,7 +3011,7 @@ sub _launch_xauth {
     }
     elsif ( defined $pid ) {
         eval {
-            if ( !$self->_debug() ) {
+            if ( !$self->debug() ) {
                 open STDERR, q[>], $dev_null
                   or Firefox::Marionette::Exception->throw(
                     "Failed to redirect STDERR to $dev_null:$EXTENDED_OS_ERROR"
@@ -3021,7 +3025,7 @@ sub _launch_xauth {
               or Firefox::Marionette::Exception->throw(
                 "Failed to exec '$binary':$EXTENDED_OS_ERROR");
         } or do {
-            if ( $self->_debug() ) {
+            if ( $self->debug() ) {
                 chomp $EVAL_ERROR;
                 warn "$EVAL_ERROR\n";
             }
@@ -3070,7 +3074,7 @@ sub _xvfb_directory {
 
 sub _debug_xvfb_execution {
     my ( $self, $binary, @arguments ) = @_;
-    if ( $self->_debug() ) {
+    if ( $self->debug() ) {
         warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
     }
     return;
@@ -3143,7 +3147,7 @@ sub _launch_xvfb {
     }
     elsif ( defined $pid ) {
         eval {
-            if ( !$self->_debug() ) {
+            if ( !$self->debug() ) {
                 open STDERR, q[>], $dev_null
                   or Firefox::Marionette::Exception->throw(
                     "Failed to redirect STDERR to $dev_null:$EXTENDED_OS_ERROR"
@@ -3157,7 +3161,7 @@ sub _launch_xvfb {
               or Firefox::Marionette::Exception->throw(
                 "Failed to exec '$binary':$EXTENDED_OS_ERROR");
         } or do {
-            if ( $self->_debug() ) {
+            if ( $self->debug() ) {
                 chomp $EVAL_ERROR;
                 warn "$EVAL_ERROR\n";
             }
@@ -3202,7 +3206,7 @@ sub _launch_unix {
     my ( $self, @arguments ) = @_;
     my $binary = $self->_binary();
     my $pid;
-    if ( $self->_debug() ) {
+    if ( $self->debug() ) {
         warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
     }
     if ( $OSNAME eq 'cygwin' ) {
@@ -3221,7 +3225,7 @@ sub _launch_unix {
         }
         elsif ( defined $pid ) {
             eval {
-                if ( !$self->_debug() ) {
+                if ( !$self->debug() ) {
                     open STDERR, q[>], $dev_null
                       or Firefox::Marionette::Exception->throw(
 "Failed to redirect STDERR to $dev_null:$EXTENDED_OS_ERROR"
@@ -3235,7 +3239,7 @@ sub _launch_unix {
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec '$binary':$EXTENDED_OS_ERROR");
             } or do {
-                if ( $self->_debug() ) {
+                if ( $self->debug() ) {
                     chomp $EVAL_ERROR;
                     warn "$EVAL_ERROR\n";
                 }
@@ -4029,7 +4033,7 @@ sub _cancel_port_forwarding_via_ssh_with_control_path {
               or Firefox::Marionette::Exception->throw(
                 "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
         } or do {
-            if ( $self->_debug() ) {
+            if ( $self->debug() ) {
                 chomp $EVAL_ERROR;
                 warn "$EVAL_ERROR\n";
             }
@@ -4067,7 +4071,7 @@ sub _start_port_forwarding_via_ssh_with_control_path {
               or Firefox::Marionette::Exception->throw(
                 "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
         } or do {
-            if ( $self->_debug() ) {
+            if ( $self->debug() ) {
                 chomp $EVAL_ERROR;
                 warn "$EVAL_ERROR\n";
             }
@@ -4101,7 +4105,7 @@ sub _setup_local_socket_via_ssh_without_control_path {
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
             } or do {
-                if ( $self->_debug() ) {
+                if ( $self->debug() ) {
                     chomp $EVAL_ERROR;
                     warn "$EVAL_ERROR\n";
                 }
@@ -4293,7 +4297,7 @@ sub _ssh_arguments {
 
 sub _ssh_exec {
     my ( $self, @parameters ) = @_;
-    if ( $self->_debug() ) {
+    if ( $self->debug() ) {
         warn q[** ] . ( join q[ ], 'ssh', @parameters ) . "\n";
     }
     my $dev_null = File::Spec->devnull();
@@ -4355,7 +4359,7 @@ sub _make_remote_directory {
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
             } or do {
-                if ( $self->_debug() ) {
+                if ( $self->debug() ) {
                     chomp $EVAL_ERROR;
                     warn "$EVAL_ERROR\n";
                 }
@@ -4773,13 +4777,13 @@ sub _get_local_command_output {
         else {
             $shell_command .= ' 2>nul';
         }
-        if ( $self->_debug() ) {
+        if ( $self->debug() ) {
             warn q[** ] . $shell_command . "\n";
         }
         $handle = FileHandle->new("$shell_command |");
     }
     else {
-        if ( $self->_debug() ) {
+        if ( $self->debug() ) {
             warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
         }
         $handle =
@@ -4905,7 +4909,7 @@ sub _system {
     else {
         my $dev_null = File::Spec->devnull();
         $command_line = join q[ ], $binary, @arguments;
-        if ( $self->_debug() ) {
+        if ( $self->debug() ) {
             warn q[** ] . $command_line . "\n";
         }
         if ( my $pid = fork ) {
@@ -4922,7 +4926,7 @@ sub _system {
         }
         elsif ( defined $pid ) {
             eval {
-                if ( !$self->_debug() ) {
+                if ( !$self->debug() ) {
                     open STDERR, q[>], $dev_null
                       or Firefox::Marionette::Exception->throw(
 "Failed to redirect STDERR to $dev_null:$EXTENDED_OS_ERROR"
@@ -4936,7 +4940,7 @@ sub _system {
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec '$binary':$EXTENDED_OS_ERROR");
             } or do {
-                if ( $self->_debug() ) {
+                if ( $self->debug() ) {
                     chomp $EVAL_ERROR;
                     warn "$EVAL_ERROR\n";
                 }
@@ -8360,7 +8364,7 @@ sub _send_request {
     my $encoder = JSON->new()->convert_blessed()->ascii();
     my $json    = $encoder->encode($object);
     my $length  = length $json;
-    if ( $self->_debug() ) {
+    if ( $self->debug() ) {
         warn ">> $length:$json\n";
     }
     my $result;
@@ -8437,7 +8441,7 @@ sub _read_from_socket {
             }
         }
     }
-    if ( ( $self->_debug() ) && ( defined $number_of_bytes_in_response ) ) {
+    if ( ( $self->debug() ) && ( defined $number_of_bytes_in_response ) ) {
         warn "<< $number_of_bytes_in_response:$json\n";
     }
     return $self->_decode_json($json);
@@ -8756,6 +8760,10 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 =head2 back
 
 causes the browser to traverse one step backward in the joint history of the current browsing context.  The browser will wait for the one step backward to complete or the session's L<page_load|Firefox::Marionette::Timeouts#page_load> duration to elapse before returning, which, by default is 5 minutes.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 debug
+
+accept a boolean and return the current value of the debug setting.  This allows the dynamic setting of debug.
 
 =head2 default_binary_name
 
@@ -9704,7 +9712,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.  This defaults to "0" (off).
 
-=item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).
+=item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).  This setting may be updated by the L<debug|Firefox::Marionette#debug> method.
 
 =item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched. This defaults to "0" (off).
 

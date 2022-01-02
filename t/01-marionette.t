@@ -553,7 +553,13 @@ SKIP: {
 		} else {
 			$profile = Firefox::Marionette::Profile->existing($name);
 		}
-		($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile );
+		($skip_message, $firefox) = start_firefox(0, profile => $profile );
+		if (defined $ENV{FIREFOX_DEBUG}) {
+			ok($firefox->debug() eq $ENV{FIREFOX_DEBUG}, "\$firefox->debug() returns \$ENV{FIREFOX_DEBUG}:$ENV{FIREFOX_DEBUG}");
+		} else {
+			ok(!$firefox->debug(1), "\$firefox->debug(1) returns false but sets debug to true");
+			ok($firefox->debug(), "\$firefox->debug() returns true");
+		}
 		ok($firefox, "Firefox loaded with a profile copied from $name");
 		ok($firefox->go('http://example.com'), "firefox with the copied profile from $name loaded example.com");
 		ok($firefox->quit() == 0, "firefox with the profile copied from $name quit successfully");
@@ -588,6 +594,11 @@ SKIP: {
 	}
 	if ($skip_message) {
 		skip($skip_message, 38);
+	}
+        if (defined $ENV{FIREFOX_DEBUG}) {
+		ok($firefox->debug() eq $ENV{FIREFOX_DEBUG}, "\$firefox->debug() returns \$ENV{FIREFOX_DEBUG}:$ENV{FIREFOX_DEBUG}");
+	} else {
+		ok($firefox->debug(), "\$firefox->debug() returns true");
 	}
 	ok($firefox, "Firefox has started in Marionette mode");
 	ok((scalar grep { /^application\/pkcs10$/ } $firefox->mime_types()), "application/pkcs10 has been added to mime_types");
