@@ -2848,9 +2848,6 @@ sub _launch {
         $self->_wait_for_updating_to_finish();
         return;
     }
-    if ( $self->{survive} ) {
-        $self->_root_directory()->unlink_on_destroy(0);
-    }
     if ( $OSNAME eq 'MSWin32' ) {
         local $ENV{TMPDIR} = $self->_local_firefox_tmp_directory();
         $self->{_firefox_pid} = $self->_launch_win32(@arguments);
