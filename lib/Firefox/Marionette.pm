@@ -434,7 +434,7 @@ sub _setup_ssh_with_reconnect {
                   $self->_remote_catfile( $self->{_root_directory},
                     'profile', 'prefs.js' );
                 my $local_scp_directory =
-                  File::Spec->catdir( $self->{_ssh_local_directory}, 'scp' );
+                  File::Spec->catdir( $self->ssh_local_directory(), 'scp' );
                 $self->{_local_scp_get_directory} =
                   File::Spec->catdir( $local_scp_directory, 'get' );
                 $self->{_scp_get_file_index} =
@@ -462,19 +462,28 @@ sub _setup_ssh_with_reconnect {
     return;
 }
 
+sub ssh_local_directory {
+    my ($self) = @_;
+    return $self->{_ssh_local_directory};
+}
+
 sub _setup_ssh {
     my ( $self, $host, $port, $user, $reconnect ) = @_;
     if ($reconnect) {
         $self->_setup_ssh_with_reconnect( $host, $port, $user );
     }
     else {
-        $self->{_ssh_local_directory} = File::Temp->newdir(
-            File::Spec->catdir( File::Spec->tmpdir(), 'perl_ff_m_XXXXXXXXXXX' )
+        my $ssh_local_directory = File::Temp->newdir(
+            CLEANUP  => 0,
+            TEMPLATE => File::Spec->catdir(
+                File::Spec->tmpdir(), 'perl_ff_m_XXXXXXXXXXX'
+            )
           )
           or Firefox::Marionette::Exception->throw(
             "Failed to create temporary directory:$EXTENDED_OS_ERROR");
+        $self->{_ssh_local_directory} = $ssh_local_directory->dirname();
         my $local_scp_directory =
-          File::Spec->catdir( $self->{_ssh_local_directory}, 'scp' );
+          File::Spec->catdir( $self->ssh_local_directory(), 'scp' );
         mkdir $local_scp_directory, Fcntl::S_IRWXU()
           or Firefox::Marionette::Exception->throw(
             "Failed to create directory $local_scp_directory:$EXTENDED_OS_ERROR"
@@ -503,7 +512,7 @@ sub _setup_ssh {
         else {
             $self->{_ssh}->{use_control_path} = 1;
             $self->{_ssh}->{control_path} =
-              File::Spec->catfile( $self->{_ssh_local_directory}->dirname(),
+              File::Spec->catfile( $self->ssh_local_directory(),
                 'control.sock' );
         }
     }
@@ -1899,7 +1908,7 @@ sub _build_local_extension_directory {
     if ( !$self->{_local_extension_directory} ) {
         my $root_directory;
         if ( $self->_ssh() ) {
-            $root_directory = $self->{_ssh_local_directory};
+            $root_directory = $self->ssh_local_directory();
         }
         else {
             $root_directory = $self->_root_directory();
@@ -2779,9 +2788,6 @@ sub _launch_via_ssh {
           $self->_start_win32_process( 'ssh', @ssh_arguments,
             q["] . $self->_binary() . q["], @arguments );
         $self->{_win32_ssh_process} = $process;
-        if ( $self->{survive} ) {
-            $self->{_ssh_local_directory}->unlink_on_destroy(0);
-        }
         my $pid = $process->GetProcessID();
         $self->{_ssh}->{pid} = $pid;
         return $pid;
@@ -2791,9 +2797,6 @@ sub _launch_via_ssh {
 
         if ( my $pid = fork ) {
             $self->{_ssh}->{pid} = $pid;
-            if ( $self->{survive} ) {
-                $self->{_ssh_local_directory}->unlink_on_destroy(0);
-            }
             return $pid;
         }
         elsif ( defined $pid ) {
@@ -3978,8 +3981,8 @@ sub alive {
 sub _ssh_local_path_or_port {
     my ($self) = @_;
     if ( $self->{_ssh}->{use_unix_sockets} ) {
-        if ( defined $self->{_ssh_local_directory} ) {
-            my $path = File::Spec->catfile( "$self->{_ssh_local_directory}",
+        if ( defined $self->ssh_local_directory() ) {
+            my $path = File::Spec->catfile( $self->ssh_local_directory(),
                 'forward.sock' );
             return $path;
         }
@@ -4374,18 +4377,25 @@ sub _make_remote_directory {
     return;
 }
 
+sub root_directory {
+    my ($self) = @_;
+    return $self->{_root_directory};
+}
+
 sub _root_directory {
     my ($self) = @_;
     if ( !defined $self->{_root_directory} ) {
-        $self->{_root_directory} = File::Temp->newdir(
-            File::Spec->catdir(
+        my $root_directory = File::Temp->newdir(
+            CLEANUP  => 0,
+            TEMPLATE => File::Spec->catdir(
                 File::Spec->tmpdir(), 'firefox_marionette_local_XXXXXXXXXXX'
             )
           )
           or Firefox::Marionette::Exception->throw(
             "Failed to create temporary directory:$EXTENDED_OS_ERROR");
+        $self->{_root_directory} = $root_directory->dirname();
     }
-    return $self->{_root_directory};
+    return $self->root_directory();
 }
 
 sub _write_local_proxy {
@@ -4393,7 +4403,7 @@ sub _write_local_proxy {
     my $local_proxy_path;
     if ( defined $ssh ) {
         $local_proxy_path =
-          File::Spec->catfile( "$self->{_ssh_local_directory}", 'reconnect' );
+          File::Spec->catfile( $self->ssh_local_directory(), 'reconnect' );
     }
     else {
         $local_proxy_path =
@@ -7398,11 +7408,11 @@ sub quit {
         $self->_terminate_process();
     }
     if ( !$self->_reconnected() ) {
-        if ( $self->{_ssh_local_directory} ) {
-            $self->{_ssh_local_directory}->unlink_on_destroy(1);
+        if ( $self->ssh_local_directory() ) {
+            File::Path::rmtree( $self->ssh_local_directory(), 0, 0 );
         }
-        elsif ( defined $self->{_root_directory} ) {
-            $self->{_root_directory}->unlink_on_destroy(1);
+        elsif ( defined $self->root_directory() ) {
+            File::Path::rmtree( $self->root_directory(), 0, 0 );
         }
     }
     return $self->child_error();
@@ -8523,19 +8533,17 @@ sub DESTROY {
 
 sub _cleanup_local_filesystem {
     my ($self) = @_;
-    if ( $self->_reconnected() ) {
-        if ( $self->{_ssh_local_directory} ) {
-            File::Path::rmtree( $self->{_ssh_local_directory}, 0, 0 );
+    if ( $self->ssh_local_directory() ) {
+        File::Path::rmtree( $self->ssh_local_directory(), 0, 0 );
+    }
+    delete $self->{_ssh_local_directory};
+    if ( $self->_ssh() ) {
+    }
+    else {
+        if ( $self->{_root_directory} ) {
+            File::Path::rmtree( $self->{_root_directory}, 0, 0 );
         }
-        delete $self->{_ssh_local_directory};
-        if ( $self->_ssh() ) {
-        }
-        else {
-            if ( $self->{_root_directory} ) {
-                File::Path::rmtree( $self->{_root_directory}, 0, 0 );
-            }
-            delete $self->{_root_directory};
-        }
+        delete $self->{_root_directory};
     }
     return;
 }
@@ -10019,6 +10027,10 @@ restarts the browser.  After the restart, L<capabilities|Firefox::Marionette::Ca
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 root_directory
+
+this is the root directory for the current instance of firefox.  The directory may exist on a remote server.  For debugging purposes only.
+
 =head2 screen_orientation
 
 returns the current browser orientation.  This will be one of the valid primary orientation values 'portrait-primary', 'landscape-primary', 'portrait-secondary', or 'landscape-secondary'.  This method is only currently available on Android (Fennec).
@@ -10096,6 +10108,10 @@ accepts a new time to sleep in L<await|Firefox::Marionette#await> or L<bye|Firef
     my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5); # setting default time to 5 milliseconds
 
     my $old_time_in_ms = $firefox->sleep_time_in_ms(8); # setting default time to 8 milliseconds, returning 5 (milliseconds)
+
+=head2 ssh_local_directory
+
+returns the path to the local directory for the ssh connection (if any). For debugging purposes only.
 
 =head2 strip
 

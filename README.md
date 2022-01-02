@@ -1384,6 +1384,10 @@ restarts the browser.  After the restart, [capabilities](https://metacpan.org/po
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## root\_directory
+
+this is the root directory for the current instance of firefox.  The directory may exist on a remote server.  For debugging purposes only.
+
 ## screen\_orientation
 
 returns the current browser orientation.  This will be one of the valid primary orientation values 'portrait-primary', 'landscape-primary', 'portrait-secondary', or 'landscape-secondary'.  This method is only currently available on Android (Fennec).
@@ -1444,6 +1448,10 @@ accepts a new time to sleep in [await](https://metacpan.org/pod/Firefox::Marione
     my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5); # setting default time to 5 milliseconds
 
     my $old_time_in_ms = $firefox->sleep_time_in_ms(8); # setting default time to 8 milliseconds, returning 5 (milliseconds)
+
+## ssh\_local\_directory
+
+returns the path to the local directory for the ssh connection (if any). For debugging purposes only.
 
 ## strip
 

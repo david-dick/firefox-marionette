@@ -1863,6 +1863,11 @@ SUBROUTINES/METHODS
 
     This method returns itself to aid in chaining methods.
 
+ root_directory
+
+    this is the root directory for the current instance of firefox. The
+    directory may exist on a remote server. For debugging purposes only.
+
  screen_orientation
 
     returns the current browser orientation. This will be one of the valid
@@ -1962,6 +1967,11 @@ SUBROUTINES/METHODS
         my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5); # setting default time to 5 milliseconds
     
         my $old_time_in_ms = $firefox->sleep_time_in_ms(8); # setting default time to 8 milliseconds, returning 5 (milliseconds)
+
+ ssh_local_directory
+
+    returns the path to the local directory for the ssh connection (if
+    any). For debugging purposes only.
 
  strip
 
