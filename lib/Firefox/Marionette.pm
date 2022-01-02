@@ -9326,6 +9326,8 @@ To make the L<go|Firefox::Marionette#go> method return quicker, you need to set 
     my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'eager' ));
     $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
+When going directly to a URL that needs to be downloaded, please see L<BUGS AND LIMITATIONS|Firefox::Marionette#DOWNLOADING-USING-GO-METHOD> for a necessary workaround.
+
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 har
@@ -10476,6 +10478,27 @@ None reported.  Always interested in any products with marionette support that t
 
 
 =head1 BUGS AND LIMITATIONS
+
+=head2 DOWNLOADING USING GO METHOD
+
+When using the L<go|Firefox::Marionette#go> method to go directly to a URL containing a downloadable file, Firefox can hang.  You can work around this by setting the L<page_load_strategy|Firefox::Marionette::Capabilities#page_load_strategy> to C<none> like below;
+
+    #! /usr/bin/perl
+
+    use strict;
+    use warnings;
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'none' ) );
+    $firefox->go("https://github.com/david-dick/firefox-marionette/archive/refs/heads/master.zip");
+    while(!$firefox->downloads()) { sleep 1 }
+    while($firefox->downloading()) { sleep 1 }
+    foreach my $path ($firefox->downloads()) {
+        warn "$path has been downloaded";
+    }
+    $firefox->quit();
+
+=head2 MISSING METHODS
 
 Currently the following Marionette methods have not been implemented;
 

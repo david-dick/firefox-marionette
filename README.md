@@ -757,6 +757,8 @@ To make the [go](https://metacpan.org/pod/Firefox::Marionette#go) method return 
     my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'eager' ));
     $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
+When going directly to a URL that needs to be downloaded, please see [BUGS AND LIMITATIONS](https://metacpan.org/pod/Firefox::Marionette#DOWNLOADING-USING-GO-METHOD) for a necessary workaround.
+
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## har
@@ -1802,6 +1804,27 @@ Firefox::Marionette requires the following non-core Perl modules
 None reported.  Always interested in any products with marionette support that this module could be patched to work with.
 
 # BUGS AND LIMITATIONS
+
+## DOWNLOADING USING GO METHOD
+
+When using the [go](https://metacpan.org/pod/Firefox::Marionette#go) method to go directly to a URL containing a downloadable file, Firefox can hang.  You can work around this by setting the [page\_load\_strategy](https://metacpan.org/pod/Firefox::Marionette::Capabilities#page_load_strategy) to `none` like below;
+
+    #! /usr/bin/perl
+
+    use strict;
+    use warnings;
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'none' ) );
+    $firefox->go("https://github.com/david-dick/firefox-marionette/archive/refs/heads/master.zip");
+    while(!$firefox->downloads()) { sleep 1 }
+    while($firefox->downloading()) { sleep 1 }
+    foreach my $path ($firefox->downloads()) {
+        warn "$path has been downloaded";
+    }
+    $firefox->quit();
+
+## MISSING METHODS
 
 Currently the following Marionette methods have not been implemented;
 
