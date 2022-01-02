@@ -1,5 +1,12 @@
 Revision history for Firefox-Marionette
 
+1.17  Mon Jan  3 10:30 2021
+       Fixes for tmp directory cleanups for Firefox::Marionette objects when defined as globals.  Thanks to eserte.
+       Documentation for firefox workaround for downloading via the go method.  Thanks to aluaces.
+       Adding the debug method
+       Fixes to image/links objects
+       firefox-passwords can now just print the password (with --password) option
+
 1.16  Sun Oct 31 17:46 2021
        Fixes to update for Firefox 94. Thanks to prozorecJP.
        Small fixes for Win32 CPAN Tester failures.
