@@ -650,6 +650,10 @@ SKIP: {
 					}
 				}
 				$update = $firefox->update();
+				if (defined $update->app_version()) {
+					diag("New Browser version is " . $update->app_version());
+					($major_version, $minor_version, $patch_version) = split /[.]/smx, $update->app_version();
+				}
 			}
 		} elsif (defined $update->number_of_updates()) {
 			ok(1, "Firefox was NOT updated");
@@ -3291,6 +3295,7 @@ SKIP: {
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	ok(!$capabilities->moz_headless(), "\$capabilities->moz_headless() is set to false");
+	diag("Final Browser version is " . $capabilities->browser_version());
 	SKIP: {
 		if (!$capabilities->proxy()) {
 			diag("\$capabilities->proxy is not supported for " . $capabilities->browser_version());
