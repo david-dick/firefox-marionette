@@ -641,7 +641,7 @@ SKIP: {
 						if ($key =~ /^(elevation_failure|unsupported|is_complete_update)$/smx) {
 							ok((($update->$key() == 1) || ($update->$key() == 0)), "\$update->$key() produces a boolean:" . $update->$key());
 						} elsif ($key eq 'type') {
-							ok($update->$key() =~ /^(partial|minor|complete)$/smx, "\$update->$key() produces an allowed type:" . $update->$key());
+							ok($update->$key() =~ /^(major|partial|minor|complete)$/smx, "\$update->$key() produces an allowed type:" . $update->$key());
 						} else {
 							ok(1, "\$update->$key() produces a result:" . $update->$key());
 						}
