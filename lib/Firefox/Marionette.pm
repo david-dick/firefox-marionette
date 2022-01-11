@@ -9819,6 +9819,8 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
 
 =back
 
+returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
+
     use Firefox::Marionette();
     use FileHandle();
 
@@ -9827,8 +9829,6 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
     foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
         $firefox->add_login($login);
     }
-
-returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
 
 =head2 logins_from_zip
 
@@ -9840,6 +9840,8 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
 
 =back
 
+returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
+
     use Firefox::Marionette();
     use FileHandle();
 
@@ -9848,8 +9850,6 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
     foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
         $firefox->add_login($login);
     }
-
-returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
 
 =head2 loaded
 

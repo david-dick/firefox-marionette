@@ -1037,6 +1037,8 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
 - [LastPass CSV](https://support.logmeininc.com/lastpass/help/how-do-i-nbsp-export-stored-data-from-lastpass-using-a-generic-csv-file)
 - [KeePass CSV](https://keepass.info/help/base/importexport.html#csv)
 
+returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) objects.
+
     use Firefox::Marionette();
     use FileHandle();
 
@@ -1046,13 +1048,13 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
         $firefox->add_login($login);
     }
 
-returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) objects.
-
 ## logins\_from\_zip
 
 accepts a filehandle as a parameter and then reads the filehandle for exported logins as a zip file.  This is known to work with the following formats;
 
 - [1Password Unencrypted Export format](https://support.1password.com/1pux-format/)
+
+returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) objects.
 
     use Firefox::Marionette();
     use FileHandle();
@@ -1062,8 +1064,6 @@ accepts a filehandle as a parameter and then reads the filehandle for exported l
     foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
         $firefox->add_login($login);
     }
-
-returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) objects.
 
 ## loaded
 

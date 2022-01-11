@@ -1317,6 +1317,8 @@ SUBROUTINES/METHODS
 
       * KeePass CSV <https://keepass.info/help/base/importexport.html#csv>
 
+    returns a list of Firefox::Marionette::Login objects.
+
         use Firefox::Marionette();
         use FileHandle();
     
@@ -1325,8 +1327,6 @@ SUBROUTINES/METHODS
         foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
             $firefox->add_login($login);
         }
-
-    returns a list of Firefox::Marionette::Login objects.
 
  logins_from_zip
 
@@ -1337,6 +1337,8 @@ SUBROUTINES/METHODS
       * 1Password Unencrypted Export format
       <https://support.1password.com/1pux-format/>
 
+    returns a list of Firefox::Marionette::Login objects.
+
         use Firefox::Marionette();
         use FileHandle();
     
@@ -1345,8 +1347,6 @@ SUBROUTINES/METHODS
         foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
             $firefox->add_login($login);
         }
-
-    returns a list of Firefox::Marionette::Login objects.
 
  loaded
 
