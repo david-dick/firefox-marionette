@@ -1029,6 +1029,19 @@ accepts a parameter describing a key and returns an action for use in the [perfo
                                  $firefox->key_up(CONTROL())
                                )->content();
 
+## loaded
+
+returns true if `document.readyState === "complete"`
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    $firefox->find_id('search_input')->type('Type::More');
+    $firefox->find('//button[@name="lucky"]')->click();
+    while(!$firefox->loaded()) {
+        # redirecting to Test::More page
+    }
+
 ## logins\_from\_csv
 
 accepts a filehandle as a parameter and then reads the filehandle for exported logins as CSV.  This is known to work with the following formats;
@@ -1063,19 +1076,6 @@ returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox:
     my $firefox = Firefox::Marionette->new();
     foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
         $firefox->add_login($login);
-    }
-
-## loaded
-
-returns true if `document.readyState === "complete"`
-
-    use Firefox::Marionette();
-
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_id('search_input')->type('Type::More');
-    $firefox->find('//button[@name="lucky"]')->click();
-    while(!$firefox->loaded()) {
-        # redirecting to Test::More page
     }
 
 ## links

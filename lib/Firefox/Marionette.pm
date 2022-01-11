@@ -9805,6 +9805,19 @@ accepts a parameter describing a key and returns an action for use in the L<perf
                                  $firefox->key_up(CONTROL())
                                )->content();
 
+=head2 loaded
+
+returns true if C<document.readyState === "complete">
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    $firefox->find_id('search_input')->type('Type::More');
+    $firefox->find('//button[@name="lucky"]')->click();
+    while(!$firefox->loaded()) {
+        # redirecting to Test::More page
+    }
+
 =head2 logins_from_csv
 
 accepts a filehandle as a parameter and then reads the filehandle for exported logins as CSV.  This is known to work with the following formats;
@@ -9849,19 +9862,6 @@ returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objec
     my $firefox = Firefox::Marionette->new();
     foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
         $firefox->add_login($login);
-    }
-
-=head2 loaded
-
-returns true if C<document.readyState === "complete">
-
-    use Firefox::Marionette();
-
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_id('search_input')->type('Type::More');
-    $firefox->find('//button[@name="lucky"]')->click();
-    while(!$firefox->loaded()) {
-        # redirecting to Test::More page
     }
 
 =head2 links
