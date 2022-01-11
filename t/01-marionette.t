@@ -1008,13 +1008,24 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 1);
 		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 			if ($ENV{RELEASE_TESTING}) {
+				my $handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_proxy_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
+				fcntl $handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
 				if (my $pid = fork) {
-					$firefox->go('http://wtf.example.org');
+					my $url = 'http://wtf.example.org';
+					$firefox->go($url);
 					ok($firefox->html() =~ /success/smx, "Correctly accessed the Proxy");
 					diag($firefox->html());
 					while(kill $signals_by_name{TERM}, $pid) {
 						waitpid $pid, POSIX::WNOHANG();
 						sleep 1;
+					}
+					$handle->seek(0,0) or die "Failed to seek to start of temporary file for proxy check:$!";
+					my $quoted_url = quotemeta $url;
+					while(my $line = <$handle>) {
+						chomp $line;
+						if ($line !~ /^$quoted_url\/?$/smx) {
+							die "Firefox is requesting this $line without any reason";
+						}
 					}
 				} elsif (defined $pid) {
 					eval {
@@ -1030,6 +1041,7 @@ SKIP: {
 									alarm 5;
 									while (my $request = $connection->get_request()) {
 										diag("Got request for " . $request->uri());
+										$handle->print($request->uri() . "\n");
 										my $response = HTTP::Response->new(200, "OK", undef, "success");
 										$connection->send_response($response);
 									}
