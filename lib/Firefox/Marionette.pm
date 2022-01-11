@@ -43,6 +43,7 @@ use FileHandle();
 use MIME::Base64();
 use DirHandle();
 use XML::Parser();
+use Text::CSV_XS();
 use Carp();
 use Config;
 use base qw(Exporter);
@@ -1130,6 +1131,204 @@ sub _define_login_info_from_blessed_user {
 let $variable_name = Components.classes["\@mozilla.org/login-manager/loginInfo;1"].createInstance(Components.interfaces.nsILoginInfo);
 $variable_name.init(arguments[0].host, ("realm" in arguments[0] && arguments[0].realm !== null ? null : arguments[0].origin || ""), arguments[0].realm, arguments[0].user, arguments[0].password, "user_field" in arguments[0] && arguments[0].user_field !== null ? arguments[0].user_field : "", "password_field" in arguments[0] && arguments[0].password_field !== null ? arguments[0].password_field : "");
 _JS_
+}
+
+sub _get_1password_login_items {
+    my ( $class, $json ) = @_;
+    my @items;
+    foreach my $account ( @{ $json->{accounts} } ) {
+        foreach my $vault ( @{ $account->{vaults} } ) {
+            foreach my $item ( @{ $vault->{items} } ) {
+                if (   ( $item->{item}->{categoryUuid} eq '001' )
+                    && ( $item->{item}->{overview}->{url} ) )
+                {    # Login
+                    push @items, $item->{item};
+                }
+            }
+        }
+    }
+    return @items;
+}
+
+sub logins_from_csv {
+    my ( $class, $import_handle ) = @_;
+    binmode $import_handle, ':encoding(utf8)';
+    my $parameters =
+      $class->_csv_parameters( $class->_get_extra_parameters($import_handle) );
+    $parameters->{auto_diag} = 1;
+    my $csv = Text::CSV_XS->new($parameters);
+    my @logins;
+    my $count = 0;
+    my %import_headers;
+
+    foreach my $key ( $csv->header($import_handle) ) {
+        $import_headers{$key} = $count;
+        $count += 1;
+    }
+    my %mapping = (
+        'web site'          => 'host',
+        'login name'        => 'user',
+        login_uri           => 'host',
+        login_username      => 'user',
+        login_password      => 'password',
+        url                 => 'host',
+        username            => 'user',
+        password            => 'password',
+        httprealm           => 'realm',
+        formactionorigin    => 'origin',
+        guid                => 'guid',
+        timecreated         => 'creation_in_ms',
+        timelastused        => 'last_used_in_ms',
+        timepasswordchanged => 'password_changed_in_ms',
+    );
+    while ( my $row = $csv->getline($import_handle) ) {
+        my %parameters;
+        foreach my $key ( sort { $a cmp $b } keys %import_headers ) {
+            if (   ( exists $row->[ $import_headers{$key} ] )
+                && ( defined $mapping{$key} ) )
+            {
+                $parameters{ $mapping{$key} } = $row->[ $import_headers{$key} ];
+            }
+        }
+        foreach my $key (qw(host origin)) {
+            if ( defined $parameters{$key} ) {
+                my $uri = URI->new( $parameters{$key} )->canonical();
+                if ( !$uri->has_recognized_scheme() ) {
+                    my $default_scheme = 'https://';
+                    warn
+"$parameters{$key} does not have a recognised scheme.  Prepending '$default_scheme'\n";
+                    $uri = URI->new( $default_scheme . $parameters{$key} );
+                }
+                $parameters{$key} = $uri->scheme() . q[://] . $uri->host();
+                if ( $uri->default_port() != $uri->port() ) {
+                    $parameters{$key} .= q[:] . $uri->port();
+                }
+            }
+        }
+        if (
+            my $login = $class->_csv_record_is_a_login(
+                $row, \%parameters, \%import_headers
+            )
+          )
+        {
+            push @logins, $login;
+        }
+    }
+    return @logins;
+}
+
+sub _csv_record_is_a_login {
+    my ( $class, $row, $parameters, $import_headers ) = @_;
+    if (   ( $parameters->{host} )
+        && ( $parameters->{host} eq 'http://sn' )
+        && ( $import_headers->{extra} )
+        && ( $row->[ $import_headers->{extra} ] )
+        && ( $row->[ $import_headers->{extra} ] =~ /^NoteType:/smx ) )
+    {
+        warn
+"Skipping non-web login for '$parameters->{user}' (probably from a LastPass export)\n";
+        return;
+    }
+    elsif (( defined $import_headers->{'first one-time password'} )
+        && ( $import_headers->{type} )
+        && ( $row->[ $import_headers->{type} ] ne 'Login' )
+      )    # See 001 reference for v8
+    {
+        warn
+"Skipping $row->[ $import_headers->{type} ] record (probably from a 1Password export)\n";
+        return;
+    }
+    elsif (( $parameters->{host} )
+        && ( $parameters->{user} )
+        && ( $parameters->{password} ) )
+    {
+        return Firefox::Marionette::Login->new( %{$parameters} );
+    }
+    return;
+}
+
+sub _csv_parameters {
+    my ( $class, $extra ) = @_;
+    return {
+        binary         => 1,
+        empty_is_undef => 1,
+        %{$extra},
+    };
+}
+
+sub _get_extra_parameters {
+    my ( $class, $import_handle ) = @_;
+    my @extra_parameter_sets = (
+        {},                                                    # normal
+        { escape_char => q[\\], allow_loose_escapes => 1 },    # KeePass
+        {
+            escape_char         => q[\\],
+            allow_loose_escapes => 1,
+            eol                 => ",$INPUT_RECORD_SEPARATOR"
+        },                                                     # 1Password v7
+    );
+    my $extra_parameters = {};
+  SET: foreach my $parameter_set (@extra_parameter_sets) {
+        seek $import_handle, Fcntl::SEEK_SET(), 0
+          or die "Failed to seek to start of file:$EXTENDED_OS_ERROR\n";
+        my $parameters = $class->_csv_parameters($parameter_set);
+        $parameters->{auto_diag} = 2;
+        my $csv = Text::CSV_XS->new($parameters);
+        eval {
+            foreach my $key (
+                $csv->header(
+                    $import_handle,
+                    {
+                        munge_column_names => sub { defined $_ ? lc : q[] }
+                    }
+                )
+              )
+            {
+            }
+            while ( my $row = $csv->getline($import_handle) ) {
+            }
+            $extra_parameters = $parameter_set;
+        } or do {
+            next SET;
+        };
+        last SET;
+    }
+    seek $import_handle, Fcntl::SEEK_SET(), 0
+      or die "Failed to seek to start of file:$EXTENDED_OS_ERROR\n";
+    return $extra_parameters;
+}
+
+sub logins_from_zip {
+    my ( $class, $import_handle ) = @_;
+    my @logins;
+    my $zip = Archive::Zip->new($import_handle);
+    if ( $zip->memberNamed('export.data')
+        && ( $zip->memberNamed('export.attributes') ) )
+    {    # 1Password v8
+        my $json = JSON::decode_json( $zip->contents('export.data') );
+        foreach my $item ( $class->_get_1password_login_items($json) ) {
+            my ( $username, $password );
+            foreach my $login_field ( @{ $item->{details}->{loginFields} } ) {
+                if ( $login_field->{designation} eq 'username' ) {
+                    $username = $login_field->{value};
+                }
+                elsif ( $login_field->{designation} eq 'password' ) {
+                    $password = $login_field->{value};
+                }
+            }
+            if ( ( defined $username ) && ( defined $password ) ) {
+                push @logins,
+                  Firefox::Marionette::Login->new(
+                    guid     => $item->{uuid},
+                    host     => $item->{overview}->{url},
+                    user     => $username,
+                    password => $password,
+                    creation => $item->{createdAt},
+                  );
+            }
+        }
+    }
+    return @logins;
 }
 
 sub add_login {
@@ -9605,6 +9804,52 @@ accepts a parameter describing a key and returns an action for use in the L<perf
                                  $firefox->key_up('l'),
                                  $firefox->key_up(CONTROL())
                                )->content();
+
+=head2 logins_from_csv
+
+accepts a filehandle as a parameter and then reads the filehandle for exported logins as CSV.  This is known to work with the following formats;
+
+=over 4
+
+=item * L<Bitwarden CSV|https://bitwarden.com/help/article/condition-bitwarden-import/>
+
+=item * L<LastPass CSV|https://support.logmeininc.com/lastpass/help/how-do-i-nbsp-export-stored-data-from-lastpass-using-a-generic-csv-file>
+
+=item * L<KeePass CSV|https://keepass.info/help/base/importexport.html#csv>
+
+=back
+
+    use Firefox::Marionette();
+    use FileHandle();
+
+    my $handle = FileHandle->new('/path/to/last_pass.csv');
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
+        $firefox->add_login($login);
+    }
+
+returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
+
+=head2 logins_from_zip
+
+accepts a filehandle as a parameter and then reads the filehandle for exported logins as a zip file.  This is known to work with the following formats;
+
+=over 4
+
+=item * L<1Password Unencrypted Export format|https://support.1password.com/1pux-format/>
+
+=back
+
+    use Firefox::Marionette();
+    use FileHandle();
+
+    my $handle = FileHandle->new('/path/to/1Passwordv8.1pux');
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
+        $firefox->add_login($login);
+    }
+
+returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
 
 =head2 loaded
 

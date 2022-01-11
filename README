@@ -1303,6 +1303,51 @@ SUBROUTINES/METHODS
                                      $firefox->key_up(CONTROL())
                                    )->content();
 
+ logins_from_csv
+
+    accepts a filehandle as a parameter and then reads the filehandle for
+    exported logins as CSV. This is known to work with the following
+    formats;
+
+      * Bitwarden CSV
+      <https://bitwarden.com/help/article/condition-bitwarden-import/>
+
+      * LastPass CSV
+      <https://support.logmeininc.com/lastpass/help/how-do-i-nbsp-export-stored-data-from-lastpass-using-a-generic-csv-file>
+
+      * KeePass CSV <https://keepass.info/help/base/importexport.html#csv>
+
+        use Firefox::Marionette();
+        use FileHandle();
+    
+        my $handle = FileHandle->new('/path/to/last_pass.csv');
+        my $firefox = Firefox::Marionette->new();
+        foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
+            $firefox->add_login($login);
+        }
+
+    returns a list of Firefox::Marionette::Login objects.
+
+ logins_from_zip
+
+    accepts a filehandle as a parameter and then reads the filehandle for
+    exported logins as a zip file. This is known to work with the following
+    formats;
+
+      * 1Password Unencrypted Export format
+      <https://support.1password.com/1pux-format/>
+
+        use Firefox::Marionette();
+        use FileHandle();
+    
+        my $handle = FileHandle->new('/path/to/1Passwordv8.1pux');
+        my $firefox = Firefox::Marionette->new();
+        foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
+            $firefox->add_login($login);
+        }
+
+    returns a list of Firefox::Marionette::Login objects.
+
  loaded
 
     returns true if document.readyState === "complete"
