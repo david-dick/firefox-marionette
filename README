@@ -1688,6 +1688,11 @@ SUBROUTINES/METHODS
       keys; 'height' and 'width'. Both keys are in cm and default to US
       letter size. See the 'size' key.
 
+      * page_ranges - A list of the pages to print. Available for Firefox
+      96
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/96#webdriver_conformance_marionette>
+      and after.
+
       * print_background - Print background graphics. Boolean value.
       Defaults to false.
 

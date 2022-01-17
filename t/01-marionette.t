@@ -1189,7 +1189,7 @@ SKIP: {
 		ok(((centimetres_to_points(7) == $urx) || (centimetres_to_points(7) == $urx - 1)) &&
 			 ((centimetres_to_points(12) == $ury) || (centimetres_to_points(12) == $ury - 1)),
 				"Correct page height of " . centimetres_to_points(12) . " (was actually $ury) and width " . centimetres_to_points(7) . " (was actually $urx)");
-		$raw_pdf = $firefox->pdf(raw => 1, shrinkToFit => 1, landscape => 1, page => { width => 7, height => 12 });
+		$raw_pdf = $firefox->pdf(raw => 1, shrinkToFit => 1, pageRanges => [0], landscape => 1, page => { width => 7, height => 12 });
 		$pdf = PDF::API2->open_scalar($raw_pdf);
 		$page = $pdf->openpage(0);
 		($llx, $lly, $urx, $ury) = $page->mediabox();
@@ -1199,7 +1199,7 @@ SKIP: {
 			 ((centimetres_to_points(7) == $ury) || (centimetres_to_points(7) == $ury - 1)),
 				"Correct page height of " . centimetres_to_points(7) . " (was actually $ury) and width " . centimetres_to_points(12) . " (was actually $urx)");
 		foreach my $paper_size ($firefox->paper_sizes()) {
-			$raw_pdf = $firefox->pdf(raw => 1, size => $paper_size, print_background => 1, shrink_to_fit => 1);
+			$raw_pdf = $firefox->pdf(raw => 1, size => $paper_size, page_ranges => [], print_background => 1, shrink_to_fit => 1);
 			$pdf = PDF::API2->open_scalar($raw_pdf);
 			$page = $pdf->openpage(0);
 			($llx, $lly, $urx, $ury) = $page->mediabox();

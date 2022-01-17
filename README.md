@@ -1242,6 +1242,7 @@ accepts a optional hash as the first parameter with the following allowed keys;
 - landscape - Paper orientation.  Boolean value.  Defaults to false
 - margin - A hash describing the margins.  The hash may have the following optional keys, 'top', 'left', 'right' and 'bottom'.  All these keys are in cm and default to 1 (~0.4 inches)
 - page - A hash describing the page.  The hash may have the following keys; 'height' and 'width'.  Both keys are in cm and default to US letter size.  See the 'size' key.
+- page\_ranges - A list of the pages to print. Available for [Firefox 96](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/96#webdriver_conformance_marionette) and after.
 - print\_background - Print background graphics.  Boolean value.  Defaults to false. 
 - raw - rather than a file handle containing the PDF, the binary PDF will be returned.
 - scale - Scale of the webpage rendering.  Defaults to 1.

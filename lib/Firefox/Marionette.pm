@@ -6800,6 +6800,7 @@ sub _map_deprecated_pdf_parameters {
     my %mapping = (
         shrink_to_fit    => 'shrinkToFit',
         print_background => 'printBackground',
+        page_ranges      => 'pageRanges',
     );
     foreach my $from ( sort { $a cmp $b } keys %mapping ) {
         my $to = $mapping{$from};
@@ -6819,6 +6820,7 @@ sub _map_deprecated_pdf_parameters {
         next if ( $key eq 'printBackground' );
         next if ( $key eq 'margin' );
         next if ( $key eq 'page' );
+        next if ( $key eq 'pageRanges' );
         next if ( $key eq 'size' );
         next if ( $key eq 'raw' );
         Firefox::Marionette::Exception->throw(
@@ -10084,6 +10086,8 @@ accepts a optional hash as the first parameter with the following allowed keys;
 =item * margin - A hash describing the margins.  The hash may have the following optional keys, 'top', 'left', 'right' and 'bottom'.  All these keys are in cm and default to 1 (~0.4 inches)
 
 =item * page - A hash describing the page.  The hash may have the following keys; 'height' and 'width'.  Both keys are in cm and default to US letter size.  See the 'size' key.
+
+=item * page_ranges - A list of the pages to print. Available for L<Firefox 96|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/96#webdriver_conformance_marionette> and after.
 
 =item * print_background - Print background graphics.  Boolean value.  Defaults to false. 
 
