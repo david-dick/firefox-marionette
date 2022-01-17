@@ -9050,11 +9050,11 @@ See the L<context|Firefox::Marionette#context> method for an alternative methods
 
 =head2 chrome_window_handle
 
-returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by L<window_handle|Firefox::Marionette#window_handle> and appropriate L<context|Firefox::Marionette#context> calls for Firefox 94 and after.
+returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by L<window_handle|Firefox::Marionette#window_handle> and appropriate L<context|Firefox::Marionette#context> calls for L<Firefox 94 and after|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
 =head2 chrome_window_handles
 
-returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by L<window_handles|Firefox::Marionette#window_handles> and appropriate L<context|Firefox::Marionette#context> calls for Firefox 94 and after.
+returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by L<window_handles|Firefox::Marionette#window_handles> and appropriate L<context|Firefox::Marionette#context> calls for L<Firefox 94 and after|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
 =head2 clear
 

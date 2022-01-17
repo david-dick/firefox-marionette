@@ -369,14 +369,16 @@ SUBROUTINES/METHODS
     This can be used to switch to this window at a later point. This
     corresponds to a window that may itself contain tabs. This method is
     replaced by window_handle and appropriate context calls for Firefox 94
-    and after.
+    and after
+    <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
  chrome_window_handles
 
     returns identifiers for each open chrome window for tests interested in
     managing a set of chrome windows and tabs separately. This method is
     replaced by window_handles and appropriate context calls for Firefox 94
-    and after.
+    and after
+    <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
  clear
 

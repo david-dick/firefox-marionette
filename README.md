@@ -283,11 +283,11 @@ See the [context](https://metacpan.org/pod/Firefox::Marionette#context) method f
 
 ## chrome\_window\_handle
 
-returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by [window\_handle](https://metacpan.org/pod/Firefox::Marionette#window_handle) and appropriate [context](https://metacpan.org/pod/Firefox::Marionette#context) calls for Firefox 94 and after.
+returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by [window\_handle](https://metacpan.org/pod/Firefox::Marionette#window_handle) and appropriate [context](https://metacpan.org/pod/Firefox::Marionette#context) calls for [Firefox 94 and after](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette).
 
 ## chrome\_window\_handles
 
-returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by [window\_handles](https://metacpan.org/pod/Firefox::Marionette#window_handles) and appropriate [context](https://metacpan.org/pod/Firefox::Marionette#context) calls for Firefox 94 and after.
+returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by [window\_handles](https://metacpan.org/pod/Firefox::Marionette#window_handles) and appropriate [context](https://metacpan.org/pod/Firefox::Marionette#context) calls for [Firefox 94 and after](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette).
 
 ## clear
 
