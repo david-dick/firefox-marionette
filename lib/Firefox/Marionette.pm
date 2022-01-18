@@ -2554,8 +2554,8 @@ sub execute {
                 "Failed to execute '$binary':$EXTENDED_OS_ERROR");
         };
         my ( $result, $output );
-        while ( $result = read $reader, my $buffer,
-            _READ_LENGTH_OF_OPEN3_OUTPUT() )
+        while ( $result = read $reader,
+            my $buffer, _READ_LENGTH_OF_OPEN3_OUTPUT() )
         {
             $output .= $buffer;
         }
@@ -3469,7 +3469,8 @@ sub macos_binary_paths {
         }
         if ( $self->{requested_version}->{waterfox} ) {
             return (
-                '/Applications/Waterfox Current.app/Contents/MacOS/waterfox', );
+                '/Applications/Waterfox Current.app/Contents/MacOS/waterfox',
+            );
         }
     }
     return (
