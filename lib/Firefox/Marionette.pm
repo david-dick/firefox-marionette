@@ -1083,6 +1083,8 @@ _JS_
                     $form->has_name( $login->password_field ) )
               )
             {
+                $user_field->clear();
+                $password_field->clear();
                 $user_field->type( $login->user() );
                 $password_field->type( $login->password() );
                 $found = 1;
