@@ -5,34 +5,39 @@ use warnings;
 
 our $VERSION = '1.17';
 
+sub IDENTIFIER { return 'element-6066-11e4-a52e-4f735466cecf' }
+
 sub new {
     my ( $class, $browser, %parameters ) = @_;
+    if ( !defined $parameters{ IDENTIFIER() } ) {
+        $parameters{ IDENTIFIER() } = delete $parameters{ELEMENT};
+        $parameters{_old_protocols_key} = 'ELEMENT';
+    }
+    else {
+        delete $parameters{ELEMENT};
+    }
     my $element = bless {
         browser => $browser,
         %parameters
     }, $class;
-    foreach my $key ( sort { $a cmp $b } keys %parameters ) {
-        if ( $key =~ /^element/smx ) {
-            $element->{ELEMENT} = $parameters{$key};
-        }
-    }
     return $element;
 }
 
 sub TO_JSON {
     my ($self) = @_;
     my $json = {};
-    foreach my $key ( sort { $a cmp $b } keys %{$self} ) {
-        if ( $key ne 'browser' ) {
-            $json->{$key} = $self->{$key};
-        }
+    if ( $self->{_old_protocols_key} ) {
+        $json->{ $self->{_old_protocols_key} } = $self->uuid();
+    }
+    else {
+        $json->{ IDENTIFIER() } = $self->uuid();
     }
     return $json;
 }
 
 sub uuid {
     my ($self) = @_;
-    return $self->{ELEMENT};
+    return $self->{ IDENTIFIER() };
 }
 
 sub browser {
@@ -698,6 +703,10 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     }
 
 If no elements are found, this method will return undef.  For the same functionality that throws a L<not found|Firefox::Marionette::Exception::NotFound> exception, see the L<find_partial|Firefox::Marionette::Element#find_partial> method.
+
+=head2 IDENTIFIER
+
+returns the L<web element identifier|https://www.w3.org/TR/webdriver/#elements>
 
 =head2 is_enabled
 
