@@ -1012,6 +1012,7 @@ SKIP: {
 				fcntl $handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
 				if (my $pid = fork) {
 					my $url = 'http://wtf.example.org';
+					my $favicon_url = 'http://wtf.example.org/favicon.ico';
 					$firefox->go($url);
 					ok($firefox->html() =~ /success/smx, "Correctly accessed the Proxy");
 					diag($firefox->html());
@@ -1021,9 +1022,11 @@ SKIP: {
 					}
 					$handle->seek(0,0) or die "Failed to seek to start of temporary file for proxy check:$!";
 					my $quoted_url = quotemeta $url;
+					my $quoted_favicon_url = quotemeta $favicon_url;
 					while(my $line = <$handle>) {
 						chomp $line;
-						if ($line !~ /^$quoted_url\/?$/smx) {
+						if ($line =~ /^$favicon_url$/smx) {
+						} elsif ($line !~ /^$quoted_url\/?$/smx) {
 							die "Firefox is requesting this $line without any reason";
 						}
 					}
