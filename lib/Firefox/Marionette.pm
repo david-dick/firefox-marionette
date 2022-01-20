@@ -7520,11 +7520,13 @@ sub _find {
               map { Firefox::Marionette::Element->new( $self, %{$_} ) }
               @{ $response->result() };
         }
-        elsif (( ref $self->_response_result_value($response) )
+        elsif (
+               ( ref $self->_response_result_value($response) )
             && ( ( ref $self->_response_result_value($response) ) eq 'ARRAY' )
             && ( ref $self->_response_result_value($response)->[0] )
             && ( ( ref $self->_response_result_value($response)->[0] ) eq
-                'HASH' ) )
+                'HASH' )
+          )
         {
             return
               map { Firefox::Marionette::Element->new( $self, %{$_} ) }
