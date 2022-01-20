@@ -2044,7 +2044,9 @@ sub _check_protocol_version_and_pid {
 sub _post_launch_checks_and_setup {
     my ( $self, $timeouts ) = @_;
     $self->_write_local_proxy( $self->_ssh() );
-    $self->timeouts($timeouts);
+    if ( defined $timeouts ) {
+        $self->timeouts($timeouts);
+    }
     if ( $self->{_har} ) {
         $self->_build_local_extension_directory();
         my $path = File::Spec->catfile(
