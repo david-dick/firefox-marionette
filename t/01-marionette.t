@@ -1130,7 +1130,7 @@ SKIP: {
 }
 
 SKIP: {
-	diag("Starting new firefox for testing PDFs");
+	diag("Starting new firefox for testing PDFs and script elements");
 	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1142,6 +1142,31 @@ SKIP: {
 		skip("TLS test infrastructure seems compromised", 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+	$firefox->go("file://$path");
+	$firefox->find_class('add')->click();
+	my $span = $firefox->has_tag('span');
+	{
+		my $count = 0;
+		my $element = $firefox->script('return arguments[0].children[0]', args => [ $span ]);
+		ok(ref $element eq 'Firefox::Marionette::Element' && $element->tag_name() eq 'button', "\$firefox->has_tag('span') has children and the first child is an Firefox::Marionette::Element with a tag_name of 'button'");
+	}
+	{
+		my $value = $firefox->script('return [2,1]', args => [ $span ]);
+		ok($value->[0] == 2, "Value returned from script is the numeric 2 in an array");
+	}
+	{
+		my $value = $firefox->script('return [2,arguments[0]]', args => [ $span ]);
+		ok(ref $value->[1] eq 'Firefox::Marionette::Element' && $value->[1]->tag_name() eq 'span', "Value returned from script is a Firefox::Mariontte::Element for a 'span' in an array");
+	}
+	{
+		my $value = $firefox->script('return 2', args => [ $span ]);
+		ok($value == 2, "Value returned from script is the numeric 2");
+	}
+	{
+		my $hash = $firefox->script('return { value: 2 }', args => [ $span ]);
+		ok($hash->{value} == 2, "Value returned from script is the numeric 2 in a hash");
+	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	if (!grep /^accept_insecure_certs$/, $capabilities->enumerate()) {

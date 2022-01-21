@@ -81,6 +81,7 @@ sub _MIN_VERSION_FOR_MODERN_EXIT    { return 40 }
 sub _MIN_VERSION_FOR_AUTO_LISTEN    { return 55 }
 sub _MIN_VERSION_FOR_HOSTPORT_PROXY { return 57 }
 sub _MIN_VERSION_FOR_XVFB           { return 12 }
+sub _MIN_VERSION_FOR_WEBDRIVER_IDS  { return 63 }
 sub _MIN_VERSION_FOR_LINUX_SANDBOX  { return 90 }
 sub _DEFAULT_SOCKS_VERSION          { return 5 }
 sub _MILLISECONDS_IN_ONE_SECOND     { return 1_000 }
@@ -2431,6 +2432,21 @@ sub _is_firefox_major_version_at_least {
 sub _is_xvfb_okay {
     my ($self) = @_;
     if ( $self->_is_firefox_major_version_at_least( _MIN_VERSION_FOR_XVFB() ) )
+    {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+sub _is_using_webdriver_ids_exclusively {
+    my ($self) = @_;
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_FOR_WEBDRIVER_IDS()
+        )
+      )
     {
         return 1;
     }
@@ -8115,7 +8131,67 @@ sub script {
         ]
     );
     my $response = $self->_get_response($message_id);
-    return $self->_response_result_value($response);
+    return $self->_check_for_and_translate_into_objects(
+        $self->_response_result_value($response) );
+}
+
+sub _get_any_class_from_variable {
+    my ( $self, $object ) = @_;
+    my $class;
+    my $old_class;
+    my $count = 0;
+    foreach my $key ( sort { $a cmp $b } keys %{$object} ) {
+        foreach my $known_class (
+            qw(
+            Firefox::Marionette::Element
+            )
+          )
+        {
+            if ( $key eq $known_class->IDENTIFIER() ) {
+                $class = $known_class;
+            }
+        }
+        if ( $key eq 'ELEMENT' ) {
+            $old_class = 'Firefox::Marionette::Element';
+        }
+        $count += 1;
+    }
+    if ( ( $count == 1 ) && ( defined $class ) ) {
+        return $class;
+    }
+    elsif ( !$self->_is_using_webdriver_ids_exclusively() ) {
+        if ( ( $count == 1 ) && ( defined $old_class ) ) {
+            return $old_class;
+        }
+        elsif (( $count == 2 )
+            && ( defined $old_class )
+            && ( defined $class ) )
+        {
+            return $class;
+        }
+    }
+    return;
+}
+
+sub _check_for_and_translate_into_objects {
+    my ( $self, $value ) = @_;
+    if ( my $ref = ref $value ) {
+        if ( $ref eq 'HASH' ) {
+            if ( my $class = $self->_get_any_class_from_variable($value) ) {
+                my $instance = $class->new( $self, %{$value} );
+                return $instance;
+            }
+        }
+        elsif ( $ref eq 'ARRAY' ) {
+            my @objects;
+            foreach my $object ( @{$value} ) {
+                push @objects,
+                  $self->_check_for_and_translate_into_objects($object);
+            }
+            return \@objects;
+        }
+    }
+    return $value;
 }
 
 sub json {
