@@ -89,7 +89,8 @@ sub new {
 
 sub _check_old_exception_cases {
     my ( $self, $parameters, $options ) = @_;
-    if (   ( $self->error()->{error} eq 'no such element' )
+    if (
+           ( $self->error()->{error} eq 'no such element' )
         || ( $self->error()->{message} =~ /^Unable[ ]to[ ]locate[ ]element/smx )
       )
     {
