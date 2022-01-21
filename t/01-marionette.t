@@ -28,7 +28,6 @@ if (defined $ENV{WATERFOX}) {
 	$class->import(qw(:all));
 }
 if ($ENV{FIREFOX_ALARM}) {
-	$SIG{ALRM} = sub { die "Alarm at time exceeded" };
 	alarm 900; # ten minutes is heaps for bulk testing
 }
 
