@@ -53,9 +53,14 @@ eval {
       . ( join q[|], map { quotemeta } @{ $options{'allow-binary'} } ) . q[)];
     my @allowed_binary_directories;
     foreach my $binary ( @{ $options{'allow-binary'} } ) {
-        my ( $volume, $directories ) = File::Spec->splitpath($binary);
-        push @allowed_binary_directories,
-          File::Spec->catdir( $volume, $directories );
+        if ( $binary eq 'firefox' ) {
+            push @allowed_binary_directories, '/usr/bin';
+        }
+        else {
+            my ( $volume, $directories ) = File::Spec->splitpath($binary);
+            push @allowed_binary_directories,
+              File::Spec->catdir( $volume, $directories );
+        }
     }
     my $allowed_binary_directories = q[(?:]
       . ( join q[|], map { quotemeta } @allowed_binary_directories ) . q[)];
