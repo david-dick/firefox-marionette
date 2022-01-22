@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.19  Sun Jan 23 07:24 2022
+       Fixing MANIFEST file
+
 1.18  Sun Jan 23 07:09 2022
        Adding the shadow_root, shadowy, logins_from_csv and logins_from_zip methods
        Change to allow directly returning Firefox::Marionette::Element elements from script calls
