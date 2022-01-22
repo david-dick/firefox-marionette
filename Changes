@@ -1,6 +1,14 @@
 Revision history for Firefox-Marionette
 
-1.17  Mon Jan  3 10:30 2021
+1.18  Sun Jan 23 07:09 2022
+       Adding the shadow_root, shadowy, logins_from_csv and logins_from_zip methods
+       Change to allow directly returning Firefox::Marionette::Element elements from script calls
+       Clear user and password fields before typing in them for the fill_login method
+       Adding page_ranges parameter for pdf method
+       Adding 1Password support for firefox-passwords
+       Adding --check-only support to firefox-passwords when importing passwords
+
+1.17  Mon Jan  3 10:30 2022
        Fixes for tmp directory cleanups for Firefox::Marionette objects when defined as globals.  Thanks to eserte.
        Documentation for firefox workaround for downloading via the go method.  Thanks to aluaces.
        Adding the debug method
