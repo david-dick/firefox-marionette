@@ -18,6 +18,7 @@ use Firefox::Marionette::Proxy();
 use Firefox::Marionette::Exception();
 use Firefox::Marionette::Exception::Response();
 use Firefox::Marionette::UpdateStatus();
+use Firefox::Marionette::ShadowRoot();
 use Waterfox::Marionette::Profile();
 use Compress::Zlib();
 use Config::INI::Reader();
@@ -8144,6 +8145,7 @@ sub _get_any_class_from_variable {
         foreach my $known_class (
             qw(
             Firefox::Marionette::Element
+            Firefox::Marionette::ShadowRoot
             )
           )
         {
@@ -8164,7 +8166,6 @@ sub _get_any_class_from_variable {
             return $old_class;
         }
         elsif (( $count == 2 )
-            && ( defined $old_class )
             && ( defined $class ) )
         {
             return $class;
@@ -8288,6 +8289,37 @@ sub window_type {
     );
     my $response = $self->_get_response($message_id);
     return $self->_response_result_value($response);
+}
+
+sub shadowy {
+    my ( $self, $element ) = @_;
+    if (
+        $self->script(
+q[if (arguments[0].shadowRoot) { return true } else { return false }],
+            args => [$element]
+        )
+      )
+    {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+sub shadow_root {
+    my ( $self, $element ) = @_;
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(), $message_id,
+            $self->_command('WebDriver:GetShadowRoot'),
+            { id => $element->uuid() }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return Firefox::Marionette::ShadowRoot->new( $self,
+        %{ $self->_response_result_value($response) } );
 }
 
 sub switch_to_shadow_root {
@@ -10429,6 +10461,44 @@ The parameters after the L<element|Firefox::Marionette::Element> parameter are t
 =head2 send_alert_text
 
 sends keys to the input field of a currently displayed modal message box
+
+=head2 shadow_root
+
+accepts an L<element|Firefox::Marionette::Element> as a parameter and returns it's L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or throws an exception.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
+    $firefox->find_class('add')->click();
+    my $custom_square = $firefox->find_tag('custom-square');
+    my $shadow_root = $firefox->shadow_root($custom_square);
+
+    foreach my $element (@{$firefox->script('return arguments[0].children', args => [ $shadow_root ])}) {
+        warn $element->tag_name();
+    }
+
+=head2 shadowy
+
+accepts an L<element|Firefox::Marionette::Element> as a parameter and returns true if the element has a L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or false otherwise.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
+    $firefox->find_class('add')->click();
+    my $custom_square = $firefox->find_tag('custom-square');
+    if ($firefox->shadowy($custom_square)) {
+        my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
+        warn $firefox->script('return arguments[0].innerHTML', args => [ $shadow_root ]);
+        ...
+    }
+
+This function will probably be used to see if the L<shadow_root|Firefox::Marionette::Element#shadow_root> method can be called on this element without raising an exception.
 
 =head2 sleep_time_in_ms
 

@@ -1142,6 +1142,7 @@ SKIP: {
 		skip("TLS test infrastructure seems compromised", 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	my $shadow_root;
 	my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
 	$firefox->go("file://$path");
 	$firefox->find_class('add')->click();
@@ -1150,6 +1151,47 @@ SKIP: {
 		my $count = 0;
 		my $element = $firefox->script('return arguments[0].children[0]', args => [ $span ]);
 		ok(ref $element eq 'Firefox::Marionette::Element' && $element->tag_name() eq 'button', "\$firefox->has_tag('span') has children and the first child is an Firefox::Marionette::Element with a tag_name of 'button'");
+	}
+	my $custom_square;
+	TODO: {
+		local $TODO = $major_version < 63 ? "Firefox cannot create elements from a shadow root for versions less than 63" : undef;
+		$custom_square = $firefox->has_tag('custom-square');
+		ok(ref $custom_square eq 'Firefox::Marionette::Element', "\$firefox->has_tag('custom-square') returns a Firefox::Marionette::Element");
+		if (ref $custom_square eq 'Firefox::Marionette::Element') {
+			my $element = $firefox->script('return arguments[0].shadowRoot.children[0]', args => [ $custom_square ]);
+			ok(!$span->shadowy(), "\$span->shadowy() returns false");
+			ok($custom_square->shadowy(), "\$custom_square->shadowy() returns true");
+			ok($element->tag_name() eq 'style', "First element from scripted shadowRoot is a style tag");
+		}
+	}
+	if ($major_version >= 96) {
+		$shadow_root = $custom_square->shadow_root();
+		ok(ref $shadow_root eq 'Firefox::Marionette::ShadowRoot', "\$firefox->has_tag('custom-square')->shadow_root() returns a Firefox::Marionette::ShadowRoot");
+		my $count = 0;
+		foreach my $element (@{$firefox->script('return arguments[0].children', args => [ $shadow_root ])}) {
+			if ($count == 0) {
+				ok($element->tag_name() eq 'style', "First element from ShadowRoot via script is a style tag");
+			} else {
+				ok($element->tag_name() eq 'div', "Second element from ShadowRoot via script is a div tag");
+			}
+			$count += 1;
+		}
+		ok($count == 2, "\$firefox->has_tag('custom-square')->shadow_root() has 2 children");
+		ok(ref $shadow_root eq 'Firefox::Marionette::ShadowRoot', "\$firefox->has_tag('custom-square')->shadow_root() returns a Firefox::Marionette::ShadowRoot");
+		{
+			my $element = $firefox->script('return arguments[0].children[0]', args => [ $shadow_root ]);
+			ok($element->tag_name() eq 'style', "Element returned from ShadowRoot via script is a style tag");
+		}
+		$count = 0;
+		foreach my $element (@{$firefox->script('return [ 2, arguments[0].children[0] ]', args => [ $shadow_root ])}) {
+			if ($count == 0) {
+				ok($element == 2, "First element is the numeric 2");
+			} else {
+				ok($element->tag_name() eq 'style', "Second element from ShadowRoot via script is a style tag");
+			}
+			$count += 1;
+		}
+		ok($count == 2, "\$firefox->script() correctly returns an array with 2 elements");
 	}
 	{
 		my $value = $firefox->script('return [2,1]', args => [ $span ]);

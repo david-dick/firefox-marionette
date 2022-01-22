@@ -1478,6 +1478,44 @@ The parameters after the [element](https://metacpan.org/pod/Firefox::Marionette:
 
 sends keys to the input field of a currently displayed modal message box
 
+## shadow\_root
+
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as a parameter and returns it's [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) or throws an exception.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
+    $firefox->find_class('add')->click();
+    my $custom_square = $firefox->find_tag('custom-square');
+    my $shadow_root = $firefox->shadow_root($custom_square);
+
+    foreach my $element (@{$firefox->script('return arguments[0].children', args => [ $shadow_root ])}) {
+        warn $element->tag_name();
+    }
+
+## shadowy
+
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as a parameter and returns true if the element has a [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) or false otherwise.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
+    $firefox->find_class('add')->click();
+    my $custom_square = $firefox->find_tag('custom-square');
+    if ($firefox->shadowy($custom_square)) {
+        my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
+        warn $firefox->script('return arguments[0].innerHTML', args => [ $shadow_root ]);
+        ...
+    }
+
+This function will probably be used to see if the [shadow\_root](https://metacpan.org/pod/Firefox::Marionette::Element#shadow_root) method can be called on this element without raising an exception.
+
 ## sleep\_time\_in\_ms
 
 accepts a new time to sleep in [await](https://metacpan.org/pod/Firefox::Marionette#await) or [bye](https://metacpan.org/pod/Firefox::Marionette#bye) methods and returns the previous time.  The default time is "1" millisecond.

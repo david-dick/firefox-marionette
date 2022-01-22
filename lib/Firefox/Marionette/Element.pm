@@ -102,6 +102,16 @@ sub switch_to_frame {
     return $self->browser()->switch_to_frame($self);
 }
 
+sub shadow_root {
+    my ($self) = @_;
+    return $self->browser()->shadow_root($self);
+}
+
+sub shadowy {
+    my ($self) = @_;
+    return $self->browser()->shadowy($self);
+}
+
 sub switch_to_shadow_root {
     my ($self) = @_;
     return $self->browser()->switch_to_shadow_root($self);
@@ -753,6 +763,42 @@ accepts the following optional parameters as a hash;
 =item * highlights - a reference to a list containing L<elements|Firefox::Marionette::Element> to draw a highlight around
 
 =back
+
+=head2 shadow_root
+
+returns the L<element|Firefox::Marionette::Element>'s L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or throws an exception.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    $firefox->go('file://' . CWd::cwd() . 't/data/shadow.html');
+    $firefox->find_class('add')->click();
+    my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
+
+    foreach my $element (@{$firefox->script('return arguments[0].children', args => [ $shadow_root ])}) {
+        warn $element->tag_name();
+    }
+
+=head2 shadowy
+
+returns true if the L<element|Firefox::Marionette::Element> has a L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or false otherwise.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+
+    $firefox->go('file://' . CWd::cwd() . 't/data/shadow.html');
+    $firefox->find_class('add')->click();
+    if ($firefox->find_tag('custom-square')->shadowy()) {
+        my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
+        warn $firefox->script('return arguments[0].innerHTML', args => [ $shadow_root ]);
+        ...
+    }
+
+This function will probably be used to see if the L<shadow_root|Firefox::Marionette::Element#shadow_root> method can be called on this element without raising an exception.
 
 =head2 switch_to_frame
 
