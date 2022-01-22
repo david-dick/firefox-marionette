@@ -758,10 +758,6 @@ accepts the following optional parameters as a hash;
 
 switches to this frame within the current window.
 
-=head2 switch_to_shadow_root
-
-switches to this element's L<shadow root|https://www.w3.org/TR/shadow-dom/>
-
 =head2 tag_name
 
 returns the relevant tag name.  For example 'a' or 'input'.
