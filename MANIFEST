@@ -11,6 +11,7 @@ lib/Firefox/Marionette/Link.pm
 lib/Firefox/Marionette/Login.pm
 lib/Firefox/Marionette/Profile.pm
 lib/Firefox/Marionette/Proxy.pm
+lib/Firefox/Marionette/ShadowRoot.pm
 lib/Firefox/Marionette/Window/Rect.pm
 lib/Firefox/Marionette/Element.pm
 lib/Firefox/Marionette/Element/Rect.pm
@@ -34,8 +35,14 @@ check-firefox-certificate-authorities
 ssh-auth-cmd-marionette
 firefox-passwords
 t/author/bulk_test.pl
+t/data/elements.html
 t/data/logins.json
 t/data/key4.db
+t/data/1Passwordv7.csv
+t/data/1Passwordv8.1pux
+t/data/bitwarden_export_org.csv
+t/data/keepass.csv
+t/data/last_pass_example.csv
 t/00.load.t
 t/01-marionette.t
 t/pod-coverage.t
