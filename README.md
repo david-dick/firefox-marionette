@@ -17,7 +17,7 @@ Version 1.17
 
     say $firefox->html();
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
 
@@ -190,7 +190,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5)->go('https://metacpan.org/');
 
-    $firefox->find_id('search-input')->type('Test::More');
+    $firefox->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find_name('lucky')->click();
 
@@ -220,7 +220,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_id('search-input')->type('Test::More');
+    $firefox->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find_name('lucky')->click();
 
@@ -369,7 +369,7 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
     use v5.10;
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    say $firefox->find_id('search-input')->css('height');
+    say $firefox->find_id('metacpan_search-input')->css('height');
 
 ## current\_chrome\_window\_handle 
 
@@ -488,7 +488,7 @@ accepts a filesystem path and returns a matching filehandle.  This is trivial fo
 
     my $firefox = Firefox::Marionette->new( host => '10.1.2.3' )->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find('//button[@name="lucky"]')->click();
 
@@ -513,7 +513,7 @@ returns true if any files in [downloads](https://metacpan.org/pod/Firefox::Mario
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find('//button[@name="lucky"]')->click();
 
@@ -536,7 +536,7 @@ returns a list of file paths (including partial downloads) of downloads during t
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find('//button[@name="lucky"]')->click();
 
@@ -589,11 +589,11 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find('//input[@id="search-input"]')->type('Test::More');
+    $firefox->find('//input[@id="metacpan_search-input"]')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find('//input[@id="search-input"]')) {
+    foreach my $element ($firefox->find('//input[@id="metacpan_search-input"]')) {
         $element->type('Test::More');
     }
 
@@ -609,11 +609,11 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_id('search-input')->type('Test::More');
+    $firefox->find_id('metacpan_search-input')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find_id('search-input')) {
+    foreach my $element ($firefox->find_id('metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -647,11 +647,11 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_class('form-control home-search-input')->type('Test::More');
+    $firefox->find_class('form-control home-metacpan_search-input')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find_class('form-control home-search-input')) {
+    foreach my $element ($firefox->find_class('form-control home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -666,11 +666,11 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_selector('input.home-search-input')->type('Test::More');
+    $firefox->find_selector('input.home-metacpan_search-input')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find_selector('input.home-search-input')) {
+    foreach my $element ($firefox->find_selector('input.home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -773,7 +773,7 @@ returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/
 
     $firefox->go("http://metacpan.org/");
 
-    $firefox->find('//input[@id="search-input"]')->type('Test::More');
+    $firefox->find('//input[@id="metacpan_search-input"]')->type('Test::More');
     $firefox->find_name('lucky')->click();
 
     my $har = Archive::Har->new();
@@ -793,7 +793,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if (my $element = $firefox->has('//input[@id="search-input"]')) {
+    if (my $element = $firefox->has('//input[@id="metacpan_search-input"]')) {
         $element->type('Test::More');
     }
 
@@ -809,7 +809,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if (my $element = $firefox->has_id('search-input')) {
+    if (my $element = $firefox->has_id('metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -839,7 +839,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    if (my $element = $firefox->has_class('form-control home-search-input')) {
+    if (my $element = $firefox->has_class('form-control home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -854,7 +854,7 @@ This method is subject to the [implicit](https://metacpan.org/pod/Firefox::Mario
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    if (my $element = $firefox->has_selector('input.home-search-input')) {
+    if (my $element = $firefox->has_selector('input.home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -1442,17 +1442,18 @@ accepts a scalar containing a javascript function body that is executed in the b
 - sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object if `new` is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluted in a sandbox with elevated system privileges, equivalent to chrome space.
 - timeout - A timeout to override the default [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.
 
-Returns the result of the javascript function.
+Returns the result of the javascript function.  When a parameter is an [element](https://metacpan.org/pod/Firefox::Marionette::Element) (such as being returned from a [find](https://metacpan.org/pod/Firefox::Marionette#find) type operation), the [script](https://metacpan.org/pod/Firefox::Marionette#script) method will automatically translate that into a javascript object.  Likewise, when the result being returned in a [script](https://metacpan.org/pod/Firefox::Marionette#script) method is an [element](https://metacpan.org/pod/Firefox::Mariontte#element), it will be automatically translated into a perl object.
 
     use Firefox::Marionette();
+    use v5.10;
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if ($firefox->script('return window.find("lucky");')) {
-        # luckily!
+    if (my $element = $firefox->script('return document.getElementsByName("lucky")[0];')) {
+        say "Lucky find is a " . $element->tag_name() . " element";
     }
 
-    my $search_input = $firefox->find_by_id('search-input');
+    my $search_input = $firefox->find_by_id('metacpan_metacpan_search-input');
 
     $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 

@@ -8883,7 +8883,7 @@ Version 1.17
 
     say $firefox->html();
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
 
@@ -9072,7 +9072,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     my $firefox = Firefox::Marionette->new(sleep_time_in_ms => 5)->go('https://metacpan.org/');
 
-    $firefox->find_id('search-input')->type('Test::More');
+    $firefox->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find_name('lucky')->click();
 
@@ -9102,7 +9102,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_id('search-input')->type('Test::More');
+    $firefox->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find_name('lucky')->click();
 
@@ -9251,7 +9251,7 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and a 
     use v5.10;
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    say $firefox->find_id('search-input')->css('height');
+    say $firefox->find_id('metacpan_search-input')->css('height');
 
 =head2 current_chrome_window_handle 
 
@@ -9370,7 +9370,7 @@ accepts a filesystem path and returns a matching filehandle.  This is trivial fo
 
     my $firefox = Firefox::Marionette->new( host => '10.1.2.3' )->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find('//button[@name="lucky"]')->click();
 
@@ -9395,7 +9395,7 @@ returns true if any files in L<downloads|Firefox::Marionette#downloads> end in C
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find('//button[@name="lucky"]')->click();
 
@@ -9418,7 +9418,7 @@ returns a list of file paths (including partial downloads) of downloads during t
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
 
     $firefox->find('//button[@name="lucky"]')->click();
 
@@ -9471,11 +9471,11 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find('//input[@id="search-input"]')->type('Test::More');
+    $firefox->find('//input[@id="metacpan_search-input"]')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find('//input[@id="search-input"]')) {
+    foreach my $element ($firefox->find('//input[@id="metacpan_search-input"]')) {
         $element->type('Test::More');
     }
 
@@ -9491,11 +9491,11 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_id('search-input')->type('Test::More');
+    $firefox->find_id('metacpan_search-input')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find_id('search-input')) {
+    foreach my $element ($firefox->find_id('metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -9529,11 +9529,11 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_class('form-control home-search-input')->type('Test::More');
+    $firefox->find_class('form-control home-metacpan_search-input')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find_class('form-control home-search-input')) {
+    foreach my $element ($firefox->find_class('form-control home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -9548,11 +9548,11 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_selector('input.home-search-input')->type('Test::More');
+    $firefox->find_selector('input.home-metacpan_search-input')->type('Test::More');
 
     # OR in list context 
 
-    foreach my $element ($firefox->find_selector('input.home-search-input')) {
+    foreach my $element ($firefox->find_selector('input.home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -9655,7 +9655,7 @@ returns a hashref representing the L<http archive|https://en.wikipedia.org/wiki/
 
     $firefox->go("http://metacpan.org/");
 
-    $firefox->find('//input[@id="search-input"]')->type('Test::More');
+    $firefox->find('//input[@id="metacpan_search-input"]')->type('Test::More');
     $firefox->find_name('lucky')->click();
 
     my $har = Archive::Har->new();
@@ -9675,7 +9675,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if (my $element = $firefox->has('//input[@id="search-input"]')) {
+    if (my $element = $firefox->has('//input[@id="metacpan_search-input"]')) {
         $element->type('Test::More');
     }
 
@@ -9691,7 +9691,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if (my $element = $firefox->has_id('search-input')) {
+    if (my $element = $firefox->has_id('metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -9721,7 +9721,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    if (my $element = $firefox->has_class('form-control home-search-input')) {
+    if (my $element = $firefox->has_class('form-control home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -9736,7 +9736,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    if (my $element = $firefox->has_selector('input.home-search-input')) {
+    if (my $element = $firefox->has_selector('input.home-metacpan_search-input')) {
         $element->type('Test::More');
     }
 
@@ -10418,17 +10418,18 @@ accepts a scalar containing a javascript function body that is executed in the b
 
 =back
 
-Returns the result of the javascript function.
+Returns the result of the javascript function.  When a parameter is an L<element|Firefox::Marionette::Element> (such as being returned from a L<find|Firefox::Marionette#find> type operation), the L<script|Firefox::Marionette#script> method will automatically translate that into a javascript object.  Likewise, when the result being returned in a L<script|Firefox::Marionette#script> method is an L<element|Firefox::Mariontte#element>, it will be automatically translated into a perl object.
 
     use Firefox::Marionette();
+    use v5.10;
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if ($firefox->script('return window.find("lucky");')) {
-        # luckily!
+    if (my $element = $firefox->script('return document.getElementsByName("lucky")[0];')) {
+        say "Lucky find is a " . $element->tag_name() . " element";
     }
 
-    my $search_input = $firefox->find_by_id('search-input');
+    my $search_input = $firefox->find_by_id('metacpan_metacpan_search-input');
 
     $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
