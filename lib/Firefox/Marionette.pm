@@ -104,6 +104,7 @@ sub _PALEMOON_VERSION_EQUIV         { return 52 }            # very approx guess
 sub _MAX_VERSION_FOR_FTP_PROXY      { return 89 }
 sub _DEFAULT_UPDATE_TIMEOUT         { return 300 }           # 5 minutes
 sub _MIN_VERSION_NO_CHROME_CALLS    { return 94 }
+sub _MIN_VERSION_FOR_SCRIPT_SCRIPT  { return 31 }
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
@@ -2433,6 +2434,21 @@ sub _is_firefox_major_version_at_least {
 sub _is_xvfb_okay {
     my ($self) = @_;
     if ( $self->_is_firefox_major_version_at_least( _MIN_VERSION_FOR_XVFB() ) )
+    {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+sub _is_script_script_parameter_okay {
+    my ($self) = @_;
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_FOR_SCRIPT_SCRIPT()
+        )
+      )
     {
         return 1;
     }
@@ -8091,7 +8107,7 @@ sub loaded {
 
 sub _script_parameters {
     my ( $self, %parameters ) = @_;
-    delete $parameters{script};
+    my $script = delete $parameters{script};
     $parameters{args} ||= [];
     if ( ( !ref $parameters{args} ) or ( ref $parameters{args} ne 'ARRAY' ) ) {
         $parameters{args} = [ $parameters{args} ];
@@ -8117,18 +8133,23 @@ sub _script_parameters {
             $parameters{$key} = $parameters{$key} ? \1 : \0;
         }
     }
+    $parameters{script} = $script;
+    if ( $self->_is_script_script_parameter_okay() ) {
+    }
+    else {
+        $parameters{value} = $parameters{script};
+    }
     return %parameters;
 }
 
 sub script {
     my ( $self, $script, %parameters ) = @_;
-    %parameters = $self->_script_parameters(%parameters);
+    %parameters = $self->_script_parameters( %parameters, script => $script );
     my $message_id = $self->_new_message_id();
     $self->_send_request(
         [
             _COMMAND(), $message_id,
-            $self->_command('WebDriver:ExecuteScript'),
-            { script => $script, value => $script, %parameters }
+            $self->_command('WebDriver:ExecuteScript'), {%parameters}
         ]
     );
     my $response = $self->_get_response($message_id);
