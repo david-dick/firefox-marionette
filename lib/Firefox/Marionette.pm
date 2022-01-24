@@ -8706,8 +8706,11 @@ sub _send_request {
     my ( $self, $object ) = @_;
     $object = $self->_convert_request_to_old_protocols($object);
     my $encoder = JSON->new()->convert_blessed()->ascii();
-    my $json    = $encoder->encode($object);
-    my $length  = length $json;
+    if ( $self->debug() ) {
+        $encoder->canonical(1);
+    }
+    my $json   = $encoder->encode($object);
+    my $length = length $json;
     if ( $self->debug() ) {
         warn ">> $length:$json\n";
     }
