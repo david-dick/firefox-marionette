@@ -766,14 +766,13 @@ accepts the following optional parameters as a hash;
 
 =head2 shadow_root
 
-returns the L<element|Firefox::Marionette::Element>'s L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or throws an exception.
+returns the L<element|Firefox::Marionette::Element>'s L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> as a L<shadow root|Firefox::Marionette::ShadowRoot> object or throws an exception.
 
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
 
-    $firefox->go('file://' . CWd::cwd() . 't/data/shadow.html');
     $firefox->find_class('add')->click();
     my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
 
@@ -788,9 +787,8 @@ returns true if the L<element|Firefox::Marionette::Element> has a L<ShadowRoot|h
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
 
-    $firefox->go('file://' . CWd::cwd() . 't/data/shadow.html');
     $firefox->find_class('add')->click();
     if ($firefox->find_tag('custom-square')->shadowy()) {
         my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();

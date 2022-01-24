@@ -32,7 +32,7 @@ __END__
 
 =head1 NAME
 
-Firefox::Marionette::ShadowRoot - Represents a Firefox element retrieved using the Marionette protocol
+Firefox::Marionette::ShadowRoot - Represents a Firefox shadow root retrieved using the Marionette protocol
 
 =head1 VERSION
 
@@ -43,9 +43,7 @@ Version 1.19
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
-    $firefox->go('file://' . CWd::cwd() . 't/data/shadow.html');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
     $firefox->find_class('add')->click();
     my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
 
@@ -65,11 +63,11 @@ returns the L<shadow root identifier|https://www.w3.org/TR/webdriver/#shadow-roo
 
 =head2 new
 
-returns a new L<element|Firefox::Marionette::ShadowRoot>.
+returns a new L<shadow root|Firefox::Marionette::ShadowRoot>.
 
 =head2 uuid
 
-returns the browser generated UUID connected with this L<element|Firefox::Marionette::ShadowRoot>.
+returns the browser generated UUID connected with this L<shadow root|Firefox::Marionette::ShadowRoot>.
 
 =head1 DIAGNOSTICS
 

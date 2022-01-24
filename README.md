@@ -1442,7 +1442,7 @@ accepts a scalar containing a javascript function body that is executed in the b
 - sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object if `new` is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluted in a sandbox with elevated system privileges, equivalent to chrome space.
 - timeout - A timeout to override the default [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.
 
-Returns the result of the javascript function.  When a parameter is an [element](https://metacpan.org/pod/Firefox::Marionette::Element) (such as being returned from a [find](https://metacpan.org/pod/Firefox::Marionette#find) type operation), the [script](https://metacpan.org/pod/Firefox::Marionette#script) method will automatically translate that into a javascript object.  Likewise, when the result being returned in a [script](https://metacpan.org/pod/Firefox::Marionette#script) method is an [element](https://metacpan.org/pod/Firefox::Mariontte#element), it will be automatically translated into a perl object.
+Returns the result of the javascript function.  When a parameter is an [element](https://metacpan.org/pod/Firefox::Marionette::Element) (such as being returned from a [find](https://metacpan.org/pod/Firefox::Marionette#find) type operation), the [script](https://metacpan.org/pod/Firefox::Marionette#script) method will automatically translate that into a javascript object.  Likewise, when the result being returned in a [script](https://metacpan.org/pod/Firefox::Marionette#script) method is an [element](https://dom.spec.whatwg.org/#concept-element) it will be automatically translated into a [perl object](https://metacpan.org/pod/Firefox::Marionette::Element).
 
     use Firefox::Marionette();
     use v5.10;
@@ -1453,7 +1453,7 @@ Returns the result of the javascript function.  When a parameter is an [element]
         say "Lucky find is a " . $element->tag_name() . " element";
     }
 
-    my $search_input = $firefox->find_by_id('metacpan_metacpan_search-input');
+    my $search_input = $firefox->find_by_id('metacpan_search-input');
 
     $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
@@ -1481,14 +1481,13 @@ sends keys to the input field of a currently displayed modal message box
 
 ## shadow\_root
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as a parameter and returns it's [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) or throws an exception.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as a parameter and returns it's [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) as a [shadow root](https://metacpan.org/pod/Firefox::Marionette::ShadowRoot) object or throws an exception.
 
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
 
-    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
     $firefox->find_class('add')->click();
     my $custom_square = $firefox->find_tag('custom-square');
     my $shadow_root = $firefox->shadow_root($custom_square);
@@ -1504,9 +1503,7 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as a
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
-    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
     $firefox->find_class('add')->click();
     my $custom_square = $firefox->find_tag('custom-square');
     if ($firefox->shadowy($custom_square)) {

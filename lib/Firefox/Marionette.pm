@@ -10418,7 +10418,7 @@ accepts a scalar containing a javascript function body that is executed in the b
 
 =back
 
-Returns the result of the javascript function.  When a parameter is an L<element|Firefox::Marionette::Element> (such as being returned from a L<find|Firefox::Marionette#find> type operation), the L<script|Firefox::Marionette#script> method will automatically translate that into a javascript object.  Likewise, when the result being returned in a L<script|Firefox::Marionette#script> method is an L<element|Firefox::Mariontte#element>, it will be automatically translated into a perl object.
+Returns the result of the javascript function.  When a parameter is an L<element|Firefox::Marionette::Element> (such as being returned from a L<find|Firefox::Marionette#find> type operation), the L<script|Firefox::Marionette#script> method will automatically translate that into a javascript object.  Likewise, when the result being returned in a L<script|Firefox::Marionette#script> method is an L<element|https://dom.spec.whatwg.org/#concept-element> it will be automatically translated into a L<perl object|Firefox::Marionette::Element>.
 
     use Firefox::Marionette();
     use v5.10;
@@ -10429,7 +10429,7 @@ Returns the result of the javascript function.  When a parameter is an L<element
         say "Lucky find is a " . $element->tag_name() . " element";
     }
 
-    my $search_input = $firefox->find_by_id('metacpan_metacpan_search-input');
+    my $search_input = $firefox->find_by_id('metacpan_search-input');
 
     $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
@@ -10465,14 +10465,13 @@ sends keys to the input field of a currently displayed modal message box
 
 =head2 shadow_root
 
-accepts an L<element|Firefox::Marionette::Element> as a parameter and returns it's L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or throws an exception.
+accepts an L<element|Firefox::Marionette::Element> as a parameter and returns it's L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> as a L<shadow root|Firefox::Marionette::ShadowRoot> object or throws an exception.
 
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
 
-    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
     $firefox->find_class('add')->click();
     my $custom_square = $firefox->find_tag('custom-square');
     my $shadow_root = $firefox->shadow_root($custom_square);
@@ -10488,9 +10487,7 @@ accepts an L<element|Firefox::Marionette::Element> as a parameter and returns tr
     use Firefox::Marionette();
     use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-
-    $firefox->go('file://' . CWd::cwd() . 't/data/elements.html');
+    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
     $firefox->find_class('add')->click();
     my $custom_square = $firefox->find_tag('custom-square');
     if ($firefox->shadowy($custom_square)) {
