@@ -10429,7 +10429,7 @@ Returns the result of the javascript function.  When a parameter is an L<element
         say "Lucky find is a " . $element->tag_name() . " element";
     }
 
-    my $search_input = $firefox->find_by_id('metacpan_search-input');
+    my $search_input = $firefox->find_id('metacpan_search-input');
 
     $firefox->script('arguments[0].style.backgroundColor = "red"', args => [ $search_input ]); # turn the search input box red
 
