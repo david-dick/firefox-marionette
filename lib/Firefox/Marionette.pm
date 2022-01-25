@@ -8073,14 +8073,12 @@ sub accept_connections {
 
 sub async_script {
     my ( $self, $script, %parameters ) = @_;
-    delete $parameters{script};
-    $parameters{args} ||= [];
+    %parameters = $self->_script_parameters( %parameters, script => $script );
     my $message_id = $self->_new_message_id();
     $self->_send_request(
         [
             _COMMAND(), $message_id,
-            $self->_command('WebDriver:ExecuteAsyncScript'),
-            { script => $script, %parameters }
+            $self->_command('WebDriver:ExecuteAsyncScript'), {%parameters}
         ]
     );
     return $self;
