@@ -8189,6 +8189,18 @@ sub _get_any_class_from_variable {
         {
             return $class;
         }
+        else {
+            foreach my $key ( sort { $a cmp $b } keys %{$object} ) {
+                $object->{$key} = $self->_check_for_and_translate_into_objects(
+                    $object->{$key} );
+            }
+        }
+    }
+    else {
+        foreach my $key ( sort { $a cmp $b } keys %{$object} ) {
+            $object->{$key} =
+              $self->_check_for_and_translate_into_objects( $object->{$key} );
+        }
     }
     return;
 }

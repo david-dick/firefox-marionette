@@ -1202,6 +1202,10 @@ SKIP: {
 		ok(ref $value->[1] eq 'Firefox::Marionette::Element' && $value->[1]->tag_name() eq 'span', "Value returned from script is a Firefox::Mariontte::Element for a 'span' in an array");
 	}
 	{
+		my $value = $firefox->script('return arguments[0]', args => { elem => $span });
+		ok(ref $value->{elem} eq 'Firefox::Marionette::Element' && $value->{elem}->tag_name() eq 'span', "Value returned from script is a Firefox::Mariontte::Element for a 'span' in a hash");
+	}
+	{
 		my $value = $firefox->script('return 2', args => [ $span ]);
 		ok($value == 2, "Value returned from script is the numeric 2");
 	}
