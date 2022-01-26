@@ -105,6 +105,7 @@ sub _MAX_VERSION_FOR_FTP_PROXY      { return 89 }
 sub _DEFAULT_UPDATE_TIMEOUT         { return 300 }           # 5 minutes
 sub _MIN_VERSION_NO_CHROME_CALLS    { return 94 }
 sub _MIN_VERSION_FOR_SCRIPT_SCRIPT  { return 31 }
+sub _MIN_VERSION_FOR_SCRIPT_WO_ARGS { return 60 }
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
@@ -2434,6 +2435,21 @@ sub _is_firefox_major_version_at_least {
 sub _is_xvfb_okay {
     my ($self) = @_;
     if ( $self->_is_firefox_major_version_at_least( _MIN_VERSION_FOR_XVFB() ) )
+    {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+sub _is_script_missing_args_okay {
+    my ($self) = @_;
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_FOR_SCRIPT_WO_ARGS()
+        )
+      )
     {
         return 1;
     }
@@ -8106,8 +8122,10 @@ sub loaded {
 sub _script_parameters {
     my ( $self, %parameters ) = @_;
     my $script = delete $parameters{script};
-    $parameters{args} ||= [];
-    if ( ( !ref $parameters{args} ) or ( ref $parameters{args} ne 'ARRAY' ) ) {
+    if ( !$self->_is_script_missing_args_okay() ) {
+        $parameters{args} ||= [];
+    }
+    if ( ( $parameters{args} ) && ( ref $parameters{args} ne 'ARRAY' ) ) {
         $parameters{args} = [ $parameters{args} ];
     }
     my %mapping = (
