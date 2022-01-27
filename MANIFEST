@@ -36,6 +36,7 @@ ssh-auth-cmd-marionette
 firefox-passwords
 t/author/bulk_test.pl
 t/data/elements.html
+t/data/iframe.html
 t/data/logins.json
 t/data/key4.db
 t/data/1Passwordv7.csv

@@ -1711,7 +1711,7 @@ SKIP: {
 
 my $bad_network_behaviour;
 SKIP: {
-	diag("Starting new firefox for testing metacpan and w3schools, with find, downloads, extensions and actions");
+	diag("Starting new firefox for testing metacpan and iframe, with find, downloads, extensions and actions");
 	($skip_message, $firefox) = start_firefox(0, debug => 0, page_load => 600000, script => 5432, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, page_load_strategy => 'eager'));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1720,9 +1720,13 @@ SKIP: {
 		skip($skip_message, 247);
 	}
 	ok($firefox, "Firefox has started in Marionette mode without defined capabilities, but with a defined profile and debug turned off");
-	my $frame_url = 'https://www.w3schools.com/html/tryit.asp?filename=tryhtml_iframe_height_width';
-	my $frame_element = '//iframe[@name="iframeResult"]';
-	ok($firefox->go(URI->new($frame_url)), "$frame_url has been loaded");
+	my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+	if ($^O eq 'cygwin') {
+		$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+	}
+	my $frame_url = "file://$path";
+	my $frame_element = '//iframe[@name="iframe"]';
+	ok($firefox->go($frame_url), "$frame_url has been loaded");
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 246);
 	}
