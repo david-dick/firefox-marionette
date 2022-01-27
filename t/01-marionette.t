@@ -504,23 +504,32 @@ if (
 	!IO::Socket::SSL->new(
 	PeerAddr => 'missing.example.org:443',
 	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
-		) &&
-	IO::Socket::SSL->new(
+		) ) {
+	if ( IO::Socket::SSL->new(
 	PeerAddr => 'untrusted-root.badssl.com:443',
 	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
-		) &&
-	!IO::Socket::SSL->new(
+		) ) {
+	if ( !IO::Socket::SSL->new(
 	PeerAddr => 'untrusted-root.badssl.com:443',
 	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
-		) &&
-	IO::Socket::SSL->new(
+		) ) {
+	if ( IO::Socket::SSL->new(
 	PeerAddr => 'metacpan.org:443',
 	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
-		)) {
-	diag("TLS/Network seem okay");
-	$tls_tests_ok = 1;
+		) ) {
+		diag("TLS/Network seem okay");
+		$tls_tests_ok = 1;
+	} else {
+		diag("TLS/Network are NOT okay:Failed to connect to metacpan.org:$IO::Socket::SSL::SSL_ERROR");
+	}
+	} else {
+		diag("TLS/Network are NOT okay:Successfully connected to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
+	}
+	} else {
+		diag("TLS/Network are NOT okay:Failed to connect to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
+	}
 } else {
-	diag("TLS/Network are NOT okay");
+	diag("TLS/Network are NOT okay:Successfully connected to missing.example.org:$IO::Socket::SSL::SSL_ERROR");
 }
 my $skip_message;
 SKIP: {
