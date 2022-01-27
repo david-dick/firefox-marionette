@@ -1266,13 +1266,17 @@ sub _csv_parameters {
 
 sub _get_extra_parameters {
     my ( $class, $import_handle ) = @_;
+    my $line_feed = qq[\n];
+    if ( $OSNAME eq 'MSWin32' or $OSNAME eq 'cygwin' ) {
+        $line_feed = qq[\r\n];
+    }
     my @extra_parameter_sets = (
         {},                                                    # normal
         { escape_char => q[\\], allow_loose_escapes => 1 },    # KeePass
         {
             escape_char         => q[\\],
             allow_loose_escapes => 1,
-            eol                 => ",$INPUT_RECORD_SEPARATOR"
+            eol                 => qq[,$line_feed],
         },                                                     # 1Password v7
     );
     my $extra_parameters = {};
