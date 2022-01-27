@@ -1144,6 +1144,9 @@ SKIP: {
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	my $shadow_root;
 	my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+	if ($^O eq 'cygwin') {
+		$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+	}
 	$firefox->go("file://$path");
 	$firefox->find_class('add')->click();
 	my $span = $firefox->has_tag('span');

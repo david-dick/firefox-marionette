@@ -1435,6 +1435,10 @@ sub _binary_directory {
 
             }
             elsif ( $self->_remote_uname() eq 'cygwin' ) {
+                my ( $volume, $directories ) =
+                  File::Spec::Unix->splitpath($binary);
+                $binary_directory =
+                  File::Spec::Unix->catdir( $volume, $directories );
             }
             else {
                 my $remote_path_to_binary =
@@ -1465,6 +1469,11 @@ sub _binary_directory {
                     }
                 }
             }
+        }
+        elsif ( $OSNAME eq 'cygwin' ) {
+            my ( $volume, $directories ) = File::Spec::Unix->splitpath($binary);
+            $binary_directory =
+              File::Spec::Unix->catdir( $volume, $directories );
         }
         else {
             my ( $volume, $directories ) = File::Spec->splitpath($binary);
@@ -3973,7 +3982,7 @@ sub _get_local_binary {
     elsif ( $OSNAME eq 'cygwin' ) {
         my $cygwin_binary = $self->_get_binary_from_cygwin_registry();
         if ( defined $cygwin_binary ) {
-            $binary = $self->execute( 'cygpath', '-s', '-m', $cygwin_binary );
+            $binary = $self->execute( 'cygpath', '-u', $cygwin_binary );
         }
     }
     return $binary;
