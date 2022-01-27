@@ -1005,6 +1005,7 @@ sub _import_profile_paths {
             my $read_handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
               or Firefox::Marionette::Exception->throw(
                 "Failed to open '$path' for reading:$EXTENDED_OS_ERROR");
+            binmode $read_handle;
             if ( $self->_ssh() ) {
                 $self->_put_file_via_scp(
                     $read_handle,
@@ -1025,6 +1026,7 @@ sub _import_profile_paths {
                   or Firefox::Marionette::Exception->throw(
 "Failed to open '$write_path' for writing:$EXTENDED_OS_ERROR"
                   );
+                binmode $write_handle;
                 my $result;
                 while ( $result =
                     $read_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() )
