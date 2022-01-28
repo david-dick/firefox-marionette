@@ -1662,7 +1662,8 @@ SKIP: {
 		}
 		my $correct = 0;
 		my $number_of_entries = 0;
-		while($number_of_entries == 0) {
+		my $count = 0;
+		GET_HAR: while($number_of_entries == 0) {
 			my $har = $firefox->har();
 			ok($har->{log}->{creator}->{name} eq ucfirst $firefox->capabilities()->browser_name(), "\$firefox->har() gives a data structure with the correct creator name");
 			$number_of_entries = 0;
@@ -1704,8 +1705,21 @@ SKIP: {
 					}
 				}
 			}
+			sleep 1;
+			$count += 1;
+			if ($count > 20) {
+				diag("Unable to find any HAR entries for 20 seconds");
+				last GET_HAR;
+			}
 		}
-		ok($correct == 4, "Correct headers have been set");
+		if ($^O eq 'cygwin') {
+			TODO: {
+				local $TODO = "cygwin can fail this test";
+				ok($correct == 4, "Correct headers have been set");
+			}
+		} else {
+			ok($correct == 4, "Correct headers have been set");
+		}
 	}
 }
 
