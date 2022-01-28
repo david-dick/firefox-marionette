@@ -235,7 +235,7 @@ sub new {
             'false', 0 );
         $profile->set_value(
 'browser.newtabpage.activity-stream.feeds.section.topstories.options',
-            q[], 1
+            q[{}], 1
         );
         $profile->set_value(
             'browser.newtabpage.activity-stream.feeds.snippets',
