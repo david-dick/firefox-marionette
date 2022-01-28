@@ -4849,7 +4849,7 @@ sub _setup_new_profile {
             $profile->set_value( 'dom.push.serverURL',
                 q[http://localhost:] . $port, 1 );
             $profile->set_value( 'services.settings.server',
-                q[http://localhost:] . $port, 1 );
+                q[http://localhost:] . $port . q[/v1/], 1 );
             $profile->set_value( 'browser.safebrowsing.gethashURL',
                 q[http://localhost:] . $port, 1 );
             $profile->set_value( 'browser.safebrowsing.keyURL',
