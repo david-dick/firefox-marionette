@@ -2312,11 +2312,13 @@ sub _setup_arguments {
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
     if ( $parameters{restart} ) {
+        my $profile_directory = $self->{_profile_directory};
+        if ( $OSNAME eq 'cygwin' ) {
+            $profile_directory =
+              $self->execute( 'cygpath', '-s', '-m', $profile_directory );
+        }
         push @arguments,
-          (
-            '-profile',    $self->{_profile_directory},
-            '--no-remote', '--new-instance'
-          );
+          ( '-profile', $profile_directory, '--no-remote', '--new-instance' );
     }
     elsif ( $parameters{profile_name} ) {
         $self->{profile_name} = $parameters{profile_name};
@@ -4800,6 +4802,7 @@ sub _setup_new_profile {
             $profile = Firefox::Marionette::Profile->new(%profile_parameters);
         }
         my $download_directory = $self->{_download_directory};
+        my $bookmarks_path     = $self->_setup_empty_bookmarks();
         if (   ( $self->_remote_uname() )
             && ( $self->_remote_uname() eq 'cygwin' ) )
         {
@@ -4807,9 +4810,12 @@ sub _setup_new_profile {
               $self->_execute_via_ssh( {}, 'cygpath', '-s', '-w',
                 $download_directory );
             chomp $download_directory;
+            $bookmarks_path =
+              $self->_execute_via_ssh( {}, 'cygpath', '-s', '-w',
+                $bookmarks_path );
+            chomp $bookmarks_path;
         }
         $profile->download_directory($download_directory);
-        my $bookmarks_path = $self->_setup_empty_bookmarks();
         $profile->set_value( 'browser.bookmarks.file', $bookmarks_path, 1 );
         if (
             !$self->_is_firefox_major_version_at_least(
