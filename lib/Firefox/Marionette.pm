@@ -4909,10 +4909,9 @@ sub _get_local_port_for_profile_urls {
 }
 
 sub _setup_empty_bookmarks {
-    my ($self)            = @_;
-    my $now               = time;
-    my $profile_directory = $self->{_profile_directory};
-    my $content           = <<"_HTML_";
+    my ($self)  = @_;
+    my $now     = time;
+    my $content = <<"_HTML_";
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
 <!-- This is an automatically generated file.
      It will be read and overwritten.
@@ -4930,6 +4929,13 @@ sub _setup_empty_bookmarks {
     </DL><p>
 </DL>
 _HTML_
+    return $self->_copy_content_to_profile_directory( $content,
+        'bookmarks.html' );
+}
+
+sub _copy_content_to_profile_directory {
+    my ( $self, $content, $name ) = @_;
+    my $profile_directory = $self->{_profile_directory};
     my $path;
     if ( $self->_ssh() ) {
         my $handle = File::Temp::tempfile(
@@ -4946,15 +4952,15 @@ _HTML_
         seek $handle, 0, Fcntl::SEEK_SET()
           or Firefox::Marionette::Exception->throw(
             "Failed to seek to start of temporary file:$EXTENDED_OS_ERROR");
-        $path = $self->_remote_catfile( $profile_directory, 'bookmarks.html' );
-        $self->_put_file_via_scp( $handle, $path, 'bookmarks.html' );
+        $path = $self->_remote_catfile( $profile_directory, $name );
+        $self->_put_file_via_scp( $handle, $path, $name );
         if ( $self->_remote_uname() eq 'cygwin' ) {
             $path = $self->_execute_via_ssh( {}, 'cygpath', '-l', '-w', $path );
             chomp $path;
         }
     }
     else {
-        $path = File::Spec->catfile( $profile_directory, 'bookmarks.html' );
+        $path = File::Spec->catfile( $profile_directory, $name );
         my $handle =
           FileHandle->new( $path,
             Fcntl::O_CREAT() | Fcntl::O_EXCL() | Fcntl::O_WRONLY() )
@@ -4966,6 +4972,10 @@ _HTML_
         $handle->close()
           or Firefox::Marionette::Exception->throw(
             "Failed to close '$path':$EXTENDED_OS_ERROR");
+        if ( $OSNAME eq 'cygwin' ) {
+            $path = $self->execute( 'cygpath', '-s', '-w', $path );
+            chomp $path;
+        }
     }
     return $path;
 }
