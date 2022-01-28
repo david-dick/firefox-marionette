@@ -3120,6 +3120,7 @@ sub _launch {
     foreach my $argument (@arguments) {
         push @{ $self->{_initial_arguments} }, $argument;
     }
+    local $ENV{XPCSHELL_TEST_PROFILE_DIR} = 1;
     if ( $self->_ssh() ) {
         $self->{_local_ssh_pid} = $self->_launch_via_ssh(@arguments);
         $self->_wait_for_updating_to_finish();
