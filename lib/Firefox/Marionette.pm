@@ -2341,39 +2341,7 @@ sub _setup_arguments {
             $profile_directory =
               $self->execute( 'cygpath', '-s', '-m', $profile_directory );
         }
-        my $mime_types_content = <<'_RDF_';
-<?xml version="1.0"?>
-<RDF:RDF xmlns:NC="http://home.netscape.com/NC-rdf#"
-         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="urn:mimetypes:root">
-_RDF_
-        foreach my $mime_type ( @{ $self->{mime_types} } ) {
-            $mime_types_content .= <<'_RDF_';
-    <RDF:li RDF:resource="urn:mimetype:$mime_type"/>
-_RDF_
-        }
-        $mime_types_content .= <<'_RDF_';
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:root"
-                   NC:en-US_defaultHandlersVersion="4" />
-  <RDF:Description RDF:about="urn:mimetypes">
-    <NC:MIME-types RDF:resource="urn:mimetypes:root"/>
-  </RDF:Description>
-_RDF_
-        foreach my $mime_type ( @{ $self->{mime_types} } ) {
-            $mime_types_content .= <<'_RDF_';
-  <RDF:Description RDF:about="urn:mimetype:handler:$mime_type"
-                   NC:saveToDisk="true"
-                   NC:alwaysAsk="false" />
-  <RDF:Description RDF:about="urn:mimetype:$mime_type"
-                   NC:value="$mime_type">
-    <NC:handlerProp RDF:resource="urn:mimetype:handler:$mime_type"/>
-  </RDF:Description>
-_RDF_
-        }
-        $mime_types_content .= <<'_RDF_';
-</RDF:RDF>
-_RDF_
+        my $mime_types_content = $self->_mime_types_content();
         if ( $self->_ssh() ) {
             $self->_write_mime_types_via_ssh($mime_types_content);
         }
@@ -2404,6 +2372,44 @@ _RDF_
         push @arguments, '--kiosk';
     }
     return @arguments;
+}
+
+sub _mime_types_content {
+    my ($self) = @_;
+    my $mime_types_content = <<'_RDF_';
+<?xml version="1.0"?>
+<RDF:RDF xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Seq RDF:about="urn:mimetypes:root">
+_RDF_
+    foreach my $mime_type ( @{ $self->{mime_types} } ) {
+        $mime_types_content .= <<'_RDF_';
+    <RDF:li RDF:resource="urn:mimetype:$mime_type"/>
+_RDF_
+    }
+    $mime_types_content .= <<'_RDF_';
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:root"
+                   NC:en-US_defaultHandlersVersion="4" />
+  <RDF:Description RDF:about="urn:mimetypes">
+    <NC:MIME-types RDF:resource="urn:mimetypes:root"/>
+  </RDF:Description>
+_RDF_
+    foreach my $mime_type ( @{ $self->{mime_types} } ) {
+        $mime_types_content .= <<'_RDF_';
+  <RDF:Description RDF:about="urn:mimetype:handler:$mime_type"
+                   NC:saveToDisk="true"
+                   NC:alwaysAsk="false" />
+  <RDF:Description RDF:about="urn:mimetype:$mime_type"
+                   NC:value="$mime_type">
+    <NC:handlerProp RDF:resource="urn:mimetype:handler:$mime_type"/>
+  </RDF:Description>
+_RDF_
+    }
+    $mime_types_content .= <<'_RDF_';
+</RDF:RDF>
+_RDF_
+    return $mime_types_content;
 }
 
 sub _write_mime_types_via_ssh {
