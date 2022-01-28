@@ -107,6 +107,8 @@ sub _MIN_VERSION_NO_CHROME_CALLS    { return 94 }
 sub _MIN_VERSION_FOR_SCRIPT_SCRIPT  { return 31 }
 sub _MIN_VERSION_FOR_SCRIPT_WO_ARGS { return 60 }
 
+# sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
+
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
     return 68;
 }    # https://github.com/MrAlex94/Waterfox/wiki/Versioning-Guidelines
@@ -4803,6 +4805,7 @@ sub _setup_new_profile {
         }
         my $download_directory = $self->{_download_directory};
         my $bookmarks_path     = $self->_setup_empty_bookmarks();
+        $self->_setup_search_json_mozlz4();
         if (   ( $self->_remote_uname() )
             && ( $self->_remote_uname() eq 'cygwin' ) )
         {
@@ -4918,6 +4921,22 @@ sub _get_local_port_for_profile_urls {
       or Firefox::Marionette::Exception->throw(
         "Failed to close random socket:$EXTENDED_OS_ERROR");
     return $port;
+}
+
+sub _setup_search_json_mozlz4 {
+    my ($self)            = @_;
+    my $profile_directory = $self->{_profile_directory};
+    my $uncompressed      = <<"_JSON_";
+{"version":6,"engines":[{"_name":"DuckDuckGo","_isAppProvided":true,"_metaData":{}}],"metaData":{"useSavedOrder":false}}
+_JSON_
+    chomp $uncompressed;
+
+#   my $content = _MAGIC_NUMBER_MOZL4Z() . Compress::LZ4::compress($uncompressed);
+    my $content = MIME::Base64::decode_base64(
+'bW96THo0MAB4AAAA8Bd7InZlcnNpb24iOjYsImVuZ2luZXMiOlt7Il9uYW1lIjoiRHVjawQA9x1HbyIsIl9pc0FwcFByb3ZpZGVkIjp0cnVlLCJfbWV0YURhdGEiOnt9fV0sIhAA8AgidXNlU2F2ZWRPcmRlciI6ZmFsc2V9fQ=='
+    );
+    return $self->_copy_content_to_profile_directory( $content,
+        'search.json.mozlz4' );
 }
 
 sub _setup_empty_bookmarks {
