@@ -523,13 +523,13 @@ if (
 		diag("TLS/Network are NOT okay:Failed to connect to metacpan.org:$IO::Socket::SSL::SSL_ERROR");
 	}
 	} else {
-		diag("TLS/Network are NOT okay:Successfully connected to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
+		diag("TLS/Network are NOT okay:Successfully connected to untrusted-root.badssl.com");
 	}
 	} else {
 		diag("TLS/Network are NOT okay:Failed to connect to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
 	}
 } else {
-	diag("TLS/Network are NOT okay:Successfully connected to missing.example.org:$IO::Socket::SSL::SSL_ERROR");
+	diag("TLS/Network are NOT okay:Successfully connected to missing.example.org");
 }
 my $skip_message;
 SKIP: {
