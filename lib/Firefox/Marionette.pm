@@ -1268,19 +1268,23 @@ sub _csv_parameters {
 
 sub _get_extra_parameters {
     my ( $class, $import_handle ) = @_;
-    my $line_feed = qq[\n];
-    if ( $OSNAME eq 'MSWin32' or $OSNAME eq 'cygwin' ) {
-        $line_feed = qq[\r\n];
-    }
     my @extra_parameter_sets = (
         {},                                                    # normal
         { escape_char => q[\\], allow_loose_escapes => 1 },    # KeePass
         {
             escape_char         => q[\\],
             allow_loose_escapes => 1,
-            eol                 => qq[,$line_feed],
+            eol                 => ",$INPUT_RECORD_SEPARATOR",
         },                                                     # 1Password v7
     );
+    if ( $OSNAME eq 'MSWin32' or $OSNAME eq 'cygwin' ) {
+        push @extra_parameter_sets,
+          {
+            escape_char         => q[\\],
+            allow_loose_escapes => 1,
+            eol                 => ",\r\n",
+          }                                                    # 1Password v7
+    }
     my $extra_parameters = {};
   SET: foreach my $parameter_set (@extra_parameter_sets) {
         seek $import_handle, Fcntl::SEEK_SET(), 0
