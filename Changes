@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.22  Sat Jan 29 15:49 2022
+       Fixes to cygwin/Win32 support
+
 1.21  Sat Jan 29 10:43 2022
        Fixes to cygwin/Win32 support, test suite, startup time, script/async_script methods
 
