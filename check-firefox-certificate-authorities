@@ -35,7 +35,8 @@ sub _write_common_output {
 
 MAIN: {
     my %options;
-    Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s' );
+    Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s',
+        'show-next' );
     if ( $options{help} ) {
         require Pod::Simple::Text;
         my $parser = Pod::Simple::Text->new();
@@ -51,14 +52,17 @@ MAIN: {
     if ( $options{binary} ) {
         $parameters{binary} = $options{binary};
     }
-    my $firefox   = Firefox::Marionette->new(%parameters);
-    my $now       = time;
+    my $firefox = Firefox::Marionette->new(%parameters);
+    my $now     = time;
+    my $oldest;
+    my $old_name;
     my $exit_code = 0;
     foreach my $certificate ( sort { $a->display_name() cmp $b->display_name }
         $firefox->certificates() )
     {
         if ( $certificate->is_ca_cert() ) {
-            if ( $certificate->not_valid_after() < $now ) {
+            my $not_valid_after = $certificate->not_valid_after();
+            if ( $not_valid_after < $now ) {
                 warn $certificate->display_name()
                   . ' expired on '
                   . ( localtime $certificate->not_valid_after() ) . "\n";
@@ -72,9 +76,19 @@ MAIN: {
                 _write_common_output($certificate);
                 $exit_code = 1;
             }
+            elsif ( ( defined $oldest ) && ( $not_valid_after > $oldest ) ) {
+            }
+            else {
+                $oldest   = $not_valid_after;
+                $old_name = $certificate->display_name();
+            }
         }
     }
     $firefox->quit();
+    if ( $options{'show-next'} ) {
+        print $old_name . ' will expire on ' . ( localtime $oldest ) . "\n"
+          or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+    }
     exit $exit_code;
 }
 
@@ -116,6 +130,8 @@ sensitive.
 =item * --help - This page.
 
 =item * --binary - Use this firefox binary instead of the default firefox instance
+
+=item * --show-next - In addition to displaying any expired CA certificates, it will print out the next certificate that will expire and what date it will expire.
 
 =back
 
