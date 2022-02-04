@@ -182,6 +182,7 @@ sub new {
         'ignore', 1 );
     $profile->set_value( 'browser.startup.page',                 '0',      0 );
     $profile->set_value( 'browser.tabs.warnOnClose',             'false',  0 );
+    $profile->set_value( 'browser.topsites.contile.enabled',     'false',  0 );
     $profile->set_value( 'browser.warnOnQuit',                   'false',  0 );
     $profile->set_value( 'datareporting.policy.firstRunURL',     q[],      1 );
     $profile->set_value( 'devtools.jsonview.enabled',            'false',  0 );
