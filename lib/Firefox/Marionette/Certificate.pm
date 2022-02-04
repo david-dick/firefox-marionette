@@ -175,7 +175,10 @@ Version 1.22
 
     my $firefox = Firefox::Marionette->new();
     foreach my $certificate (sort { $a->display_name() cmp $b->display_name() } $firefox->certificates()) {
-       ...
+        if ($certificate->is_ca_cert()) {
+            print 'PEM Encoded CA Certificate ' . "\n" . $firefox->certificate_as_pem($certificate) . "\n";
+        }
+        ...
     }
 
 =head1 DESCRIPTION

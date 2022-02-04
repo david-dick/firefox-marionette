@@ -9255,6 +9255,7 @@ returns a list of all known L<certificates in the Firefox database|Firefox::Mari
     my $firefox = Firefox::Marionette->new();
     foreach my $certificate (grep { $_->is_ca_cert() && $_->not_valid_after() < time } $firefox->certificates()) {
         say "The " . $certificate->display_name() " . certificate has expired and should be removed";
+        print 'PEM Encoded Certificate ' . "\n" . $firefox->certificate_as_pem($certificate) . "\n";
     }
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
