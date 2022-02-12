@@ -1593,12 +1593,25 @@ SKIP: {
 	foreach my $path (qw(t/data/1Passwordv8.1pux)) {
 		my $handle = FileHandle->new($path, Fcntl::O_RDONLY()) or die "Failed to open $path:$!";
 		my @logins;
+		my $encoded_username = 'tésting@au.example.org';
+		my $display_username = $encoded_username;
+		my $utf8_username = Encode::decode('UTF-8', $encoded_username, 1);
+		my $found_utf8_user;
 		foreach my $login (Firefox::Marionette->logins_from_zip($handle)) {
 			ok($login->host() =~ /^https?:\/\/(?:[a-z]+[.])?[a-z]+[.](?:com|net|org)$/smx, "Firefox::Marionette::Login->host() from Firefox::Marionette->logins_from_zip('$path') looks correct:" . Encode::encode('UTF-8', $login->host(), 1));
 			ok($login->user(), "Firefox::Marionette::Login->user() from Firefox::Marionette->logins_from_zip('$path') looks correct:" . Encode::encode('UTF-8', $login->user(), 1));
+			if ($login->user() eq $utf8_username) {
+				$found_utf8_user = 1;
+				my $encoded_password = 'TGe3xQxzZ8t4nfzQ-vpY6@D4GnCQaFTuD3hDe72D3btt!';
+				my $utf8_password = Encode::decode('UTF-8', $encoded_password, 1);
+				ok($login->password() eq $utf8_password, "$display_username contains a correctly encoded UTF-8 password");
+				ok($login->creation_time() == 1641413610, "$display_username has a creation time of " . gmtime($login->creation_time()));
+				ok($login->password_changed_time() == 1641850061, "$display_username has a password changed time of " . gmtime($login->password_changed_time()));
+			}
 			ok($firefox->add_login($login), "\$firefox->add_login() copes with a login from Firefox::Marionette->logins_from_zip('$path') passed directly to it");
 			push @logins, $login;
 		}
+		ok($found_utf8_user, "$path contains a UTF-8 username of $display_username for $path");
 		ok(scalar @logins, "$path produces Firefox::Marionette::Login records:" . scalar @logins);
 		my %existing;
 		foreach my $login ($firefox->logins()) {

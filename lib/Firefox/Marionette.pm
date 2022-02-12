@@ -1337,11 +1337,12 @@ sub logins_from_zip {
             if ( ( defined $username ) && ( defined $password ) ) {
                 push @logins,
                   Firefox::Marionette::Login->new(
-                    guid     => $item->{uuid},
-                    host     => $item->{overview}->{url},
-                    user     => $username,
-                    password => $password,
-                    creation => $item->{createdAt},
+                    guid                  => $item->{uuid},
+                    host                  => $item->{overview}->{url},
+                    user                  => $username,
+                    password              => $password,
+                    creation_time         => $item->{createdAt},
+                    password_changed_time => $item->{updatedAt},
                   );
             }
         }
