@@ -1759,9 +1759,9 @@ SKIP: {
 				last GET_HAR;
 			}
 		}
-		if ($^O eq 'cygwin') {
+		if (($^O eq 'cygwin') || ($^O eq 'MSWin32')) {
 			TODO: {
-				local $TODO = "cygwin can fail this test";
+				local $TODO = "$^O can fail this test";
 				ok($correct == 4, "Correct headers have been set");
 			}
 		} else {
