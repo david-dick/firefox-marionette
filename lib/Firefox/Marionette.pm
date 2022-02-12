@@ -36,6 +36,7 @@ use File::Spec();
 use URI();
 use URI::Escape();
 use Time::HiRes();
+use Time::Local();
 use File::Temp();
 use File::stat();
 use File::Spec::Unix();
@@ -1314,6 +1315,93 @@ sub _get_extra_parameters {
     seek $import_handle, Fcntl::SEEK_SET(), 0
       or die "Failed to seek to start of file:$EXTENDED_OS_ERROR\n";
     return $extra_parameters;
+}
+
+sub logins_from_xml {
+    my ( $class, $import_handle ) = @_;
+    my $parser = XML::Parser->new();
+    my @parsed_pw_entries;
+    my $current_pw_entry;
+    my $key_regex_string = join q[|], qw(
+      username
+      url
+      password
+      uuid
+      creationtime
+      lastmodtime
+      lastaccesstime
+    );
+    my $key_name;
+    $parser->setHandlers(
+        Start => sub {
+            my ( $p, $element, %attributes ) = @_;
+            if ( $element eq 'pwentry' ) {
+                $current_pw_entry = {};
+                $key_name         = undef;
+            }
+            elsif ( $element =~ /^($key_regex_string)$/smx ) {
+                $key_name = ($1);
+            }
+            else {
+                $key_name = undef;
+            }
+        },
+        Char => sub {
+            my ( $p, $string ) = @_;
+            if ( defined $key_name ) {
+                chomp $string;
+                $current_pw_entry->{$key_name} .= $string;
+            }
+        },
+        End => sub {
+            my ( $p, $element ) = @_;
+            $key_name = undef;
+            if ( $element eq 'pwentry' ) {
+                push @parsed_pw_entries, $current_pw_entry;
+            }
+        },
+    );
+    $parser->parse($import_handle);
+    my @logins;
+    foreach my $pw_entry (@parsed_pw_entries) {
+        my $login = {};
+        foreach my $key (qw(creationtime lastmodtime lastaccesstime)) {
+            if (
+                ( defined $pw_entry->{$key} )
+                && ( $pw_entry->{$key} =~
+                    /^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/smx )
+              )
+            {
+                my ( $year, $month, $day, $hour, $mins, $secs ) =
+                  ( $1, $2, $3, $4, $5, $6 );
+                my $time =
+                  Time::Local::timegm( $secs, $mins, $hour, $day,
+                    $month - 1, $year );
+                $pw_entry->{$key} = $time;
+            }
+
+        }
+        my $host;
+        if ( defined $pw_entry->{url} ) {
+            my $url = URI::URL->new( $pw_entry->{url} );
+            $host = URI::URL->new( $url->scheme() . q[://] . $url->host_port() )
+              ->canonical()->as_string;
+        }
+        if ( ( $pw_entry->{username} ) && ($host) && ( $pw_entry->{password} ) )
+        {
+            push @logins,
+              Firefox::Marionette::Login->new(
+                host                  => $host,
+                user                  => $pw_entry->{username},
+                password              => $pw_entry->{password},
+                guid                  => $pw_entry->{uuid},
+                creation_time         => $pw_entry->{creationtime},
+                password_changed_time => $pw_entry->{lastmodtime},
+                last_used_time        => $pw_entry->{lastaccesstime}
+              );
+        }
+    }
+    return @logins;
 }
 
 sub logins_from_zip {
@@ -10075,6 +10163,27 @@ returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objec
         $firefox->add_login($login);
     }
 
+=head2 logins_from_xml
+
+accepts a filehandle as a parameter and then reads the filehandle for exported logins as XML.  This is known to work with the following formats;
+
+=over 4
+
+=item * L<KeePass 1.x XML|https://keepass.info/help/base/importexport.html#xml>
+
+=back
+
+returns a list of L<Firefox::Marionette::Login|Firefox::Marionette::Login> objects.
+
+    use Firefox::Marionette();
+    use FileHandle();
+
+    my $handle = FileHandle->new('/path/to/keepass1.xml');
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
+        $firefox->add_login($login);
+    }
+
 =head2 logins_from_zip
 
 accepts a filehandle as a parameter and then reads the filehandle for exported logins as a zip file.  This is known to work with the following formats;
@@ -10981,6 +11090,9 @@ L<URI|URI>
 
 =item *
 L<XML::Parser|XML::Parser>
+ 
+=item *
+L<Time::Local|Time::Local>
  
 =back
 

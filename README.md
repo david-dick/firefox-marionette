@@ -1062,6 +1062,23 @@ returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox:
         $firefox->add_login($login);
     }
 
+## logins\_from\_xml
+
+accepts a filehandle as a parameter and then reads the filehandle for exported logins as XML.  This is known to work with the following formats;
+
+- [KeePass 1.x XML](https://keepass.info/help/base/importexport.html#xml)
+
+returns a list of [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) objects.
+
+    use Firefox::Marionette();
+    use FileHandle();
+
+    my $handle = FileHandle->new('/path/to/keepass1.xml');
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
+        $firefox->add_login($login);
+    }
+
 ## logins\_from\_zip
 
 accepts a filehandle as a parameter and then reads the filehandle for exported logins as a zip file.  This is known to work with the following formats;

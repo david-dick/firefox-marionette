@@ -1624,6 +1624,40 @@ SKIP: {
 		}
 	}
 	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
+	foreach my $path (qw(t/data/keepass1.xml)) {
+		my $handle = FileHandle->new($path, Fcntl::O_RDONLY()) or die "Failed to open $path:$!";
+		my @logins;
+		my $encoded_username = '!"§$%&/()=?`´²³{[]}\\';
+		my $display_username = $encoded_username;
+		my $utf8_username = Encode::decode('UTF-8', $encoded_username, 1);
+		my $found_utf8_user;
+		foreach my $login (Firefox::Marionette->logins_from_xml($handle)) {
+			ok($login->host() =~ /^https?:\/\/(?:[a-z]+[.])?[a-z]+[.](?:com|net|org)(?:[:]\d+)?\/?$/smx, "Firefox::Marionette::Login->host() from Firefox::Marionette->logins_from_zip('$path') looks correct:" . Encode::encode('UTF-8', $login->host(), 1));
+			ok($login->user(), "Firefox::Marionette::Login->user() from Firefox::Marionette->logins_from_zip('$path') looks correct:" . Encode::encode('UTF-8', $login->user(), 1));
+			if ($login->user() eq $utf8_username) {
+				$found_utf8_user = 1;
+				my $encoded_password = 'öüäÖÜÄß<>@€µ®“«';
+				my $utf8_password = Encode::decode('UTF-8', $encoded_password, 1);
+				ok($login->password() eq $utf8_password, "$display_username contains a correctly encoded UTF-8 password");
+				ok($login->creation_time() == 1167566157, "$display_username has a creation time of " . gmtime($login->creation_time()));
+				ok($login->password_changed_time() == 1167566166, "$display_username has a password changed time of " . gmtime($login->password_changed_time()));
+			}
+			ok($firefox->add_login($login), "\$firefox->add_login() copes with a login from Firefox::Marionette->logins_from_zip('$path') passed directly to it");
+			push @logins, $login;
+		}
+		ok($found_utf8_user, "$path contains a UTF-8 username of $display_username for $path");
+		ok(scalar @logins, "$path produces Firefox::Marionette::Login records:" . scalar @logins);
+		my %existing;
+		foreach my $login ($firefox->logins()) {
+			$existing{$login->host()}{$login->user()} = $login;
+		}
+		$handle = FileHandle->new($path, Fcntl::O_RDONLY()) or die "Failed to open $path:$!";
+		foreach my $login (Firefox::Marionette->logins_from_xml($handle)) {
+			ok(exists $existing{$login->host()}{$login->user()} && $existing{$login->host()}{$login->user()}->password() eq $login->password(), "\$firefox->logins() produces a matching login after adding record from Firefox::Marionette->logins_from_zip('$path')");
+			ok($firefox->delete_login($login), "\$firefox->delete_login() copes with a login from Firefox::Marionette->logins_from_zip('$path') passed directly to it");
+		}
+	}
+	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
