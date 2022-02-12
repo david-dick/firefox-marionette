@@ -39,6 +39,7 @@ t/data/elements.html
 t/data/iframe.html
 t/data/logins.json
 t/data/keepass1.xml
+t/data/keepassxs.csv
 t/data/key4.db
 t/data/1Passwordv7.csv
 t/data/1Passwordv8.1pux

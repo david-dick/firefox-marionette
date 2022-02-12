@@ -1178,6 +1178,8 @@ sub logins_from_csv {
     }
     my %mapping = (
         'web site'          => 'host',
+        'last modified'     => 'password_changed_time',
+        created             => 'creation_time',
         'login name'        => 'user',
         login_uri           => 'host',
         login_username      => 'user',
@@ -1192,6 +1194,10 @@ sub logins_from_csv {
         timelastused        => 'last_used_in_ms',
         timepasswordchanged => 'password_changed_in_ms',
     );
+    my %time_mapping = (
+        'last modified' => 1,
+        'created'       => 1,
+    );
     while ( my $row = $csv->getline($import_handle) ) {
         my %parameters;
         foreach my $key ( sort { $a cmp $b } keys %import_headers ) {
@@ -1199,6 +1205,19 @@ sub logins_from_csv {
                 && ( defined $mapping{$key} ) )
             {
                 $parameters{ $mapping{$key} } = $row->[ $import_headers{$key} ];
+                if ( $time_mapping{$key} ) {
+                    if ( $parameters{ $mapping{$key} } =~
+/^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/smx
+                      )
+                    {
+                        my ( $year, $month, $day, $hour, $mins, $secs ) =
+                          ( $1, $2, $3, $4, $5, $6 );
+                        my $time =
+                          Time::Local::timegm( $secs, $mins, $hour, $day,
+                            $month - 1, $year );
+                        $parameters{ $mapping{$key} } = $time;
+                    }
+                }
             }
         }
         foreach my $key (qw(host origin)) {

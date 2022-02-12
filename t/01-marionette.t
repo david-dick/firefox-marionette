@@ -1569,14 +1569,32 @@ SKIP: {
 		ok($firefox->delete_login($login), "\$firefox->delete_login() removes the form based login passed directly");
 	}
 	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
-	foreach my $path (qw(t/data/1Passwordv7.csv t/data/bitwarden_export_org.csv t/data/keepass.csv t/data/last_pass_example.csv)) {
+	foreach my $path (qw(t/data/1Passwordv7.csv t/data/bitwarden_export_org.csv t/data/keepass.csv t/data/last_pass_example.csv t/data/keepassxs.csv)) {
 		my $handle = FileHandle->new($path, Fcntl::O_RDONLY()) or die "Failed to open $path:$!";
 		my @logins;
+		my $encoded_username = '!"§$%&/()=?`´²³{[]}\\';
+		my $display_username = $encoded_username;
+		my $utf8_username = Encode::decode('UTF-8', $encoded_username, 1);
+		my $found_utf8_user;
 		foreach my $login (Firefox::Marionette->logins_from_csv($handle)) {
-			ok($login->host() =~ /^https?:\/\/(?:[a-z]+[.])?[a-z]+[.](?:com|net|org)$/smx, "Firefox::Marionette::Login->host() from Firefox::Marionette->logins_from_csv('$path') looks correct:" . Encode::encode('UTF-8', $login->host(), 1));
-			ok($login->user(), "Firefox::Marionette::Login->user() from Firefox::Marionette->logins_from_csv('$path') looks correct:" . Encode::encode('UTF-8', $login->user(), 1));
+			if ($path eq 't/data/keepassxs.csv') {
+				if ($login->user() eq $utf8_username) {
+					$found_utf8_user = 1;
+					my $encoded_password = 'öüäÖÜÄß<>@€µ®“«';
+					my $utf8_password = Encode::decode('UTF-8', $encoded_password, 1);
+					ok($login->password() eq $utf8_password, "$display_username contains a correctly encoded UTF-8 password");
+					ok($login->creation_time() == 1644485034, "$display_username has a creation time of " . gmtime($login->creation_time()));
+					ok($login->password_changed_time() == 1644398823, "$display_username has a password changed time of " . gmtime($login->password_changed_time()));
+				}
+			} else {
+				ok($login->host() =~ /^https?:\/\/(?:[a-z]+[.])?[a-z]+[.](?:com|net|org)$/smx, "Firefox::Marionette::Login->host() from Firefox::Marionette->logins_from_csv('$path') looks correct:" . Encode::encode('UTF-8', $login->host(), 1));
+				ok($login->user(), "Firefox::Marionette::Login->user() from Firefox::Marionette->logins_from_csv('$path') looks correct:" . Encode::encode('UTF-8', $login->user(), 1));
+			}
 			ok($firefox->add_login($login), "\$firefox->add_login() copes with a login from Firefox::Marionette->logins_from_csv('$path') passed directly to it");
 			push @logins, $login;
+		}
+		if ($path eq 't/data/keepassxs.csv') {
+			ok($found_utf8_user, "$path contains a UTF-8 username of $display_username for $path");
 		}
 		ok(scalar @logins, "$path produces Firefox::Marionette::Login records:" . scalar @logins);
 		my %existing;
