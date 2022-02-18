@@ -108,6 +108,7 @@ sub _MIN_VERSION_NO_CHROME_CALLS    { return 94 }
 sub _MIN_VERSION_FOR_SCRIPT_SCRIPT  { return 31 }
 sub _MIN_VERSION_FOR_SCRIPT_WO_ARGS { return 60 }
 sub _MIN_VERSION_FOR_MODERN_GO      { return 31 }
+sub _MIN_VERSION_FOR_MODERN_SWITCH  { return 90 }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -2573,6 +2574,21 @@ sub _is_firefox_major_version_at_least {
 sub _is_xvfb_okay {
     my ($self) = @_;
     if ( $self->_is_firefox_major_version_at_least( _MIN_VERSION_FOR_XVFB() ) )
+    {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+sub _is_modern_switch_window_okay {
+    my ($self) = @_;
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_FOR_MODERN_SWITCH()
+        )
+      )
     {
         return 1;
     }
@@ -8579,8 +8595,14 @@ sub switch_to_window {
             $message_id,
             $self->_command('WebDriver:SwitchToWindow'),
             {
-                value  => "$window_handle",
-                name   => "$window_handle",
+                (
+                    $self->_is_modern_switch_window_okay()
+                    ? ()
+                    : (
+                        value => "$window_handle",
+                        name  => "$window_handle",
+                    )
+                ),
                 handle => "$window_handle",
             }
         ]
