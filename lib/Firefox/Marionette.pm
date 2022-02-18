@@ -2971,9 +2971,10 @@ sub _get_version {
     }
     else {
         $version_string = $self->_get_version_string($binary);
-        my $browser_regex = join q[|],
+        my $waterfox_regex = qr/Waterfox(?:Limited)?[ ]Waterfox[ ]/smx;
+        my $browser_regex  = join q[|],
           qr/Mozilla[ ]Firefox[ ]/smx,
-          qr/Waterfox[ ]Waterfox[ ]/smx,
+          $waterfox_regex,
           qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
           qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
         if ( $version_string =~
@@ -2983,23 +2984,24 @@ sub _get_version {
 # RHEL6 and dbus crashing with error messages like
 # 'Failed to open connection to "session" message bus: /bin/dbus-launch terminated abnormally without any error message'
         {
-            if ( $1 eq 'Moonchild Productions Pale Moon ' ) {
+            my ( $browser_result, $major, $minor, $patch ) = ( $1, $2, $3, $4 );
+            if ( $browser_result eq 'Moonchild Productions Pale Moon ' ) {
                 $self->{pale_moon} = 1;
                 $self->{_initial_version}->{major} =
                   _PALEMOON_VERSION_EQUIV();
             }
-            elsif ( $1 eq 'Waterfox Waterfox ' ) {
+            elsif ( $browser_result =~ /^$waterfox_regex$/smx ) {
                 $self->{waterfox} = 1;
             }
             else {
-                $self->{_initial_version}->{major} = $2;
-                $self->{_initial_version}->{minor} = $3;
-                $self->{_initial_version}->{patch} = $4;
+                $self->{_initial_version}->{major} = $major;
+                $self->{_initial_version}->{minor} = $minor;
+                $self->{_initial_version}->{patch} = $patch;
             }
         }
         elsif ( defined $self->{_initial_version} ) {
         }
-        elsif ( $version_string =~ /^Waterfox[ ]/smx ) {
+        elsif ( $version_string =~ /^Waterfox(?:Limited)?[ ]/smx ) {
             $self->{waterfox} = 1;
             if ( $version_string =~ /^Waterfox Classic/smx ) {
                 $self->{_initial_version}->{major} =
@@ -5627,6 +5629,16 @@ sub _initial_socket_setup {
     return $self->new_session($capabilities);
 }
 
+sub _split_browser_version {
+    my ($self) = @_;
+    my ( $major, $minor, $patch );
+    my $browser_version = $self->browser_version();
+    if ( defined $browser_version ) {
+        ( $major, $minor, $patch ) = split /[.]/smx, $browser_version;
+    }
+    return ( $major, $minor, $patch );
+}
+
 sub _request_proxy {
     my ( $self, $proxy ) = @_;
     my $build = {};
@@ -5640,9 +5652,9 @@ sub _request_proxy {
         $build->{proxyAutoconfigUrl} = $proxy->pac()->as_string();
     }
     if ( $proxy->ftp() ) {
-        my ( $major, $minor, $patch ) = split /[.]/smx,
-          $self->browser_version();
-        if ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) {
+        my ( $major, $minor, $patch ) = $self->_split_browser_version();
+        if ( ( defined $major ) && ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) )
+        {
             $build->{proxyType} ||= 'manual';
             $build->{ftpProxy} = $proxy->ftp();
         }
@@ -5701,8 +5713,8 @@ sub _proxy_from_env {
     my ($self) = @_;
     my $build;
     my @keys = (qw(all https http));
-    my ( $major, $minor, $patch ) = split /[.]/smx, $self->browser_version();
-    if ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) {
+    my ( $major, $minor, $patch ) = $self->_split_browser_version();
+    if ( ( defined $major ) && ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) ) {
         unshift @keys, qw(ftp);
     }
     foreach my $key (@keys) {
