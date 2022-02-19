@@ -9,6 +9,8 @@ use File::Temp();
 use Cwd();
 use POSIX();
 
+our $start_time = time;
+print "Start time is " . (localtime $start_time) . "\n";
 if (exists $ENV{COUNT}) {
 	$0 = "Test run number $ENV{COUNT}";
 }
@@ -267,4 +269,16 @@ END {
 			waitpid $pid, POSIX::WNOHANG();
 		}
 	}
+	my $end_time = time;
+	my ($hours, $minutes, $seconds) = (0,0,$end_time - $start_time);
+	while($seconds >= 3600) {
+		$seconds -= 3600;
+		$hours += 1;
+	}
+	while($seconds >= 60) {
+		$seconds -= 60;
+		$minutes += 1;
+	}
+	print "Run took $hours hours, $minutes minutes and $seconds seconds\n";
+	print "End time is " . (localtime $end_time) . "\n";
 }
