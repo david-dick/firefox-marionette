@@ -3429,7 +3429,7 @@ _CERT_
 			if (defined $certificate->sha256_fingerprint()) {
 				ok($certificate->sha256_fingerprint(), Encode::encode('UTF-8', display_name($certificate)) . " has a sha256_fingerprint of " . $certificate->sha256_fingerprint());
 			} else {
-				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " has a sha256_fingerprint of " . $certificate->sha256_fingerprint());
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . ' does not have a sha256_fingerprint');
 			}
 			ok($certificate->subject_name(), Encode::encode('UTF-8', display_name($certificate)) . " has a subject_name of " . Encode::encode('UTF-8', $certificate->subject_name()));
 			if (defined $certificate->key_usages()) {
