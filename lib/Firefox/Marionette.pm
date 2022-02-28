@@ -5639,18 +5639,8 @@ sub _split_browser_version {
     return ( $major, $minor, $patch );
 }
 
-sub _request_proxy {
-    my ( $self, $proxy ) = @_;
-    my $build = {};
-    if ( $proxy->type() ) {
-        $build->{proxyType} = $proxy->type();
-    }
-    elsif ( $proxy->pac() ) {
-        $build->{proxyType} = 'pac';
-    }
-    if ( $proxy->pac() ) {
-        $build->{proxyAutoconfigUrl} = $proxy->pac()->as_string();
-    }
+sub _check_ftp_support_for_proxy_request {
+    my ( $self, $proxy, $build ) = @_;
     if ( $proxy->ftp() ) {
         my ( $major, $minor, $patch ) = $self->_split_browser_version();
         if ( ( defined $major ) && ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) )
@@ -5664,6 +5654,22 @@ sub _request_proxy {
             );
         }
     }
+    return $build;
+}
+
+sub _request_proxy {
+    my ( $self, $proxy ) = @_;
+    my $build = {};
+    if ( $proxy->type() ) {
+        $build->{proxyType} = $proxy->type();
+    }
+    elsif ( $proxy->pac() ) {
+        $build->{proxyType} = 'pac';
+    }
+    if ( $proxy->pac() ) {
+        $build->{proxyAutoconfigUrl} = $proxy->pac()->as_string();
+    }
+    $build = $self->_check_ftp_support_for_proxy_request( $proxy, $build );
     if ( $proxy->http() ) {
         $build->{proxyType} ||= 'manual';
         $build->{httpProxy} = $proxy->http();
