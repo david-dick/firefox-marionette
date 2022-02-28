@@ -343,18 +343,16 @@ my $binary = 'firefox';
 if ($ENV{FIREFOX_BINARY}) {
 	$binary = $ENV{FIREFOX_BINARY};
 } elsif ( $^O eq 'MSWin32' ) {
-    my $program_files_key;
     foreach my $possible ( 'ProgramFiles(x86)', 'ProgramFiles' ) {
-        if ( $ENV{$possible} ) {
-            $program_files_key = $possible;
+        if (( $ENV{$possible} ) && (-e File::Spec->catfile($ENV{$possible}, 'Mozilla Firefox', 'firefox.exe') )) {
+	    $binary = File::Spec->catfile(
+		$ENV{$possible},
+		'Mozilla Firefox',
+		'firefox.exe'
+	    );
             last;
         }
     }
-    $binary = File::Spec->catfile(
-        $ENV{$program_files_key},
-        'Mozilla Firefox',
-        'firefox.exe'
-    );
 }
 elsif ( $^O eq 'darwin' ) {
     $binary = '/Applications/Firefox.app/Contents/MacOS/firefox';
