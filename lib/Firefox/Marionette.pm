@@ -5610,6 +5610,11 @@ sub _get_marionette_port {
               or Firefox::Marionette::Exception->throw(
                 "Failed to close '$self->{profile_path}':$EXTENDED_OS_ERROR");
         }
+        elsif (( $OSNAME eq 'MSWin32' )
+            && ( $EXTENDED_OS_ERROR == _WIN32_ERROR_SHARING_VIOLATION() ) )
+        {
+            $port = 0;
+        }
     }
     if ( defined $port ) {
     }
