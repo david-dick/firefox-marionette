@@ -109,6 +109,7 @@ sub _MIN_VERSION_FOR_SCRIPT_SCRIPT  { return 31 }
 sub _MIN_VERSION_FOR_SCRIPT_WO_ARGS { return 60 }
 sub _MIN_VERSION_FOR_MODERN_GO      { return 31 }
 sub _MIN_VERSION_FOR_MODERN_SWITCH  { return 90 }
+sub _ACTIVE_UPDATE_XML_FILE_NAME    { return 'active-update.xml' }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -2843,59 +2844,150 @@ sub _read_and_close_handle {
     return $content;
 }
 
+sub _catfile {
+    my ( $self, $base_directory, @parts ) = @_;
+    my $path;
+    if ( $self->_ssh() ) {
+        $path = $self->_remote_catfile( $base_directory, @parts );
+    }
+    else {
+        $path = File::Spec->catfile( $base_directory, @parts );
+    }
+    return $path;
+}
+
+sub _find_win32_active_update_xml {
+    my ( $self, $update_directory ) = @_;
+    foreach
+      my $tainted_id ( $self->_directory_listing( {}, $update_directory, 1 ) )
+    {
+        if ( $tainted_id =~ /^([A-F\d]{16})$/smx ) {
+            my ($id) = ($1);
+            my $sub_directory_path = $self->_catfile( $update_directory, $id );
+            if (
+                my $found = $self->_find_active_update_xml_in_directory(
+                    $sub_directory_path)
+              )
+            {
+                return $found;
+            }
+        }
+    }
+    return;
+}
+
+sub _find_active_update_xml_in_directory {
+    my ( $self, $directory ) = @_;
+    foreach my $entry ( $self->_directory_listing( {}, $directory, 1 ) ) {
+        if ( $entry eq _ACTIVE_UPDATE_XML_FILE_NAME() ) {
+            return $self->_catfile( $directory,
+                _ACTIVE_UPDATE_XML_FILE_NAME() );
+        }
+    }
+    return;
+}
+
+sub _active_update_xml_path {
+    my ($self) = @_;
+    my $path;
+    my $directory = $self->_binary_directory();
+    if ( !defined $directory ) {
+    }
+    elsif ( $self->_ssh() ) {
+        if ( $self->_remote_uname() eq 'MSWin32' ) {
+            my $common_appdata_directory =
+              $self->_get_remote_environment_variable_via_ssh(
+                'ALLUSERSPROFILE');
+            my $update_directory =
+              $self->_remote_catfile( $common_appdata_directory, 'Mozilla',
+                'updates' );
+            if ( my $found =
+                $self->_find_win32_active_update_xml($update_directory) )
+            {
+                $path = $found;
+            }
+        }
+        else {
+            if ( my $found =
+                $self->_find_active_update_xml_in_directory($directory) )
+            {
+                $path = $found;
+            }
+        }
+    }
+    else {
+        if ( $OSNAME eq 'MSWin32' ) {
+            my $common_appdata_directory =
+              Win32::GetFolderPath( Win32::CSIDL_COMMON_APPDATA() );
+            my $update_directory =
+              File::Spec->catdir( $common_appdata_directory, 'Mozilla',
+                'updates' );
+            if ( my $found =
+                $self->_find_win32_active_update_xml($update_directory) )
+            {
+                $path = $found;
+            }
+        }
+        else {
+            if ( my $found =
+                $self->_find_active_update_xml_in_directory($directory) )
+            {
+                $path = $found;
+            }
+        }
+    }
+    return $path;
+}
+
 sub _search_for_version_in_application_ini {
     my ( $self, $binary ) = @_;
-    my $binary_directory = $self->_binary_directory();
-    if ( defined $binary_directory ) {
-        my $found_active_update;
-        foreach
-          my $entry ( $self->_directory_listing( {}, $binary_directory, 1 ) )
-        {
-            if ( $entry eq 'active-update.xml' ) {
-                $found_active_update = 1;
-            }
-        }
-        my ( $active_update_handle, $active_update_path );
+    if ( my $active_update_path = $self->_active_update_xml_path() ) {
+        my $active_update_handle;
         my $active_update_version;
-        if ($found_active_update) {
-            if ( $self->_ssh() ) {
-                $active_update_path =
-                  $self->_remote_catfile( $binary_directory,
-                    'active-update.xml' );
-
-                $active_update_handle =
-                  $self->_get_file_via_scp( { ignore_missing_file => 1 },
-                    $active_update_path, 'active-update.xml' );
-            }
-            else {
-                $active_update_path =
-                  File::Spec->catdir( $binary_directory, 'active-update.xml' );
-                $active_update_handle =
-                  FileHandle->new( $active_update_path, Fcntl::O_RDONLY() )
-                  or Firefox::Marionette::Exception->throw(
-"Failed to open $active_update_path for reading:$EXTENDED_OS_ERROR"
-                  );
-            }
-            if ($active_update_handle) {
-                my $active_update_contents =
-                  $self->_read_and_close_handle( $active_update_handle,
-                    $active_update_path );
-                my $parser = XML::Parser->new();
-                $parser->setHandlers(
-                    Start => sub {
-                        my ( $p, $element, %attributes ) = @_;
-                        if ( $element eq 'update' ) {
-                            $active_update_version = $attributes{appVersion};
-                        }
-                    },
-                );
-                $parser->parse($active_update_contents);
-            }
+        if ( $self->_ssh() ) {
+            $active_update_handle =
+              $self->_get_file_via_scp( { ignore_missing_file => 1 },
+                $active_update_path, _ACTIVE_UPDATE_XML_FILE_NAME() );
         }
-        my $application_ini_path =
-          File::Spec->catfile( $binary_directory, 'application.ini' );
-        my $application_ini_handle =
-          FileHandle->new( $application_ini_path, Fcntl::O_RDONLY() );
+        else {
+            $active_update_handle =
+              FileHandle->new( $active_update_path, Fcntl::O_RDONLY() )
+              or Firefox::Marionette::Exception->throw(
+"Failed to open $active_update_path for reading:$EXTENDED_OS_ERROR"
+              );
+        }
+        if ($active_update_handle) {
+            my $active_update_contents =
+              $self->_read_and_close_handle( $active_update_handle,
+                $active_update_path );
+            my $parser = XML::Parser->new();
+            $parser->setHandlers(
+                Start => sub {
+                    my ( $p, $element, %attributes ) = @_;
+                    if ( $element eq 'update' ) {
+                        $active_update_version = $attributes{appVersion};
+                    }
+                },
+            );
+            $parser->parse($active_update_contents);
+        }
+        my $application_ini_path;
+        my $application_ini_handle;
+        my $application_ini_name = 'application.ini';
+        if ( $self->_ssh() ) {
+            $application_ini_path = $self->_catfile( $self->_binary_directory(),
+                $application_ini_name );
+            $application_ini_handle =
+              $self->_get_file_via_scp( { ignore_missing_file => 1 },
+                $application_ini_path, $application_ini_name );
+        }
+        else {
+            $application_ini_path =
+              File::Spec->catfile( $self->_binary_directory(),
+                $application_ini_name );
+            $application_ini_handle =
+              FileHandle->new( $application_ini_path, Fcntl::O_RDONLY() );
+        }
         if ($application_ini_handle) {
             my $config =
               Config::INI::Reader->read_handle($application_ini_handle);
