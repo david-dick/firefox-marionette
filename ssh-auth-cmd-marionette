@@ -49,28 +49,48 @@ eval {
         $root_dir_regex =
           qr/${quoted_tmp_directory}\/firefox_marionette_remote\w+/smx;
     }
-    my $allowed_binaries = q[(?:]
-      . ( join q[|], map { quotemeta } @{ $options{'allow-binary'} } ) . q[)];
+    my @allowed_binaries;
+    my @allowed_binary_paths;
     my @allowed_binary_directories;
     foreach my $binary ( @{ $options{'allow-binary'} } ) {
         if ( $binary eq 'firefox' ) {
+            push @allowed_binaries,           'firefox';
+            push @allowed_binary_paths,       '/usr/bin/firefox';
             push @allowed_binary_directories, '/usr/bin';
         }
         else {
+            push @allowed_binaries,     $binary;
+            push @allowed_binary_paths, $binary;
             my ( $volume, $directories ) = File::Spec->splitpath($binary);
             push @allowed_binary_directories,
               File::Spec->catdir( $volume, $directories );
         }
     }
+    my $allowed_binaries =
+      q[(?:] . ( join q[|], map { quotemeta } @allowed_binaries ) . q[)];
+    my $allowed_binary_paths =
+      q[(?:] . ( join q[|], map { quotemeta } @allowed_binary_paths ) . q[)];
     my $allowed_binary_directories = q[(?:]
       . ( join q[|], map { quotemeta } @allowed_binary_directories ) . q[)];
     my $allowed_binary_directories_regex = qr/$allowed_binary_directories/smx;
+    my $allowed_binary_paths_regex       = qr/$allowed_binary_paths/smx;
     my $allowed_binary_regex             = qr/$allowed_binaries/smx;
     my $sub_directory_regex = qr/(?:profile|downloads|tmp|addons|certs)/smx;
-    my $profile_file_regex =
-      qr/profile\/(?:bookmarks[.]html|prefs[.]js|mimeTypes[.]rdf)/smx;
+    my $profile_names       = q[(?:] . (
+        join q[|],
+        map { quotemeta } (
+            qw(
+              bookmarks.html
+              prefs.js
+              mimeTypes.rdf
+              search.json.mozlz4
+            )
+        )
+    ) . q[)];
+    my $profile_file_regex    = qr/profile\/$profile_names/smx;
     my $file_regex            = qr/[+\w\-()]{1,255}(?:[.][+\w\-()]{1,255})*/smx;
     my $downloads_regex       = qr/downloads\/$file_regex/smx;
+    my $addons_regex          = qr/(?:addons|profile)\/$file_regex/smx;
     my $ca_name_regex         = qr/Firefox::Marionette[ ]Root[ ]CA/smx;
     my $version_updates_regex = q[(?:]
       . (
@@ -86,12 +106,14 @@ eval {
       qr/[ ]\-marionette/smx,
       qr/(?:[ ]\-width[ ]\d{1,8})?/smx,
       qr/(?:[ ]\-height[ ]\d{1,8})?/smx,
+      qr/(?:[ ]\-\-jsconsole)?/smx,
       qr/(?:[ ]-safe\-mode)?/smx,
       qr/(?:[ ]\-headless)?/smx,
       qr/[ ]\-profile[ ]$root_dir_regex\/profile/smx,
       qr/[ ]\-\-no\-remote/smx,
       qr/[ ]\-\-new\-instance/smx,
-      qr/(?:[ ]\-\-devtools)?/smx;
+      qr/(?:[ ]\-\-devtools)?/smx,
+      qr/(?:[ ]\-\-kiosk)?/smx;
     my $prefs_grep_patterns_regex = join q[],
       qr/\-e[ ]marionette\\.port[ ]/smx,
       qr/\-e[ ]security\\.sandbox\\.content\\.tempDirSuffix[ ]/smx,
@@ -107,6 +129,8 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
         );
     }
 
+    my $scp_parameters_regex =
+      qr/(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ](?:-P[ ]\d{2}[ ])?(?:\-v[ ])?/smx;
     my $allowed_commands_regex = join q[|],
       qr/"$allowed_binary_regex"[ ]\-\-version/smx,
       @darwin_regexes,
@@ -115,14 +139,14 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
       qr/echo[ ]"TMP=\\"\$TMP\\""/smx,
       qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex/smx,
       qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex\/$sub_directory_regex/smx,
-      qr/scp[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$profile_file_regex"/smx,
-qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/(?:addons|profile)\/$file_regex"/smx,
+      qr/scp$scp_parameters_regex"$root_dir_regex\/$profile_file_regex"/smx,
+      qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-t[ ]"$root_dir_regex\/$addons_regex"/smx,
       qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer"/smx,
 qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?"$allowed_binary_directories\/$version_updates_regex"/smx,
-      qr/scp[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$downloads_regex"/smx,
+qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$downloads_regex"/smx,
       qr/kill[ ]\-0[ ]\d{1,8}/smx,
       qr/which[ ]$allowed_binary_regex/smx,
-      qr/readlink[ ]\-f[ ]$allowed_binary_regex/smx,
+      qr/readlink[ ]\-f[ ]$allowed_binary_paths_regex/smx,
 qr/rm[ ]\-Rf[ ]$root_dir_regex(?:[ ]$quoted_tmp_directory\/Temp\-[\d\-a-f]{1,255})*/smx,
       qr/ls[ ]-1[ ]"$allowed_binary_directories(?:\/updates(?:\/\d+)?)?"/smx,
       qr/ls[ ]-1[ ]"$root_dir_regex\/downloads"/smx,
