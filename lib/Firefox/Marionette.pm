@@ -3192,7 +3192,7 @@ sub _firefox_tmp_directory {
 }
 
 sub _quoting_for_cmd_exe {
-    my (@unquoted_arguments) = @_;
+    my ( $self, @unquoted_arguments ) = @_;
     my @quoted_arguments;
     foreach my $unquoted_argument (@unquoted_arguments) {
         $unquoted_argument =~ s/\\"/\\\\"/smxg;
@@ -3254,7 +3254,7 @@ sub _restore_stdin_stdout {
 sub _start_win32_process {
     my ( $self, $binary, @arguments ) = @_;
     my $full_path    = $self->_get_full_short_path_for_win32_binary($binary);
-    my $command_line = _quoting_for_cmd_exe( $binary, @arguments );
+    my $command_line = $self->_quoting_for_cmd_exe( $binary, @arguments );
     if ( $self->debug() ) {
         warn q[** ] . $command_line . "\n";
     }
@@ -5325,7 +5325,7 @@ sub _get_local_command_output {
     my $output;
     my $handle;
     if ( $OSNAME eq 'MSWin32' ) {
-        my $shell_command = _quoting_for_cmd_exe( $binary, @arguments );
+        my $shell_command = $self->_quoting_for_cmd_exe( $binary, @arguments );
         if ( $parameters->{capture_stderr} ) {
             $shell_command = "\"$shell_command 2>&1\"";
         }
@@ -5453,7 +5453,7 @@ sub _system {
     my $command_line;
     my $result;
     if ( $OSNAME eq 'MSWin32' ) {
-        $command_line = _quoting_for_cmd_exe( $binary, @arguments );
+        $command_line = $self->_quoting_for_cmd_exe( $binary, @arguments );
         if ( $self->_execute_win32_process( $binary, @arguments ) ) {
             $result = 0;
         }
@@ -5517,7 +5517,7 @@ sub _get_file_via_scp {
     my $local_path =
       File::Spec->catfile( $self->{_local_scp_get_directory}, $local_name );
     if ( $OSNAME eq 'MSWin32' ) {
-        $remote_path = _quoting_for_cmd_exe($remote_path);
+        $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
     my @arguments = (
         $self->_scp_arguments(),
@@ -5575,7 +5575,7 @@ sub _put_file_via_scp {
       or Firefox::Marionette::Exception->throw(
         "Failed to close $local_path:$EXTENDED_OS_ERROR");
     if ( $OSNAME eq 'MSWin32' ) {
-        $remote_path = _quoting_for_cmd_exe($remote_path);
+        $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
     my @arguments = (
         $self->_scp_arguments(),
