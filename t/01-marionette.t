@@ -830,13 +830,13 @@ SKIP: {
 		my $capabilities = $firefox->capabilities();
 		ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 		my $firefox_pid = $capabilities->moz_process_id();
-		ok($firefox_pid, "Firefox process has a process id of $firefox_pid");
-		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid)");
+		ok($firefox_pid, "Firefox process has a process id of $firefox_pid when using a profile_name");
+		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid) when using a profile_name");
 		$firefox = undef;
-		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid)");
+		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid) when using a profile_name");
 		($skip_message, $firefox) = start_firefox(0, debug => 1, reconnect => 1, profile_name => $name);
-		ok($firefox, "Firefox has reconnected in Marionette mode");
-		ok($firefox_pid == $capabilities->moz_process_id(), "Firefox has the same process id");
+		ok($firefox, "Firefox has reconnected in Marionette mode when using a profile_name");
+		ok($firefox_pid == $capabilities->moz_process_id(), "Firefox has the same process id when using a profile_name");
 		$firefox = undef;
 		ok(!(kill 0, $firefox_pid), "Cannot contact firefox process ($firefox_pid)");
 	}
