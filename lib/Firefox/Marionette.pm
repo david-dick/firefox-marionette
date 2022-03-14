@@ -2939,11 +2939,11 @@ sub _active_update_xml_path {
     return $path;
 }
 
-sub _search_for_version_in_application_ini {
-    my ( $self, $binary ) = @_;
+sub _active_update_version {
+    my ($self) = @_;
+    my $active_update_version;
     if ( my $active_update_path = $self->_active_update_xml_path() ) {
         my $active_update_handle;
-        my $active_update_version;
         if ( $self->_ssh() ) {
             $active_update_handle =
               $self->_get_file_via_scp( { ignore_missing_file => 1 },
@@ -2971,38 +2971,52 @@ sub _search_for_version_in_application_ini {
             );
             $parser->parse($active_update_contents);
         }
-        my $application_ini_path;
-        my $application_ini_handle;
-        my $application_ini_name = 'application.ini';
+    }
+    return $active_update_version;
+}
+
+sub _application_ini_config {
+    my ( $self, $binary ) = @_;
+    my $application_ini_path;
+    my $application_ini_handle;
+    my $application_ini_name = 'application.ini';
+    if ( my $binary_directory = $self->_binary_directory() ) {
         if ( $self->_ssh() ) {
-            $application_ini_path = $self->_catfile( $self->_binary_directory(),
-                $application_ini_name );
+            $application_ini_path =
+              $self->_catfile( $binary_directory, $application_ini_name );
             $application_ini_handle =
               $self->_get_file_via_scp( { ignore_missing_file => 1 },
                 $application_ini_path, $application_ini_name );
         }
         else {
             $application_ini_path =
-              File::Spec->catfile( $self->_binary_directory(),
-                $application_ini_name );
+              File::Spec->catfile( $binary_directory, $application_ini_name );
             $application_ini_handle =
               FileHandle->new( $application_ini_path, Fcntl::O_RDONLY() );
         }
-        if ($application_ini_handle) {
-            my $config =
-              Config::INI::Reader->read_handle($application_ini_handle);
-            if ( my $app = $config->{App} ) {
-                if (
-                    ( $app->{SourceRepository} )
-                    && ( $app->{SourceRepository} eq
-                        'https://hg.mozilla.org/releases/mozilla-beta' )
-                  )
-                {
-                    $self->{developer_edition} = 1;
-                }
-                return join q[ ], $app->{Vendor}, $app->{Name},
-                  $active_update_version || $app->{Version};
+    }
+    if ($application_ini_handle) {
+        my $config = Config::INI::Reader->read_handle($application_ini_handle);
+        return $config;
+    }
+    return;
+}
+
+sub _search_for_version_in_application_ini {
+    my ( $self, $binary ) = @_;
+    my $active_update_version = $self->_active_update_version();
+    if ( my $config = $self->_application_ini_config($binary) ) {
+        if ( my $app = $config->{App} ) {
+            if (
+                ( $app->{SourceRepository} )
+                && ( $app->{SourceRepository} eq
+                    'https://hg.mozilla.org/releases/mozilla-beta' )
+              )
+            {
+                $self->{developer_edition} = 1;
             }
+            return join q[ ], $app->{Vendor}, $app->{Name},
+              $active_update_version || $app->{Version};
         }
     }
     return;
