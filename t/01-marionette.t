@@ -30,6 +30,15 @@ if (defined $ENV{WATERFOX}) {
 if ($ENV{FIREFOX_ALARM}) {
 	alarm 900; # ten minutes is heaps for bulk testing
 }
+foreach my $name (qw(FIREFOX_HOST FIREFOX_USER)) {
+	if (exists $ENV{$name}) {
+		if (defined $ENV{$name}) {
+			$ENV{$name} =~ s/\s*$//smx;
+		} else {
+			die "This is just not possible:$name";
+		}
+	}
+}
 
 my $test_time_limit = 90;
 
