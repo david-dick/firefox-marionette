@@ -4681,14 +4681,10 @@ sub _setup_local_socket_via_ssh {
 
 sub _get_marionette_port_or_undef {
     my ($self) = @_;
-    my $port;
-    if ( $self->{profile_path} ) {
-        $port =
-          defined $port && $port > 0 ? $port : $self->_get_marionette_port();
-        if ( ( !defined $port ) || ( $port == 0 ) ) {
-            sleep 1;
-            return;
-        }
+    my $port = $self->_get_marionette_port();
+    if ( ( !defined $port ) || ( $port == 0 ) ) {
+        sleep 1;
+        return;
     }
     return $port;
 }
