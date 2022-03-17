@@ -642,7 +642,9 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
-	if (($ENV{RELEASE_TESTING}) && ($major_version >= 52)) {
+	if (($^O eq 'MSWin32') || ($^O eq 'cygwin') || ($^O eq 'darwin')) {
+		diag("No update checks for $^O");
+	} elsif (($ENV{RELEASE_TESTING}) && ($major_version >= 52)) {
 		my $update = $firefox->update();
 		ok(ref $update eq 'Firefox::Marionette::UpdateStatus', "\$firefox->update() produces a Firefox::Marionette::UpdateStatus object");
 		diag("Update status code is " . $update->update_status_code());
