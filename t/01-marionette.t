@@ -20,6 +20,9 @@ my $at_least_one_success;
 my $terminated;
 my $class;
 
+my $oldfh = select STDOUT; $| = 1; select $oldfh;
+$oldfh = select STDERR; $| = 1; select $oldfh;
+
 if (defined $ENV{WATERFOX}) {
 	$class = 'Waterfox::Marionette';
 	$class->import(qw(:all));
@@ -3486,9 +3489,8 @@ sub check_for_window {
 SKIP: {
 	diag("Starting new firefox for testing \%ENV proxy, min/maxing and killing firefox");
 	local %ENV = %ENV;
-	my $localPort = 8080;
-	$ENV{http_proxy} = 'https://localhost:' . $localPort;
-	$ENV{https_proxy} = 'https://proxy2.example.org:4343';
+	$ENV{http_proxy} = 'http://localhost:8080';
+	$ENV{https_proxy} = 'http://proxy2.example.org:4343';
 	$ENV{ftp_proxy} = 'ftp://ftp2.example.org:2121';
 	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600);
 	if (!$skip_message) {
@@ -3533,7 +3535,7 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
 		}
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
-		ok($capabilities->proxy()->http() eq 'localhost:' . $localPort, "\$capabilities->proxy()->http() is 'localhost:" . $localPort . "':" . $capabilities->proxy()->http());
+		ok($capabilities->proxy()->http() eq 'localhost:8080', "\$capabilities->proxy()->http() is 'localhost:8080':" . $capabilities->proxy()->http());
 		ok($capabilities->proxy()->https() eq 'proxy2.example.org:4343', "\$capabilities->proxy()->https() is 'proxy2.example.org:4343'");
 		if ($major_version < 90) {
 			ok($capabilities->proxy()->ftp() eq 'ftp2.example.org:2121', "\$capabilities->proxy()->ftp() is 'ftp2.example.org:2121'");
