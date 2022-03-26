@@ -5827,7 +5827,9 @@ sub _proxy_from_env {
     my $build;
     my @keys = (qw(all https http));
     my ( $major, $minor, $patch ) = $self->_split_browser_version();
-    if ( ( defined $major ) && ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) ) {
+    if ( $self->{waterfox} ) {
+    }
+    elsif ( ( defined $major ) && ( $major <= _MAX_VERSION_FOR_FTP_PROXY() ) ) {
         unshift @keys, qw(ftp);
     }
     foreach my $key (@keys) {
