@@ -8191,8 +8191,8 @@ sub _cleanup_remote_filesystem {
                     (
                         join q[ ], 'if',
                         'exist',   $remote_directory,
-                        'rmdir',   '/S',
-                        '/Q',      $remote_directory
+                        $binary,   @parameters,
+                        $remote_directory
                     )
                 );
             }
