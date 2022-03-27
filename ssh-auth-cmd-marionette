@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Sys::Syslog();
 use Fcntl();
+use FileHandle();
 use Symbol();
 use Getopt::Long();
 use English qw( -no_match_vars );
@@ -19,6 +20,40 @@ my $binary  = 'firefox';
 my $ident   = 'ssh-auth-cmd-marionette';
 my %options = ( facility => 'LOG_LOCAL0' );
 
+sub _tmp_directory_regex {
+    my $regex = qr{(?:/var)?/tmp}smx;
+    if ( $OSNAME eq 'darwin' ) {    # getconf DARWIN_USER_TEMP_DIR
+        my $handle    = FileHandle->new();
+        my $command   = 'getconf';
+        my @arguments = qw(DARWIN_USER_TEMP_DIR);
+        if ( my $pid = $handle->open(q[-|]) ) {
+            my $content;
+            while ( my $line = <$handle> ) {
+                $content .= $line;
+            }
+            close $handle
+              or die "Failed to successfully complete:$EXTENDED_OS_ERROR\n";
+            chomp $content;
+            my $quoted_content = quotemeta $content;
+            $regex = qr/$quoted_content/smx;
+        }
+        elsif ( defined $pid ) {
+            eval {
+                exec {$command} $command, @arguments
+                  or die "Failed to exec '$command':$EXTENDED_OS_ERROR\n";
+            } or do {
+                chomp $EVAL_ERROR;
+                warn "$EVAL_ERROR\n";
+            };
+            exit 1;
+        }
+        else {
+            die "Failed to fork:$EXTENDED_OS_ERROR\n";
+        }
+    }
+    return $regex;
+}
+
 eval {
     Getopt::Long::GetOptions( \%options, 'help', 'version', 'facility:s',
         'allow-binary:s@', 'force-binary:s' );
@@ -33,13 +68,14 @@ eval {
           or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
         exit 0;
     }
-    %options = _validate_parameters(%options);
-    my $tmp_directory = $ENV{TMPDIR} || '/tmp';
+    my $tmp_directory_regex = _tmp_directory_regex();
+    my $tmp_directory       = $ENV{TMPDIR} || '/tmp';
     $tmp_directory =~ s/\/$//smx;    # remove trailing / for darwin
     my $root_dir_regex;
-    my $quoted_tmp_directory;
+    my $quoted_tmp_directory = quotemeta $tmp_directory;
     if ( $tmp_directory =~
-        s/^(.*firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx )
+s/^(${tmp_directory_regex}\/firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx
+      )
     {
         $quoted_tmp_directory = quotemeta $tmp_directory;
         $root_dir_regex       = qr/$quoted_tmp_directory/smx;
@@ -47,8 +83,9 @@ eval {
     else {
         $quoted_tmp_directory = quotemeta $tmp_directory;
         $root_dir_regex =
-          qr/${quoted_tmp_directory}\/firefox_marionette_remote\w+/smx;
+          qr/${$tmp_directory_regex}\/firefox_marionette_remote\w+/smx;
     }
+    %options = _validate_parameters(%options);
     my @allowed_binaries;
     my @allowed_binary_paths;
     my @allowed_binary_directories;
