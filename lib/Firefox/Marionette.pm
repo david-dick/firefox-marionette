@@ -4410,7 +4410,11 @@ sub _remote_process_running {
         return $self->{last_remote_alive_status};
     }
     $self->{last_remote_kill_time} = $now;
-    if ( $self->_remote_uname() eq 'MSWin32' ) {
+    my $remote_uname = $self->_remote_uname();
+    if ( !defined $remote_uname ) {
+        return;
+    }
+    elsif ( $remote_uname eq 'MSWin32' ) {
         return $self->_win32_remote_process_running($remote_pid);
     }
     else {
@@ -7992,6 +7996,9 @@ sub quit {
         }
         $self->_terminate_process();
     }
+    else {
+        $self->_terminate_process();
+    }
     if ( !$self->_reconnected() ) {
         if ( $self->ssh_local_directory() ) {
             File::Path::rmtree( $self->ssh_local_directory(), 0, 0 );
@@ -8019,16 +8026,16 @@ sub _quit_over_marionette {
     if ( $OSNAME eq 'MSWin32' ) {
         if ( defined $self->{_win32_ssh_process} ) {
             $self->{_win32_ssh_process}->Wait( Win32::Process::INFINITE() );
-            $self->_reap();
+            $self->_wait_for_firefox_to_exit();
         }
         if ( defined $self->{_win32_firefox_process} ) {
             $self->{_win32_firefox_process}->Wait( Win32::Process::INFINITE() );
-            $self->_reap();
+            $self->_wait_for_firefox_to_exit();
         }
     }
     elsif ( ( $OSNAME eq 'MSWin32' ) && ( !$self->_ssh() ) ) {
         $self->{_win32_firefox_process}->Wait( Win32::Process::INFINITE() );
-        $self->_reap();
+        $self->_wait_for_firefox_to_exit();
     }
     else {
         if (
@@ -8071,15 +8078,15 @@ sub _sandbox_prefix {
 sub _wait_for_firefox_to_exit {
     my ($self) = @_;
     if ( $self->_ssh() ) {
-        if ( $self->_reconnected() ) {
-            while ( $self->_remote_process_running( $self->_firefox_pid() ) ) {
-                sleep 1;
-            }
-        }
-        else {
+        if ( !$self->_reconnected() ) {
             while ( kill 0, $self->_local_ssh_pid() ) {
                 sleep 1;
                 $self->_reap();
+            }
+        }
+        if ( $self->_firefox_pid() ) {
+            while ( $self->_remote_process_running( $self->_firefox_pid() ) ) {
+                sleep 1;
             }
         }
     }
