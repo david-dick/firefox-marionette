@@ -2982,6 +2982,9 @@ sub _application_ini_config {
     my $application_ini_name = 'application.ini';
     if ( my $binary_directory = $self->_binary_directory() ) {
         if ( $self->_ssh() ) {
+            if ( $self->_remote_uname() eq 'darwin' ) {
+                $binary_directory =~ s/Contents\/MacOS$/Contents\/Resources/smx;
+            }
             $application_ini_path =
               $self->_catfile( $binary_directory, $application_ini_name );
             $application_ini_handle =

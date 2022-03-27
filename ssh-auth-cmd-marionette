@@ -34,6 +34,7 @@ sub _tmp_directory_regex {
             close $handle
               or die "Failed to successfully complete:$EXTENDED_OS_ERROR\n";
             chomp $content;
+            $content =~ s/\/$//smx;    # remove trailing / for darwin
             my $quoted_content = quotemeta $content;
             $regex = qr/$quoted_content/smx;
         }
@@ -101,6 +102,11 @@ s/^(${tmp_directory_regex}\/firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx
             my ( $volume, $directories ) = File::Spec->splitpath($binary);
             push @allowed_binary_directories,
               File::Spec->catdir( $volume, $directories );
+            if ( $OSNAME eq 'darwin' ) {
+                $directories =~ s{/Contents/MacOS/$}{/Contents/Resources/}smx;
+                push @allowed_binary_directories,
+                  File::Spec->catdir( $volume, $directories );
+            }
         }
     }
     my $allowed_binaries =
