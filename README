@@ -2561,6 +2561,8 @@ DEPENDENCIES
 
       * XML::Parser
 
+      * Time::Local
+
 INCOMPATIBILITIES
 
     None reported. Always interested in any products with marionette

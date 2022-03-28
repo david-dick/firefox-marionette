@@ -1889,6 +1889,7 @@ Firefox::Marionette requires the following non-core Perl modules
 - [JSON](https://metacpan.org/pod/JSON)
 - [URI](https://metacpan.org/pod/URI)
 - [XML::Parser](https://metacpan.org/pod/XML::Parser)
+- [Time::Local](https://metacpan.org/pod/Time::Local)
 
 # INCOMPATIBILITIES
 
