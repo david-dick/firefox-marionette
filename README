@@ -203,6 +203,7 @@ SUBROUTINES/METHODS
 
     returns if pre-existing addons (extensions/themes) are allowed to run.
     This will be true for Firefox versions less than 55, as -safe-mode
+    <http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
     cannot be automated.
 
  alert_text
@@ -1535,8 +1536,10 @@ SUBROUTINES/METHODS
       separate window. The HAR Export Trigger
       <https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/>
       addon will be loaded into the new session automatically, which means
-      that -safe-mode will not be activated for this session AND this
-      functionality will only be available for Firefox 61+.
+      that -safe-mode
+      <http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
+      will not be activated for this session AND this functionality will
+      only be available for Firefox 61+.
 
       * host - use ssh <https://man.openbsd.org/ssh.1> to create and
       automate firefox on the specified host. See REMOTE AUTOMATION OF
@@ -2385,6 +2388,34 @@ REMOTE AUTOMATION OF FIREFOX VIA SSH
     <https://github.com/Microsoft/vscode-remote-release/issues/96> and
     therefore this type of automation is still possible, but slower than
     other client platforms.
+
+WEBGL
+
+    There are a number of steps to getting WebGL
+    <https://en.wikipedia.org/wiki/WebGL> to work correctly;
+
+    1. The addons parameter to the new method must be set. This will
+    disable -safe-mode
+    <http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
+
+    2. The visible parameter to the new method must be set. This is due to
+    an existing bug in Firefox
+    <https://bugzilla.mozilla.org/show_bug.cgi?id=1375585>.
+
+    3. REMOTE AUTOMATION OF FIREFOX VIA SSH cannot be used with WebGL at
+    the moment.
+
+    With all those conditions being met, WebGL
+    <https://en.wikipedia.org/wiki/WebGL> can be enabled like so;
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new( addons => 1, visible => 1 );
+        if ($firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false])) {
+            $firefox->go("https://get.webgl.org/");
+        } else {
+            die "WebGL is not supported";
+        }
 
 DIAGNOSTICS
 

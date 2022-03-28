@@ -150,7 +150,7 @@ these headers are added to any existing headers going to the metacpan.org site, 
 
 ## addons
 
-returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as -safe-mode cannot be automated.
+returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) cannot be automated.
 
 ## alert\_text
 
@@ -1180,7 +1180,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - developer - only allow a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) to be launched. This defaults to "0" (off).
 - devtools - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.
 - height - set the [height](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
-- har - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.  The [HAR Export Trigger](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/) addon will be loaded into the new session automatically, which means that -safe-mode will not be activated for this session AND this functionality will only be available for Firefox 61+.
+- har - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.  The [HAR Export Trigger](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/) addon will be loaded into the new session automatically, which means that [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) will not be activated for this session AND this functionality will only be available for Firefox 61+.
 - host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
 - implicit - a shortcut to allow directly providing the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeout#implicit) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - kiosk - start the browser in [kiosk](https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode) mode.
@@ -1758,6 +1758,25 @@ When using ssh, Firefox::Marionette will attempt to pass the [TMPDIR](https://en
     AcceptEnv TMPDIR
 
 This module uses [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaster) functionality when using [ssh](https://man.openbsd.org/ssh), for a useful speedup of executing remote commands.  Unfortunately, when using ssh to move from a [cygwin](https://gcc.gnu.org/wiki/SSH_connection_caching), [Windows 10 or Windows Server 2019](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse) node to a remote environment, we cannot use [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaster), because at this time, Windows [does not support ControlMaster](https://github.com/Microsoft/vscode-remote-release/issues/96) and therefore this type of automation is still possible, but slower than other client platforms.
+
+# WEBGL
+
+There are a number of steps to getting [WebGL](https://en.wikipedia.org/wiki/WebGL) to work correctly;
+
+- 1. The addons parameter to the [new](https://metacpan.org/pod/Firefox::Marionette#new) method must be set.  This will disable [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29)
+- 2. The visible parameter to the [new](https://metacpan.org/pod/Firefox::Marionette#new) method must be set.  This is due to [an existing bug in Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1375585).
+- 3. [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH) cannot be used with WebGL at the moment.
+
+With all those conditions being met, [WebGL](https://en.wikipedia.org/wiki/WebGL) can be enabled like so;
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( addons => 1, visible => 1 );
+    if ($firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false])) {
+        $firefox->go("https://get.webgl.org/");
+    } else {
+        die "WebGL is not supported";
+    }
 
 # DIAGNOSTICS
 

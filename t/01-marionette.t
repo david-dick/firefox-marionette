@@ -1183,6 +1183,7 @@ SKIP: {
 		skip("TLS test infrastructure seems compromised", 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	ok(!$firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false]), "WebGL is disabled by default");
 	if (!$ENV{FIREFOX_HOST}) {
 		my $shadow_root;
 		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
@@ -1376,7 +1377,7 @@ sub centimetres_to_points {
 
 SKIP: {
 	diag("Starting new firefox for testing logins");
-	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
+	($skip_message, $firefox) = start_firefox(0, addons => 1, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1387,6 +1388,11 @@ SKIP: {
 		skip("TLS test infrastructure seems compromised", 4);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	if ($major_version < 51) {
+		diag("WebGL does not work and should not as version $major_version is older than 51");
+	} elsif ($firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false])) {
+		diag("WebGL appears to be disabled in headless mode");
+	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	if (out_of_time()) {
@@ -3517,7 +3523,7 @@ SKIP: {
 	$ENV{http_proxy} = 'http://localhost:8080';
 	$ENV{https_proxy} = 'http://proxy2.example.org:4343';
 	$ENV{ftp_proxy} = 'ftp://ftp2.example.org:2121';
-	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600);
+	($skip_message, $firefox) = start_firefox(1, addons => 1, visible => 1, width => 800, height => 600);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -3554,6 +3560,18 @@ SKIP: {
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	ok(!$capabilities->moz_headless(), "\$capabilities->moz_headless() is set to false");
 	diag("Final Browser version is " . $capabilities->browser_version());
+	if ($major_version >= 51) {
+		SKIP: {
+			local $TODO = (($major_version > 70) && (!$ENV{FIREFOX_HOST}) && (!$ENV{SSH_CONNECTION})) ? '' : "WebGL should be okay after 51, but can be unstable for specific versions like 65.0.2 or over a remote session";
+			my $result = $firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false]);
+			ok($result, "WebGL is enabled for this browser");
+			if ($result) {
+				diag("WebGL is working correctly for " . $capabilities->browser_version() . " on $^O");
+			} else {
+				diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O");
+			}
+		}
+	}
 	SKIP: {
 		if (!$capabilities->proxy()) {
 			diag("\$capabilities->proxy is not supported for " . $capabilities->browser_version());

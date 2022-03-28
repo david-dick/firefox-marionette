@@ -9428,7 +9428,7 @@ these headers are added to any existing headers going to the metacpan.org site, 
 
 =head2 addons
 
-returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as -safe-mode cannot be automated.
+returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> cannot be automated.
 
 =head2 alert_text
 
@@ -10507,7 +10507,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * height - set the L<height|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> of the initial firefox window
 
-=item * har - begin the session with the L<devtools|https://developer.mozilla.org/en-US/docs/Tools> window opened in a separate window.  The L<HAR Export Trigger|https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/> addon will be loaded into the new session automatically, which means that -safe-mode will not be activated for this session AND this functionality will only be available for Firefox 61+.
+=item * har - begin the session with the L<devtools|https://developer.mozilla.org/en-US/docs/Tools> window opened in a separate window.  The L<HAR Export Trigger|https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/> addon will be loaded into the new session automatically, which means that L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> will not be activated for this session AND this functionality will only be available for Firefox 61+.
 
 =item * host - use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox on the specified host.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.
 
@@ -11142,6 +11142,31 @@ When using ssh, Firefox::Marionette will attempt to pass the L<TMPDIR|https://en
     AcceptEnv TMPDIR
 
 This module uses L<ControlMaster|https://man.openbsd.org/ssh_config#ControlMaster> functionality when using L<ssh|https://man.openbsd.org/ssh>, for a useful speedup of executing remote commands.  Unfortunately, when using ssh to move from a L<cygwin|https://gcc.gnu.org/wiki/SSH_connection_caching>, L<Windows 10 or Windows Server 2019|https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse> node to a remote environment, we cannot use L<ControlMaster|https://man.openbsd.org/ssh_config#ControlMaster>, because at this time, Windows L<does not support ControlMaster|https://github.com/Microsoft/vscode-remote-release/issues/96> and therefore this type of automation is still possible, but slower than other client platforms.
+
+=head1 WEBGL
+
+There are a number of steps to getting L<WebGL|https://en.wikipedia.org/wiki/WebGL> to work correctly;
+
+=over
+
+=item 1. The addons parameter to the L<new|Firefox::Marionette#new> method must be set.  This will disable L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
+
+=item 2. The visible parameter to the L<new|Firefox::Marionette#new> method must be set.  This is due to L<an existing bug in Firefox|https://bugzilla.mozilla.org/show_bug.cgi?id=1375585>.
+
+=item 3. L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> cannot be used with WebGL at the moment.
+
+=back
+
+With all those conditions being met, L<WebGL|https://en.wikipedia.org/wiki/WebGL> can be enabled like so;
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( addons => 1, visible => 1 );
+    if ($firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false])) {
+        $firefox->go("https://get.webgl.org/");
+    } else {
+        die "WebGL is not supported";
+    }
 
 =head1 DIAGNOSTICS
 
