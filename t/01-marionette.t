@@ -1183,7 +1183,13 @@ SKIP: {
 		skip("TLS test infrastructure seems compromised", 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
-	ok(!$firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false]), "WebGL is disabled by default");
+	if ($major_version < 30) {
+		diag("Skipping WebGL as it can cause older browsers to hang");
+	} elsif ($firefox->script(q[let c = document.createElement('canvas'); return c.getContext('webgl2') ? true : c.getContext('experimental-webgl') ? true : false;])) {
+		diag("WebGL is enabled by default when visible and addons are turned off");
+	} else {
+		diag("WebGL is disabled by default when visible and addons are turned off");
+	}
 	if (!$ENV{FIREFOX_HOST}) {
 		my $shadow_root;
 		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
@@ -1390,8 +1396,10 @@ SKIP: {
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	if ($major_version < 51) {
 		diag("WebGL does not work and should not as version $major_version is older than 51");
-	} elsif ($firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false])) {
-		diag("WebGL appears to be disabled in headless mode");
+	} elsif ($firefox->script(q[let c = document.createElement('canvas'); return c.getContext('webgl2') ? true : c.getContext('experimental-webgl') ? true : false;])) {
+		diag("WebGL appears to be enabled in headless mode (with addons => 1)");
+	} else {
+		diag("WebGL appears to be disabled in headless mode (with addons => 1)");
 	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
@@ -3563,10 +3571,13 @@ SKIP: {
 	if ($major_version >= 51) {
 		SKIP: {
 			local $TODO = (($major_version > 70) && (!$ENV{FIREFOX_HOST}) && (!$ENV{SSH_CONNECTION})) ? '' : "WebGL should be okay after 51, but can be unstable for specific versions like 65.0.2 or over a remote session";
-			my $result = $firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false]);
-			ok($result, "WebGL is enabled for this browser");
-			if ($result) {
-				diag("WebGL is working correctly for " . $capabilities->browser_version() . " on $^O");
+			my $webgl2 = $firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false;]);
+			my $experimental = $firefox->script(q[return document.createElement('canvas').getContext('experimental-webgl') ? true : false;]);
+			ok($webgl2 || $experimental, "WebGL is enabled for this browser");
+			if ($webgl2) {
+				diag("WebGL (webgl2) is working correctly for " . $capabilities->browser_version() . " on $^O");
+			} elsif ($experimental) {
+				diag("WebGL (experimental) is working correctly for " . $capabilities->browser_version() . " on $^O");
 			} else {
 				diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O");
 			}

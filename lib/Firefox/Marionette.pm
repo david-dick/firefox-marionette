@@ -11162,7 +11162,7 @@ With all those conditions being met, L<WebGL|https://en.wikipedia.org/wiki/WebGL
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new( addons => 1, visible => 1 );
-    if ($firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false])) {
+    if ($firefox->script(q[let c = document.createElement('canvas'); return c.getContext('webgl2') ? true : c.getContext('experimental-webgl') ? true : false;])) {
         $firefox->go("https://get.webgl.org/");
     } else {
         die "WebGL is not supported";
