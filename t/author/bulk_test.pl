@@ -329,7 +329,7 @@ MAIN: {
 			if ($entry eq 'firefox-upgrade') {
 				setup_upgrade();
 			}
-			my $bash_command = 'cd ' . Cwd::cwd() . '; DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ' RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X $devel_cover_inc -Ilib $test_marionette_file";
+			my $bash_command = 'cd ' . Cwd::cwd() . '; FIREFOX_ALARM=' . $ENV{FIREFOX_ALARM} . ' DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ' RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X $devel_cover_inc -Ilib $test_marionette_file";
 			if ($entry eq 'firefox-nightly') {
 				if (!_multiple_attempts_execute('ssh', [ 'localhost', $bash_command ], undef, 1)) {
 					$firefox_nightly_failed = 1;
@@ -341,7 +341,7 @@ MAIN: {
 			if ($entry eq 'firefox-upgrade') {
 				setup_upgrade();
 			}
-			$bash_command = 'cd ' . Cwd::cwd() . '; DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ' RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X $devel_cover_inc -Ilib $test_marionette_file";
+			$bash_command = 'cd ' . Cwd::cwd() . '; FIREFOX_ALARM=' . $ENV{FIREFOX_ALARM} . ' DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ' RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X $devel_cover_inc -Ilib $test_marionette_file";
 			if ($entry eq 'firefox-nightly') {
 				if (!_multiple_attempts_execute('ssh', [ 'localhost', $bash_command ], undef, 1)) {
 					$firefox_nightly_failed = 1;
