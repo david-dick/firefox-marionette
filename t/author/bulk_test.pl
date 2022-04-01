@@ -133,14 +133,44 @@ MAIN: {
 									}
 								}
 							}
+							$count = 0;
+							REMOTE_CYGWIN_FIREFOX: {
+								local $ENV{FIREFOX_NO_RECONNECT} = 1;
+								local $ENV{FIREFOX_NO_UPDATE} = 1;
+								local $ENV{FIREFOX_USER} = $server->{user};
+								my $port = 2222;
+								local $ENV{FIREFOX_PORT} = $port;
+								local $ENV{FIREFOX_HOST} = $server->{address};
+								$count += 1;
+								my $start_execute_time = time;
+								my $result = _execute($server, { return_result => 1 }, $^X, $devel_cover_inc, '-Ilib', $test_marionette_file);
+								my $total_execute_time = time - $start_execute_time;
+								if ($result != 0) {
+									if ($count < 3) {
+										my $error_message = _error_message($^X, $CHILD_ERROR);
+										warn "Failed '$^X $devel_cover_inc -Ilib $test_marionette_file' with FIREFOX_USER=$server->{user} and FIREFOX_HOST=$server->{address}:$port at " . localtime . " exited with a '$error_message' after $total_execute_time seconds.  Sleeping for $reset_time seconds";
+										if (_restart_server($server, $count)) {
+											redo REMOTE_CYGWIN_FIREFOX;
+										} else {
+											die "Failed to restart remote $server->{name} on time $count";
+										}
+									} else {
+										die "Failed to make $count times";
+									}
+								}
+							}
 							_execute($server, undef, 'scp', '-r', '-P', $server->{port}, Cwd::cwd(), $server->{user} . q[@] . $server->{address} . q[:/] . $remote_tmp_directory);
 							$server->{initial_command} .= "\\firefox-marionette";
+							my $cygwin_tmp_directory = $remote_tmp_directory;
+							$cygwin_tmp_directory =~ s/^C:/\/cygdrive\/c/smx;
 							foreach my $command_line (
+											"C:\\\\cygwin64\\\\bin\\\\bash --login -c 'cd $cygwin_tmp_directory/firefox-marionette; FIREFOX_ALARM=$win32_local_alarm RELEASE_TESTING=1 perl -Ilib $test_marionette_file;'",
 											"set FIREFOX_ALARM=$win32_local_alarm && set RELEASE_TESTING=1 && perl $devel_cover_inc -Ilib " . _win32_path($test_marionette_file),
 											"set FIREFOX_ALARM=$win32_local_alarm && set FIREFOX_DEVELOPER=1 && set RELEASE_TESTING=1 && set FIREFOX_DEBUG=1 && perl $devel_cover_inc -Ilib " . _win32_path($test_marionette_file),
 											"set FIREFOX_ALARM=$win32_local_alarm && set FIREFOX_NIGHTLY=1 && set RELEASE_TESTING=1 && perl $devel_cover_inc -Ilib " . _win32_path($test_marionette_file),
 											"set FIREFOX_ALARM=$win32_local_alarm && set WATERFOX=1 && set RELEASE_TESTING=1 && perl $devel_cover_inc -Ilib " . _win32_path($test_marionette_file),
 											"set FIREFOX_ALARM=$win32_local_alarm && set WATERFOX_VIA_FIREFOX=1 && set RELEASE_TESTING=1 && perl $devel_cover_inc -Ilib " . _win32_path($test_marionette_file),
+
 											) {
 								$count = 0;
 								WIN32_FIREFOX: {

@@ -1558,6 +1558,9 @@ sub _binary_directory {
 
             }
             elsif ( $self->_remote_uname() eq 'cygwin' ) {
+                $binary =
+                  $self->_execute_via_ssh( {}, 'cygpath', '-u', $binary );
+                chomp $binary;
                 my ( $volume, $directories ) =
                   File::Spec::Unix->splitpath($binary);
                 $binary_directory =
@@ -2413,6 +2416,24 @@ sub _launch_xvfb_if_required {
     return;
 }
 
+sub _restart_profile_directory {
+    my ($self) = @_;
+    my $profile_directory = $self->{_profile_directory};
+    if ( $self->_ssh() ) {
+        if ( $self->_remote_uname() eq 'cygwin' ) {
+            $profile_directory =
+              $self->_execute_via_ssh( {}, 'cygpath', '-s', '-m',
+                $profile_directory );
+            chomp $profile_directory;
+        }
+    }
+    elsif ( $OSNAME eq 'cygwin' ) {
+        $profile_directory =
+          $self->execute( 'cygpath', '-s', '-m', $profile_directory );
+    }
+    return $profile_directory;
+}
+
 sub _setup_arguments {
     my ( $self, %parameters ) = @_;
     my @arguments = qw(-marionette);
@@ -2429,13 +2450,11 @@ sub _setup_arguments {
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
     if ( $parameters{restart} ) {
-        my $profile_directory = $self->{_profile_directory};
-        if ( $OSNAME eq 'cygwin' ) {
-            $profile_directory =
-              $self->execute( 'cygpath', '-s', '-m', $profile_directory );
-        }
         push @arguments,
-          ( '-profile', $profile_directory, '--no-remote', '--new-instance' );
+          (
+            '-profile',    $self->_restart_profile_directory(),
+            '--no-remote', '--new-instance'
+          );
     }
     elsif ( $parameters{profile_name} ) {
         $self->{profile_name} = $parameters{profile_name};
@@ -2894,10 +2913,19 @@ sub _active_update_xml_path {
     if ( !defined $directory ) {
     }
     elsif ( $self->_ssh() ) {
-        if ( $self->_remote_uname() eq 'MSWin32' ) {
+        if (   ( $self->_remote_uname() eq 'MSWin32' )
+            || ( $self->_remote_uname() eq 'cygwin' ) )
+        {
             my $common_appdata_directory =
               $self->_get_remote_environment_variable_via_ssh(
                 'ALLUSERSPROFILE');
+            if ( $self->_remote_uname() eq 'cygwin' ) {
+                $common_appdata_directory =~ s/\\/\//smxg;
+                $common_appdata_directory =
+                  $self->_execute_via_ssh( {}, 'cygpath', '-u',
+                    $common_appdata_directory );
+                chomp $common_appdata_directory;
+            }
             my $update_directory =
               $self->_remote_catfile( $common_appdata_directory, 'Mozilla',
                 'updates' );
@@ -2984,6 +3012,12 @@ sub _application_ini_config {
         if ( $self->_ssh() ) {
             if ( $self->_remote_uname() eq 'darwin' ) {
                 $binary_directory =~ s/Contents\/MacOS$/Contents\/Resources/smx;
+            }
+            if ( $self->_remote_uname() eq 'cygwin' ) {
+                $binary_directory =
+                  $self->_execute_via_ssh( {}, 'cygpath', '-u',
+                    $binary_directory );
+                chomp $binary_directory;
             }
             $application_ini_path =
               $self->_catfile( $binary_directory, $application_ini_name );
@@ -3967,7 +4001,7 @@ sub _get_binary_from_cygwin_registry_via_ssh {
                   . $name_for_path_to_exe . q[/]
                   . $version
                   . '/Main/PathToExe"' );
-            my $version_regex = qr/(\d+)[.](\d+(?:\w\d+)?)(?:[.](\d+))?/smx;
+            my $version_regex = qr/(\d+)[.](\d+(?:\w\d+)?)(?:[.](\d+))?\0?/smx;
             if (   ( defined $path )
                 && ( $initial_version =~ /^$version_regex$/smx ) )
             {
@@ -5039,7 +5073,15 @@ sub _setup_new_profile {
     if ($profile) {
         if ( !$profile->download_directory() ) {
             my $download_directory = $self->{_download_directory};
-            if ( $OSNAME eq 'cygwin' ) {
+            if ( $self->_ssh() ) {
+                if ( $self->_remote_uname() eq 'cygwin' ) {
+                    $download_directory =
+                      $self->_execute_via_ssh( {}, 'cygpath', '-s', '-w',
+                        $download_directory );
+                    chomp $download_directory;
+                }
+            }
+            elsif ( $OSNAME eq 'cygwin' ) {
                 $download_directory =
                   $self->execute( 'cygpath', '-s', '-w', $download_directory );
             }
@@ -5069,10 +5111,6 @@ sub _setup_new_profile {
               $self->_execute_via_ssh( {}, 'cygpath', '-s', '-w',
                 $download_directory );
             chomp $download_directory;
-            $bookmarks_path =
-              $self->_execute_via_ssh( {}, 'cygpath', '-s', '-w',
-                $bookmarks_path );
-            chomp $bookmarks_path;
         }
         $profile->download_directory($download_directory);
         $profile->set_value( 'browser.bookmarks.file', $bookmarks_path, 1 );
@@ -8979,9 +9017,17 @@ sub install {
           or Firefox::Marionette::Exception->throw(
             "Failed to open $xpi_path for reading:$EXTENDED_OS_ERROR");
         binmode $handle;
-        $actual_path =
-          $self->_remote_catfile( $self->{_addons_directory}, $name );
+        my $addons_directory = $self->{_addons_directory};
+        $actual_path = $self->_remote_catfile( $addons_directory, $name );
         $self->_put_file_via_scp( $handle, $actual_path, 'addon ' . $name );
+        if ( $self->_remote_uname() eq 'cygwin' ) {
+            $addons_directory =
+              $self->_execute_via_ssh( {}, 'cygpath', '-s', '-w',
+                $addons_directory );
+            chomp $addons_directory;
+            $actual_path =
+              File::Spec::Win32->catdir( $addons_directory, $name );
+        }
     }
     elsif ( $OSNAME eq 'cygwin' ) {
         $actual_path = $self->execute( 'cygpath', '-s', '-w', $xpi_path );
