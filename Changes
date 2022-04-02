@@ -1,5 +1,12 @@
 Revision history for Firefox-Marionette
 
+1.23  Sat Apr  2 21:14 2022
+       Fixes to tests, cygwin, Win32 support
+       Adding documentation/tests for WebGL
+       Improvements to ssh-auth-cmd-marionette
+       Parameter cleanup for new browser versions
+       Adding logins_from_xml method, --show-next to check-firefox-certificate-authorities
+
 1.22  Sat Jan 29 15:49 2022
        Fixes to cygwin/Win32 support
 
