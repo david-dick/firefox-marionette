@@ -401,7 +401,7 @@ WriteMakefile(
         'POSIX'               => 0,
         'Scalar::Util'        => 0,
         'Socket'              => 0,
-        'Text::CSV_XS'        => 0,
+        'Text::CSV_XS'        => 1.35,
         'Time::Local'         => 0,
         'Term::ReadKey'       => 0,
         'Time::HiRes'         => 0,
