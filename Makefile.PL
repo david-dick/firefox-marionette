@@ -275,9 +275,7 @@ if ($version_string) {
 "Please install a more recent version of Mozilla Firefox.  Current version is $major\n";
         }
     }
-    elsif (
-        $version_string =~ /^Waterfox[ ]/smx )
-    {
+    elsif ( $version_string =~ /^Waterfox[ ]/smx ) {
     }
     elsif ( $version_string =~ /^Moonchild[ ]/smx ) {
     }
@@ -364,8 +362,11 @@ WriteMakefile(
             },
         },
     },
-    PL_FILES       => {},
-    EXE_FILES      => [ 'ssh-auth-cmd-marionette', 'ca-bundle-for-firefox', 'check-firefox-certificate-authorities', 'firefox-passwords' ],
+    PL_FILES  => {},
+    EXE_FILES => [
+        'ssh-auth-cmd-marionette',               'ca-bundle-for-firefox',
+        'check-firefox-certificate-authorities', 'firefox-passwords'
+    ],
     BUILD_REQUIRES => {
         'Compress::Zlib'  => 0,
         'Cwd'             => 0,
@@ -416,7 +417,7 @@ WriteMakefile(
               )
             : ()
         ),
-        'XML::Parser'         => 0,
+        'XML::Parser' => 0,
         (
             (
                       $OSNAME ne 'MSWin32'
