@@ -164,7 +164,7 @@ if ( $OSNAME eq 'MSWin32' ) {
     }
 }
 elsif ( $OSNAME eq 'darwin' ) {
-    foreach my $path (
+  PATH: foreach my $path (
         '/Applications/Firefox.app/Contents/MacOS/firefox',
         '/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox',
         '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
@@ -173,6 +173,7 @@ elsif ( $OSNAME eq 'darwin' ) {
     {
         if ( -e $path ) {
             $binary = $path;
+            last PATH;
         }
     }
 }
