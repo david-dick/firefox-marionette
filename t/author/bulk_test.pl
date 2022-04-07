@@ -62,6 +62,8 @@ MAIN: {
 			foreach my $key (sort { $a cmp $b } keys %headers) {
 				$server->{$key} = $row->[$headers{$key}];
 			}
+			$server->{port} ||= 22;
+			$server->{user} ||= getpwuid $UID;
 			push @servers, $server;
 		}
 		close $handle or die "Failed to close $servers_path:$EXTENDED_OS_ERROR";
@@ -77,9 +79,9 @@ MAIN: {
 		} elsif (defined $pid) {
 			eval {
 				undef $ping_pid;
-				my $win32_remote_alarm = 1800;
 				my $win32_local_alarm = 600;
-				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
+				my $physical_local_alarm = 600;
+				$ENV{FIREFOX_ALARM} = 1800;
 				if ((lc $server->{type}) eq 'virsh') {
 					if (_virsh_node_running($server)) {
 						_execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
@@ -199,6 +201,64 @@ MAIN: {
 							_execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
 							_sleep_until_shutdown($server);
 						}
+					} else {
+						die "SSH server is not detected";
+					}
+				} elsif ((lc $server->{type}) eq 'physical') {
+					my $socket = _sleep_until_ssh_available($server);
+					if ($socket) {
+						$server->{initial_command} = 'cd firefox-marionette';
+						_execute($server, undef, 'ssh', '-p', $server->{port}, $server->{user} . q[@] . $server->{address}, 'rm', '-Rf', 'firefox-marionette');
+						_execute($server, undef, 'scp', '-r', '-P', $server->{port}, Cwd::cwd(), $server->{user} . q[@] . $server->{address} . q[:]);
+						my $count = 0;
+						REMOTE_PHYSICAL_FIREFOX: {
+							local $ENV{FIREFOX_NO_RECONNECT} = 1;
+							local $ENV{FIREFOX_NO_UPDATE} = 1;
+							local $ENV{FIREFOX_USER} = 'firefox';
+							local $ENV{FIREFOX_HOST} = $server->{address};
+							$count += 1;
+							my $start_execute_time = time;
+							my $result = _execute($server, { return_result => 1 }, $^X, $devel_cover_inc, '-Ilib', $test_marionette_file);
+							my $total_execute_time = time - $start_execute_time;
+							if ($result != 0) {
+								if ($count < 3) {
+									my $error_message = _error_message($^X, $CHILD_ERROR);
+									warn "Failed '$^X $devel_cover_inc -Ilib $test_marionette_file' with FIREFOX_USER=$server->{user} and FIREFOX_HOST=$server->{address} at " . localtime . " exited with a '$error_message' after $total_execute_time seconds.  Sleeping for $reset_time seconds";
+									redo REMOTE_PHYSICAL_FIREFOX;
+								} else {
+									die "Failed to make $count times";
+								}
+							}
+						}
+						foreach my $command_line (
+										"FIREFOX_ALARM=$physical_local_alarm DEVEL_COVER_DB_FORMAT=JSON RELEASE_TESTING=1 perl $devel_cover_inc -Ilib $test_marionette_file",
+										"FIREFOX_ALARM=$physical_local_alarm DEVEL_COVER_DB_FORMAT=JSON FIREFOX_DEVELOPER=1 RELEASE_TESTING=1 perl $devel_cover_inc -Ilib $test_marionette_file",
+										"FIREFOX_ALARM=$physical_local_alarm DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NIGHTLY=1 RELEASE_TESTING=1 perl $devel_cover_inc -Ilib $test_marionette_file",
+										"FIREFOX_ALARM=$physical_local_alarm DEVEL_COVER_DB_FORMAT=JSON WATERFOX=1 RELEASE_TESTING=1 perl $devel_cover_inc -Ilib $test_marionette_file",
+										"FIREFOX_ALARM=$physical_local_alarm DEVEL_COVER_DB_FORMAT=JSON WATERFOX_VIA_FIREFOX=1 RELEASE_TESTING=1 perl $devel_cover_inc -Ilib $test_marionette_file",
+										) {
+							$count = 0;
+							REMOTE_FIREFOX: {
+								$count += 1;
+								my $start_execute_time = time;
+								my $result = _remote_execute($server, { return_result => 1 }, $command_line);
+								my $total_execute_time = time - $start_execute_time;
+								if ($result != 0) {
+									if ($count < 3) {
+										my $error_message = _error_message('ssh', $CHILD_ERROR);
+										warn "Failed '$command_line' at " . localtime . " exited with a '$error_message' after $total_execute_time seconds.  Sleeping for $reset_time seconds";
+										_remote_execute($server, undef, 'killall firefox || true');
+										_remote_execute($server, undef, 'killall perl || true');
+										redo REMOTE_FIREFOX;
+									} else {
+										die "Failed to make $count times";
+									}
+								}
+							}
+						}
+						_execute($server, undef, 'scp', '-r', '-P', $server->{port}, $server->{user} . q[@] . $server->{address} . q[:firefox-marionette/] . $cover_db_name, Cwd::cwd() . '/');
+					} else {
+						die "SSH server is not detected at $server->{address}";
 					}
 				} else {
 					die "Unknown server type '$server->{type}' in $servers_path";
@@ -665,7 +725,7 @@ sub _get_address {
 
 sub _prefix {
 	my ($server) = @_;
-	return $server->{name} . ' --> ';
+	return ($server->{name} || $server->{address}). ' --> ';
 }
 
 sub _log_stderr {

@@ -118,10 +118,10 @@ sub start_firefox {
 	} elsif (defined $ca_cert_handle) {
 		if ($launches % 2) {
 			diag("Setting trust to list");
-			$parameters{trust} = [ '/dev/fd/' . fileno $ca_cert_handle ];
+			$parameters{trust} = [ $ca_cert_handle->filename() ];
 		} else {
 			diag("Setting trust to scalar");
-			$parameters{trust} = '/dev/fd/' . fileno $ca_cert_handle;
+			$parameters{trust} = $ca_cert_handle->filename();
 		}
 	}
 	if ((defined $major_version) && ($major_version >= 61)) {
@@ -560,6 +560,9 @@ SKIP: {
 	if ($ENV{FIREFOX_BINARY}) {
 		skip("No profile testing when the FIREFOX_BINARY override is used", 6);
 	}
+	if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
+		skip("No profile testing when any WATERFOX override is used", 6);
+	}
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("No profile testing except for RELEASE_TESTING", 6);
 	}
@@ -851,6 +854,9 @@ SKIP: {
 		if (!$ENV{RELEASE_TESTING}) {
 			skip("No profile testing except for RELEASE_TESTING", 6);
 		}
+		if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
+			skip("No profile testing when any WATERFOX override is used", 6);
+		}
 		my $name = 'throw';
 		($skip_message, $firefox) = start_firefox(0, debug => 1, har => 1, survive => 1, profile_name => $name );
 		if (!$skip_message) {
@@ -902,7 +908,7 @@ emailAddress           = ddick\@cpan.org
 _CONFIG_
 		seek $ca_config_handle, 0, 0 or Carp::croak("Failed to seek to start of temporary file:$!");
 		fcntl $ca_config_handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
-		system {'openssl'} 'openssl', 'req', '-x509',
+		system {'openssl'} 'openssl', 'req', '-new', '-x509',
 			'-set_serial' => '1',
 			'-config'     => $ca_config_handle->filename(),
 			'-days'       => 10,
