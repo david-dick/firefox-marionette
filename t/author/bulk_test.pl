@@ -372,6 +372,9 @@ MAIN: {
 			local $ENV{FIREFOX_ALARM} = 1800;
 			_multiple_attempts_execute($^X, [ $devel_cover_inc, '-Ilib', $test_marionette_file ], { FIREFOX_HOST => 'localhost' });
 		}
+		{
+			_multiple_attempts_execute('xvfb-run', [ '-a', $^X, $devel_cover_inc, '-Ilib', $test_marionette_file ]);
+		}
 	}
 	_check_for_background_processes($background_pids);
 	if (my $entry = $old_versions{'firefox-upgrade'}) {

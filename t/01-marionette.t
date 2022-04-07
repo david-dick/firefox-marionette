@@ -3576,17 +3576,39 @@ SKIP: {
 	diag("Final Browser version is " . $capabilities->browser_version());
 	if ($major_version >= 51) {
 		SKIP: {
-			local $TODO = (($major_version > 70) && (!$ENV{FIREFOX_HOST}) && (!$ENV{SSH_CONNECTION})) ? '' : "WebGL should be okay after 51, but can be unstable for specific versions like 65.0.2 or over a remote session";
+			local $TODO = (($major_version > 70) && (!$ENV{FIREFOX_HOST})) ? '' : "WebGL should be okay after 51, but can be unstable for specific versions like 65.0.2 or over a remote session";
 			my $webgl2 = $firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false;]);
 			my $experimental = $firefox->script(q[return document.createElement('canvas').getContext('experimental-webgl') ? true : false;]);
-			ok($webgl2 || $experimental, "WebGL is enabled for this browser");
+			my $other = $firefox->script(q[return ("WebGLRenderingContext" in window) ? true : false;]);
+			my $webgl_ok = 1;
 			if ($webgl2) {
 				diag("WebGL (webgl2) is working correctly for " . $capabilities->browser_version() . " on $^O");
 			} elsif ($experimental) {
 				diag("WebGL (experimental) is working correctly for " . $capabilities->browser_version() . " on $^O");
-			} else {
+			} elsif ($other) {
+				diag("WebGL (WebGLRenderingContext) is providing some sort of support for " . $capabilities->browser_version() . " on $^O");
+			} elsif (($^O eq 'cygwin') ||
+				($^O eq 'darwin') ||
+				($^O eq 'MSWin32'))
+			{
+				$webgl_ok = 0;
 				diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O");
+			} else {
+				my $glxinfo = `glxinfo 2>&1`;
+				$glxinfo =~ s/\s+/ /smxg;
+				if ($? == 0) {
+					if ($glxinfo =~ /^Error:/smx) {
+						diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O, probably because glxinfo has failed:$glxinfo");
+					} else {
+						$webgl_ok = 0;
+						diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O but glxinfo has run successfully:$glxinfo");
+					}
+				} else {
+					$webgl_ok = 0;
+					diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O and glxinfo cannot be run:$?");
+				}
 			}
+			ok($webgl_ok, "WebGL is enabled when visible and addons are turned on");
 		}
 	}
 	SKIP: {
