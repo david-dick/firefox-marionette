@@ -9363,7 +9363,7 @@ accepts a hash as a parameter and adds the specified certificate to the Firefox 
 
 =item * path - a file system path to a single L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5>.
 
-=item * string - a string containg a single L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5>
+=item * string - a string containing a single L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5>
 
 =item * trust - This is the L<trustargs|https://www.mankier.com/1/certutil#-t> value for L<NSS|https://wiki.mozilla.org/NSS>.  If defaults to 'C,,';
 
@@ -9883,7 +9883,7 @@ This utility method executes a command with arguments and returns STDOUT as a ch
 
 =head2 fill_login
 
-This method searchs the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins> for an appropriate login for any form on the current page.  The form must match the host, the action attribute and the user and password field names.
+This method searches the L<Password Manager|https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins> for an appropriate login for any form on the current page.  The form must match the host, the action attribute and the user and password field names.
 
     use Firefox::Marionette();
     use IO::Prompt();
@@ -10232,7 +10232,7 @@ If no elements are found, this method will return undef.  For the same functiona
 
 =head2 html
 
-returns the page source of the content document.  This page source can be wrapped in html that firefox provides.  See the L<json|Firefox::Marionette#json> method for an alternative when dealing with response content types such as application/json and L<strip|Firefox::Marionette#strip> for an alterative when dealing with other non-html content types such as text/plain.
+returns the page source of the content document.  This page source can be wrapped in html that firefox provides.  See the L<json|Firefox::Marionette#json> method for an alternative when dealing with response content types such as application/json and L<strip|Firefox::Marionette#strip> for an alternative when dealing with other non-html content types such as text/plain.
 
     use Firefox::Marionette();
     use v5.10;
@@ -10278,7 +10278,7 @@ accepts the following as the first parameter;
 
 =back
 
-and an optional true/false second parameter to indicate if the xpi file should be a L<temporary extension|https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/> (just for the existance of this browser instance).  Unsigned xpi files L<may only be loaded temporarily|https://wiki.mozilla.org/Add-ons/Extension_Signing> (except for L<nightly firefox installations|https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly>).  It returns the GUID for the addon which may be used as a parameter to the L<uninstall|Firefox::Marionette#uninstall> method.
+and an optional true/false second parameter to indicate if the xpi file should be a L<temporary extension|https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/> (just for the existence of this browser instance).  Unsigned xpi files L<may only be loaded temporarily|https://wiki.mozilla.org/Add-ons/Extension_Signing> (except for L<nightly firefox installations|https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly>).  It returns the GUID for the addon which may be used as a parameter to the L<uninstall|Firefox::Marionette#uninstall> method.
 
     use Firefox::Marionette();
 
@@ -10874,9 +10874,9 @@ accepts a scalar containing a javascript function body that is executed in the b
 
 =item * line - Line in the client's program where this script is evaluated.
 
-=item * new - Forces the script to be evaluated in a fresh sandbox.  Note that if it is undefined, the script will normally be evaluted in a fresh sandbox.
+=item * new - Forces the script to be evaluated in a fresh sandbox.  Note that if it is undefined, the script will normally be evaluated in a fresh sandbox.
 
-=item * sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same L<window|https://developer.mozilla.org/en-US/docs/Web/API/Window> object if C<new> is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluted in a sandbox with elevated system privileges, equivalent to chrome space.
+=item * sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same L<window|https://developer.mozilla.org/en-US/docs/Web/API/Window> object if C<new> is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluated in a sandbox with elevated system privileges, equivalent to chrome space.
 
 =item * timeout - A timeout to override the default L<script|Firefox::Marionette::Timeouts#script> timeout, which, by default is 30 seconds.
 
@@ -10978,7 +10978,7 @@ returns the path to the local directory for the ssh connection (if any). For deb
 
 =head2 strip
 
-returns the page source of the content document after an attempt has been made to remove typical firefox html wrappers of non html content types such as text/plain and application/json.  See the L<json|Firefox::Marionette#json> method for an alternative when dealing with response content types such as application/json and L<html|Firefox::Marionette#html> for an alterative when dealing with html content types.  This is a convenience method that wraps the L<html|Firefox::Marionette#html> method.
+returns the page source of the content document after an attempt has been made to remove typical firefox html wrappers of non html content types such as text/plain and application/json.  See the L<json|Firefox::Marionette#json> method for an alternative when dealing with response content types such as application/json and L<html|Firefox::Marionette#html> for an alternative when dealing with html content types.  This is a convenience method that wraps the L<html|Firefox::Marionette#html> method.
 
     use Firefox::Marionette();
     use JSON();
@@ -11075,7 +11075,7 @@ accepts a parameter of a Win32 product name and returns the matching organisatio
 
 =head2 win32_product_names
 
-returns a hash of known Windows product names (such as 'Mozilla Firefox') with priority orders.  The lower the priority will determine the order that this module will check for the existance of this product.  Only of interest when sub-classing.
+returns a hash of known Windows product names (such as 'Mozilla Firefox') with priority orders.  The lower the priority will determine the order that this module will check for the existence of this product.  Only of interest when sub-classing.
 
 =head2 window_handle
 
