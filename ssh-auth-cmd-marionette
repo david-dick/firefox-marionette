@@ -140,6 +140,8 @@ s/^(${tmp_directory_regex}\/firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx
         join q[|], qr/active\-update[.]xml/smx, qr/application[.]ini/smx,
         qr/updates\/\d+\/update[.]status/smx
       ) . q[)];
+    my $xvfb_regex =
+      qr/xvfb\-run[ ]\-a[ ]\-s[ ]"-screen[ ]0[ ]\d+x\d+x\d+"[ ]/smx;
     my $certutil_arguments_regex = join q[],
       qr/[ ]\-A/smx,
       qr/[ ]\-d[ ](?:dbm|sql):$root_dir_regex\/profile/smx,
@@ -194,7 +196,7 @@ qr/rm[ ]\-Rf[ ]$root_dir_regex(?:[ ]$quoted_tmp_directory\/Temp\-[\d\-a-f]{1,255
       qr/ls[ ]-1[ ]"$allowed_binary_directories(?:\/updates(?:\/\d+)?)?"/smx,
       qr/ls[ ]-1[ ]"$root_dir_regex\/downloads"/smx,
       qr/certutil$certutil_arguments_regex/smx,
-      qr/"$allowed_binary_regex"$firefox_arguments_regex/smx,
+      qr/(?:$xvfb_regex)?"$allowed_binary_regex"$firefox_arguments_regex/smx,
 qr/grep[ ]$prefs_grep_patterns_regex$root_dir_regex\/profile\/prefs[.]js/smx;
 
     if ( $ENV{SSH_ORIGINAL_COMMAND} =~ m/^($allowed_commands_regex)$/smx ) {

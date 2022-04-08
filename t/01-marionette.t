@@ -191,7 +191,7 @@ sub start_firefox {
 			}
 			$parameters{capabilities} = Firefox::Marionette::Capabilities->new(%new);
 		}
-		if ($parameters{visible}) {
+		if (($parameters{visible}) && ($ENV{FIREFOX_NO_VISIBLE})) {
 			$skip_message = "Firefox visible tests are unreliable on a remote host";
 			return ($skip_message, undef);
 		}
@@ -3576,7 +3576,6 @@ SKIP: {
 	diag("Final Browser version is " . $capabilities->browser_version());
 	if ($major_version >= 51) {
 		SKIP: {
-			local $TODO = (($major_version > 70) && (!$ENV{FIREFOX_HOST})) ? '' : "WebGL should be okay after 51, but can be unstable for specific versions like 65.0.2 or over a remote session";
 			my $webgl2 = $firefox->script(q[return document.createElement('canvas').getContext('webgl2') ? true : false;]);
 			my $experimental = $firefox->script(q[return document.createElement('canvas').getContext('experimental-webgl') ? true : false;]);
 			my $other = $firefox->script(q[return ("WebGLRenderingContext" in window) ? true : false;]);

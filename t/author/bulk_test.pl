@@ -214,6 +214,7 @@ MAIN: {
 						REMOTE_PHYSICAL_FIREFOX: {
 							local $ENV{FIREFOX_NO_RECONNECT} = 1;
 							local $ENV{FIREFOX_NO_UPDATE} = 1;
+							local $ENV{FIREFOX_NO_VISIBLE} = 1;
 							local $ENV{FIREFOX_USER} = 'firefox';
 							local $ENV{FIREFOX_HOST} = $server->{address};
 							$count += 1;

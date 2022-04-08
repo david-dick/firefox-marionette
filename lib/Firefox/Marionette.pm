@@ -3386,6 +3386,22 @@ sub _execute_win32_process {
 
 sub _launch_via_ssh {
     my ( $self, @arguments ) = @_;
+    my $binary = q["] . $self->_binary() . q["];
+    if ( $self->_visible() ) {
+        if (   ( $self->_remote_uname() eq 'MSWin32' )
+            || ( $self->_remote_uname() eq 'darwin' )
+            || ( $self->_remote_uname() eq 'cygwin' ) )
+        {
+        }
+        else {
+            @arguments = (
+                '-a', '-s',
+                q["] . ( join q[ ], $self->_xvfb_common_arguments() ) . q["],
+                $binary, @arguments
+            );
+            $binary = 'xvfb-run';
+        }
+    }
     if ( $OSNAME eq 'MSWin32' ) {
         my $ssh_binary = $self->_get_full_short_path_for_win32_binary('ssh')
           or Firefox::Marionette::Exception->throw(
@@ -3395,7 +3411,7 @@ sub _launch_via_ssh {
           ( $self->_ssh_arguments( env => 1 ), $self->_ssh_address() );
         my $process =
           $self->_start_win32_process( 'ssh', @ssh_arguments,
-            q["] . $self->_binary() . q["], @arguments );
+            $binary, @arguments );
         $self->{_win32_ssh_process} = $process;
         my $pid = $process->GetProcessID();
         $self->{_ssh}->{pid} = $pid;
@@ -3413,10 +3429,8 @@ sub _launch_via_ssh {
                 open STDIN, q[<], $dev_null
                   or Firefox::Marionette::Exception->throw(
                     "Failed to redirect STDIN to $dev_null:$EXTENDED_OS_ERROR");
-                $self->_ssh_exec(
-                    $self->_ssh_arguments( env => 1 ), $self->_ssh_address(),
-                    q["] . $self->_binary() . q["],    @arguments
-                  )
+                $self->_ssh_exec( $self->_ssh_arguments( env => 1 ),
+                    $self->_ssh_address(), $binary, @arguments )
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
             } or do {
@@ -3690,6 +3704,24 @@ sub _debug_xvfb_execution {
     return;
 }
 
+sub _xvfb_common_arguments {
+    my ($self) = @_;
+    my $width =
+      defined $self->{window_width}
+      ? $self->{window_width}
+      : _DEFAULT_WINDOW_WIDTH();
+    my $height =
+      defined $self->{window_height}
+      ? $self->{window_height}
+      : _DEFAULT_WINDOW_HEIGHT();
+    my $width_height_depth = join q[x], $width, $height, _DEFAULT_DEPTH();
+    my @arguments          = (
+        '-screen' => '0',
+        $width_height_depth,
+    );
+    return @arguments;
+}
+
 sub _launch_xvfb {
     my ($self) = @_;
     my $xvfb_directory = $self->_xvfb_directory();
@@ -3712,19 +3744,9 @@ sub _launch_xvfb {
       or Firefox::Marionette::Exception->throw(
 "Failed to clear the close-on-exec flag on a temporary file:$EXTENDED_OS_ERROR"
       );
-    my $width =
-      defined $self->{window_width}
-      ? $self->{window_width}
-      : _DEFAULT_WINDOW_WIDTH();
-    my $height =
-      defined $self->{window_height}
-      ? $self->{window_height}
-      : _DEFAULT_WINDOW_HEIGHT();
-    my $width_height_depth = join q[x], $width, $height, _DEFAULT_DEPTH();
-    my @arguments          = (
+    my @arguments = (
         '-displayfd' => fileno $display_no_handle,
-        '-screen'    => '0',
-        $width_height_depth,
+        $self->_xvfb_common_arguments(),
         '-nolisten' => 'tcp',
         '-fbdir'    => $fbdir_directory,
     );
@@ -11242,9 +11264,7 @@ There are a number of steps to getting L<WebGL|https://en.wikipedia.org/wiki/Web
 
 =item 2. The visible parameter to the L<new|Firefox::Marionette#new> method must be set.  This is due to L<an existing bug in Firefox|https://bugzilla.mozilla.org/show_bug.cgi?id=1375585>.
 
-=item 3. L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> cannot be used with WebGL at the moment when jumping to a linux/bsd server.
-
-=item 4. It can be tricky getting L<WebGL|https://en.wikipedia.org/wiki/WebGL> to work with a L<Xvfb|https://en.wikipedia.org/wiki/Xvfb> instance.  L<glxinfo|https://dri.freedesktop.org/wiki/glxinfo/> can be useful to help debug issues in this case.
+=item 3. It can be tricky getting L<WebGL|https://en.wikipedia.org/wiki/WebGL> to work with a L<Xvfb|https://en.wikipedia.org/wiki/Xvfb> instance.  L<glxinfo|https://dri.freedesktop.org/wiki/glxinfo/> can be useful to help debug issues in this case.
 
 =back
 
