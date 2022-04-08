@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.24  Fri Apr  8 19:32 2022
+       Fixes for CPAN Testers results
+       Adding visible support for remote Firefox instances on linux (via xvfb-run)
+       Test suite changes for darwin
+
 1.23  Sat Apr  2 21:14 2022
        Fixes to tests, cygwin, Win32 support
        Adding documentation/tests for WebGL

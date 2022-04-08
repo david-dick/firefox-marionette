@@ -3,7 +3,7 @@ package Firefox::Marionette::ShadowRoot;
 use strict;
 use warnings;
 
-our $VERSION = '1.23';
+our $VERSION = '1.24';
 
 sub IDENTIFIER { return 'shadow-6066-11e4-a52e-4f735466cecf' }
 
@@ -36,7 +36,7 @@ Firefox::Marionette::ShadowRoot - Represents a Firefox shadow root retrieved usi
 
 =head1 VERSION
 
-Version 1.23
+Version 1.24
 
 =head1 SYNOPSIS
 
