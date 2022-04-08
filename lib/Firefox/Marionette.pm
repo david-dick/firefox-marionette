@@ -1617,46 +1617,24 @@ sub _binary_directory {
 
 sub _most_recent_updates_index {
     my ($self) = @_;
-    if ( defined $self->{_cached_per_instance}->{_most_recent_updates_index} ) {
-
-    }
-    else {
-        my $binary_directory = $self->_binary_directory();
-        if ( defined $binary_directory ) {
-            my $found_updates_directory;
-            foreach my $entry (
-                $self->_directory_listing(
-                    { ignore_missing_directory => 1 },
-                    $binary_directory, 1
-                )
-              )
-            {
-                if ( $entry eq 'updates' ) {
-                    $found_updates_directory = 1;
-                }
-            }
-            if ($found_updates_directory) {
-                my $updates_path =
-                  File::Spec->catfile( $binary_directory, 'updates' );
-                my @entries;
-                foreach my $entry (
-                    $self->_directory_listing(
-                        { ignore_missing_directory => 1 },
-                        $updates_path, 1
-                    )
-                  )
-                {
-                    if ( $entry =~ /^(\d{1,10})$/smx ) {
-                        push @entries, $1;
-                    }
-                }
-                my @sorted_entries = reverse sort { $a <=> $b } @entries;
-                $self->{_cached_per_instance}->{_most_recent_updates_index} =
-                  shift @sorted_entries;
+    my $directory = $self->_binary_directory();
+    if ( my $update_directory = $self->_updates_directory_exists($directory) ) {
+        my @entries;
+        foreach my $entry (
+            $self->_directory_listing(
+                { ignore_missing_directory => 1 },
+                $update_directory, 1
+            )
+          )
+        {
+            if ( $entry =~ /^(\d{1,10})$/smx ) {
+                push @entries, $1;
             }
         }
+        my @sorted_entries = reverse sort { $a <=> $b } @entries;
+        return shift @sorted_entries;
     }
-    return $self->{_cached_per_instance}->{_most_recent_updates_index};
+    return;
 }
 
 sub _most_recent_updates_status_path {
@@ -1667,16 +1645,19 @@ sub _most_recent_updates_status_path {
         )
       )
     {
-        my $binary_directory = $self->_binary_directory();
-        return File::Spec->catfile( $binary_directory, 'updates',
-            $most_recent_updates_index, 'update.status' );
+        if ( my $updates_directory =
+            $self->_updates_directory_exists( $self->_binary_directory() ) )
+        {
+            return $self->_catfile( $updates_directory,
+                $most_recent_updates_index, 'update.status' );
+
+        }
     }
     return;
 }
 
 sub _wait_for_updating_to_finish {
     my ($self) = @_;
-    delete $self->{_cached_per_instance}->{_most_recent_updates_index};
     my $count = 1;
     my $updating;
     while ($count) {
@@ -1688,9 +1669,10 @@ sub _wait_for_updating_to_finish {
             )
           )
         {
-            my $binary_directory = $self->_binary_directory();
+            my $update_directory =
+              $self->_updates_directory_exists( $self->_binary_directory() );
             my $most_recent_update_directory =
-              File::Spec->catfile( $binary_directory, 'updates',
+              File::Spec->catfile( $update_directory,
                 $most_recent_updates_index );
             foreach my $entry (
                 $self->_directory_listing(
@@ -2906,6 +2888,71 @@ sub _find_active_update_xml_in_directory {
     return;
 }
 
+sub _updates_directory_exists {
+    my ( $self, $base_directory ) = @_;
+    if ( !$self->{_cached_per_instance}->{_update_directory} ) {
+        my $common_appdata_directory;
+        if ( $self->_ssh() ) {
+            if (   ( $self->_remote_uname() eq 'MSWin32' )
+                || ( $self->_remote_uname() eq 'cygwin' ) )
+            {
+                $common_appdata_directory =
+                  $self->_get_remote_environment_variable_via_ssh(
+                    'ALLUSERSPROFILE');
+                if ( $self->_remote_uname() eq 'cygwin' ) {
+                    $common_appdata_directory =~ s/\\/\//smxg;
+                    $common_appdata_directory =
+                      $self->_execute_via_ssh( {}, 'cygpath', '-u',
+                        $common_appdata_directory );
+                    chomp $common_appdata_directory;
+                }
+            }
+        }
+        elsif ( $OSNAME eq 'MSWin32' ) {
+            $common_appdata_directory =
+              Win32::GetFolderPath( Win32::CSIDL_COMMON_APPDATA() );
+        }
+        elsif ( $OSNAME ne 'cygwin' ) {
+            $common_appdata_directory = $ENV{ALLUSERSPROFILE};
+        }
+        if (   ($common_appdata_directory)
+            && ( !$self->{_cached_per_instance}->{_mozilla_update_directory} ) )
+        {
+            foreach my $entry (
+                $self->_directory_listing(
+                    { ignore_missing_directory => 1 },
+                    $common_appdata_directory,
+                    1
+                )
+              )
+            {
+                if ( $entry eq 'Mozilla' ) {
+                    $base_directory =
+                      $self->_remote_catfile( $common_appdata_directory,
+                        'Mozilla' );
+                    $self->{_cached_per_instance}->{_mozilla_update_directory}
+                      = $base_directory;
+                }
+            }
+        }
+        if ($base_directory) {
+            foreach my $entry (
+                $self->_directory_listing(
+                    { ignore_missing_directory => 1 },
+                    $base_directory, 1
+                )
+              )
+            {
+                if ( $entry eq 'updates' ) {
+                    $self->{_cached_per_instance}->{_update_directory} =
+                      $self->_remote_catfile( $base_directory, 'updates' );
+                }
+            }
+        }
+    }
+    return $self->{_cached_per_instance}->{_update_directory};
+}
+
 sub _active_update_xml_path {
     my ($self) = @_;
     my $path;
@@ -2916,21 +2963,15 @@ sub _active_update_xml_path {
         if (   ( $self->_remote_uname() eq 'MSWin32' )
             || ( $self->_remote_uname() eq 'cygwin' ) )
         {
-            my $common_appdata_directory =
-              $self->_get_remote_environment_variable_via_ssh(
-                'ALLUSERSPROFILE');
-            if ( $self->_remote_uname() eq 'cygwin' ) {
-                $common_appdata_directory =~ s/\\/\//smxg;
-                $common_appdata_directory =
-                  $self->_execute_via_ssh( {}, 'cygpath', '-u',
-                    $common_appdata_directory );
-                chomp $common_appdata_directory;
-            }
-            my $update_directory =
-              $self->_remote_catfile( $common_appdata_directory, 'Mozilla',
-                'updates' );
-            if ( my $found =
-                $self->_find_win32_active_update_xml($update_directory) )
+            my $update_directory;
+            if (
+                (
+                    $update_directory =
+                    $self->_updates_directory_exists($directory)
+                )
+                && ( my $found =
+                    $self->_find_win32_active_update_xml($update_directory) )
+              )
             {
                 $path = $found;
             }
@@ -2944,14 +2985,16 @@ sub _active_update_xml_path {
         }
     }
     else {
-        if ( $OSNAME eq 'MSWin32' ) {
-            my $common_appdata_directory =
-              Win32::GetFolderPath( Win32::CSIDL_COMMON_APPDATA() );
-            my $update_directory =
-              File::Spec->catdir( $common_appdata_directory, 'Mozilla',
-                'updates' );
-            if ( my $found =
-                $self->_find_win32_active_update_xml($update_directory) )
+        if ( ( $OSNAME eq 'MSWin32' ) || ( $OSNAME eq 'cygwin' ) ) {
+            my $update_directory;
+            if (
+                (
+                    $update_directory =
+                    $self->_updates_directory_exists($directory)
+                )
+                && ( my $found =
+                    $self->_find_win32_active_update_xml($update_directory) )
+              )
             {
                 $path = $found;
             }
