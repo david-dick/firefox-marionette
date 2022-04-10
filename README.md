@@ -1766,7 +1766,7 @@ There are a number of steps to getting [WebGL](https://en.wikipedia.org/wiki/Web
 
 - 1. The addons parameter to the [new](https://metacpan.org/pod/Firefox::Marionette#new) method must be set.  This will disable [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29)
 - 2. The visible parameter to the [new](https://metacpan.org/pod/Firefox::Marionette#new) method must be set.  This is due to [an existing bug in Firefox](https://bugzilla.mozilla.org/show_bug.cgi?id=1375585).
-- 3. It can be tricky getting [WebGL](https://en.wikipedia.org/wiki/WebGL) to work with a [Xvfb](https://en.wikipedia.org/wiki/Xvfb) instance.  [glxinfo](https://dri.freedesktop.org/wiki/glxinfo/) can be useful to help debug issues in this case.
+- 3. It can be tricky getting [WebGL](https://en.wikipedia.org/wiki/WebGL) to work with a [Xvfb](https://en.wikipedia.org/wiki/Xvfb) instance.  [glxinfo](https://dri.freedesktop.org/wiki/glxinfo/) can be useful to help debug issues in this case.  The mesa-dri-drivers rpm is also required for Redhat systems.
 
 With all those conditions being met, [WebGL](https://en.wikipedia.org/wiki/WebGL) can be enabled like so;
 
