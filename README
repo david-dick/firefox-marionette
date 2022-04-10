@@ -64,7 +64,7 @@ SUBROUTINES/METHODS
       * path - a file system path to a single PEM encoded X.509 certificate
       <https://datatracker.ietf.org/doc/html/rfc7468#section-5>.
 
-      * string - a string containg a single PEM encoded X.509 certificate
+      * string - a string containing a single PEM encoded X.509 certificate
       <https://datatracker.ietf.org/doc/html/rfc7468#section-5>
 
       * trust - This is the trustargs
@@ -694,7 +694,7 @@ SUBROUTINES/METHODS
 
  fill_login
 
-    This method searchs the Password Manager
+    This method searches the Password Manager
     <https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins>
     for an appropriate login for any form on the current page. The form
     must match the host, the action attribute and the user and password
@@ -1143,7 +1143,7 @@ SUBROUTINES/METHODS
     returns the page source of the content document. This page source can
     be wrapped in html that firefox provides. See the json method for an
     alternative when dealing with response content types such as
-    application/json and strip for an alterative when dealing with other
+    application/json and strip for an alternative when dealing with other
     non-html content types such as text/plain.
 
         use Firefox::Marionette();
@@ -1194,7 +1194,7 @@ SUBROUTINES/METHODS
     and an optional true/false second parameter to indicate if the xpi file
     should be a temporary extension
     <https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/>
-    (just for the existance of this browser instance). Unsigned xpi files
+    (just for the existence of this browser instance). Unsigned xpi files
     may only be loaded temporarily
     <https://wiki.mozilla.org/Add-ons/Extension_Signing> (except for
     nightly firefox installations
@@ -1969,7 +1969,7 @@ SUBROUTINES/METHODS
       * line - Line in the client's program where this script is evaluated.
 
       * new - Forces the script to be evaluated in a fresh sandbox. Note
-      that if it is undefined, the script will normally be evaluted in a
+      that if it is undefined, the script will normally be evaluated in a
       fresh sandbox.
 
       * sandbox - Name of the sandbox to evaluate the script in. The
@@ -1977,7 +1977,7 @@ SUBROUTINES/METHODS
       <https://developer.mozilla.org/en-US/docs/Web/API/Window> object if
       new is false. If he parameter is undefined, the script is evaluated
       in a mutable sandbox. If the parameter is "system", it will be
-      evaluted in a sandbox with elevated system privileges, equivalent to
+      evaluated in a sandbox with elevated system privileges, equivalent to
       chrome space.
 
       * timeout - A timeout to override the default script timeout, which,
@@ -2105,7 +2105,7 @@ SUBROUTINES/METHODS
     been made to remove typical firefox html wrappers of non html content
     types such as text/plain and application/json. See the json method for
     an alternative when dealing with response content types such as
-    application/json and html for an alterative when dealing with html
+    application/json and html for an alternative when dealing with html
     content types. This is a convenience method that wraps the html method.
 
         use Firefox::Marionette();
@@ -2228,7 +2228,7 @@ SUBROUTINES/METHODS
 
     returns a hash of known Windows product names (such as 'Mozilla
     Firefox') with priority orders. The lower the priority will determine
-    the order that this module will check for the existance of this
+    the order that this module will check for the existence of this
     product. Only of interest when sub-classing.
 
  window_handle

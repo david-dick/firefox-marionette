@@ -52,7 +52,7 @@ returns the active element of the current browsing context's document element, i
 accepts a hash as a parameter and adds the specified certificate to the Firefox database with the supplied or default trust.  Allowed keys are below;
 
 - path - a file system path to a single [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5).
-- string - a string containg a single [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5)
+- string - a string containing a single [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5)
 - trust - This is the [trustargs](https://www.mankier.com/1/certutil#-t) value for [NSS](https://wiki.mozilla.org/NSS).  If defaults to 'C,,';
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
@@ -559,7 +559,7 @@ This utility method executes a command with arguments and returns STDOUT as a ch
 
 ## fill\_login
 
-This method searchs the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins) for an appropriate login for any form on the current page.  The form must match the host, the action attribute and the user and password field names.
+This method searches the [Password Manager](https://support.mozilla.org/en-US/kb/password-manager-remember-delete-edit-logins) for an appropriate login for any form on the current page.  The form must match the host, the action attribute and the user and password field names.
 
     use Firefox::Marionette();
     use IO::Prompt();
@@ -908,7 +908,7 @@ If no elements are found, this method will return undef.  For the same functiona
 
 ## html
 
-returns the page source of the content document.  This page source can be wrapped in html that firefox provides.  See the [json](https://metacpan.org/pod/Firefox::Marionette#json) method for an alternative when dealing with response content types such as application/json and [strip](https://metacpan.org/pod/Firefox::Marionette#strip) for an alterative when dealing with other non-html content types such as text/plain.
+returns the page source of the content document.  This page source can be wrapped in html that firefox provides.  See the [json](https://metacpan.org/pod/Firefox::Marionette#json) method for an alternative when dealing with response content types such as application/json and [strip](https://metacpan.org/pod/Firefox::Marionette#strip) for an alternative when dealing with other non-html content types such as text/plain.
 
     use Firefox::Marionette();
     use v5.10;
@@ -943,7 +943,7 @@ accepts the following as the first parameter;
 - path to a directory containing [firefox extension source code](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension).  This directory will be packaged up as an unsigned xpi file.
 - path to a top level file (such as [manifest.json](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Anatomy_of_a_WebExtension#manifest.json)) in a directory containing [firefox extension source code](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension).  This directory will be packaged up as an unsigned xpi file.
 
-and an optional true/false second parameter to indicate if the xpi file should be a [temporary extension](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) (just for the existance of this browser instance).  Unsigned xpi files [may only be loaded temporarily](https://wiki.mozilla.org/Add-ons/Extension_Signing) (except for [nightly firefox installations](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)).  It returns the GUID for the addon which may be used as a parameter to the [uninstall](https://metacpan.org/pod/Firefox::Marionette#uninstall) method.
+and an optional true/false second parameter to indicate if the xpi file should be a [temporary extension](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) (just for the existence of this browser instance).  Unsigned xpi files [may only be loaded temporarily](https://wiki.mozilla.org/Add-ons/Extension_Signing) (except for [nightly firefox installations](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly)).  It returns the GUID for the addon which may be used as a parameter to the [uninstall](https://metacpan.org/pod/Firefox::Marionette#uninstall) method.
 
     use Firefox::Marionette();
 
@@ -1456,8 +1456,8 @@ accepts a scalar containing a javascript function body that is executed in the b
 - args - The reference to a list is the arguments passed to the function body.
 - filename - Filename of the client's program where this script is evaluated.
 - line - Line in the client's program where this script is evaluated.
-- new - Forces the script to be evaluated in a fresh sandbox.  Note that if it is undefined, the script will normally be evaluted in a fresh sandbox.
-- sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object if `new` is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluted in a sandbox with elevated system privileges, equivalent to chrome space.
+- new - Forces the script to be evaluated in a fresh sandbox.  Note that if it is undefined, the script will normally be evaluated in a fresh sandbox.
+- sandbox - Name of the sandbox to evaluate the script in.  The sandbox is cached for later re-use on the same [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object if `new` is false.  If he parameter is undefined, the script is evaluated in a mutable sandbox.  If the parameter is "system", it will be evaluated in a sandbox with elevated system privileges, equivalent to chrome space.
 - timeout - A timeout to override the default [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.
 
 Returns the result of the javascript function.  When a parameter is an [element](https://metacpan.org/pod/Firefox::Marionette::Element) (such as being returned from a [find](https://metacpan.org/pod/Firefox::Marionette#find) type operation), the [script](https://metacpan.org/pod/Firefox::Marionette#script) method will automatically translate that into a javascript object.  Likewise, when the result being returned in a [script](https://metacpan.org/pod/Firefox::Marionette#script) method is an [element](https://dom.spec.whatwg.org/#concept-element) it will be automatically translated into a [perl object](https://metacpan.org/pod/Firefox::Marionette::Element).
@@ -1548,7 +1548,7 @@ returns the path to the local directory for the ssh connection (if any). For deb
 
 ## strip
 
-returns the page source of the content document after an attempt has been made to remove typical firefox html wrappers of non html content types such as text/plain and application/json.  See the [json](https://metacpan.org/pod/Firefox::Marionette#json) method for an alternative when dealing with response content types such as application/json and [html](https://metacpan.org/pod/Firefox::Marionette#html) for an alterative when dealing with html content types.  This is a convenience method that wraps the [html](https://metacpan.org/pod/Firefox::Marionette#html) method.
+returns the page source of the content document after an attempt has been made to remove typical firefox html wrappers of non html content types such as text/plain and application/json.  See the [json](https://metacpan.org/pod/Firefox::Marionette#json) method for an alternative when dealing with response content types such as application/json and [html](https://metacpan.org/pod/Firefox::Marionette#html) for an alternative when dealing with html content types.  This is a convenience method that wraps the [html](https://metacpan.org/pod/Firefox::Marionette#html) method.
 
     use Firefox::Marionette();
     use JSON();
@@ -1645,7 +1645,7 @@ accepts a parameter of a Win32 product name and returns the matching organisatio
 
 ## win32\_product\_names
 
-returns a hash of known Windows product names (such as 'Mozilla Firefox') with priority orders.  The lower the priority will determine the order that this module will check for the existance of this product.  Only of interest when sub-classing.
+returns a hash of known Windows product names (such as 'Mozilla Firefox') with priority orders.  The lower the priority will determine the order that this module will check for the existence of this product.  Only of interest when sub-classing.
 
 ## window\_handle
 
