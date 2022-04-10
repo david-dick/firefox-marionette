@@ -110,6 +110,7 @@ sub _MIN_VERSION_FOR_SCRIPT_WO_ARGS { return 60 }
 sub _MIN_VERSION_FOR_MODERN_GO      { return 31 }
 sub _MIN_VERSION_FOR_MODERN_SWITCH  { return 90 }
 sub _ACTIVE_UPDATE_XML_FILE_NAME    { return 'active-update.xml' }
+sub _NUMBER_OF_CHARS_IN_TEMPLATE    { return 11 }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -122,7 +123,6 @@ sub _WATERFOX_CLASSIC_VERSION_EQUIV {
 }    # https://github.com/MrAlex94/Waterfox/wiki/Versioning-Guidelines
 
 my $proxy_name_regex = qr/perl_ff_m_\w+/smx;
-my $local_name_regex = qr/firefox_marionette_local_\w+/smx;
 my $tmp_name_regex   = qr/firefox_marionette_(?:remote|local)_\w+/smx;
 my @sig_nums         = split q[ ], $Config{sig_num};
 my @sig_names        = split q[ ], $Config{sig_name};
@@ -611,6 +611,7 @@ sub _init {
     }
     $self->{extension_index} = 0;
     $self->{debug}           = $parameters{debug};
+    $self->{reconnect_index} = $parameters{index};
 
     $self->_get_marionette_parameter(%parameters);
     if ( $parameters{console} ) {
@@ -727,6 +728,17 @@ sub _check_reconnecting_firefox_process_is_alive {
     return;
 }
 
+sub _get_local_name_regex {
+    my ($self) = @_;
+    my $local_name_regex = qr/firefox_marionette_local_/smx;
+    if ( $self->{reconnect_index} ) {
+        my $quoted_index = quotemeta $self->{reconnect_index};
+        $local_name_regex = qr/${local_name_regex}${quoted_index}\-/smx;
+    }
+    $local_name_regex = qr/${local_name_regex}\w+/smx;
+    return $local_name_regex;
+}
+
 sub _get_local_reconnect_pid {
     my ($self)         = @_;
     my $temp_directory = File::Spec->tmpdir();
@@ -734,6 +746,8 @@ sub _get_local_reconnect_pid {
       or Firefox::Marionette::Exception->throw(
         "Failed to open directory '$temp_directory':$EXTENDED_OS_ERROR");
     my $alive_pid;
+    my $local_name_regex = $self->_get_local_name_regex();
+
   TEMP_DIR_LISTING: while ( my $tainted_entry = $temp_handle->read() ) {
         next if ( $tainted_entry eq File::Spec->curdir() );
         next if ( $tainted_entry eq File::Spec->updir() );
@@ -5015,10 +5029,16 @@ sub root_directory {
 sub _root_directory {
     my ($self) = @_;
     if ( !defined $self->{_root_directory} ) {
+        my $template_prefix = 'firefox_marionette_local_';
+        if ( $self->{reconnect_index} ) {
+            $template_prefix .= $self->{reconnect_index} . q[-];
+        }
+
         my $root_directory = File::Temp->newdir(
             CLEANUP  => 0,
             TEMPLATE => File::Spec->catdir(
-                File::Spec->tmpdir(), 'firefox_marionette_local_XXXXXXXXXXX'
+                File::Spec->tmpdir(),
+                $template_prefix . 'X' x _NUMBER_OF_CHARS_IN_TEMPLATE()
             )
           )
           or Firefox::Marionette::Exception->throw(
@@ -10623,6 +10643,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * host - use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox on the specified host.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.
 
 =item * implicit - a shortcut to allow directly providing the L<implicit|Firefox::Marionette::Timeout#implicit> timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
+
+=item * index - a parameter to allow the user to specify a specific firefox instance to survive and reconnect to.  It does not do anything else at the moment.  See the survive parameter.
 
 =item * kiosk - start the browser in L<kiosk|https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode> mode.
 

@@ -1549,6 +1549,10 @@ SUBROUTINES/METHODS
       timeout, instead of needing to use timeouts from the capabilities
       parameter. Overrides all longer ways.
 
+      * index - a parameter to allow the user to specify a specific firefox
+      instance to survive and reconnect to. It does not do anything else at
+      the moment. See the survive parameter.
+
       * kiosk - start the browser in kiosk
       <https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode>
       mode.
