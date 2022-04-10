@@ -98,7 +98,10 @@ sub names {
 
 sub path {
     my ( $class, $name ) = @_;
-    return File::Spec->catfile( $class->directory($name), 'prefs.js' );
+    if ( my $profile_directory = $class->directory($name) ) {
+        return File::Spec->catfile( $profile_directory, 'prefs.js' );
+    }
+    return;
 }
 
 sub directory {
@@ -137,7 +140,7 @@ sub directory {
             }
         }
     }
-    if ( ( !$path ) && ( defined $first_key ) ) {
+    if ( ( !$path ) && ( !defined $name ) && ( defined $first_key ) ) {
         if ( $config->{$first_key}->{IsRelative} ) {
             $path = File::Spec->catfile( $profile_ini_directory,
                 $config->{$first_key}->{Path} );
