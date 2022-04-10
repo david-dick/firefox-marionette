@@ -857,6 +857,16 @@ SKIP: {
 		if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
 			skip("No profile testing when any WATERFOX override is used", 6);
 		}
+		my $found;
+		my @names = Firefox::Marionette::Profile->names();
+		foreach my $name (@names) {
+			if ($name eq 'throw') {
+				$found = 1;
+			}
+		}
+		if (!$found) {
+			skip("No profile testing when throw profile doesn't exist", 6);
+		}
 		my $name = 'throw';
 		($skip_message, $firefox) = start_firefox(0, debug => 1, har => 1, survive => 1, profile_name => $name );
 		if (!$skip_message) {
