@@ -3397,7 +3397,7 @@ sub _launch_via_ssh {
             @arguments = (
                 '-a', '-s',
                 q["] . ( join q[ ], $self->_xvfb_common_arguments() ) . q["],
-                $binary, @arguments
+                $binary, @arguments,
             );
             $binary = 'xvfb-run';
         }
