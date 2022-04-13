@@ -5142,9 +5142,8 @@ sub _setup_profile_directories {
     return;
 }
 
-sub _setup_new_profile {
-    my ( $self, $profile, %parameters ) = @_;
-    $self->_setup_profile_directories($profile);
+sub _new_profile_path {
+    my ($self) = @_;
     my $profile_path;
     if ( $self->_ssh() ) {
         $profile_path =
@@ -5154,7 +5153,13 @@ sub _setup_new_profile {
         $profile_path =
           File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
     }
-    $self->{profile_path} = $profile_path;
+    return $profile_path;
+}
+
+sub _setup_new_profile {
+    my ( $self, $profile, %parameters ) = @_;
+    $self->_setup_profile_directories($profile);
+    $self->{profile_path} = $self->_new_profile_path();
     if ($profile) {
         if ( !$profile->download_directory() ) {
             my $download_directory = $self->{_download_directory};
@@ -5267,7 +5272,7 @@ sub _setup_new_profile {
         $self->_save_profile_via_ssh($profile);
     }
     else {
-        $profile->save($profile_path);
+        $profile->save( $self->{profile_path} );
     }
     return $self->{_profile_directory};
 }
