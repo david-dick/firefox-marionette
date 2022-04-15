@@ -2758,15 +2758,12 @@ SKIP: {
 		ok($count == 1, "Downloaded 1 files:$count");
 		my $handle = $firefox->download($download_path);
 		ok($handle->isa('GLOB'), "Obtained GLOB from \$firefox->download(\$path)");
-		if ($INC{'Devel/Cover.pm'}) {
-		} else {
-			my $gz = Compress::Zlib::gzopen($handle, 'rb') or die "Failed to open gzip stream";
-			my $bytes_read = 0;
-			while($gz->gzread(my $buffer, 4096)) {
-				$bytes_read += length $buffer
-			}
-			ok($bytes_read > 1_000, "Downloaded file is gzipped");
+		my $gz = Compress::Zlib::gzopen($handle, 'rb') or die "Failed to open gzip stream";
+		my $bytes_read = 0;
+		while($gz->gzread(my $buffer, 4096)) {
+			$bytes_read += length $buffer
 		}
+		ok($bytes_read > 1_000, "Downloaded file is gzipped");
 	}
 	foreach my $element ($firefox->find_tag('option')) {
 		my $inner_html;
