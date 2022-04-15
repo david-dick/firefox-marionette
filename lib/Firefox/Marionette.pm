@@ -203,7 +203,9 @@ sub _download_directory {
             File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' ) );
         $directory = $profile->get_value('browser.download.downloadDir');
     };
-    if ( $OSNAME eq 'cygwin' ) {
+    if ( my $ssh = $self->_ssh() ) {
+    }
+    elsif ( $OSNAME eq 'cygwin' ) {
         $directory = $self->execute( 'cygpath', '-s', '-m', $directory );
     }
     return $directory;
