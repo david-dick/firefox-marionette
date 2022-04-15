@@ -3083,6 +3083,9 @@ sub _application_ini_config {
                 $application_ini_path, $application_ini_name );
         }
         else {
+            if ( $OSNAME eq 'darwin' ) {
+                $binary_directory =~ s/Contents\/MacOS$/Contents\/Resources/smx;
+            }
             $application_ini_path =
               File::Spec->catfile( $binary_directory, $application_ini_name );
             $application_ini_handle =
