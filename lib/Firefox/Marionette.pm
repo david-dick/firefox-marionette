@@ -3072,7 +3072,7 @@ sub _application_ini_config {
             if ( $self->_remote_uname() eq 'darwin' ) {
                 $binary_directory =~ s/Contents\/MacOS$/Contents\/Resources/smx;
             }
-            if ( $self->_remote_uname() eq 'cygwin' ) {
+            elsif ( $self->_remote_uname() eq 'cygwin' ) {
                 $binary_directory =
                   $self->_execute_via_ssh( {}, 'cygpath', '-u',
                     $binary_directory );
@@ -3087,6 +3087,12 @@ sub _application_ini_config {
         else {
             if ( $OSNAME eq 'darwin' ) {
                 $binary_directory =~ s/Contents\/MacOS$/Contents\/Resources/smx;
+            }
+            elsif ( $OSNAME eq 'cygwin' ) {
+                if ( defined $binary_directory ) {
+                    $binary_directory =
+                      $self->execute( 'cygpath', '-u', $binary_directory );
+                }
             }
             $application_ini_path =
               File::Spec->catfile( $binary_directory, $application_ini_name );
