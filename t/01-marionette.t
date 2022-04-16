@@ -6,6 +6,7 @@ use Digest::SHA();
 use MIME::Base64();
 use Test::More;
 use Cwd();
+use Encode();
 use Firefox::Marionette();
 use Waterfox::Marionette();
 use Compress::Zlib();
