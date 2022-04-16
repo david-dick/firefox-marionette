@@ -1062,6 +1062,8 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for remote hosts", 3);
 		} elsif (!$capabilities->proxy()) {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 1);
+		} elsif ($^O eq 'cygwin') {
+			skip("\$capabilities->proxy is not supported for $^O", 1);
 		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 			if ($ENV{RELEASE_TESTING}) {
 				my $handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_proxy_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
@@ -2965,7 +2967,10 @@ SKIP: {
 		local $TODO = ($major_version < 31) ? "\$capabilities->platform_version() may not exist for Firefox versions less than 31" : undef;
 		ok(defined $capabilities->platform_version() && $capabilities->platform_version() =~ /\d+/, "\$capabilities->platform_version() contains a number:" . ($capabilities->platform_version() || ''));
 	}
-	ok($capabilities->moz_profile() =~ /firefox_marionette/, "\$capabilities->moz_profile() contains 'firefox_marionette':" . $capabilities->moz_profile());
+	TODO: {
+		local $TODO = ($ENV{FIREFOX_HOST} || $^O eq 'cygwin' || $^O eq 'Win32') ? "\$capabilities->moz_profiles() can contain shorted profile directory names" : undef;
+		ok($capabilities->moz_profile() =~ /firefox_marionette/, "\$capabilities->moz_profile() contains 'firefox_marionette':" . $capabilities->moz_profile());
+	}
 	SKIP: {
 		if (!grep /^moz_webdriver_click$/, $capabilities->enumerate()) {
 			diag("\$capabilities->moz_webdriver_click is not supported for " . $capabilities->browser_version());
@@ -3075,6 +3080,9 @@ SKIP: {
 		} elsif (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_PORT})) {
 			diag("\$capabilities->proxy is not supported for remote hosts");
 			skip("\$capabilities->proxy is not supported for remote hosts", 3);
+		} elsif ($^O eq 'cygwin') {
+			diag("\$capabilities->proxy is not supported for " . $^O);
+			skip("\$capabilities->proxy is not supported for " . $^O, 3);
 		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 			my $json_document = Encode::decode('UTF-8', '{ "id": "5", "value": "sömething"}');
 			my $txt_document = 'This is ordinary text';
@@ -3208,6 +3216,9 @@ SKIP: {
 			} elsif (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_PORT})) {
 				diag("\$capabilities->proxy is not supported for remote hosts");
 				skip("\$capabilities->proxy is not supported for remote hosts", 3);
+			} elsif ($^O eq 'cygwin') {
+				diag("\$capabilities->proxy is not supported for " . $^O);
+				skip("\$capabilities->proxy is not supported for " . $^O, 3);
 			} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 				if (my $pid = fork) {
 					$firefox->go($daemon->url() . '?links_and_images');
