@@ -2032,13 +2032,14 @@ SKIP: {
 			}
 			ok($switch_to_parent_frame, "Switched to parent frame");
 		}
+		my $browser_name = $firefox->capabilities()->browser_name();
 		SKIP: {
 			if (!$chrome_window_handle_supported) {
 				diag("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version");
 				skip("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version", 1);
 			}
 			foreach my $handle ($firefox->close_current_chrome_window_handle()) {
-				local $TODO = $major_version < 52 || $binary =~ /waterfox/i ? "\$firefox->close_current_chrome_window_handle() can return a undef value for versions less than 52" : undef;
+				local $TODO = $major_version < 52 || $browser_name =~ /waterfox/i ? "\$firefox->close_current_chrome_window_handle() can return a undef value for versions less than 52 or browser is waterfox" : undef;
 				if ($major_version < 90) {
 					ok(defined $handle && $handle == $new_chrome_window_handle, "Closed original window, which means the remaining chrome window handle should be $new_chrome_window_handle:" . ($handle || ''));
 				} else {
