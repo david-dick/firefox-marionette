@@ -3033,7 +3033,7 @@ sub _active_update_version {
         my $active_update_handle;
         if ( $self->_ssh() ) {
             $active_update_handle =
-              $self->_get_file_via_scp( { ignore_missing_file => 1 },
+              $self->_get_file_via_scp( { ignore_exit_status => 1 },
                 $active_update_path, _ACTIVE_UPDATE_XML_FILE_NAME() );
         }
         else {
@@ -3081,7 +3081,7 @@ sub _application_ini_config {
             $application_ini_path =
               $self->_catfile( $binary_directory, $application_ini_name );
             $application_ini_handle =
-              $self->_get_file_via_scp( { ignore_missing_file => 1 },
+              $self->_get_file_via_scp( { ignore_exit_status => 1 },
                 $application_ini_path, $application_ini_name );
         }
         else {
@@ -5478,6 +5478,8 @@ sub _get_local_handle_for_generic_command_output {
 
 sub _get_local_command_output {
     my ( $self, $parameters, $binary, @arguments ) = @_;
+    local $SIG{XFSZ} = 'IGNORE';
+    local $SIG{PIPE} = 'IGNORE';
     my $output;
     my $handle;
     if ( $OSNAME eq 'MSWin32' ) {
@@ -5618,6 +5620,8 @@ sub _system {
         }
     }
     else {
+        local $SIG{XFSZ} = 'IGNORE';
+        local $SIG{PIPE} = 'IGNORE';
         my $dev_null = File::Spec->devnull();
         $command_line = join q[ ], $binary, @arguments;
         if ( $self->debug() ) {
@@ -5679,7 +5683,7 @@ sub _get_file_via_scp {
         $self->_scp_arguments(),
         $self->_ssh_address() . ":\"$remote_path\"", $local_path,
     );
-    $self->_system( {}, 'scp', @arguments );
+    $self->_system( $parameters, 'scp', @arguments );
     my $handle = FileHandle->new( $local_path, Fcntl::O_RDONLY() );
     if ($handle) {
         binmode $handle;
@@ -5780,8 +5784,8 @@ sub _get_marionette_port_via_ssh {
     my $sandbox_regex = $self->_sandbox_regex();
     $self->_initialise_remote_uname();
     if ( $self->_remote_uname() eq 'MSWin32' ) {
-        $handle =
-          $self->_get_file_via_scp( {}, $self->{profile_path}, 'profile path' );
+        $handle = $self->_get_file_via_scp( { ignore_exit_status => 1 },
+            $self->{profile_path}, 'profile path' );
     }
     else {
         $handle = $self->_search_file_via_ssh(
