@@ -1199,6 +1199,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) encoded as a [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5) that will be trusted for this session.
 - timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
 - user - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name.
+- via - specifies a [proxy jump box](https://man.openbsd.org/ssh_config#ProxyJump) to be used to connect to a remote host.  See the host parameter.
 - visible - should firefox be visible on the desktop.  This defaults to "0".
 - waterfox - only allow a binary that looks like a [waterfox version](https://www.waterfox.net/) to be launched.
 - width - set the [width](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
@@ -1746,6 +1747,16 @@ And used to fill in login prompts without explicitly knowing the account details
     # OR specify a different port to connect to
     
     my $firefox = Firefox::Marionette->new( host => 'remote.example.org', port => 2222, debug => 1 );
+    $firefox->go('https://metacpan.org/');
+
+    # OR use a proxy host to jump via to the final host
+
+    my $firefox = Firefox::Marionette->new(
+                                             host  => 'remote.example.org',
+                                             port  => 2222,
+                                             via   => 'user@secure-jump-box.example.org:42222',
+                                             debug => 1,
+                                          );
     $firefox->go('https://metacpan.org/');
 
 This module has support for creating and automating an instance of Firefox on a remote node.  It has been tested against a number of operating systems, including recent version of [Windows 10 or Windows Server 2019](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse), OS X, and Linux and BSD distributions.  It expects to be able to login to the remote node via public key authentication.  It can be further secured via the [command](https://man.openbsd.org/sshd#command=_command_) option in the [OpenSSH](https://www.openssh.com/) [authorized\_keys](https://man.openbsd.org/sshd#AUTHORIZED_KEYS_FILE_FORMAT) file such as;

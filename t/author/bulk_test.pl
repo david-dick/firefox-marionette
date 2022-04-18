@@ -274,6 +274,7 @@ MAIN: {
 							}
 						}
 						foreach my $command (
+										{ alarm_after => $win32_via_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON RELEASE_TESTING=1 FIREFOX_VIA=$via_address FIREFOX_USER=$remote_user FIREFOX_HOST=$remote_address FIREFOX_NO_RECONNECT=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_DEVELOPER=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NIGHTLY=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },

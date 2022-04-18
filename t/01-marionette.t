@@ -167,6 +167,9 @@ sub start_firefox {
 	if ($ENV{FIREFOX_HOST}) {
 		$parameters{host} = $ENV{FIREFOX_HOST};
 		diag("Overriding host to '$parameters{host}'");
+		if ($ENV{FIREFOX_VIA}) {
+			$parameters{via} = $ENV{FIREFOX_VIA};
+		}
 		if ($ENV{FIREFOX_USER}) {
 			$parameters{user} = $ENV{FIREFOX_USER};
 		} elsif (($ENV{FIREFOX_HOST} eq 'localhost') && (!$ENV{FIREFOX_PORT})) {
@@ -418,6 +421,9 @@ if ((exists $ENV{FIREFOX_USER}) && (defined $ENV{FIREFOX_USER})) {
 }
 if ((exists $ENV{FIREFOX_PORT}) && (defined $ENV{FIREFOX_PORT})) {
 	diag("FIREFOX_PORT is $ENV{FIREFOX_PORT}");
+}
+if ((exists $ENV{FIREFOX_VIA}) && (defined $ENV{FIREFOX_VIA})) {
+	diag("FIREFOX_VIA is $ENV{FIREFOX_VIA}");
 }
 if ((exists $ENV{FIREFOX_VISIBLE}) && (defined $ENV{FIREFOX_VISIBLE})) {
 	diag("FIREFOX_VISIBLE is $ENV{FIREFOX_VISIBLE}");
@@ -3760,8 +3766,10 @@ SKIP: {
 			}
 			my $handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ssh_local_directory_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
 			fcntl $handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
+			my $via = $ENV{FIREFOX_VIA} ? q[, via => "] . $ENV{FIREFOX_VIA} . q["] : q[];
 			my $handle_fileno = fileno $handle;
-			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', q['open(my $fh, ">&=", ] . $handle_fileno . q[) or die "OPEN:$!"; $f = Firefox::Marionette->new( user => "] . $user . q[", host => "] . $host . q["); $fh->print($f->ssh_local_directory()) or die "PRINT:$!"; close($fh) or die "CLOSE:$!";'];
+			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', q['open(my $fh, ">&=", ] . $handle_fileno . q[) or die "OPEN:$!"; $f = Firefox::Marionette->new( user => "] . $user . q[", host => "] . $host . q["] . $via . q[); $fh->print($f->ssh_local_directory()) or die "PRINT:$!"; close($fh) or die "CLOSE:$!";'];
+			$command =~ s/([@])/\\$1/smxg;
 			my $output = `$command`;
 			$handle->seek(0,0) or die "Failed to seek on temporary file:$!";
 			my $result = read($handle, my $directory, 2048) or die "Failed to read from temporary file:$!";
