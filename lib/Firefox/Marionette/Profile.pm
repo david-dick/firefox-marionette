@@ -207,7 +207,7 @@ sub new {
     if ( !$parameters{seer} ) {
         $profile->set_value( 'browser.urlbar.speculativeConnect.enable',
             'false', 0 );
-        $profile->set_value( 'network.dns.disablePrefetch', 'false', 0 );
+        $profile->set_value( 'network.dns.disablePrefetch', 'true', 0 );
         $profile->set_value( 'network.http.speculative-parallel-limit', '0',
             0 );
         $profile->set_value( 'network.prefetch-next', 'false', 0 );
