@@ -15,6 +15,11 @@ use HTTP::Daemon();
 use HTTP::Status();
 use HTTP::Response();
 use IO::Socket::SSL();
+BEGIN: {
+    if ( $^O eq 'MSWin32' ) {
+        require Win32::Process;
+    }
+}
 
 my $segv_detected;
 my $at_least_one_success;
@@ -80,6 +85,19 @@ foreach my $sig_name (@sig_names) {
 
 $SIG{INT} = sub { $terminated = 1; die "Caught an INT signal"; };
 $SIG{TERM} = sub { $terminated = 1; die "Caught a TERM signal"; };
+
+sub process_alive {
+	my ($pid) = @_;
+	if ($^O eq 'MSWin32') {
+		if (Win32::Process::Open(my $process, $pid, 0)) {
+			return 1;
+		} else {
+			return 0;
+		}
+	} else {
+		return kill 0, $pid;
+	}
+}
 
 sub out_of_time {
 	my ($package, $file, $line) = caller 1;
@@ -809,7 +827,7 @@ $profile->set_value('browser.pagethumbnails.capturing_disabled', 'false', 0);
 $profile->set_value('startup.homepage_welcome_url', 'false', 0); 
 
 SKIP: {
-	if (($^O eq 'MSWin32') || ($^O eq 'cygwin') || ($ENV{FIREFOX_NO_RECONNECT})) {
+	if (($ENV{FIREFOX_NO_RECONNECT})) {
 		if ($ENV{FIREFOX_HOST}) {
 			skip("$ENV{FIREFOX_HOST} is not supported for reconnecting yet", 8);
 		} else {
@@ -834,11 +852,11 @@ SKIP: {
 	my $firefox_pid = $capabilities->moz_process_id();
 	ok($firefox_pid, "Firefox process has a process id of $firefox_pid");
 	if (!$ENV{FIREFOX_HOST}) {
-		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid)");
+		ok(process_alive($firefox_pid), "Can contact firefox process ($firefox_pid)");
 	}
 	$firefox = undef;
 	if (!$ENV{FIREFOX_HOST}) {
-		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid)");
+		ok(process_alive($firefox_pid), "Can contact firefox process ($firefox_pid)");
 	}
 	($skip_message, $firefox) = start_firefox(0, debug => 1, reconnect => 1);
 	ok($firefox, "Firefox has reconnected in Marionette mode");
@@ -846,7 +864,7 @@ SKIP: {
 	ok($firefox_pid == $capabilities->moz_process_id(), "Firefox has the same process id");
 	$firefox = undef;
 	if (!$ENV{FIREFOX_HOST}) {
-		ok((!kill 0, $firefox_pid), "Cannot contact firefox process ($firefox_pid)");
+		ok(!process_alive($firefox_pid), "Cannot contact firefox process ($firefox_pid)");
 	}
 	if (!$ENV{FIREFOX_HOST}) {
 		if ($ENV{FIREFOX_BINARY}) {
@@ -881,14 +899,14 @@ SKIP: {
 		ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 		my $firefox_pid = $capabilities->moz_process_id();
 		ok($firefox_pid, "Firefox process has a process id of $firefox_pid when using a profile_name");
-		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid) when using a profile_name");
+		ok(process_alive($firefox_pid), "Can contact firefox process ($firefox_pid) when using a profile_name");
 		$firefox = undef;
-		ok((kill 0, $firefox_pid), "Can contact firefox process ($firefox_pid) when using a profile_name");
+		ok(process_alive($firefox_pid), "Can contact firefox process ($firefox_pid) when using a profile_name");
 		($skip_message, $firefox) = start_firefox(0, debug => 1, reconnect => 1, profile_name => $name);
 		ok($firefox, "Firefox has reconnected in Marionette mode when using a profile_name");
 		ok($firefox_pid == $capabilities->moz_process_id(), "Firefox has the same process id when using a profile_name");
 		$firefox = undef;
-		ok(!(kill 0, $firefox_pid), "Cannot contact firefox process ($firefox_pid)");
+		ok(!process_alive($firefox_pid), "Cannot contact firefox process ($firefox_pid)");
 	}
 }
 
