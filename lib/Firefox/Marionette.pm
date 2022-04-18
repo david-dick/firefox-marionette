@@ -185,24 +185,12 @@ sub BY_PARTIAL {
 
 sub _download_directory {
     my ($self) = @_;
-    my $directory;
-    eval {
-        my $context = $self->_context('chrome');
-        $directory =
-          $self->script( 'let branch = Components.classes["' . q[@]
-              . 'mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(""); return branch.getStringPref ? branch.getStringPref("browser.download.downloadDir") : branch.getComplexValue("browser.download.downloadDir", Components.interfaces.nsISupportsString).data;'
-          );
-        $self->_context($context);
-    } or do {
-        chomp $EVAL_ERROR;
-        Carp::carp(
-"Firefox does not support dynamically determining download directory:$EVAL_ERROR"
-        );
-        my $profile =
-          Firefox::Marionette::Profile->parse(
-            File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' ) );
-        $directory = $profile->get_value('browser.download.downloadDir');
-    };
+    my $context = $self->_context('chrome');
+    my $directory =
+      $self->script( 'let branch = Components.classes["' . q[@]
+          . 'mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(""); return branch.getStringPref ? branch.getStringPref("browser.download.downloadDir") : branch.getComplexValue("browser.download.downloadDir", Components.interfaces.nsISupportsString).data;'
+      );
+    $self->_context($context);
     if ( my $ssh = $self->_ssh() ) {
     }
     elsif ( $OSNAME eq 'cygwin' ) {
