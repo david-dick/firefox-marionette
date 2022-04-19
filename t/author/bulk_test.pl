@@ -75,7 +75,7 @@ MAIN: {
 		die "Failed to open $servers_path for reading: $EXTENDED_OS_ERROR";
 	}
 
-	my $win32_remote_alarm = 1800;
+	my $win32_remote_alarm = 2700;
 	my $win32_via_alarm = 3600;
 	my $background_pids = {};
 	foreach my $server (@servers) {
@@ -85,7 +85,7 @@ MAIN: {
 			eval {
 				undef $ping_pid;
 				my $win32_local_alarm = 600;
-				my $cygwin_local_alarm = 1800;
+				my $cygwin_local_alarm = 2700;
 				my $cygwin_remote_alarm = 3600;
 				my $physical_local_alarm = 600;
 				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
