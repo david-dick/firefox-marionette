@@ -521,7 +521,7 @@ MAIN: {
 	chdir $cwd or die "Failed to chdir to '$cwd':$EXTENDED_OS_ERROR";
 	if (-d "$cwd/$cover_db_name") {
 		$ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
-		system { 'cover' } 'cover' and die "Failed to 'cover'";
+		system { 'cover' } 'cover', '-ignore', $test_marionette_file and die "Failed to 'cover'";
 	} else {
 		warn "No coverage generated\n";
 	}
