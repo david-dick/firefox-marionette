@@ -111,6 +111,7 @@ sub _MIN_VERSION_FOR_MODERN_GO      { return 31 }
 sub _MIN_VERSION_FOR_MODERN_SWITCH  { return 90 }
 sub _ACTIVE_UPDATE_XML_FILE_NAME    { return 'active-update.xml' }
 sub _NUMBER_OF_CHARS_IN_TEMPLATE    { return 11 }
+sub _DEFAULT_ADB_PORT               { return 5555 }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -301,8 +302,11 @@ sub downloads {
 }
 
 sub _setup_adb {
-    my ( $self, $host ) = @_;
-    $self->{_adb} = { host => $host, };
+    my ( $self, $host, $port ) = @_;
+    if ( !defined $port ) {
+        $port = _DEFAULT_ADB_PORT();
+    }
+    $self->{_adb} = { host => $host, port => $port };
     return;
 }
 
@@ -610,7 +614,7 @@ sub _init {
     }
 
     if ( defined $parameters{adb} ) {
-        $self->_setup_adb( $parameters{adb} );
+        $self->_setup_adb( $parameters{adb}, $parameters{port} );
     }
     if ( defined $parameters{host} ) {
         if ( $OSNAME eq 'MSWin32' ) {
@@ -2808,12 +2812,19 @@ sub execute {
     }
 }
 
-sub _adb_initialise {
+sub _adb_serial {
     my ($self) = @_;
-    $self->execute( 'adb', 'connect', $self->_adb()->{host} );
-    my $adb_regex = qr/package:(.*(firefox|fennec).*)/smx;
+    my $adb = $self->_adb();
+    return join q[:], $adb->{host}, $adb->{port};
+}
+
+sub _initialise_adb {
+    my ($self) = @_;
+    $self->execute( 'adb', 'connect', $self->_adb_serial() );
+    my $adb_regex = qr/package:(.*(firefox|fennec|fenix).*)/smx;
     my $binary    = 'adb';
-    my @arguments = qw(shell pm list packages);
+    my @arguments =
+      ( qw(-s), $self->_adb_serial(), qw(shell pm list packages) );
     my $package_name;
     foreach my $line ( split /\r?\n/smx, $self->execute( $binary, @arguments ) )
     {
@@ -3144,6 +3155,16 @@ sub _initialise_version {
     return;
 }
 
+sub _adb_package_name {
+    my ($self) = @_;
+    return $self->{adb_package_name};
+}
+
+sub _adb_component_name {
+    my ($self) = @_;
+    return join q[.], $self->_adb_package_name, q[App];
+}
+
 sub _get_version {
     my ($self) = @_;
     my $binary = $self->_binary();
@@ -3151,9 +3172,10 @@ sub _get_version {
     my $version_string;
     my $version_regex = qr/(\d+)[.](\d+(?:\w\d+)?)(?:[.](\d+))*/smx;
     if ( $self->_adb() ) {
-        my $package_name = $self->_adb_initialise();
+        my $package_name = $self->_initialise_adb();
         my $dumpsys =
-          $self->execute( 'adb', 'shell', 'dumpsys', 'package', $package_name );
+          $self->execute( 'adb', '-s', $self->_adb_serial(), 'shell',
+            'dumpsys', 'package', $package_name );
         my $found;
         foreach my $line ( split /\r?\n/smx, $dumpsys ) {
             if ( $line =~ /^[ ]+versionName=$version_regex\s*$/smx ) {
@@ -3163,9 +3185,13 @@ sub _get_version {
                 $self->{_initial_version}->{patch} = $3;
             }
         }
-        if ( !$found ) {
-            Firefox::Marionette::Exception->throw(
-"'adb shell dumpsys package $package_name' did not produce output that looks like '^[ ]+versionName=\\d+[.]\\d+([.]\\d+)?\\s*\$':$version_string"
+        if ($found) {
+            $self->{adb_package_name} = $package_name;
+        }
+        else {
+            Firefox::Marionette::Exception->throw( 'adb -s '
+                  . $self->_adb_serial()
+                  . " shell dumpsys package $package_name' did not produce output that looks like '^[ ]+versionName=\\d+[.]\\d+([.]\\d+)?\\s*\$':$version_string"
             );
         }
     }
@@ -3474,6 +3500,25 @@ sub _local_firefox_tmp_directory {
     return File::Spec->catdir( $root_directory, 'tmp' );
 }
 
+sub _launch_via_adb {
+    my ( $self, @arguments ) = @_;
+    my $binary         = q[adb];
+    my $package_name   = $self->_adb_package_name();
+    my $component_name = $self->_adb_component_name();
+    @arguments = (
+        (
+            qw(-s),
+            $self->_adb_serial(),
+            qw(shell am start -W -n),
+            ( join q[/], $package_name, $component_name ),
+            qw(--es),
+            q[args -marionette]
+        ),
+    );
+    $self->execute( $binary, @arguments );
+    return;
+}
+
 sub _launch {
     my ( $self, @arguments ) = @_;
     $self->{_initial_arguments} = [];
@@ -3481,6 +3526,10 @@ sub _launch {
         push @{ $self->{_initial_arguments} }, $argument;
     }
     local $ENV{XPCSHELL_TEST_PROFILE_DIR} = 1;
+    if ( $self->_adb() ) {
+        $self->_launch_via_adb(@arguments);
+        return;
+    }
     if ( $self->_ssh() ) {
         $self->{_local_ssh_pid} = $self->_launch_via_ssh(@arguments);
         $self->_wait_for_updating_to_finish();
@@ -4586,6 +4635,27 @@ sub _generic_remote_process_running {
 
 sub alive {
     my ($self) = @_;
+    if ( $self->_adb() ) {
+        my $parameters;
+        my $binary = q[adb];
+        my @arguments =
+          ( qw(-s), $self->_adb_serial(), qw(shell am stack list) );
+        my $handle =
+          $self->_get_local_handle_for_generic_command_output( $parameters,
+            $binary, @arguments );
+        my $quoted_package_name   = quotemeta $self->_adb_package_name();
+        my $quoted_component_name = quotemeta $self->_adb_component_name();
+        my $found                 = 0;
+        while ( my $line = <$handle> ) {
+            if ( $line =~
+/^[ ]+taskId=\d+:[ ]$quoted_package_name\/${quoted_component_name}[ ]+/smx
+              )
+            {
+                $found = 1;
+            }
+        }
+        return $found;
+    }
     if ( my $ssh = $self->_ssh() ) {
         $self->_reap();
         if ( defined $ssh->{pid} ) {
@@ -4867,6 +4937,10 @@ sub _setup_local_connection_to_firefox {
     my $sock_addr;
     my $connected;
     while ( ( !$connected ) && ( $self->alive() ) ) {
+        if ( $self->_adb() ) {
+            Firefox::Marionette::Exception->throw(
+                'TODO: Cannot connect to android yet. Patches welcome');
+        }
         $socket = undef;
         socket $socket,
           $self->_using_unix_sockets_for_ssh_connection()
@@ -5743,6 +5817,8 @@ sub _put_file_via_scp {
 sub _initialise_remote_uname {
     my ($self) = @_;
     if ( defined $self->{_remote_uname} ) {
+    }
+    elsif ( $self->_adb() ) {
     }
     else {
         my $uname;
@@ -8463,14 +8539,24 @@ sub _terminate_local_win32_process {
 
 sub _terminate_marionette_process {
     my ($self) = @_;
-    if ( $OSNAME eq 'MSWin32' ) {
-        $self->_terminate_local_win32_process();
+    if ( $self->_adb() ) {
+        $self->execute(
+            q[adb], qw(-s), $self->_adb_serial(),
+            qw(shell am force-stop),
+            $self->_adb_package_name()
+        );
     }
-    elsif ( my $ssh = $self->_ssh() ) {
-        $self->_terminate_process_via_ssh();
-    }
-    elsif ( ( $self->_firefox_pid() ) && ( kill 0, $self->_firefox_pid() ) ) {
-        $self->_terminate_local_non_win32_process();
+    else {
+        if ( $OSNAME eq 'MSWin32' ) {
+            $self->_terminate_local_win32_process();
+        }
+        elsif ( my $ssh = $self->_ssh() ) {
+            $self->_terminate_process_via_ssh();
+        }
+        elsif ( ( $self->_firefox_pid() ) && ( kill 0, $self->_firefox_pid() ) )
+        {
+            $self->_terminate_local_non_win32_process();
+        }
     }
     return;
 }

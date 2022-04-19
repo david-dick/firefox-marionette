@@ -65,7 +65,7 @@ MAIN: {
 			foreach my $key (sort { $a cmp $b } keys %headers) {
 				$server->{$key} = $row->[$headers{$key}];
 			}
-			$server->{port} ||= 22;
+			$server->{port} ||= $server->{os} eq 'android' ? 5555 : 22;
 			$server->{user} ||= getpwuid $UID;
 			push @servers, $server;
 		}
@@ -91,12 +91,13 @@ MAIN: {
 				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
 				if ((lc $server->{type}) eq 'virsh') {
 					if (_virsh_node_running($server)) {
-						_execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
+						_determine_address($server);
+						_virsh_shutdown($server);
 						_sleep_until_shutdown($server);
 					}
 					_execute($server, undef, 'sudo', 'virsh', 'start', $server->{name});
 					_determine_address($server);
-					my $socket = _sleep_until_ssh_available($server);
+					my $socket = _sleep_until_tcp_available($server);
 					if ($socket) {
 						close $socket;
 						if ($server->{os} eq 'win32') {
@@ -214,12 +215,17 @@ MAIN: {
 							if ($devel_cover_inc) {
 								_execute($server, undef, 'scp', '-r', '-P', $server->{port}, $server->{user} . q[@] . $server->{address} . q[:/] . $remote_tmp_directory . q[/firefox-marionette/] . $cover_db_name, Cwd::cwd() . '/');
 							}
+						} elsif ($server->{os} eq 'android') {
+							my $count = 0;
+							_execute($server, { alarm_after => $ENV{FIREFOX_ALARM}, return_result => 1 }, $^X, ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', '-MFirefox::Marionette', '-e', "Firefox::Marionette->new(adb => '$server->{address}');");
+							_execute($server, { alarm_after => $ENV{FIREFOX_ALARM}, return_result => 1 }, $^X, ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', '-MFirefox::Marionette', '-e', "Firefox::Marionette->new(adb => '$server->{address}', port => $server->{port});");
+							_execute($server, undef, 'adb', 'shell', 'poweroff');
 						}
 					} else {
 						die "SSH server is not detected";
 					}
 				} elsif ((lc $server->{type}) eq 'physical') {
-					my $socket = _sleep_until_ssh_available($server);
+					my $socket = _sleep_until_tcp_available($server);
 					if ($socket) {
 						my $remote_tmp_directory = join q[], _remote_contents($server, undef, 'echo $TMPDIR');
 						_execute($server, undef, 'ssh', '-p', $server->{port}, $server->{user} . q[@] . $server->{address}, 'rm', '-Rf', $remote_tmp_directory . 'firefox-marionette');
@@ -503,7 +509,7 @@ MAIN: {
 	foreach my $server (@servers) {
 		if ((lc $server->{type}) eq 'virsh') {
 			if (_virsh_node_running($server)) {
-				_execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
+				_virsh_shutdown($server);
 			}
 		}
 	}
@@ -571,11 +577,11 @@ sub _restart_server {
 		_log_stderr($server, "Woken up at " . localtime);
 	} elsif (defined $pid) {
 		eval {
-			_execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
+			_virsh_shutdown($server);
 			_sleep_until_shutdown($server);
 			_execute($server, undef, 'sudo', 'virsh', 'start', $server->{name});
 			_determine_address($server);
-			my $socket = _sleep_until_ssh_available($server);
+			my $socket = _sleep_until_tcp_available($server);
 			if ($socket) {
 				close $socket;
 				exit 0;
@@ -607,7 +613,7 @@ sub _check_for_background_processes {
 	if (%{$background_pids}) {
 		foreach my $server (@{$servers}) {
 			if ((lc $server->{type}) eq 'virsh') {
-				_execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
+				_virsh_shutdown($server);
 			}
 		}
 	}
@@ -684,30 +690,27 @@ sub _determine_address {
 		}
 		$server->{address} = $address;
 	}
-	if (!$server->{port}) {
-		$server->{port} = 22;
-	}
 }
 
-sub _sleep_until_ssh_available {
+sub _sleep_until_tcp_available {
 	my ($server) = @_;
 	my $client_socket;
 	while(!($client_socket = IO::Socket->new(
 		Domain => IO::Socket::AF_INET(),
 		Type => IO::Socket::SOCK_STREAM(),
 		proto => 'tcp',
-		PeerPort => 22,
+		PeerPort => $server->{port},
 		PeerHost => $server->{address},
 				   ))) {
 		if (_virsh_node_running($server)) {
-			_log_stderr($server, "Waiting for $server->{name} to start the ssh server");
+			_log_stderr($server, "Waiting for $server->{name} to start a TCP server on port $server->{port}");
 			sleep 1;
 		} else {
-			_log_stderr($server, "Server $server->{name} has stopped running while waiting for ssh server to start");
+			_log_stderr($server, "Server $server->{name} has stopped running while waiting for TCP server to start on port $server->{port}");
 			return;
 		}
 	}
-	_log_stderr($server, ($server->{name} || $server->{address}) . " has started the ssh server");
+	_log_stderr($server, ($server->{name} || $server->{address}) . " has started the TCP server on port $server->{port}");
 	return $client_socket;
 }
 
@@ -772,6 +775,16 @@ sub _cleanup_server {
 		} elsif ($line =~ /^(MozillaBackgroundTask\S+backgroundupdate\S*)\s*$/smx) {
 			_rmdir($server, $1);
 		}
+	}
+}
+
+sub _virsh_shutdown {
+	my ($server) = @_;
+	if ($server->{os} eq 'android') {
+		_execute($server, undef, 'adb', 'connect', (join q[:], $server->{address}, $server->{port}));
+		return _execute($server, undef, 'adb', '-s', (join q[:], $server->{address}, $server->{port}), 'shell', 'poweroff');
+	} else {
+		return _execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
 	}
 }
 
