@@ -39,16 +39,6 @@ $ENV{FIREFOX_ALARM} = 600;
 $ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
 system { 'cover' } 'cover', '-delete' and die "Failed to 'cover' for " . ($ENV{FIREFOX_BINARY} || 'firefox');
 our $ping_pid;
-my $devel_cover_inc_with_space = $devel_cover_inc ? " $devel_cover_inc" : q[];
-my $test_marionette_file = 't/01-marionette.t';
-my $reset_time = 600; # 10 minutes
-my $max_attempts = 3;
-my $reboot_sleep_time = 60;
-$ENV{RELEASE_TESTING} = 1;
-$ENV{FIREFOX_ALARM} = 600;
-$ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
-system { 'cover' } 'cover', '-delete' and die "Failed to 'cover' for " . ($ENV{FIREFOX_BINARY} || 'firefox');
-our $ping_pid;
 MAIN: {
 	my $cwd = Cwd::cwd();
 	if ($ping_pid = fork) {
