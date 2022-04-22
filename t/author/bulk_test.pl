@@ -49,6 +49,8 @@ MAIN: {
 			print STDERR $EVAL_ERROR;
 		};
 		exit 1;
+	} else {
+		die "Failed to fork:$EXTENDED_OS_ERROR";
 	}
 	my @servers;
         my $csv = Text::CSV_XS->new ({ binary => 1, auto_diag => 1 });
@@ -556,6 +558,8 @@ sub _get_best_local_ip_match { # this is pretty dodgy, but good enough for these
 			warn "Failed to execute 'ip addr':$EVAL_ERROR";
 		};
 		exit 1;
+	} else {
+		die "Failed to fork:$EXTENDED_OS_ERROR";
 	}
 	return;
 }
@@ -591,6 +595,8 @@ sub _restart_server {
 			_log_stderr($server, "Caught an exception while restarting $server->{address}:$EVAL_ERROR");
 		};
 		exit 1;
+	} else {
+		die "Failed to fork:$EXTENDED_OS_ERROR";
 	}
 }
 
@@ -923,7 +929,7 @@ sub _contents {
 		};
 		exit 1;
 	} else {
-		_log_stderr($server, q[Failed to fork:] . $!);
+		die "Failed to fork:$EXTENDED_OS_ERROR";
 	}
 	if ($parameters->{return_result}) {
 		return $return_result;
