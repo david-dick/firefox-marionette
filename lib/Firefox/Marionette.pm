@@ -5731,9 +5731,12 @@ sub _get_file_via_scp {
     if ( $OSNAME eq 'MSWin32' ) {
         $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
+    else {
+        $remote_path = "\"$remote_path\"";
+    }
     my @arguments = (
         $self->_scp_arguments(),
-        $self->_ssh_address() . ":\"$remote_path\"", $local_path,
+        $self->_ssh_address() . ":$remote_path", $local_path,
     );
     $self->_system( $parameters, 'scp', @arguments );
     my $handle = FileHandle->new( $local_path, Fcntl::O_RDONLY() );
@@ -5789,9 +5792,12 @@ sub _put_file_via_scp {
     if ( $OSNAME eq 'MSWin32' ) {
         $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
+    else {
+        $remote_path = "\"$remote_path\"";
+    }
     my @arguments = (
         $self->_scp_arguments(),
-        $local_path, $self->_ssh_address() . ":\"$remote_path\"",
+        $local_path, $self->_ssh_address() . ":$remote_path",
     );
     $self->_system( {}, 'scp', @arguments );
     unlink $local_path
