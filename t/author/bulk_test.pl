@@ -770,6 +770,8 @@ sub _cleanup_server {
 			_unlink($server, $1);
 		} elsif ($line =~ /^(firefox_marionette_\S+)\s*$/smx) {
 			_rmdir($server, $1);
+		} elsif ($line =~ /^(perl_ff_m_\S+)\s*$/smx) {
+			_rmdir($server, $1);
 		} elsif ($line =~ /^(firefox_test_part_cert_\S+)\s*$/smx) {
 			_unlink($server, $1);
 		} elsif ($line =~ /^(firefox_test_part_cert_\S+)\s*$/smx) {
