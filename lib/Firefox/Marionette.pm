@@ -4933,6 +4933,7 @@ sub _setup_local_connection_to_firefox {
         next if ( !defined $port );
         $sock_addr ||= $self->_get_sock_addr( $host, $port );
         next if ( !defined $sock_addr );
+
         if ( connect $socket, $sock_addr ) {
             $connected = 1;
         }
