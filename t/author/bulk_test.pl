@@ -104,9 +104,7 @@ MAIN: {
 						close $socket;
 						if ($server->{os} eq 'win32') {
 							$server->{initial_command} = 'cd %TMP%';
-							_log_stderr($server, "Sleeping for $reboot_sleep_time seconds at " . localtime);
-							sleep $reboot_sleep_time;
-							_log_stderr($server, "Woken up at " . localtime);
+							_wait_for_server_to_boot($server);
 							_cleanup_server($server);
 							my $remote_tmp_directory = join q[], _remote_contents($server, undef, 'echo %TMP%');
 							$remote_tmp_directory =~ s/[\r\n]+$//smx;
@@ -564,6 +562,33 @@ sub _get_best_local_ip_match { # this is pretty dodgy, but good enough for these
 	return;
 }
 
+sub _wait_for_server_to_boot {
+	my ($server) = @_;
+	my $server_booted = 0;
+	_log_stderr($server, "Waiting for SSH to start");
+	while(!$server_booted) {
+		if (my $pid = fork) {
+			waitpid $pid, 0;
+			if ($CHILD_ERROR == 0) {
+				$server_booted = 1;
+			} else {
+				_log_stderr($server, "SSH has not started yet");
+			}
+		} elsif (defined $pid) {
+			local $SIG{ALRM} = q[];
+			alarm 10;
+			eval {
+				exec { 'ssh' } 'ssh', $server->{user} . q[@] . $server->{address}, 'exit 0' or die "Failed to exec 'ssh':$EXTENDED_OS_ERROR";
+			} or do {
+				warn "Failed to execute 'ip addr':$EVAL_ERROR";
+			};
+			exit 1;
+		} else {
+			die "Failed to fork:$EXTENDED_OS_ERROR";
+		}
+	}
+	_log_stderr($server, "SSH has started");
+}
 
 sub _restart_server {
 	my ($server, $count) = @_;
@@ -575,10 +600,8 @@ sub _restart_server {
 		if ($CHILD_ERROR != 0) {
 			die "Restart process failed to complete successfully:" . _error_message('Restart process', $CHILD_ERROR);
 		}
+		_wait_for_server_to_boot($server);
 		_log_stderr($server, "Restart successful at " . localtime);
-		_log_stderr($server, "Sleeping for $reboot_sleep_time seconds at " . localtime);
-		sleep $reboot_sleep_time;
-		_log_stderr($server, "Woken up at " . localtime);
 	} elsif (defined $pid) {
 		eval {
 			_virsh_shutdown($server);
