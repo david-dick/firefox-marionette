@@ -4602,33 +4602,13 @@ sub _win32_remote_process_running {
 
 sub _generic_remote_process_running {
     my ( $self, $remote_pid ) = @_;
-    my $binary    = 'kill';
-    my @arguments = ( '-0', $remote_pid );
-    my $dev_null  = File::Spec->devnull();
-    if ( my $pid = fork ) {
-        waitpid $pid, 0;
-        if ( $CHILD_ERROR == 0 ) {
-            $self->{last_remote_alive_status} = 1;
-        }
-        else {
-            $self->{last_remote_alive_status} = 0;
-        }
-    }
-    elsif ( defined $pid ) {
-        eval {
-            $self->_ssh_exec( $self->_ssh_arguments(),
-                $self->_ssh_address(), $binary, @arguments )
-              or Firefox::Marionette::Exception->throw(
-                "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
-        } or do {
-            chomp $EVAL_ERROR;
-            warn "$EVAL_ERROR\n";
-        };
-        exit 1;
+    my $result = $self->_execute_via_ssh( { return_exit_status => 1 },
+        'kill', '-0', $remote_pid );
+    if ( $result == 0 ) {
+        $self->{last_remote_alive_status} = 1;
     }
     else {
-        Firefox::Marionette::Exception->throw(
-            "Failed to fork:$EXTENDED_OS_ERROR");
+        $self->{last_remote_alive_status} = 0;
     }
     return $self->{last_remote_alive_status};
 }
@@ -5541,7 +5521,6 @@ sub _get_local_handle_for_generic_command_output {
 
 sub _get_local_command_output {
     my ( $self, $parameters, $binary, @arguments ) = @_;
-    local $SIG{XFSZ} = 'IGNORE';
     local $SIG{PIPE} = 'IGNORE';
     my $output;
     my $handle;
@@ -5572,16 +5551,23 @@ sub _get_local_command_output {
     }
     defined $result
       or $parameters->{ignore_exit_status}
+      or $parameters->{return_exit_status}
       or Firefox::Marionette::Exception->throw( "Failed to read from $binary "
           . ( join q[ ], @arguments )
           . ":$EXTENDED_OS_ERROR" );
-    $handle->close()
+         $handle->close()
       or $parameters->{ignore_exit_status}
+      or $parameters->{return_exit_status}
       or Firefox::Marionette::Exception->throw( q[Command ']
           . ( join q[ ], $binary, @arguments )
           . q[ did not complete successfully:]
           . $self->_error_message( $binary, $CHILD_ERROR ) );
-    return $output;
+    if ( $parameters->{return_exit_status} ) {
+        return $CHILD_ERROR;
+    }
+    else {
+        return $output;
+    }
 }
 
 sub _ssh_client_version {
@@ -5686,7 +5672,6 @@ sub _system {
         }
     }
     else {
-        local $SIG{XFSZ} = 'IGNORE';
         local $SIG{PIPE} = 'IGNORE';
         my $dev_null = File::Spec->devnull();
         $command_line = join q[ ], $binary, @arguments;
