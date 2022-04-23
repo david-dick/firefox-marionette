@@ -21,6 +21,7 @@ my $ident   = 'ssh-auth-cmd-marionette';
 my %options = ( facility => 'LOG_LOCAL0' );
 
 sub _tmp_directory_regex {
+    my (%parameters) = @_;
     my $regex = qr{(?:/var)?/tmp}smx;
     if ( $OSNAME eq 'darwin' ) {    # getconf DARWIN_USER_TEMP_DIR
         my $handle    = FileHandle->new();
@@ -44,7 +45,9 @@ sub _tmp_directory_regex {
                   or die "Failed to exec '$command':$EXTENDED_OS_ERROR\n";
             } or do {
                 chomp $EVAL_ERROR;
-                warn "$EVAL_ERROR\n";
+                Sys::Syslog::openlog( $ident, 'cons', $parameters{facility} );
+                Sys::Syslog::syslog( Sys::Syslog::LOG_ERR(), $EVAL_ERROR );
+                Sys::Syslog::closelog();
             };
             exit 1;
         }
@@ -56,8 +59,13 @@ sub _tmp_directory_regex {
 }
 
 eval {
-    Getopt::Long::GetOptions( \%options, 'help', 'version', 'facility:s',
-        'allow-binary:s@', 'force-binary:s' );
+    Getopt::Long::GetOptions(
+        \%options,                          'help',
+        'version',                          'facility:s',
+        'allow-binary:s@',                  'force-binary:s',
+        'regex-allow-binary-directories:s', 'regex-allow-binary-paths:s',
+        'regex-allow-binary:s',
+    );
     if ( $options{help} ) {
         require Pod::Simple::Text;
         my $parser = Pod::Simple::Text->new();
@@ -69,7 +77,7 @@ eval {
           or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
         exit 0;
     }
-    my $tmp_directory_regex = _tmp_directory_regex();
+    my $tmp_directory_regex = _tmp_directory_regex(%options);
     my $tmp_directory       = $ENV{TMPDIR} || '/tmp';
     $tmp_directory =~ s/\/$//smx;    # remove trailing / for darwin
     my $root_dir_regex;
@@ -87,37 +95,9 @@ s/^(${tmp_directory_regex}\/firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx
           qr/${$tmp_directory_regex}\/firefox_marionette_remote\w+/smx;
     }
     %options = _validate_parameters(%options);
-    my @allowed_binaries;
-    my @allowed_binary_paths;
-    my @allowed_binary_directories;
-    foreach my $binary ( @{ $options{'allow-binary'} } ) {
-        if ( $binary eq 'firefox' ) {
-            push @allowed_binaries,           'firefox';
-            push @allowed_binary_paths,       '/usr/bin/firefox';
-            push @allowed_binary_directories, '/usr/bin';
-        }
-        else {
-            push @allowed_binaries,     $binary;
-            push @allowed_binary_paths, $binary;
-            my ( $volume, $directories ) = File::Spec->splitpath($binary);
-            push @allowed_binary_directories,
-              File::Spec->catdir( $volume, $directories );
-            if ( $OSNAME eq 'darwin' ) {
-                $directories =~ s{/Contents/MacOS/$}{/Contents/Resources/}smx;
-                push @allowed_binary_directories,
-                  File::Spec->catdir( $volume, $directories );
-            }
-        }
-    }
-    my $allowed_binaries =
-      q[(?:] . ( join q[|], map { quotemeta } @allowed_binaries ) . q[)];
-    my $allowed_binary_paths =
-      q[(?:] . ( join q[|], map { quotemeta } @allowed_binary_paths ) . q[)];
-    my $allowed_binary_directories = q[(?:]
-      . ( join q[|], map { quotemeta } @allowed_binary_directories ) . q[)];
-    my $allowed_binary_directories_regex = qr/$allowed_binary_directories/smx;
-    my $allowed_binary_paths_regex       = qr/$allowed_binary_paths/smx;
-    my $allowed_binary_regex             = qr/$allowed_binaries/smx;
+    my ( $allowed_binary_directories_regex,
+        $allowed_binary_paths_regex, $allowed_binary_regex )
+      = _filesystem_regexes(%options);
     my $sub_directory_regex = qr/(?:profile|downloads|tmp|addons|certs)/smx;
     my $profile_names       = q[(?:] . (
         join q[|],
@@ -187,13 +167,13 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
       qr/scp$scp_parameters_regex"$root_dir_regex\/$profile_file_regex"/smx,
       qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-t[ ]"$root_dir_regex\/$addons_regex"/smx,
       qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer"/smx,
-qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?"$allowed_binary_directories\/$version_updates_regex"/smx,
+qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?"$allowed_binary_directories_regex\/$version_updates_regex"/smx,
 qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$downloads_regex"/smx,
       qr/kill[ ]\-0[ ]\d{1,8}/smx,
       qr/which[ ]$allowed_binary_regex/smx,
       qr/readlink[ ]\-f[ ]$allowed_binary_paths_regex/smx,
 qr/rm[ ]\-Rf[ ]$root_dir_regex(?:[ ]$quoted_tmp_directory\/Temp\-[\d\-a-f]{1,255})*/smx,
-      qr/ls[ ]-1[ ]"$allowed_binary_directories(?:\/updates(?:\/\d+)?)?"/smx,
+qr/ls[ ]-1[ ]"$allowed_binary_directories_regex(?:\/updates(?:\/\d+)?)?"/smx,
       qr/ls[ ]-1[ ]"$root_dir_regex\/downloads"/smx,
       qr/certutil$certutil_arguments_regex/smx,
       qr/(?:$xvfb_regex)?"$allowed_binary_regex"$firefox_arguments_regex/smx,
@@ -213,9 +193,13 @@ qr/grep[ ]$prefs_grep_patterns_regex$root_dir_regex\/profile\/prefs[.]js/smx;
           or die "Failed to '$command_and_arguments':$EXTENDED_OS_ERROR\n";
     }
     else {
-        die 'Unrecognisable command "'
-          . $ENV{SSH_ORIGINAL_COMMAND}
-          . "\" with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\"\n";
+        Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
+                'Unrecognisable command "'
+              . $ENV{SSH_ORIGINAL_COMMAND}
+              . "\" with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\""
+        );
+        Sys::Syslog::closelog();
     }
     1;
 } or do {
@@ -224,9 +208,8 @@ qr/grep[ ]$prefs_grep_patterns_regex$root_dir_regex\/profile\/prefs[.]js/smx;
     Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
     Sys::Syslog::syslog( Sys::Syslog::LOG_ERR(), $eval_error );
     Sys::Syslog::closelog();
-    warn "$eval_error\n";
-    exit 1;
 };
+exit 1;
 
 sub _validate_parameters {
     my (%parameters) = @_;
@@ -265,6 +248,83 @@ sub _validate_parameters {
         Sys::Syslog::closelog();
     }
     return %parameters;
+}
+
+sub _filesystem_regexes {
+    my (%parameters) = @_;
+    if (   ( $parameters{'regex-allow-binary-directories'} )
+        && ( $parameters{'regex-allow-binary-paths'} )
+        && ( $parameters{'regex-allow-binary'} ) )
+    {
+        my $allowed_binary_directories_regex;
+        if ( $parameters{'regex-allow-binary-directories'} =~ /^(.*)$/smx ) {
+            ($allowed_binary_directories_regex) = ($1);    # untaint
+        }
+        my $allowed_binary_paths_regex;
+        if ( $parameters{'regex-allow-binary-paths'} =~ /^(.*)$/smx ) {
+            ($allowed_binary_paths_regex) = ($1);          # untaint
+        }
+        my $allowed_binary_regex;
+        if ( $parameters{'regex-allow-binary'} =~ /^(.*)$/smx ) {
+            ($allowed_binary_regex) = ($1);                # untaint
+        }
+        return ( $allowed_binary_directories_regex,
+            $allowed_binary_paths_regex, $allowed_binary_regex );
+    }
+    if ( $parameters{'regex-allow-binary-directories'} ) {
+        Sys::Syslog::openlog( $ident, 'cons', $parameters{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
+'Ignoring --regex-allow-binary-directories parameter.  --regex-allow-binary-directories must be combined with --regex-allow-binary-paths and --regex-allow-binary'
+        );
+        Sys::Syslog::closelog();
+    }
+    if ( $parameters{'regex-allow-binary-paths'} ) {
+        Sys::Syslog::openlog( $ident, 'cons', $parameters{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
+'Ignoring --regex-allow-binary-paths parameter.  --regex-allow-binary-paths must be combined with --regex-allow-binary-directories and --regex-allow-binary'
+        );
+        Sys::Syslog::closelog();
+    }
+    if ( $parameters{'regex-allow-binary'} ) {
+        Sys::Syslog::openlog( $ident, 'cons', $parameters{facility} );
+        Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
+'Ignoring --regex-allow-binary parameter.  --regex-allow-binary must be combined with --regex-allow-binary-directories and --regex-allow-binary-paths'
+        );
+        Sys::Syslog::closelog();
+    }
+    my @allowed_binaries;
+    my @allowed_binary_paths;
+    my @allowed_binary_directories;
+    foreach my $binary ( @{ $parameters{'allow-binary'} } ) {
+        if ( $binary eq 'firefox' ) {
+            push @allowed_binaries,           'firefox';
+            push @allowed_binary_paths,       '/usr/bin/firefox';
+            push @allowed_binary_directories, '/usr/bin';
+        }
+        else {
+            push @allowed_binaries,     $binary;
+            push @allowed_binary_paths, $binary;
+            my ( $volume, $directories ) = File::Spec->splitpath($binary);
+            push @allowed_binary_directories,
+              File::Spec->catdir( $volume, $directories );
+            if ( $OSNAME eq 'darwin' ) {
+                $directories =~ s{/Contents/MacOS/$}{/Contents/Resources/}smx;
+                push @allowed_binary_directories,
+                  File::Spec->catdir( $volume, $directories );
+            }
+        }
+    }
+    my $allowed_binaries =
+      q[(?:] . ( join q[|], map { quotemeta } @allowed_binaries ) . q[)];
+    my $allowed_binary_paths =
+      q[(?:] . ( join q[|], map { quotemeta } @allowed_binary_paths ) . q[)];
+    my $allowed_binary_directories = q[(?:]
+      . ( join q[|], map { quotemeta } @allowed_binary_directories ) . q[)];
+    my $allowed_binary_directories_regex = qr/$allowed_binary_directories/smx;
+    my $allowed_binary_paths_regex       = qr/$allowed_binary_paths/smx;
+    my $allowed_binary_regex             = qr/$allowed_binaries/smx;
+    return ( $allowed_binary_directories_regex,
+        $allowed_binary_paths_regex, $allowed_binary_regex );
 }
 
 sub _get_plist_prefix_regex {
