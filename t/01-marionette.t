@@ -213,7 +213,7 @@ sub start_firefox {
 			}
 			$parameters{capabilities} = Firefox::Marionette::Capabilities->new(%new);
 		}
-		if (($parameters{visible}) && ($ENV{FIREFOX_NO_VISIBLE})) {
+		if ((($parameters{visible}) || ($require_visible)) && ($ENV{FIREFOX_NO_VISIBLE})) {
 			$skip_message = "Firefox visible tests are unreliable on a remote host";
 			return ($skip_message, undef);
 		}
@@ -236,9 +236,7 @@ sub start_firefox {
 	}
 	if ($ENV{FIREFOX_VISIBLE}) {
 		$require_visible = 1;
-		if (!$parameters{visible}) {
-			$parameters{visible} = 1;
-		}
+		$parameters{visible} = $require_visible;
 		if ((defined $parameters{capabilities}) && ($parameters{capabilities}->moz_headless())) {
 			my $old = $parameters{capabilities};
 			my %new = ( moz_headless => 0 );
@@ -275,6 +273,10 @@ sub start_firefox {
 			$parameters{capabilities} = Firefox::Marionette::Capabilities->new(%new);
 		}
 		diag("Overriding firefox visibility");
+	} elsif ($ENV{FIREFOX_NO_VISIBLE}) {
+		$parameters{visible} = 0;
+	} else {
+		$parameters{visible} = $require_visible;
 	}
 	if ($segv_detected) {
 		$skip_message = "Previous SEGV detected.  Trying to shutdown tests as fast as possible";
@@ -1191,7 +1193,11 @@ SKIP: {
 
 SKIP: {
 	diag("Starting new firefox for testing proxies again");
-	($skip_message, $firefox) = start_firefox(1, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'proxy.example.org:3128')));
+	my $visible = 1;
+	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_USER})) {
+		$visible = 'local';
+	}
+	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'proxy.example.org:3128')));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1210,7 +1216,29 @@ SKIP: {
 		ok($capabilities->proxy()->https() eq 'proxy.example.org:3128', "\$capabilities->proxy()->https() is 'proxy.example.org:3128'");
 		ok($capabilities->proxy()->http() eq 'proxy.example.org:3128', "\$capabilities->proxy()->http() is 'proxy.example.org:3128'");
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	if (($ENV{RELEASE_TESTING}) && ($visible eq 'local')) {
+		`xwininfo -version 2>/dev/null`;
+		if ($? == 0) {
+			require Crypt::URandom;
+			my $string = join q[], unpack("h*", Crypt::URandom::urandom(20));
+			$firefox->script('window.document.title = arguments[0]', args => [ $string ]);
+			my $found_window = `xwininfo -root -tree | grep $string`;
+			chomp $found_window;
+			ok($found_window, "Found X11 Forwarded window:$found_window");
+			my $pid = $capabilities->moz_process_id();
+			if (defined $pid) {
+				my $command = "ps axo pid,user,cmd | grep -E '^[ ]+$pid\[ \]+$ENV{FIREFOX_USER}\[ \]+.+firefox[ ]\-marionette[ ]\-safe\-mode[ ]\-profile[ ].*/profile[ ]\-\-no\-remote[ ]\-\-new\-instance[ ]*\$'";
+				my $process_listing = `$command`;
+				chomp $process_listing;
+				ok($process_listing =~ /^[ ]+$pid/, "Found X11 Forwarded process:$process_listing");
+			}
+		}
+	}
+	my $child_error = $firefox->quit();
+	if (($major_version < 50) && ($ENV{RELEASE_TESTING}) && ($visible eq 'local')) {
+		$correct_exit_status = $child_error;
+	}
+	ok($child_error == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->error_message());
 }
 
 SKIP: {

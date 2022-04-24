@@ -1627,7 +1627,9 @@ SUBROUTINES/METHODS
       to a remote host. See the host parameter.
 
       * visible - should firefox be visible on the desktop. This defaults
-      to "0".
+      to "0". When moving from a X11 platform to another X11 platform, you
+      can set visible to 'local' to enable X11 forwarding
+      <https://man.openbsd.org/ssh#X>. See X11 FORWARDING WITH FIREFOX.
 
       * waterfox - only allow a binary that looks like a waterfox version
       <https://www.waterfox.net/> to be launched.
@@ -2437,6 +2439,21 @@ WEBGL
         } else {
             die "WebGL is not supported";
         }
+
+X11 FORWARDING WITH FIREFOX
+
+    This is an experimental addition to this module. X11 Forwarding
+    <https://man.openbsd.org/ssh#X> allows you to launch a remote firefox
+    via ssh and have it visually appear in your local X11 desktop. This can
+    be accomplished with the following code;
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new( debug => 1, visible => 'local' );
+        $firefox->go('https://metacpan.org');
+
+    Feedback is welcome on any odd X11 workarounds that might be required
+    for different platforms.
 
 DIAGNOSTICS
 

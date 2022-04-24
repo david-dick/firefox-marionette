@@ -1200,7 +1200,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
 - user - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name.
 - via - specifies a [proxy jump box](https://man.openbsd.org/ssh_config#ProxyJump) to be used to connect to a remote host.  See the host parameter.
-- visible - should firefox be visible on the desktop.  This defaults to "0".
+- visible - should firefox be visible on the desktop.  This defaults to "0".  When moving from a X11 platform to another X11 platform, you can set visible to 'local' to enable [X11 forwarding](https://man.openbsd.org/ssh#X).  See [X11 FORWARDING WITH FIREFOX](https://metacpan.org/pod/Firefox::Marionette#X11-FORWARDING-WITH-FIREFOX).
 - waterfox - only allow a binary that looks like a [waterfox version](https://www.waterfox.net/) to be launched.
 - width - set the [width](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
 
@@ -1789,6 +1789,17 @@ With all those conditions being met, [WebGL](https://en.wikipedia.org/wiki/WebGL
     } else {
         die "WebGL is not supported";
     }
+
+# X11 FORWARDING WITH FIREFOX
+
+This is an experimental addition to this module.  [X11 Forwarding](https://man.openbsd.org/ssh#X) allows you to launch a [remote firefox via ssh](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH) and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( debug => 1, visible => 'local' );
+    $firefox->go('https://metacpan.org');
+
+Feedback is welcome on any odd X11 workarounds that might be required for different platforms.
 
 # DIAGNOSTICS
 

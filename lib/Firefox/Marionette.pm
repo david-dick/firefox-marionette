@@ -595,6 +595,7 @@ sub _init {
     $self->{last_message_id}  = 0;
     $self->{creation_pid}     = $PROCESS_ID;
     $self->{sleep_time_in_ms} = $parameters{sleep_time_in_ms};
+    $self->{visible}          = $parameters{visible};
     foreach my $type (qw(nightly developer waterfox)) {
         if ( defined $parameters{$type} ) {
             $self->{requested_version}->{$type} = $parameters{$type};
@@ -2351,13 +2352,12 @@ sub _check_visible {
         && ( defined $parameters{capabilities}->moz_headless() )
         && ( !$parameters{capabilities}->moz_headless() ) )
     {
-        if ( !$parameters{visible} ) {
+        if ( !$self->_visible() ) {
             Carp::carp('Unable to launch firefox with -headless option');
         }
         $self->{visible} = 1;
     }
-    elsif ( $parameters{visible} ) {
-        $self->{visible} = 1;
+    elsif ( $self->_visible() ) {
     }
     else {
         if ( $self->_is_headless_okay() ) {
@@ -3430,6 +3430,7 @@ sub _launch_via_ssh {
     if ( $self->_visible() ) {
         if (   ( $self->_remote_uname() eq 'MSWin32' )
             || ( $self->_remote_uname() eq 'darwin' )
+            || ( $self->_visible() eq 'local' )
             || ( $self->_remote_uname() eq 'cygwin' ) )
         {
         }
@@ -3447,8 +3448,10 @@ sub _launch_via_ssh {
           or Firefox::Marionette::Exception->throw(
 "Failed to find 'ssh' anywhere in the Path environment variable:$ENV{Path}"
           );
-        my @ssh_arguments =
-          ( $self->_ssh_arguments( env => 1 ), $self->_ssh_address() );
+        my @ssh_arguments = (
+            $self->_ssh_arguments( graphical => 1, env => 1 ),
+            $self->_ssh_address()
+        );
         my $process =
           $self->_start_win32_process( 'ssh', @ssh_arguments,
             $binary, @arguments );
@@ -3469,7 +3472,8 @@ sub _launch_via_ssh {
                 open STDIN, q[<], $dev_null
                   or Firefox::Marionette::Exception->throw(
                     "Failed to redirect STDIN to $dev_null:$EXTENDED_OS_ERROR");
-                $self->_ssh_exec( $self->_ssh_arguments( env => 1 ),
+                $self->_ssh_exec(
+                    $self->_ssh_arguments( graphical => 1, env => 1 ),
                     $self->_ssh_address(), $binary, @arguments )
                   or Firefox::Marionette::Exception->throw(
                     "Failed to exec 'ssh':$EXTENDED_OS_ERROR");
@@ -4989,6 +4993,12 @@ sub _ssh_address {
 sub _ssh_arguments {
     my ( $self, %parameters ) = @_;
     my @arguments = ( '-2', );
+    if ( ( $parameters{graphical} ) || ( $parameters{master} ) ) {
+        if ( ( defined $self->_visible() ) && ( $self->_visible() eq 'local' ) )
+        {
+            push @arguments, '-X';
+        }
+    }
     if ( my $ssh = $self->_ssh() ) {
         if ( my $port = $ssh->{port} ) {
             push @arguments, ( '-p' => $port, );
@@ -10768,7 +10778,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * via - specifies a L<proxy jump box|https://man.openbsd.org/ssh_config#ProxyJump> to be used to connect to a remote host.  See the host parameter.
 
-=item * visible - should firefox be visible on the desktop.  This defaults to "0".
+=item * visible - should firefox be visible on the desktop.  This defaults to "0".  When moving from a X11 platform to another X11 platform, you can set visible to 'local' to enable L<X11 forwarding|https://man.openbsd.org/ssh#X>.  See L<X11 FORWARDING WITH FIREFOX|Firefox::Marionette#X11-FORWARDING-WITH-FIREFOX>.
 
 =item * waterfox - only allow a binary that looks like a L<waterfox version|https://www.waterfox.net/> to be launched.
 
@@ -11402,6 +11412,17 @@ With all those conditions being met, L<WebGL|https://en.wikipedia.org/wiki/WebGL
     } else {
         die "WebGL is not supported";
     }
+
+=head1 X11 FORWARDING WITH FIREFOX
+
+This is an experimental addition to this module.  L<X11 Forwarding|https://man.openbsd.org/ssh#X> allows you to launch a L<remote firefox via ssh|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( debug => 1, visible => 'local' );
+    $firefox->go('https://metacpan.org');
+
+Feedback is welcome on any odd X11 workarounds that might be required for different platforms.
 
 =head1 DIAGNOSTICS
 
