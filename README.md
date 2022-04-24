@@ -1796,7 +1796,11 @@ This is an experimental addition to this module.  [X11 Forwarding](https://man.o
 
     use Firefox::Marionette();
 
-    my $firefox = Firefox::Marionette->new( debug => 1, visible => 'local' );
+    my $firefox = Firefox::Marionette->new(
+                                             host    => 'remote-x11.example.org',
+                                             visible => 'local',
+                                             debug   => 1,
+                                          );
     $firefox->go('https://metacpan.org');
 
 Feedback is welcome on any odd X11 workarounds that might be required for different platforms.
