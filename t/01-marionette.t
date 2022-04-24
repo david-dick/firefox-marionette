@@ -806,7 +806,7 @@ SKIP: {
 	ok($timeouts->implicit() == $implicit_timeout, "\$timeouts->implicit() is $implicit_timeout");
 	ok(!defined $firefox->child_error(), "Firefox does not have a value for child_error");
 	ok($firefox->alive(), "Firefox is still alive");
-	ok(not($firefox->script('window.open("https://duckduckgo.com", "_blank");')), "Opening new window to duckduckgo.com via 'window.open' script");
+	ok(not($firefox->script('window.open("about:blank", "_blank");')), "Opening new window to about:blank via 'window.open' script");
 	ok($firefox->close_current_window_handle(), "Closed new tab/window");
 	SKIP: {
 		if ($major_version < 55) {
@@ -1344,6 +1344,9 @@ SKIP: {
 		skip("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version(), 4);
 	}
 	ok($capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is true");
+	if (!$ENV{RELEASE_TESTING}) {
+		skip("Skipping network tests", 3);
+	}
 	ok($firefox->go(URI->new("https://untrusted-root.badssl.com/")), "https://untrusted-root.badssl.com/ has been loaded");
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
@@ -1476,6 +1479,9 @@ SKIP: {
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
+	}
+	if (!$ENV{RELEASE_TESTING}) {
+		skip("Skipping network tests", 2);
 	}
 	if (grep /^accept_insecure_certs$/, $capabilities->enumerate()) {
 		ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
@@ -2103,6 +2109,9 @@ SKIP: {
 			}
 		}
 		ok($firefox->switch_to_window($new_window_handle), "\$firefox->switch_to_window() used to move back to the original window");
+	}
+	if (!$ENV{RELEASE_TESTING}) {
+		skip("Skipping network tests", 225);
 	}
 	my $metacpan_uri = 'https://metacpan.org/';
 	ok($firefox->go($metacpan_uri), "$metacpan_uri has been loaded in the new window");
@@ -3579,8 +3588,13 @@ _CERT_
 			ok($certificate->sha1_fingerprint(), Encode::encode('UTF-8', display_name($certificate)) . " has a sha1_fingerprint of " . $certificate->sha1_fingerprint());
 			ok(defined $certificate->organizational_unit(), Encode::encode('UTF-8', display_name($certificate)) . " has a organizational_unit of " . Encode::encode('UTF-8', $certificate->organizational_unit()));
 			$count += 1;
+			if (!$ENV{RELEASE_TESTING}) {
+				last;
+			}
 		}
-		ok($count > 0, "There are $count certificates in the firefox database");
+		if ($ENV{RELEASE_TESTING}) {
+			ok($count > 0, "There are $count certificates in the firefox database");
+		}
 	}
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
