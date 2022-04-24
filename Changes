@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.25  Mon Apr 25 09:32 2022
+       Adding X11 Forwarding and support for ssh jump hosts
+       Reduce network and disk load during 'make test'
+       Improving test suite (coverage now > 90%)
+
 1.24  Fri Apr  8 19:32 2022
        Fixes for CPAN Testers results
        Adding visible support for remote Firefox instances on linux (via xvfb-run)
