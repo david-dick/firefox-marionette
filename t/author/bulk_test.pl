@@ -65,7 +65,7 @@ MAIN: {
 		die "Failed to open $servers_path for reading: $EXTENDED_OS_ERROR";
 	}
 
-	my $win32_remote_alarm = 2700;
+	my $win32_remote_alarm = 3600;
 	my $win32_via_alarm = 3600;
 	my $background_pids = {};
 	foreach my $server (@servers) {
@@ -171,6 +171,7 @@ MAIN: {
 												{ cygwin => 1, alarm_after => $cygwin_remote_alarm, command_line => "cd $cygwin_tmp_directory/firefox-marionette; FIREFOX_HOST=$local_ip_address FIREFOX_USER=$local_username RELEASE_TESTING=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 											) : (),
 											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
+											{ alarm_after => $win32_remote_alarm, force_pseudo_terminal => 1, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_NO_RECONNECT=1 && set RELEASE_TESTING=1 && set FIREFOX_HOST=$local_ip_address && set FIREFOX_USER=firefox && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
 											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_DEVELOPER=1 && set RELEASE_TESTING=1 && set FIREFOX_DEBUG=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
 											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_NIGHTLY=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
 											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set WATERFOX=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
@@ -181,7 +182,12 @@ MAIN: {
 								WIN32_FIREFOX: {
 									$count += 1;
 									my $start_execute_time = time;
-									my $result = _remote_execute($server, { alarm_after => $command->{alarm_after}, return_result => 1, cygwin => $command->{cygwin} }, $command->{command_line});
+									my $result = _remote_execute($server, {
+															alarm_after => $command->{alarm_after},
+															return_result => 1,
+															cygwin => $command->{cygwin},
+															force_pseudo_terminal => $command->{force_pseudo_terminal},
+														}, $command->{command_line});
 									my $total_execute_time = time - $start_execute_time;
 									if ($result != 0) {
 										if ($count < $max_attempts) {
@@ -796,7 +802,10 @@ sub _virsh_shutdown {
 	my ($server) = @_;
 	if ($server->{os} eq 'android') {
 		_execute($server, undef, 'adb', 'connect', (join q[:], $server->{address}, $server->{port}));
-		return _execute($server, undef, 'adb', '-s', (join q[:], $server->{address}, $server->{port}), 'shell', 'poweroff');
+		_execute($server, undef, 'adb', '-s', (join q[:], $server->{address}, $server->{port}), 'shell', 'poweroff');
+		_execute($server, undef, 'adb', 'kill-server');
+		my $adb_log_file = File::Spec->catfile(File::Spec->tmpdir(), 'adb.' . $> . '.log');
+		unlink $adb_log_file or ($! == POSIX::ENOENT()) or die "Failed to unlink $adb_log_file:$!";
 	} else {
 		return _execute($server, undef, 'sudo', 'virsh', 'shutdown', $server->{name});
 	}
@@ -830,12 +839,14 @@ sub _remote_contents {
 	} else {
 		$initial_command = $server->{initial_command};
 	}
-	return _contents($server, $parameters, 'ssh', _ssh_parameters(), _server_address($server, $parameters), join q[ && ], grep { defined } $initial_command, $remote_command_line);
+	return _contents($server, $parameters, 'ssh', _ssh_parameters($parameters), _server_address($server, $parameters), join q[ && ], grep { defined } $initial_command, $remote_command_line);
 }
 
 sub _ssh_parameters {
+	my ($parameters) = @_;
 	return (
             '-2',
+            ($parameters->{force_pseudo_terminal} ? ('-t', '-t') : ()),
             '-o',    'BatchMode=yes',
             '-o',    'ServerAliveCountMax=5',
             '-o',    'ServerAliveInterval=3',
@@ -903,7 +914,10 @@ sub _contents {
 		}
 		local $SIG{ALRM} = $alarm_method;
 		COMMAND: while(my $line = <$handle>) {
-			chomp $line;
+			$line =~ s/\r?\n$//smx;
+			$line =~ s/\e\[(K|\d+;1H|\??25[lh]|2J|[mHG]|23X|17X)//smxg;
+			$line =~ s/\e\]0;//smxg;
+			$line =~ s/\x7//smxg;
 			_check_parent_alive();
 			_log_stdout($server, $line);
 			push @lines, $line;
