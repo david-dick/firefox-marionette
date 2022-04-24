@@ -38,20 +38,8 @@ $ENV{RELEASE_TESTING} = 1;
 $ENV{FIREFOX_ALARM} = 600;
 $ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
 system { 'cover' } 'cover', '-delete' and die "Failed to 'cover' for " . ($ENV{FIREFOX_BINARY} || 'firefox');
-our $ping_pid;
 MAIN: {
 	my $cwd = Cwd::cwd();
-	if ($ping_pid = fork) {
-	} elsif (defined $ping_pid) {
-		eval {
-			exec { 'ping' } 'ping', '8.8.8.8' or die "Failed to exec ping:$EXTENDED_OS_ERROR";
-		} or do {
-			print STDERR $EVAL_ERROR;
-		};
-		exit 1;
-	} else {
-		die "Failed to fork:$EXTENDED_OS_ERROR";
-	}
 	my @servers;
         my $csv = Text::CSV_XS->new ({ binary => 1, auto_diag => 1 });
 	my $servers_path = $cwd . '/servers.csv';
@@ -85,7 +73,6 @@ MAIN: {
 			$background_pids->{$pid} = $server;
 		} elsif (defined $pid) {
 			eval {
-				undef $ping_pid;
 				my $win32_local_alarm = 600;
 				my $cygwin_local_alarm = 2700;
 				my $cygwin_remote_alarm = 3600;
@@ -514,11 +501,6 @@ MAIN: {
 			}
 		}
 	}
-	while (kill 0, $ping_pid) {
-		kill 'TERM', $ping_pid;
-		waitpid $ping_pid, POSIX::WNOHANG();
-	}
-	undef $ping_pid;
 	chdir $cwd or die "Failed to chdir to '$cwd':$EXTENDED_OS_ERROR";
 	if (-d "$cwd/$cover_db_name") {
 		$ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
@@ -997,12 +979,6 @@ sub _cleanup_win32 {
 }
 
 END {
-	if (defined $ping_pid) {
-		while (kill 0, $ping_pid) {
-			kill 'TERM', $ping_pid;
-			waitpid $ping_pid, POSIX::WNOHANG();
-		}
-	}
 	my $end_time = time;
 	my ($hours, $minutes, $seconds) = (0,0,$end_time - $start_time);
 	while($seconds >= 3600) {
