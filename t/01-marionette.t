@@ -415,6 +415,9 @@ elsif ( $^O eq 'darwin' ) {
 }
 my $version_string = `"$binary" -version`;
 diag("Version is $version_string");
+if ($version_string =~ /^Mozilla[ ]Firefox[ ](\d+)[.](\d+)(?:a1)?(?:[.](\d+)(?:esr)?)?$/smx) {
+	($major_version, $minor_version, $patch_version) = ($1, $2, $3);
+}
 if ((exists $ENV{FIREFOX_HOST}) && (defined $ENV{FIREFOX_HOST})) {
 	diag("FIREFOX_HOST is $ENV{FIREFOX_HOST}");
 }
