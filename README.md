@@ -172,15 +172,15 @@ The executing javascript is subject to the [script](https://metacpan.org/pod/Fir
 
 ## attribute 
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the initial value of the attribute with the supplied name.  This method will return the initial content, the [property](https://metacpan.org/pod/Firefox::Marionette#property) method will return the current content.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the initial value of the attribute with the supplied name.  This method will return the initial content from the HTML source code, the [property](https://metacpan.org/pod/Firefox::Marionette#property) method will return the current content.
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    my $element = $firefox->find_id('search_input');
-    !defined $element->attribute('value') or die "attribute is not defined!");
+    my $element = $firefox->find_id('metacpan_search-input');
+    !defined $element->attribute('value') or die "attribute is defined but did not exist in the html source!";
     $element->type('Test::More');
-    !defined $element->attribute('value') or die "attribute is still not defined!");
+    !defined $element->attribute('value') or die "attribute has changed but only the property should have changed!";
 
 ## await
 
@@ -972,7 +972,7 @@ returns true if `document.readyState === "interactive"` or if [loaded](https://m
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_id('search_input')->type('Type::More');
+    $firefox->find_id('metacpan_search-input')->type('Type::More');
     $firefox->find('//button[@name="lucky"]')->click();
     while(!$firefox->interactive()) {
         # redirecting to Test::More page
@@ -1037,7 +1037,7 @@ returns true if `document.readyState === "complete"`
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    $firefox->find_id('search_input')->type('Type::More');
+    $firefox->find_id('metacpan_search-input')->type('Type::More');
     $firefox->find('//button[@name="lucky"]')->click();
     while(!$firefox->loaded()) {
         # redirecting to Test::More page
@@ -1316,13 +1316,13 @@ returns the profile directory used by the current instance of firefox.  This is 
 
 ## property
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the [attribute](https://metacpan.org/pod/Firefox::Marionette#attribute) method will return the initial content.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a scalar attribute name as the second parameter.  It returns the current value of the property with the supplied name.  This method will return the current content, the [attribute](https://metacpan.org/pod/Firefox::Marionette#attribute) method will return the initial content from the HTML source code.
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    my $element = $firefox->find_id('search_input');
-    $element->property('value') eq '' or die "Initial property is the empty string";
+    my $element = $firefox->find_id('metacpan_search-input');
+    $element->property('value') eq '' or die "Initial property should be the empty string";
     $element->type('Test::More');
     $element->property('value') eq 'Test::More' or die "This property should have changed!";
 
