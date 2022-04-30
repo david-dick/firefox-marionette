@@ -173,8 +173,8 @@ SUBROUTINES/METHODS
     
         # for form based login
     
-        $firefox->add_login(host => 'https://github.com', origin => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
         my $form_login = Firefox::Marionette::Login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+        $firefox->add_login($form_login);
     
         # or just directly
     
@@ -387,6 +387,18 @@ SUBROUTINES/METHODS
 
     accepts a element as the first parameter and clears any user supplied
     input
+
+ clear_pref
+
+    accepts a preference <http://kb.mozillazine.org/About:config> name and
+    restores it to the original value. See the get_pref and set_pref
+    methods to get a preference value and to set to it to a particular
+    value. This method returns itself to aid in chaining methods.
+
+        use Firefox::Marionette();
+        my $firefox = Firefox::Marionette->new();
+    
+        $firefox->clear_pref('browser.search.defaultenginename');
 
  click
 
@@ -949,6 +961,18 @@ SUBROUTINES/METHODS
     BUGS AND LIMITATIONS for a necessary workaround.
 
     This method returns itself to aid in chaining methods.
+
+ get_pref
+
+    accepts a preference <http://kb.mozillazine.org/About:config> name. See
+    the set_pref and clear_pref methods to set a preference value and to
+    restore it to it's original value. This method returns the current
+    value of the preference.
+
+        use Firefox::Marionette();
+        my $firefox = Firefox::Marionette->new();
+    
+        warn "Your browser's default search engine is set to " . $firefox->get_pref('browser.search.defaultenginename');
 
  har
 
@@ -1576,14 +1600,17 @@ SUBROUTINES/METHODS
 
       * profile - create a new profile based on the supplied profile. NOTE:
       firefox ignores any changes made to the profile on the disk while it
-      is running.
+      is running, instead, use the set_pref and clear_pref methods to make
+      changes while firefox is running.
 
       * profile_name - pick a specific existing profile to automate, rather
       than creating a new profile. Firefox <https://firefox.com> refuses to
       allow more than one instance of a profile to run at the same time.
       Profile names can be obtained by using the
       Firefox::Marionette::Profile::names() method. NOTE: firefox ignores
-      any changes made to the profile on the disk while it is running.
+      any changes made to the profile on the disk while it is running,
+      instead, use the set_pref and clear_pref methods to make changes
+      while firefox is running.
 
       * reconnect - an experimental parameter to allow a reconnection to
       firefox that a connection has been discontinued. See the survive
@@ -2053,6 +2080,18 @@ SUBROUTINES/METHODS
 
     sends keys to the input field of a currently displayed modal message
     box
+
+ set_pref
+
+    accepts a preference <http://kb.mozillazine.org/About:config> name and
+    the new value to set it to. See the get_pref and clear_pref methods to
+    get a preference value and to restore it to it's original value. This
+    method returns itself to aid in chaining methods.
+
+        use Firefox::Marionette();
+        my $firefox = Firefox::Marionette->new();
+        ...
+        $firefox->set_pref('browser.search.defaultenginename', 'DuckDuckGo');
 
  shadow_root
 

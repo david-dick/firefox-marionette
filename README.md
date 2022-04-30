@@ -125,8 +125,8 @@ or a [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::
 
     # for form based login
 
-    $firefox->add_login(host => 'https://github.com', origin => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
     my $form_login = Firefox::Marionette::Login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+    $firefox->add_login($form_login);
 
     # or just directly
 
@@ -293,6 +293,15 @@ returns identifiers for each open chrome window for tests interested in managing
 ## clear
 
 accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and clears any user supplied input
+
+## clear\_pref
+
+accepts a [preference](http://kb.mozillazine.org/About:config) name and restores it to the original value.  See the [get\_pref](https://metacpan.org/pod/Firefox::Marionette#get_pref) and [set\_pref](https://metacpan.org/pod/Firefox::Marionette#set_pref) methods to get a preference value and to set to it to a particular value.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+    use Firefox::Marionette();
+    my $firefox = Firefox::Marionette->new();
+
+    $firefox->clear_pref('browser.search.defaultenginename');
 
 ## click
 
@@ -762,6 +771,15 @@ When going directly to a URL that needs to be downloaded, please see [BUGS AND L
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## get\_pref
+
+accepts a [preference](http://kb.mozillazine.org/About:config) name.  See the [set\_pref](https://metacpan.org/pod/Firefox::Marionette#set_pref) and [clear\_pref](https://metacpan.org/pod/Firefox::Marionette#clear_pref) methods to set a preference value and to restore it to it's original value.  This method returns the current value of the preference.
+
+    use Firefox::Marionette();
+    my $firefox = Firefox::Marionette->new();
+
+    warn "Your browser's default search engine is set to " . $firefox->get_pref('browser.search.defaultenginename');
+
 ## har
 
 returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/HAR_\(file_format\)) of the session.  This function is subject to the [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout, which, by default is 30 seconds.  It is also possible for the function to hang (until the [script](https://metacpan.org/pod/Firefox::Marionette::Timeouts#script) timeout) if the original [devtools](https://developer.mozilla.org/en-US/docs/Tools) window is closed.  The hashref has been designed to be accepted by the [Archive::Har](https://metacpan.org/pod/Archive::Har) module.  This function should be considered experimental.  Feedback welcome.
@@ -1189,8 +1207,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - nightly - only allow a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) to be launched.  This defaults to "0" (off).
 - port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox via the specified port.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
 - page\_load - a shortcut to allow directly providing the [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
-- profile - create a new profile based on the supplied [profile](https://metacpan.org/pod/Firefox::Marionette::Profile).  NOTE: firefox ignores any changes made to the profile on the disk while it is running.
-- profile\_name - pick a specific existing profile to automate, rather than creating a new profile.  [Firefox](https://firefox.com) refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the [Firefox::Marionette::Profile::names()](https://metacpan.org/pod/Firefox::Marionette::Profile#names) method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running.
+- profile - create a new profile based on the supplied [profile](https://metacpan.org/pod/Firefox::Marionette::Profile).  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the [set\_pref](https://metacpan.org/pod/Firefox::Marionette#set_pref) and [clear\_pref](https://metacpan.org/pod/Firefox::Marionette#clear_pref) methods to make changes while firefox is running.
+- profile\_name - pick a specific existing profile to automate, rather than creating a new profile.  [Firefox](https://firefox.com) refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the [Firefox::Marionette::Profile::names()](https://metacpan.org/pod/Firefox::Marionette::Profile#names) method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the [set\_pref](https://metacpan.org/pod/Firefox::Marionette#set_pref) and [clear\_pref](https://metacpan.org/pod/Firefox::Marionette#clear_pref) methods to make changes while firefox is running.
 - reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
 - script - a shortcut to allow directly providing the [script](https://metacpan.org/pod/Firefox::Marionette::Timeout#script) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - seer - this option is switched off "0" by default.  When it is switched on "1", it will activate the various speculative and pre-fetch options for firefox.  NOTE: that this option only works when profile\_name/profile is not specified.
@@ -1498,6 +1516,15 @@ The parameters after the [element](https://metacpan.org/pod/Firefox::Marionette:
 ## send\_alert\_text
 
 sends keys to the input field of a currently displayed modal message box
+
+## set\_pref
+
+accepts a [preference](http://kb.mozillazine.org/About:config) name and the new value to set it to.  See the [get\_pref](https://metacpan.org/pod/Firefox::Marionette#get_pref) and [clear\_pref](https://metacpan.org/pod/Firefox::Marionette#clear_pref) methods to get a preference value and to restore it to it's original value.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+    use Firefox::Marionette();
+    my $firefox = Firefox::Marionette->new();
+    ...
+    $firefox->set_pref('browser.search.defaultenginename', 'DuckDuckGo');
 
 ## shadow\_root
 

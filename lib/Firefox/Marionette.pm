@@ -9716,8 +9716,8 @@ or a L<Firefox::Marionette::Login|Firefox::Marionette::Login> object as the firs
 
     # for form based login
 
-    $firefox->add_login(host => 'https://github.com', origin => 'https://github.com', user => 'me@example.org', password => 'qwerty', user_field => 'login', password_field => 'password');
     my $form_login = Firefox::Marionette::Login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
+    $firefox->add_login($form_login);
 
     # or just directly
 
