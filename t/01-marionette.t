@@ -1478,6 +1478,41 @@ SKIP: {
 	} else {
 		diag("WebGL appears to be disabled in headless mode (with addons => 1)");
 	}
+	my $new_max_url_length = 4321;
+	my $original_max_url_length = $firefox->get_pref('browser.history.maxStateObjectSize');
+	ok($original_max_url_length =~ /^\d+$/smx, "Retrieved browser.history.maxStateObjectSize as a number '$original_max_url_length'");
+	ok(ref $firefox->set_pref('browser.history.maxStateObjectSize', $new_max_url_length) eq $class, "\$firefox->set_pref correctly returns itself for chaining and set 'browser.history.maxStateObjectSize' to '$new_max_url_length'");
+	my $max_url_length = $firefox->get_pref('browser.history.maxStateObjectSize');
+	ok($max_url_length == $new_max_url_length, "Retrieved browser.history.maxStateObjectSize which was equal to the previous setting of '$new_max_url_length'");
+	ok(ref $firefox->set_pref('browser.history.maxStateObjectSize', $original_max_url_length) eq $class, "\$firefox->set_pref correctly returns itself for chaining and set 'browser.history.maxStateObjectSize' to the original '$original_max_url_length'");
+	$max_url_length = $firefox->get_pref('browser.history.maxStateObjectSize');
+	ok($max_url_length == $original_max_url_length, "Retrieved browser.history.maxStateObjectSize as a number '$max_url_length' which was equal to the original setting of '$original_max_url_length'");
+	my $original_use_system_colours = $firefox->get_pref('browser.display.use_system_colors');
+	ok($original_use_system_colours =~ /^[01]$/smx, "Retrieved browser.display.use_system_colors as a boolean '$original_use_system_colours', and set it as true");
+	ok(ref $firefox->set_pref('browser.display.use_system_colors', \1) eq $class, "\$firefox->set_pref correctly returns itself for chaining and set 'browser.display.use_system_colors' to 'true'");;
+	my $use_system_colours = $firefox->get_pref('browser.display.use_system_colors');
+	ok($use_system_colours, "Retrieved browser.display.use_system_colors as true '$use_system_colours'");
+	ok(ref $firefox->set_pref('browser.display.use_system_colors', \0) eq $class, "\$firefox->set_pref correctly returns itself for chaining and set 'browser.display.use_system_colors' to 'false'");;
+	$use_system_colours = $firefox->get_pref('browser.display.use_system_colors');
+	ok(!$use_system_colours, "Retrieved browser.display.use_system_colors as false '$use_system_colours'");
+	ok(ref $firefox->clear_pref('browser.display.use_system_colors', \0) eq $class, "\$firefox->clear_pref correctly returns itself for chaining and cleared 'browser.display.use_system_colors'");
+	$use_system_colours = $firefox->get_pref('browser.display.use_system_colors');
+	ok($use_system_colours == $original_use_system_colours, "Retrieved original browser.display.use_system_colors as a boolean '$use_system_colours'");
+	ok(!defined $firefox->get_pref('browser.no_such_key'), "Returned undef when querying for a non-existant key of 'browser.no_such_key'");
+	my $new_value = "Can't be real:$$";
+	ok(ref $firefox->set_pref('browser.no_such_key', $new_value) eq $class, "\$firefox->set_pref correctly returns itself for chaining and set 'browser.no_such_key' to '$new_value'");
+	ok($firefox->get_pref('browser.no_such_key') eq $new_value, "Returned browser.no_such_key as a string '$new_value'");
+	my $new_active_colour = '#FFFFFF';
+	my $original_active_colour = $firefox->get_pref('browser.active_color');
+	ok($original_active_colour =~ /^[#][[:xdigit:]]{6}$/smx, "Retrieved browser.active_color as a string '$original_active_colour'");
+	my $active_colour = $firefox->get_pref('browser.active_color');
+	ok($active_colour eq $original_active_colour, "Retrieved browser.active_color as a string '$active_colour' which was equal to the original setting of '$original_active_colour'");
+	ok(ref $firefox->set_pref('browser.active_color', $new_active_colour) eq $class, "\$firefox->set_pref correctly returns itself for chaining and set 'browser.active_color' to '$new_active_colour'");;
+	$active_colour = $firefox->get_pref('browser.active_color');
+	ok($active_colour eq $new_active_colour, "Retrieved browser.active_color as a string '$active_colour' which was equal to the new setting of '$new_active_colour'");
+	ok(ref $firefox->clear_pref('browser.active_color') eq $class, "\$firefox->clear_pref correctly returns itself for chaining and cleared 'browser.active_color'");;
+	$active_colour = $firefox->get_pref('browser.active_color');
+	ok($active_colour eq $original_active_colour, "Retrieved browser.active_color as a string '$active_colour' which was equal to the original string of '$original_active_colour'");
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	if (out_of_time()) {
