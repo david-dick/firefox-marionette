@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.26  Sun May 01 06:31 2022
+       Adding support for about:config prefs.js dynamic changes
+
 1.25  Mon Apr 25 09:32 2022
        Adding X11 Forwarding and support for ssh jump hosts
        Reduce network and disk load during 'make test'

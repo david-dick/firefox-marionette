@@ -6,7 +6,7 @@ use Getopt::Long();
 use English qw( -no_match_vars );
 use Firefox::Marionette();
 
-our $VERSION = '1.25';
+our $VERSION = '1.26';
 
 sub _NUMBER_OF_SPACES_FOR_CODE_QUOTING_IN_MARKDOWN { return 4 }
 
@@ -99,7 +99,7 @@ check-firefox-certificate-authorities - check the CA certificates in firefox for
 
 =head1 VERSION
 
-Version 1.25
+Version 1.26
 
 =head1 USAGE
 
