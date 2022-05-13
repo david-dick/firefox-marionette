@@ -551,36 +551,38 @@ eval {
 chomp $@;
 ok((($@) and (not($firefox))), "$class->new() threw an exception when launched with a path to a non firefox binary:$@");
 my $tls_tests_ok;
-if ( 
-	!IO::Socket::SSL->new(
-	PeerAddr => 'missing.example.org:443',
-	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
-		) ) {
-	if ( IO::Socket::SSL->new(
-	PeerAddr => 'untrusted-root.badssl.com:443',
-	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
-		) ) {
-	if ( !IO::Socket::SSL->new(
-	PeerAddr => 'untrusted-root.badssl.com:443',
-	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
-		) ) {
-	if ( IO::Socket::SSL->new(
-	PeerAddr => 'metacpan.org:443',
-	SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
-		) ) {
-		diag("TLS/Network seem okay");
-		$tls_tests_ok = 1;
+if ($ENV{RELEASE_TESTING}) {
+	if ( 
+		!IO::Socket::SSL->new(
+		PeerAddr => 'missing.example.org:443',
+		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
+			) ) {
+		if ( IO::Socket::SSL->new(
+		PeerAddr => 'untrusted-root.badssl.com:443',
+		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
+			) ) {
+		if ( !IO::Socket::SSL->new(
+		PeerAddr => 'untrusted-root.badssl.com:443',
+		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
+			) ) {
+		if ( IO::Socket::SSL->new(
+		PeerAddr => 'metacpan.org:443',
+		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
+			) ) {
+			diag("TLS/Network seem okay");
+			$tls_tests_ok = 1;
+		} else {
+			diag("TLS/Network are NOT okay:Failed to connect to metacpan.org:$IO::Socket::SSL::SSL_ERROR");
+		}
+		} else {
+			diag("TLS/Network are NOT okay:Successfully connected to untrusted-root.badssl.com");
+		}
+		} else {
+			diag("TLS/Network are NOT okay:Failed to connect to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
+		}
 	} else {
-		diag("TLS/Network are NOT okay:Failed to connect to metacpan.org:$IO::Socket::SSL::SSL_ERROR");
+		diag("TLS/Network are NOT okay:Successfully connected to missing.example.org");
 	}
-	} else {
-		diag("TLS/Network are NOT okay:Successfully connected to untrusted-root.badssl.com");
-	}
-	} else {
-		diag("TLS/Network are NOT okay:Failed to connect to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
-	}
-} else {
-	diag("TLS/Network are NOT okay:Successfully connected to missing.example.org");
 }
 my $skip_message;
 SKIP: {
@@ -1253,9 +1255,6 @@ SKIP: {
 	if ($skip_message) {
 		skip($skip_message, 6);
 	}
-	if (!$tls_tests_ok) {
-		skip("TLS test infrastructure seems compromised", 6);
-	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	if ($major_version < 30) {
 		diag("Skipping WebGL as it can cause older browsers to hang");
@@ -1349,6 +1348,9 @@ SKIP: {
 	ok($capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is true");
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("Skipping network tests", 3);
+	}
+	if (!$tls_tests_ok) {
+		skip("TLS test infrastructure seems compromised", 3);
 	}
 	ok($firefox->go(URI->new("https://untrusted-root.badssl.com/")), "https://untrusted-root.badssl.com/ has been loaded");
 	if (out_of_time()) {
@@ -1467,9 +1469,6 @@ SKIP: {
 	if ($skip_message) {
 		skip($skip_message, 4);
 	}
-	if (!$tls_tests_ok) {
-		skip("TLS test infrastructure seems compromised", 4);
-	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	if ($major_version < 51) {
 		diag("WebGL does not work and should not as version $major_version is older than 51");
@@ -1520,6 +1519,9 @@ SKIP: {
 	}
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("Skipping network tests", 2);
+	}
+	if (!$tls_tests_ok) {
+		skip("TLS test infrastructure seems compromised", 2);
 	}
 	if (grep /^accept_insecure_certs$/, $capabilities->enumerate()) {
 		ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
@@ -1851,9 +1853,6 @@ SKIP: {
 	if ($skip_message) {
 		skip($skip_message, 6);
 	}
-	if (!$tls_tests_ok) {
-		skip("TLS test infrastructure seems compromised", 6);
-	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	ok(scalar $firefox->logins() == 0, "\$firefox->logins() has no entries:" . scalar $firefox->logins());
         my $testing_header_name = 'X-CPAN-Testing';
@@ -1883,6 +1882,9 @@ SKIP: {
 	}
 	ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
 	if ($ENV{RELEASE_TESTING}) { # har sometimes hangs and sometimes metacpan.org fails certificate checks.  for example. http://www.cpantesters.org/cpan/report/e71bfb3b-7413-1014-98e6-045206f7812f
+		if (!$tls_tests_ok) {
+			skip("TLS test infrastructure seems compromised", 5);
+		}
 		ok($firefox->go(URI->new("https://fastapi.metacpan.org/author/DDICK")), "https://fastapi.metacpan.org/author/DDICK has been loaded");
 		ok($firefox->interactive() && $firefox->loaded(), "\$firefox->interactive() and \$firefox->loaded() are ok");
 		if ($major_version < 61) {
