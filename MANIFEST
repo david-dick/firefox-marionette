@@ -32,6 +32,7 @@ LICENSE
 README
 ca-bundle-for-firefox
 check-firefox-certificate-authorities
+setup-for-firefox-marionette-build.sh
 ssh-auth-cmd-marionette
 firefox-passwords
 t/author/bulk_test.pl

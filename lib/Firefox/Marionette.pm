@@ -11537,6 +11537,36 @@ This is an experimental addition to this module.  L<X11 Forwarding|https://man.o
 
 Feedback is welcome on any odd X11 workarounds that might be required for different platforms.
 
+=head1 UBUNTU AND FIREFOX DELIVERED VIA SNAP
+
+L<Ubuntu 22.04 LTS|https://ubuntu.com/blog/ubuntu-22-04-lts-whats-new-linux-desktop> is packaging firefox as a L<snap|https://ubuntu.com/blog/whats-in-a-snap>.  This breaks the way that this module expects to be able to run, specifically, being able to setup a firefox profile in a systems temporary directory (/tmp or $TMPDIR in most Unix based systems) and allow the operating system to cleanup old directories caused by exceptions / network failures / etc.
+
+Because of this design decision, attempting to run a snap version of firefox will simply result in firefox hanging, unable to read it's custom profile directory and hence unable to read the marionette port configuration entry.
+
+Which would be workable except that; there does not appear to be _any_ way to detect that a snap firefox will run (/usr/bin/firefox is a bash shell which eventually runs the snap firefox), so there is no way to know (heuristics aside) if a normal firefox or a snap firefox will be launched by execing 'firefox'.
+
+It seems the only way to fix this issue (as documented in more than a few websites) is;
+
+=over
+
+=item 1. sudo snap remove firefox
+
+=item 2. sudo add-apt-repository -y ppa:mozillateam/ppa
+
+=item 3. sudo apt update
+
+=item 4. sudo apt install -t 'o=LP-PPA-mozillateam' firefox
+
+=item 5. echo -e "Package: firefox*\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 501" >/tmp/mozillateamppa
+
+=item 6. sudo mv /tmp/mozillateamppa /etc/apt/preferences.d/mozillateamppa
+
+=back
+
+If anyone is aware of a reliable method to detect if a snap firefox is going to launch vs a normal firefox, I would love to know about it.
+
+This technique is used in the L<setup-for-firefox-marionette-build.sh|setup-for-firefox-marionette-build.sh> script in this distribution.
+
 =head1 DIAGNOSTICS
 
 =over

@@ -225,6 +225,14 @@ elsif ( $OSNAME eq 'cygwin' ) {
     }
 }
 if ( !defined $binary ) {
+    if ( $OSNAME eq 'linux' ) {
+        foreach my $line ( split /\r?\n/smx, `snap list firefox 2>/dev/null` ) {
+            if ( $line =~ /^firefox[ ]+/smx ) {
+                die
+"We found a snapped firefox.  This module does not work with snap.  The ./setup-for-firefox-marionette-build.sh script contains an alternative way to setup firefox that works with this module\n";
+            }
+        }
+    }
   POSSIBLE: foreach my $possible (@possibles) {
         foreach my $path (
             split /$Config::Config{path_sep}/smx,
@@ -366,7 +374,8 @@ WriteMakefile(
     PL_FILES  => {},
     EXE_FILES => [
         'ssh-auth-cmd-marionette',               'ca-bundle-for-firefox',
-        'check-firefox-certificate-authorities', 'firefox-passwords'
+        'check-firefox-certificate-authorities', 'firefox-passwords',
+        'setup-for-firefox-marionette-build.sh',
     ],
     BUILD_REQUIRES => {
         'Compress::Zlib'  => 0,
