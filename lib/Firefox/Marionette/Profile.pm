@@ -183,24 +183,25 @@ sub new {
     $profile->set_value( 'browser.startup.homepage', 'about:blank',      1 );
     $profile->set_value( 'browser.startup.homepage_override.mstone',
         'ignore', 1 );
-    $profile->set_value( 'browser.startup.page',                 '0',      0 );
-    $profile->set_value( 'browser.tabs.warnOnClose',             'false',  0 );
-    $profile->set_value( 'browser.topsites.contile.enabled',     'false',  0 );
-    $profile->set_value( 'browser.warnOnQuit',                   'false',  0 );
-    $profile->set_value( 'datareporting.policy.firstRunURL',     q[],      1 );
-    $profile->set_value( 'devtools.jsonview.enabled',            'false',  0 );
-    $profile->set_value( 'devtools.netmonitor.persistlog',       'true',   0 );
-    $profile->set_value( 'devtools.toolbox.host',                'window', 1 );
-    $profile->set_value( 'dom.disable_open_click_delay',         0,        0 );
-    $profile->set_value( 'extensions.installDistroAddons',       'false',  0 );
-    $profile->set_value( 'focusmanager.testmode',                'true',   0 );
-    $profile->set_value( 'marionette.port',                      ANY_PORT() );
-    $profile->set_value( 'network.http.prompt-temp-redirect',    'false', 0 );
-    $profile->set_value( 'network.http.request.max-start-delay', '0',     0 );
-    $profile->set_value( 'security.osclientcerts.autoload',      'true',  0 );
-    $profile->set_value( 'signon.autofillForms',                 'false', 0 );
-    $profile->set_value( 'signon.rememberSignons',               'false', 0 );
-    $profile->set_value( 'startup.homepage_welcome_url', 'about:blank',   1 );
+    $profile->set_value( 'browser.startup.page',                  '0',      0 );
+    $profile->set_value( 'browser.tabs.warnOnClose',              'false',  0 );
+    $profile->set_value( 'browser.toolbars.bookmarks.visibility', 'never',  1 );
+    $profile->set_value( 'browser.topsites.contile.enabled',      'false',  0 );
+    $profile->set_value( 'browser.warnOnQuit',                    'false',  0 );
+    $profile->set_value( 'datareporting.policy.firstRunURL',      q[],      1 );
+    $profile->set_value( 'devtools.jsonview.enabled',             'false',  0 );
+    $profile->set_value( 'devtools.netmonitor.persistlog',        'true',   0 );
+    $profile->set_value( 'devtools.toolbox.host',                 'window', 1 );
+    $profile->set_value( 'dom.disable_open_click_delay',          0,        0 );
+    $profile->set_value( 'extensions.installDistroAddons',        'false',  0 );
+    $profile->set_value( 'focusmanager.testmode',                 'true',   0 );
+    $profile->set_value( 'marionette.port',                       ANY_PORT() );
+    $profile->set_value( 'network.http.prompt-temp-redirect',     'false', 0 );
+    $profile->set_value( 'network.http.request.max-start-delay',  '0',     0 );
+    $profile->set_value( 'security.osclientcerts.autoload',       'true',  0 );
+    $profile->set_value( 'signon.autofillForms',                  'false', 0 );
+    $profile->set_value( 'signon.rememberSignons',                'false', 0 );
+    $profile->set_value( 'startup.homepage_welcome_url', 'about:blank',    1 );
     $profile->set_value( 'startup.homepage_welcome_url.additional',
         'about:blank', 1 );
 
