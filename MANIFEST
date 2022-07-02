@@ -49,6 +49,7 @@ t/data/keepass.csv
 t/data/last_pass_example.csv
 t/00.load.t
 t/01-marionette.t
+t/02-taint.t
 t/pod-coverage.t
 t/pod.t
 t/addons/test.xpi

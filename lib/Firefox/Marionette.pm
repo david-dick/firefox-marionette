@@ -3369,7 +3369,12 @@ sub _visible {
 
 sub _firefox_pid {
     my ($self) = @_;
-    return $self->{_firefox_pid};
+    if (   ( defined $self->{_firefox_pid} )
+        && ( $self->{_firefox_pid} =~ /^(\d+)/smx ) )
+    {
+        return $1;
+    }
+    return;
 }
 
 sub _local_ssh_pid {
