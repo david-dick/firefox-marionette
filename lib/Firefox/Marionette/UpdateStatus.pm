@@ -38,7 +38,7 @@ sub _resolve_to_boolean {
 sub successful {
     my ($self) = @_;
     return ( ( defined $self->{update_status_code} )
-          && ( $self->{update_status_code} eq 'SUCCESSFUL_UPDATE' ) );
+          && ( $self->{update_status_code} eq 'PENDING_UPDATE' ) );
 }
 
 sub update_status_code {

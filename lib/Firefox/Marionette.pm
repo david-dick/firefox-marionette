@@ -1747,55 +1747,17 @@ sub _most_recent_updates_status_path {
     return;
 }
 
-sub _wait_for_updating_to_finish {
-    my ($self) = @_;
-    my $count = 1;
-    my $updating;
-    while ($count) {
-        $count = 0;
-        if (
-            defined(
-                my $most_recent_updates_index =
-                  $self->_most_recent_updates_index()
-            )
-          )
-        {
-            my $update_directory =
-              $self->_updates_directory_exists( $self->_binary_directory() );
-            my $most_recent_update_directory =
-              File::Spec->catfile( $update_directory,
-                $most_recent_updates_index );
-            foreach my $entry (
-                $self->_directory_listing(
-                    { ignore_missing_directory => 1 },
-                    $most_recent_update_directory,
-                    1
-                )
-              )
-            {
-                $count += 1;
-            }
-        }
-        if ($count) {
-            $updating = 1;
-            sleep 1;
-        }
-    }
-    if ($updating) {
-        sleep 1;
-    }
-    return;
-}
-
 sub _get_update_status {
     my ($self) = @_;
     my $updates_status_path = $self->_most_recent_updates_status_path();
     if ($updates_status_path) {
         my $updates_status_handle;
         if ( $self->_ssh() ) {
-            $updates_status_handle =
-              $self->_get_file_via_scp( {}, $updates_status_path,
-                'update.status file' );
+            $updates_status_handle = $self->_get_file_via_scp(
+                { ignore_exit_status => 1 },
+                $updates_status_path,
+                'update.status file'
+            );
         }
         else {
             $updates_status_handle =
@@ -1807,7 +1769,7 @@ sub _get_update_status {
             chomp $status;
             return $status;
         }
-        elsif ( $OS_ERROR == POSIX::ENOENT() ) {
+        elsif ( ( $self->_ssh() ) || ( $OS_ERROR == POSIX::ENOENT() ) ) {
         }
         else {
             Firefox::Marionette::Exception->throw(
@@ -1982,7 +1944,7 @@ let updateManager = new Promise((resolve, reject) => {
             updateStatus["state"] = latestUpdate.state;
             updateStatus["statusText"] = latestUpdate.statusText;
             if ((latestUpdate.state == 'pending') || (latestUpdate.state == 'pending-service')) {
-              updateStatus["updateStatusCode"] = 'SUCCESSFUL_UPDATE';
+              updateStatus["updateStatusCode"] = 'PENDING_UPDATE';
               resolve(updateStatus);
             } else {
               setTimeout(function() { nowPending() }, 500);
@@ -3016,21 +2978,14 @@ sub _updates_directory_exists {
         if (   ($common_appdata_directory)
             && ( !$self->{_cached_per_instance}->{_mozilla_update_directory} ) )
         {
-            foreach my $entry (
-                $self->_directory_listing(
-                    { ignore_missing_directory => 1 },
-                    $common_appdata_directory,
-                    1
-                )
+            if (
+                my $sub_directory = $self->_get_microsoft_updates_sub_directory(
+                    $common_appdata_directory)
               )
             {
-                if ( $entry eq 'Mozilla' ) {
-                    $base_directory =
-                      $self->_remote_catfile( $common_appdata_directory,
-                        'Mozilla' );
-                    $self->{_cached_per_instance}->{_mozilla_update_directory}
-                      = $base_directory;
-                }
+                $base_directory = $sub_directory;
+                $self->{_cached_per_instance}->{_mozilla_update_directory} =
+                  $base_directory;
             }
         }
         if ($base_directory) {
@@ -3049,6 +3004,54 @@ sub _updates_directory_exists {
         }
     }
     return $self->{_cached_per_instance}->{_update_directory};
+}
+
+sub _get_microsoft_updates_sub_directory {
+    my ( $self, $common_appdata_directory ) = @_;
+    my $sub_directory;
+  ENTRY:
+    foreach my $entry (
+        $self->_directory_listing(
+            { ignore_missing_directory => 1 },
+            $common_appdata_directory, 1
+        )
+      )
+    {
+        if ( $entry =~ /^Mozilla/smx ) {
+            my $first_updates_directory =
+              $self->_remote_catfile( $common_appdata_directory,
+                $entry, 'updates' );
+            foreach my $entry (
+                $self->_directory_listing(
+                    { ignore_missing_directory => 1 },
+                    $first_updates_directory,
+                    1
+                )
+              )
+            {
+                if ( $entry =~ /^[[:xdigit:]]{16}$/smx ) {
+                    if (
+                        my $handle = $self->_get_file_via_scp(
+                            { ignore_exit_status => 1 },
+                            $self->_remote_catfile(
+                                $first_updates_directory, $entry,
+                                'updates',                '0',
+                                'update.status'
+                            ),
+                            'update.status file'
+                        )
+                      )
+                    {
+                        $sub_directory =
+                          $self->_remote_catfile( $first_updates_directory,
+                            $entry );
+                        last ENTRY;
+                    }
+                }
+            }
+        }
+    }
+    return $sub_directory;
 }
 
 sub _active_update_xml_path {
@@ -3623,7 +3626,7 @@ sub _launch {
     }
     if ( $self->_ssh() ) {
         $self->{_local_ssh_pid} = $self->_launch_via_ssh(@arguments);
-        $self->_wait_for_updating_to_finish();
+        $self->_wait_for_any_background_update_status();
         return;
     }
     if ( $OSNAME eq 'MSWin32' ) {
@@ -3653,7 +3656,7 @@ sub _launch {
         local $ENV{TMPDIR} = $self->_local_firefox_tmp_directory();
         $self->{_firefox_pid} = $self->_launch_unix(@arguments);
     }
-    $self->_wait_for_updating_to_finish();
+    $self->_wait_for_any_background_update_status();
     return;
 }
 
@@ -4054,8 +4057,7 @@ sub macos_binary_paths {
         }
         if ( $self->{requested_version}->{waterfox} ) {
             return (
-                '/Applications/Waterfox Current.app/Contents/MacOS/waterfox',
-            );
+                '/Applications/Waterfox Current.app/Contents/MacOS/waterfox', );
         }
     }
     return (
@@ -5763,10 +5765,10 @@ sub _system {
     if ( $OSNAME eq 'MSWin32' ) {
         $command_line = $self->_quoting_for_cmd_exe( $binary, @arguments );
         if ( $self->_execute_win32_process( $binary, @arguments ) ) {
-            $result = 0;
+            $result = 1;
         }
         else {
-            $result = 1;
+            $result = 0;
         }
     }
     else {
@@ -5779,8 +5781,10 @@ sub _system {
         if ( my $pid = fork ) {
             waitpid $pid, 0;
             if ( $CHILD_ERROR == 0 ) {
+                $result = 1;
             }
             elsif ( $parameters->{ignore_exit_status} ) {
+                $result = 0;
             }
             else {
                 Firefox::Marionette::Exception->throw(
@@ -5816,7 +5820,7 @@ sub _system {
                 "Failed to fork:$EXTENDED_OS_ERROR");
         }
     }
-    return;
+    return $result;
 }
 
 sub _get_file_via_scp {
@@ -5835,25 +5839,26 @@ sub _get_file_via_scp {
         $self->_scp_arguments(),
         $self->_ssh_address() . ":$remote_path", $local_path,
     );
-    $self->_system( $parameters, 'scp', @arguments );
-    my $handle = FileHandle->new( $local_path, Fcntl::O_RDONLY() );
-    if ($handle) {
-        binmode $handle;
+    if ( $self->_system( $parameters, 'scp', @arguments ) ) {
+        my $handle = FileHandle->new( $local_path, Fcntl::O_RDONLY() );
+        if ($handle) {
+            binmode $handle;
 
-        if (   ( $OSNAME eq 'MSWin32' )
-            || ( $OSNAME eq 'cygwin' ) )
-        {
+            if (   ( $OSNAME eq 'MSWin32' )
+                || ( $OSNAME eq 'cygwin' ) )
+            {
+            }
+            else {
+                unlink $local_path
+                  or Firefox::Marionette::Exception->throw(
+                    "Failed to unlink '$local_path':$EXTENDED_OS_ERROR");
+            }
+            return $handle;
         }
         else {
-            unlink $local_path
-              or Firefox::Marionette::Exception->throw(
-                "Failed to unlink '$local_path':$EXTENDED_OS_ERROR");
+            Firefox::Marionette::Exception->throw(
+                "Failed to open '$local_path' for reading:$EXTENDED_OS_ERROR");
         }
-        return $handle;
-    }
-    else {
-        Firefox::Marionette::Exception->throw(
-            "Failed to open '$local_path' for reading:$EXTENDED_OS_ERROR");
     }
     return;
 }
