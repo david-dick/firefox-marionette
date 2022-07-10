@@ -154,11 +154,18 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
         );
     }
 
+    my @sftp_server_regexs = (
+        map { qr/$_/smx } (
+            quotemeta '/usr/libexec/openssh/sftp-server',    # Redhat, Debian
+            quotemeta '/usr/libexec/sftp-server',            # FreeBSD
+        )
+    );
     my $scp_parameters_regex =
       qr/(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ](?:-P[ ]\d{2}[ ])?(?:\-v[ ])?/smx;
     my $allowed_commands_regex = join q[|],
       qr/"$allowed_binary_regex"[ ]\-\-version/smx,
       @darwin_regexes,
+      @sftp_server_regexs,
       qr/uname[ ][|][|][ ]ver/smx,
       qr/echo[ ]"TMPDIR=\\"\$TMPDIR\\""/smx,
       qr/echo[ ]"TMP=\\"\$TMP\\""/smx,
