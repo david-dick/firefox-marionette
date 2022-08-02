@@ -6338,8 +6338,9 @@ sub _create_capabilities {
         ? $parameters->{platformName}
         : $parameters->{platform},
         rotatable        => $parameters->{rotatable} ? 1 : 0,
-        platform_version => $parameters->{platformVersion},
-        moz_profile      => $parameters->{'moz:profile'}
+        platform_version =>
+          $self->_platform_version_from_capabilities($parameters),
+        moz_profile => $parameters->{'moz:profile'}
           || $self->{_profile_directory},
         moz_process_id => $pid,
         moz_build_id   => $parameters->{'moz:buildID'}
@@ -6348,6 +6349,15 @@ sub _create_capabilities {
         moz_headless => $headless,
         %optional,
     );
+}
+
+sub _platform_version_from_capabilities {
+    my ( $self, $parameters ) = @_;
+    return
+      defined $parameters->{'moz:platformVersion'}
+      ? $parameters->{'moz:platformVersion'}
+      : $parameters->{platformVersion}
+      , # https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/103#marionette
 }
 
 sub _get_optional_capabilities {

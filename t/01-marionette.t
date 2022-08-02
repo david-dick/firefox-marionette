@@ -691,6 +691,9 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
+	if ($major_version > 50) {
+		ok($capabilities->platform_version(), "Firefox Platform version is " . $capabilities->platform_version());
+	}
 	if (($^O eq 'MSWin32') || ($^O eq 'cygwin') || ($^O eq 'darwin') || ($ENV{FIREFOX_NO_UPDATE})) {
 		if ($ENV{FIREFOX_HOST}) {
 			diag("No update checks for $ENV{FIREFOX_HOST}");
