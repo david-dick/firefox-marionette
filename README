@@ -2076,6 +2076,22 @@ SUBROUTINES/METHODS
       <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/70#WebDriver_conformance_Marionette>
       onwards.
 
+ scroll
+
+    accepts a element as the first parameter and scrolls
+    <https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView>
+    to it. The optional second parameter is the same as for the
+    scrollInfoView method.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new(visible => 1)->go('https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView');
+        my $link = $firefox->find_id('content')->find_link('Examples');
+        $firefox->scroll($link);
+        $firefox->scroll($link, 1);
+        $firefox->scroll($link, { behavior => 'smooth', block => 'center' });
+        $firefox->scroll($link, { block => 'end', inline => 'nearest' });
+
  send_alert_text
 
     sends keys to the input field of a currently displayed modal message

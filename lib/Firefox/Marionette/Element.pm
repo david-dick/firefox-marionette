@@ -55,6 +55,11 @@ sub clear {
     return $self->browser()->clear($self);
 }
 
+sub scroll {
+    my ($self) = @_;
+    return $self->browser()->scroll($self);
+}
+
 sub text {
     my ($self) = @_;
     return $self->browser()->text($self);
@@ -741,6 +746,15 @@ accepts a scalar name a parameter.  It returns the current value of the property
 =head2 rect
 
 returns the current L<position and size|Firefox::Marionette::Element::Rect> of the L<element|Firefox::Marionette::Element>
+
+=head2 scroll
+
+accepts an optional parameter which is the same as for the L<scrollInfoView|https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView> method.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new(visible => 1)->go('https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView');
+    $firefox->find_id('content')->find_link('Examples')->scroll({ behavior => 'smooth', block => 'center' });
 
 =head2 send_keys
 

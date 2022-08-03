@@ -7609,6 +7609,32 @@ sub pdf {
     }
 }
 
+sub scroll {
+    my ( $self, $element, $arguments ) = @_;
+    if (
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
+        )
+      )
+    {
+        Firefox::Marionette::Exception->throw(
+            'scroll method requires a Firefox::Marionette::Element parameter');
+    }
+    if ( defined $arguments ) {
+        if ( ref $arguments ) {
+        }
+        else {
+            $arguments = $arguments ? JSON::true() : JSON::false();
+        }
+        $self->script( 'arguments[0].scrollIntoView(arguments[1]);',
+            args => [ $element, $arguments ] );
+    }
+    else {
+        $self->script( 'arguments[0].scrollIntoView();', args => [$element] );
+    }
+    return $self;
+}
+
 sub selfie {
     my ( $self, $element, @remaining ) = @_;
     my $message_id = $self->_new_message_id();
@@ -11231,6 +11257,19 @@ The parameters after the L<element|Firefox::Marionette::Element> parameter are t
 =item * highlights - a reference to a list containing L<elements|Firefox::Marionette::Element> to draw a highlight around.  Not available in L<Firefox 70|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/70#WebDriver_conformance_Marionette> onwards.
 
 =back
+
+=head2 scroll
+
+accepts a L<element|Firefox::Marionette::Element> as the first parameter and L<scrolls|https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView> to it.  The optional second parameter is the same as for the L<scrollInfoView|https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView> method.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new(visible => 1)->go('https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView');
+    my $link = $firefox->find_id('content')->find_link('Examples');
+    $firefox->scroll($link);
+    $firefox->scroll($link, 1);
+    $firefox->scroll($link, { behavior => 'smooth', block => 'center' });
+    $firefox->scroll($link, { block => 'end', inline => 'nearest' });
 
 =head2 send_alert_text
 

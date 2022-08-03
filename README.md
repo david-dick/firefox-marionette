@@ -1513,6 +1513,19 @@ The parameters after the [element](https://metacpan.org/pod/Firefox::Marionette:
 - scroll - scroll to the [element](https://metacpan.org/pod/Firefox::Marionette::Element) supplied
 - highlights - a reference to a list containing [elements](https://metacpan.org/pod/Firefox::Marionette::Element) to draw a highlight around.  Not available in [Firefox 70](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/70#WebDriver_conformance_Marionette) onwards.
 
+## scroll
+
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and [scrolls](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView) to it.  The optional second parameter is the same as for the [scrollInfoView](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView) method.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new(visible => 1)->go('https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView');
+    my $link = $firefox->find_id('content')->find_link('Examples');
+    $firefox->scroll($link);
+    $firefox->scroll($link, 1);
+    $firefox->scroll($link, { behavior => 'smooth', block => 'center' });
+    $firefox->scroll($link, { block => 'end', inline => 'nearest' });
+
 ## send\_alert\_text
 
 sends keys to the input field of a currently displayed modal message box

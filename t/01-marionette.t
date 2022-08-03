@@ -2210,6 +2210,7 @@ SKIP: {
 	}
 	my @links = $firefox->links();
 	ok(scalar @links, "Found " . (scalar @links) . " links in metacpan.org");
+	my $number_of_links = 0;
 	foreach my $link (@links) {
 		if (defined $link->url()) {
 			ok($link->url(), "Link from metacpan.org has a url of " . $link->url());
@@ -2239,6 +2240,8 @@ SKIP: {
 			$count += 1;
 		}
 		ok($count, "Link from metacpan.org has $count attributes");
+		my @scroll_arguments = test_scroll_arguments($number_of_links++);
+		ok($firefox->scroll($link, @scroll_arguments), "Firefox scrolled to the link with arguments of:" . join q[, ], stringify_scroll_arguments(@scroll_arguments));
 	}
 	my @images = $firefox->images();
 	foreach my $image (@images) {
@@ -2820,7 +2823,7 @@ SKIP: {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 36);
 	}
 	my $dummy_object = bless {}, 'What::is::this::object';
-	foreach my $name ('click', 'clear', 'is_selected', 'is_enabled', 'is_displayed', 'type', 'tag_name', 'rect', 'text') {
+	foreach my $name ('click', 'clear', 'is_selected', 'is_enabled', 'is_displayed', 'type', 'tag_name', 'rect', 'text', 'scroll') {
 		eval {
 			$firefox->$name({});
 		};
@@ -2833,6 +2836,10 @@ SKIP: {
 			$firefox->$name($dummy_object);
 		};
 		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->$name() with a non Element blessed parameter produces a Firefox::Marionette::Exception exception");
+		eval {
+			$firefox->$name();
+		};
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->$name() with no parameters produces a Firefox::Marionette::Exception exception");
 	}
 	ok($firefox->find_name('lucky')->click($element), "Clicked the \"I'm Feeling Lucky\" button");
 	diag("Going to Test::More page with a page load strategy of " . ($capabilities->page_load_strategy() || ''));
@@ -3404,6 +3411,41 @@ SKIP: {
 sub display_name {
 	my ($certificate) = @_;
 	return $certificate->display_name() || $certificate->nickname();
+}
+
+sub stringify_scroll_arguments {
+	my (@scroll_arguments) = @_;
+	if (@scroll_arguments) {
+		if (ref $scroll_arguments[0]) {
+			my @attributes;
+			while (my ($key, $value) = each %{$scroll_arguments[0]}) {
+				push @attributes, "$key => '$value'";
+			}
+			return '{' . (join q[, ], @attributes) . '}';
+		} else {
+			return $scroll_arguments[0];
+		}
+	} else {
+		return q[an empty list];
+	}
+}
+
+sub test_scroll_arguments {
+	my ($number_of_links) = @_;
+	my $number_of_options = 5;
+	if (($number_of_links % $number_of_options) == 0) {
+		return ();
+	} elsif (($number_of_links % $number_of_options) == 1) {
+		return (1);
+	} elsif (($number_of_links % $number_of_options) == 2) {
+		return (0);
+	} elsif (($number_of_links % $number_of_options) == 3) {
+		return ({block => 'end'});
+	} elsif (($number_of_links % $number_of_options) == 4) {
+		return ({behavior => 'smooth', block => 'end', inline => 'nearest'});
+	} else {
+		return ();
+	}
 }
 
 SKIP: {
