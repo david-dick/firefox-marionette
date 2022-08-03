@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Getopt::Long();
 use English qw( -no_match_vars );
+use Encode();
 use Firefox::Marionette();
 
 our $VERSION = '1.28';
@@ -13,7 +14,8 @@ sub _NUMBER_OF_SPACES_FOR_CODE_QUOTING_IN_MARKDOWN { return 4 }
 sub _write_common_output {
     my ($certificate) = @_;
     my $indent = q[ ] x _NUMBER_OF_SPACES_FOR_CODE_QUOTING_IN_MARKDOWN();
-    warn $indent . $certificate->subject_name() . "\n";
+    warn $indent
+      . Encode::encode( 'UTF-8', $certificate->subject_name(), 1 ) . "\n";
     warn $indent
       . 'DB Key                   : '
       . $certificate->db_key() . "\n";
@@ -63,14 +65,14 @@ MAIN: {
         if ( $certificate->is_ca_cert() ) {
             my $not_valid_after = $certificate->not_valid_after();
             if ( $not_valid_after < $now ) {
-                warn $certificate->display_name()
+                warn Encode::encode( 'UTF-8', $certificate->display_name(), 1 )
                   . ' expired on '
                   . ( localtime $certificate->not_valid_after() ) . "\n";
                 _write_common_output($certificate);
                 $exit_code = 1;
             }
             elsif ( $certificate->not_valid_before > $now ) {
-                warn $certificate->display_name()
+                warn Encode::encode( 'UTF-8', $certificate->display_name(), 1 )
                   . ' is not valid until '
                   . ( localtime $certificate->not_valid_before() ) . "\n";
                 _write_common_output($certificate);
