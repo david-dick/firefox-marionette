@@ -1199,7 +1199,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - devtools - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.
 - height - set the [height](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
 - har - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.  The [HAR Export Trigger](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/) addon will be loaded into the new session automatically, which means that [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) will not be activated for this session AND this functionality will only be available for Firefox 61+.
-- host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
+- host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name (see the user parameter to change this).  Authentication should be via public keys loaded into the local [ssh-agent](https://man.openbsd.org/ssh-agent).
 - implicit - a shortcut to allow directly providing the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeout#implicit) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - index - a parameter to allow the user to specify a specific firefox instance to survive and reconnect to.  It does not do anything else at the moment.  See the survive parameter.
 - kiosk - start the browser in [kiosk](https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode) mode.
@@ -1216,7 +1216,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 - trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) encoded as a [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5) that will be trusted for this session.
 - timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
-- user - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name.
+- user - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name.  Authentication should be via public keys loaded into the local [ssh-agent](https://man.openbsd.org/ssh-agent).
 - via - specifies a [proxy jump box](https://man.openbsd.org/ssh_config#ProxyJump) to be used to connect to a remote host.  See the host parameter.
 - visible - should firefox be visible on the desktop.  This defaults to "0".  When moving from a X11 platform to another X11 platform, you can set visible to 'local' to enable [X11 forwarding](https://man.openbsd.org/ssh#X).  See [X11 FORWARDING WITH FIREFOX](https://metacpan.org/pod/Firefox::Marionette#X11-FORWARDING-WITH-FIREFOX).
 - waterfox - only allow a binary that looks like a [waterfox version](https://www.waterfox.net/) to be launched.
@@ -1804,6 +1804,8 @@ This module has support for creating and automating an instance of Firefox on a 
     no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
 
 As an example, the [ssh-auth-cmd-marionette](https://metacpan.org/pod/ssh-auth-cmd-marionette) command is provided as part of this distribution.
+
+The module will expect to access private keys via the local [ssh-agent](https://man.openbsd.org/ssh-agent) when authenticating.
 
 When using ssh, Firefox::Marionette will attempt to pass the [TMPDIR](https://en.wikipedia.org/wiki/TMPDIR) environment variable across the ssh connection to make cleanups easier.  In order to allow this, the [AcceptEnv](https://man.openbsd.org/sshd_config#AcceptEnv) setting in the remote [sshd configuration](https://man.openbsd.org/sshd_config) should be set to allow TMPDIR, which will look like;
 

@@ -10886,7 +10886,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * har - begin the session with the L<devtools|https://developer.mozilla.org/en-US/docs/Tools> window opened in a separate window.  The L<HAR Export Trigger|https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/> addon will be loaded into the new session automatically, which means that L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> will not be activated for this session AND this functionality will only be available for Firefox 61+.
 
-=item * host - use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox on the specified host.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.
+=item * host - use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox on the specified host.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.  The user will default to the current user name (see the user parameter to change this).  Authentication should be via public keys loaded into the local L<ssh-agent|https://man.openbsd.org/ssh-agent>.
 
 =item * implicit - a shortcut to allow directly providing the L<implicit|Firefox::Marionette::Timeout#implicit> timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 
@@ -10920,7 +10920,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * timeouts - a shortcut to allow directly providing a L<timeout|Firefox::Marionette::Timeout> object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
 
-=item * user - if the "host" parameter is also set, use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox with the specified user.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.  The user will default to the current user name.
+=item * user - if the "host" parameter is also set, use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox with the specified user.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.  The user will default to the current user name.  Authentication should be via public keys loaded into the local L<ssh-agent|https://man.openbsd.org/ssh-agent>.
 
 =item * via - specifies a L<proxy jump box|https://man.openbsd.org/ssh_config#ProxyJump> to be used to connect to a remote host.  See the host parameter.
 
@@ -11549,6 +11549,8 @@ This module has support for creating and automating an instance of Firefox on a 
     no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
 
 As an example, the L<ssh-auth-cmd-marionette|ssh-auth-cmd-marionette> command is provided as part of this distribution.
+
+The module will expect to access private keys via the local L<ssh-agent|https://man.openbsd.org/ssh-agent> when authenticating.
 
 When using ssh, Firefox::Marionette will attempt to pass the L<TMPDIR|https://en.wikipedia.org/wiki/TMPDIR> environment variable across the ssh connection to make cleanups easier.  In order to allow this, the L<AcceptEnv|https://man.openbsd.org/sshd_config#AcceptEnv> setting in the remote L<sshd configuration|https://man.openbsd.org/sshd_config> should be set to allow TMPDIR, which will look like;
 

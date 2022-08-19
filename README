@@ -1568,7 +1568,10 @@ SUBROUTINES/METHODS
 
       * host - use ssh <https://man.openbsd.org/ssh.1> to create and
       automate firefox on the specified host. See REMOTE AUTOMATION OF
-      FIREFOX VIA SSH.
+      FIREFOX VIA SSH. The user will default to the current user name (see
+      the user parameter to change this). Authentication should be via
+      public keys loaded into the local ssh-agent
+      <https://man.openbsd.org/ssh-agent>.
 
       * implicit - a shortcut to allow directly providing the implicit
       timeout, instead of needing to use timeouts from the capabilities
@@ -1648,7 +1651,9 @@ SUBROUTINES/METHODS
       * user - if the "host" parameter is also set, use ssh
       <https://man.openbsd.org/ssh.1> to create and automate firefox with
       the specified user. See REMOTE AUTOMATION OF FIREFOX VIA SSH. The
-      user will default to the current user name.
+      user will default to the current user name. Authentication should be
+      via public keys loaded into the local ssh-agent
+      <https://man.openbsd.org/ssh-agent>.
 
       * via - specifies a proxy jump box
       <https://man.openbsd.org/ssh_config#ProxyJump> to be used to connect
@@ -2443,6 +2448,9 @@ REMOTE AUTOMATION OF FIREFOX VIA SSH
 
     As an example, the ssh-auth-cmd-marionette command is provided as part
     of this distribution.
+
+    The module will expect to access private keys via the local ssh-agent
+    <https://man.openbsd.org/ssh-agent> when authenticating.
 
     When using ssh, Firefox::Marionette will attempt to pass the TMPDIR
     <https://en.wikipedia.org/wiki/TMPDIR> environment variable across the
