@@ -132,6 +132,7 @@ s/^(${tmp_directory_regex}\/firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx
       qr/(?:[ ]\-width[ ]\d{1,8})?/smx,
       qr/(?:[ ]\-height[ ]\d{1,8})?/smx,
       qr/(?:[ ]\-\-jsconsole)?/smx,
+      qr/(?:[ ]\-MOZ_LOG=[[:alnum:],:]+)?/smx,
       qr/(?:[ ]-safe\-mode)?/smx,
       qr/(?:[ ]\-headless)?/smx,
       qr/[ ]\-profile[ ]$root_dir_regex\/profile/smx,

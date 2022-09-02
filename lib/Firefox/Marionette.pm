@@ -2482,6 +2482,9 @@ sub _setup_arguments {
     if ( defined $self->{console} ) {
         push @arguments, '--jsconsole';
     }
+    if (( defined $self->{debug} ) && ($self->{debug} !~ /^[01]$/smx))  {
+        push @arguments, '-MOZ_LOG=' . $self->{debug};
+    }
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
     if ( $parameters{restart} ) {
@@ -10876,7 +10879,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.  This defaults to "0" (off).
 
-=item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).  This setting may be updated by the L<debug|Firefox::Marionette#debug> method.
+=item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).  This setting may be updated by the L<debug|Firefox::Marionette#debug> method.  If this option is not a boolean (0|1), the value will be passed to the L<MOZ_LOG|https://firefox-source-docs.mozilla.org/networking/http/logging.html> option on the command line of the firefox binary to allow extra levels of debug.
 
 =item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched. This defaults to "0" (off).
 
@@ -10937,7 +10940,7 @@ This method returns a new C<Firefox::Marionette> object, connected to an instanc
     use Firefox::Marionette();
 
     my $remote_darwin_firefox = Firefox::Marionette->new(
-                     debug => 1,
+                     debug => 'timestamp,nsHttp:1',
                      host => '10.1.2.3',
                      trust => '/path/to/root_ca.pem',
                      binary => '/Applications/Firefox.app/Contents/MacOS/firefox'

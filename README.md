@@ -1194,7 +1194,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - capabilities - use the supplied [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) object, for example to set whether the browser should [accept insecure certs](https://metacpan.org/pod/Firefox::Marionette::Capabilities#accept_insecure_certs) or whether the browser should use a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy).
 - chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, [connections to firefox.settings.services.mozilla.com will still be made](https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13).  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via [/etc/hosts](https://en.wikipedia.org/wiki//etc/hosts).  NOTE: that this option only works when profile\_name/profile is not specified.
 - console - show the [browser console](https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/) when the browser is launched.  This defaults to "0" (off).
-- debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).  This setting may be updated by the [debug](https://metacpan.org/pod/Firefox::Marionette#debug) method.
+- debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).  This setting may be updated by the [debug](https://metacpan.org/pod/Firefox::Marionette#debug) method.  If this option is not a boolean (0|1), the value will be passed to the [MOZ\_LOG](https://firefox-source-docs.mozilla.org/networking/http/logging.html) option on the command line of the firefox binary to allow extra levels of debug.
 - developer - only allow a [developer edition](https://www.mozilla.org/en-US/firefox/developer/) to be launched. This defaults to "0" (off).
 - devtools - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.
 - height - set the [height](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
@@ -1227,7 +1227,7 @@ This method returns a new `Firefox::Marionette` object, connected to an instance
     use Firefox::Marionette();
 
     my $remote_darwin_firefox = Firefox::Marionette->new(
-                     debug => 1,
+                     debug => 'timestamp,nsHttp:1',
                      host => '10.1.2.3',
                      trust => '/path/to/root_ca.pem',
                      binary => '/Applications/Firefox.app/Contents/MacOS/firefox'
