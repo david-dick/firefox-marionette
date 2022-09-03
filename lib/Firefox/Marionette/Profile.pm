@@ -227,6 +227,7 @@ sub new {
         $profile->set_value( 'app.update.staging.enabled', 'false',      0 );
         $profile->set_value( 'app.update.timer',           '131400000',  0 );
         $profile->set_value( 'beacon.enabled',             'false',      0 );
+        $profile->set_value( 'browser.aboutConfig.showWarning', 'false', 0 );
         $profile->set_value( 'browser.aboutHomeSnippets.updateUrl', q[], 1 );
         $profile->set_value( 'browser.beacon.enabled',          'false', 0 );
         $profile->set_value( 'browser.casting.enabled',         'false', 0 );
@@ -290,8 +291,12 @@ sub new {
         $profile->set_value( 'browser.uitour.enabled',            'false', 0 );
         $profile->set_value( 'datareporting.healthreport.uploadEnabled',
             'false', 0 );
-        $profile->set_value( 'dom.battery.enabled',                'false', 0 );
-        $profile->set_value( 'extensions.blocklist.enabled',       'false', 0 );
+        $profile->set_value( 'dom.battery.enabled',          'false', 0 );
+        $profile->set_value( 'extensions.blocklist.enabled', 'false', 0 );
+        $profile->set_value( 'extensions.formautofill.addresses.enabled',
+            'false', 0 );
+        $profile->set_value( 'extensions.formautofill.creditCards.enabled',
+            'false', 0 );
         $profile->set_value( 'extensions.pocket.enabled',          'false', 0 );
         $profile->set_value( 'extensions.pocket.site',             q[],     1 );
         $profile->set_value( 'extensions.getAddons.cache.enabled', 'false', 0 );
@@ -313,10 +318,20 @@ sub new {
         $profile->set_value( 'media.navigator.enabled',    'false', 0 );
         $profile->set_value( 'network.captive-portal-service.enabled',
             'false', 0 );
-        $profile->set_value( 'network.cookie.lifetimePolicy', '2', 0 );
+        $profile->set_value( 'network.cookie.lifetimePolicy',       '2',    0 );
+        $profile->set_value( 'privacy.clearOnShutdown.downloads',   'true', 0 );
+        $profile->set_value( 'privacy.clearOnShutdown.formdata',    'true', 0 );
+        $profile->set_value( 'privacy.clearOnShutdown.history',     'true', 0 );
+        $profile->set_value( 'privacy.clearOnShutdown.offlineApps', 'true', 0 );
+        $profile->set_value( 'privacy.clearOnShutdown.openWindows', 'true', 0 );
+        $profile->set_value( 'privacy.clearOnShutdown.sessions',    'true', 0 );
+        $profile->set_value( 'privacy.clearOnShutdown.siteSettings', 'true',
+            0 );
+        $profile->set_value( 'privacy.donottrackheader.enabled',   'true', 0 );
+        $profile->set_value( 'privacy.trackingprotection.enabled', 'true', 0 );
         $profile->set_value(
             'privacy.trackingprotection.fingerprinting.enabled',
-            'false', 0 );
+            'true', 0 );
         $profile->set_value( 'privacy.trackingprotection.pbmode.enabled',
             'false', 0 );
         $profile->set_value( 'profile.enable_profile_migration', 'false', 0 );
@@ -337,7 +352,9 @@ sub new {
 'services.sync.prefs.sync.privacy.trackingprotection.pbmode.enabled',
             'false', 0
         );
-        $profile->set_value( 'signon.rememberSignons',            'false', 0 );
+        $profile->set_value( 'signon.rememberSignons', 'false', 0 );
+        $profile->set_value( 'signon.management.page.breach-alerts.enabled',
+            'false', 0 );
         $profile->set_value( 'toolkit.telemetry.archive.enabled', 'false', 0 );
         $profile->set_value( 'toolkit.telemetry.enabled',         'false', 0 );
         $profile->set_value( 'toolkit.telemetry.rejected',        'true',  0 );
