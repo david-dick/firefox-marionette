@@ -2482,7 +2482,7 @@ sub _setup_arguments {
     if ( defined $self->{console} ) {
         push @arguments, '--jsconsole';
     }
-    if (( defined $self->{debug} ) && ($self->{debug} !~ /^[01]$/smx))  {
+    if ( ( defined $self->{debug} ) && ( $self->{debug} !~ /^[01]$/smx ) ) {
         push @arguments, '-MOZ_LOG=' . $self->{debug};
     }
     push @arguments, $self->_check_addons(%parameters);
