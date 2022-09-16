@@ -9266,13 +9266,17 @@ sub _get_xpi_path {
               File::Spec->splitpath( $path, 1 );
             $base_directory = $path;
         }
-        else {
+        elsif ( FileHandle->new( $path, Fcntl::O_RDONLY() ) ) {
             ( $volume, $directories, $name ) = File::Spec->splitpath($path);
             $base_directory = File::Spec->catdir( $volume, $directories );
             if ( $OSNAME eq 'cygwin' ) {
                 $base_directory =~
                   s/^\/\//\//smx;   # seems to be a bug in File::Spec for cygwin
             }
+        }
+        else {
+            Firefox::Marionette::Exception->throw(
+                "Failed to find extension $path:$EXTENDED_OS_ERROR");
         }
         my @directories = File::Spec->splitdir($directories);
         if ( $directories[-1] eq q[] ) {

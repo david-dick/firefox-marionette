@@ -3152,6 +3152,11 @@ SKIP: {
 		$result = undef;
 	}
 	eval {
+		$firefox->install(q[t/addons/not_exists_] . int(rand(50000)));
+	};
+	chomp $@;
+	ok($@ =~ /Failed[ ]to[ ]find[ ]extension/smx, "\$firefox->install() throws an exception when asked to install a non-existant extension:$@");
+	eval {
 		$result = $firefox->accept_connections(1);
 	};
 	SKIP: {
