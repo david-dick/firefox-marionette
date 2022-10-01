@@ -67,15 +67,16 @@ Version 1.28
 
     say $waterfox->html();
 
-    $waterfox->find_class('container-fluid')->find_id('search-input')->type('Test::More');
+    $waterfox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
 
-    say "Height of search box is " . $waterfox->find_class('container-fluid')->css('height');
+    say "Height of page-content div is " . $waterfox->find_class('page-content')->css('height');
 
     my $file_handle = $waterfox->selfie();
 
-    $waterfox->find('//button[@name="lucky"]')->click();
+    $waterfox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
-    $waterfox->await(sub { $waterfox->interactive() && $waterfox->find_partial('Download') })->click();
+    $waterfox->find_partial('Download')->click();
+
 
 =head1 DESCRIPTION
 

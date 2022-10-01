@@ -17,15 +17,15 @@ Version 1.28
 
     say $firefox->html();
 
-    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+    $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
 
-    say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
+    say "Height of page-content div is " . $firefox->find_class('page-content')->css('height');
 
     my $file_handle = $firefox->selfie();
 
-    $firefox->find('//button[@name="lucky"]')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
-    $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+    $firefox->find_partial('Download')->click();
 
 # DESCRIPTION
 
@@ -192,9 +192,7 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     $firefox->find_id('metacpan_search-input')->type('Test::More');
 
-    $firefox->find_name('lucky')->click();
-
-    $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
 ## back
 
@@ -222,9 +220,9 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     $firefox->find_id('metacpan_search-input')->type('Test::More');
 
-    $firefox->find_name('lucky')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
-    $firefox->bye(sub { $firefox->find_name('lucky') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+    $firefox->bye(sub { $firefox->find_name('metacpan_search-input') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
 ## capabilities
 
@@ -498,11 +496,11 @@ accepts a filesystem path and returns a matching filehandle.  This is trivial fo
 
     my $firefox = Firefox::Marionette->new( host => '10.1.2.3' )->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+    $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
 
-    $firefox->find('//button[@name="lucky"]')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
-    $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+    $firefox->find_partial('Download')->click();
 
     while(!$firefox->downloads()) { sleep 1 }
 
@@ -523,11 +521,11 @@ returns true if any files in [downloads](https://metacpan.org/pod/Firefox::Mario
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+    $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
 
-    $firefox->find('//button[@name="lucky"]')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
-    $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+    $firefox->find_partial('Download')->click();
 
     while(!$firefox->downloads()) { sleep 1 }
 
@@ -546,11 +544,11 @@ returns a list of file paths (including partial downloads) of downloads during t
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+    $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
 
-    $firefox->find('//button[@name="lucky"]')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
-    $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+    $firefox->find_partial('Download')->click();
 
     while(!$firefox->downloads()) { sleep 1 }
 
@@ -793,7 +791,7 @@ returns a hashref representing the [http archive](https://en.wikipedia.org/wiki/
     $firefox->go("http://metacpan.org/");
 
     $firefox->find('//input[@id="metacpan_search-input"]')->type('Test::More');
-    $firefox->find_name('lucky')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
     my $har = Archive::Har->new();
     $har->hashref($firefox->har());
@@ -991,7 +989,7 @@ returns true if `document.readyState === "interactive"` or if [loaded](https://m
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     $firefox->find_id('metacpan_search-input')->type('Type::More');
-    $firefox->find('//button[@name="lucky"]')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     while(!$firefox->interactive()) {
         # redirecting to Test::More page
     }
@@ -1056,7 +1054,7 @@ returns true if `document.readyState === "complete"`
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     $firefox->find_id('metacpan_search-input')->type('Type::More');
-    $firefox->find('//button[@name="lucky"]')->click();
+    $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     while(!$firefox->loaded()) {
         # redirecting to Test::More page
     }
@@ -1487,7 +1485,7 @@ Returns the result of the javascript function.  When a parameter is an [element]
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    if (my $element = $firefox->script('return document.getElementsByName("lucky")[0];')) {
+    if (my $element = $firefox->script('return document.getElementsByName("metacpan_search-input")[0];')) {
         say "Lucky find is a " . $element->tag_name() . " element";
     }
 

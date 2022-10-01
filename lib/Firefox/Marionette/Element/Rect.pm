@@ -48,8 +48,9 @@ Version 1.28
     use v5.10;
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
-    my $rect = $firefox->find('//button[@name="lucky"]')->rect();
+    my $rect = $firefox->find_class('page-content');
     say "Current height of the Lucky button " . $rect->height();
+    say "Height of page-content div is " . $rect->height();
 
 =head1 DESCRIPTION
 

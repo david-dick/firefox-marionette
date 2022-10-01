@@ -410,12 +410,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     $div->find('//input[@id="metacpan_search-input"]')->type('Test::More');
 
     # OR in list context
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     foreach my $element ($div->find('//input[@id="metacpan_search-input"]')) {
         $element->type('Test::More');
     }
@@ -433,12 +433,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     $div->find_id('metacpan_search-input')->type('Test::More');
 
     # OR in list context
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     foreach my $element ($div->find_id('metacpan_search-input')) {
         $element->type('Test::More');
     }
@@ -456,12 +456,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     $div->find_name('q')->type('Test::More');
 
     # OR in list context
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     foreach my $element ($div->find_name('q')) {
         $element->type('Test::More');
     }
@@ -479,12 +479,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     $div->find_class('form-control home-metacpan_search-input')->type('Test::More');
 
     # OR in list context
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     foreach my $element ($div->find_class('form-control home-metacpan_search-input')) {
         $element->type('Test::More');
     }
@@ -502,12 +502,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     $div->find_selector('input.home-metacpan_search-input')->type('Test::More');
 
     # OR in list context
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     foreach my $element ($div->find_selector('input.home-metacpan_search-input')) {
         $element->type('Test::More');
     }
@@ -525,12 +525,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     my $input = $div->find_tag('input');
 
     # OR in list context
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     foreach my $element ($div->find_tag('input')) {
         # do something
     }
@@ -548,12 +548,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('container-fluid');
+    my $div = $firefox->find_class('footer-links');
     $div->find_link('API')->click();
 
     # OR in list context
 
-    my $div = $firefox->find_class('container-fluid');
+    my $div = $firefox->find_class('footer-links');
     foreach my $element ($div->find_link('API')) {
         $element->click();
     }
@@ -571,12 +571,12 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('container-fluid');
+    my $div = $firefox->find_class('footer-links');
     $div->find_partial('AP')->click();
 
     # OR in list context
 
-    my $div = $firefox->find_class('container-fluid');
+    my $div = $firefox->find_class('footer-links');
     foreach my $element ($div->find_partial('AP')) {
         $element->click();
     }
@@ -593,7 +593,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     if (my $element = $div->has('//input[@id="metacpan_search-input"]')) {
         $element->type('Test::More');
     }
@@ -610,7 +610,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     if (my $element = $div->has_id('metacpan_search-input')) {
         $element->type('Test::More');
     }
@@ -627,7 +627,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     if (my $element = $div->has_name('q')) {
         $element->type('Test::More');
     }
@@ -644,7 +644,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     if (my $element = $div->has_class('form-control home-metacpan_search-input')) {
         $element->type('Test::More');
     }
@@ -661,7 +661,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     if (my $element = $div->has_selector('input.home-metacpan_search-input')) {
         $element->type('Test::More');
     }
@@ -678,7 +678,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('main-content');
+    my $div = $firefox->find_class('page-content');
     if (my $element = $div->has_tag('input');
         # do something
     }
@@ -695,7 +695,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('container-fluid');
+    my $div = $firefox->find_class('footer-links');
     if (my $element = $div->has_link('API')->click();
         $element->click();
     }
@@ -712,7 +712,7 @@ This method is subject to the L<implicit|Firefox::Marionette::Timeouts#implicit>
 
     my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
 
-    my $div = $firefox->find_class('container-fluid');
+    my $div = $firefox->find_class('footer-links');
     if (my $element = $div->has_partial('AP')->click();
         $element->click();
     }

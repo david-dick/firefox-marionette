@@ -18,15 +18,15 @@ SYNOPSIS
     
         say $firefox->html();
     
-        $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+        $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
     
-        say "Height of search box is " . $firefox->find_class('container-fluid')->css('height');
+        say "Height of page-content div is " . $firefox->find_class('page-content')->css('height');
     
         my $file_handle = $firefox->selfie();
     
-        $firefox->find('//button[@name="lucky"]')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     
-        $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+        $firefox->find_partial('Download')->click();
 
 DESCRIPTION
 
@@ -258,9 +258,7 @@ SUBROUTINES/METHODS
     
         $firefox->find_id('metacpan_search-input')->type('Test::More');
     
-        $firefox->find_name('lucky')->click();
-    
-        $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
 
  back
 
@@ -297,9 +295,9 @@ SUBROUTINES/METHODS
     
         $firefox->find_id('metacpan_search-input')->type('Test::More');
     
-        $firefox->find_name('lucky')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     
-        $firefox->bye(sub { $firefox->find_name('lucky') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+        $firefox->bye(sub { $firefox->find_name('metacpan_search-input') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
  capabilities
 
@@ -632,11 +630,11 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new( host => '10.1.2.3' )->go('https://metacpan.org/');
     
-        $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+        $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
     
-        $firefox->find('//button[@name="lucky"]')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     
-        $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+        $firefox->find_partial('Download')->click();
     
         while(!$firefox->downloads()) { sleep 1 }
     
@@ -657,11 +655,11 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     
-        $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+        $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
     
-        $firefox->find('//button[@name="lucky"]')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     
-        $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+        $firefox->find_partial('Download')->click();
     
         while(!$firefox->downloads()) { sleep 1 }
     
@@ -681,11 +679,11 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     
-        $firefox->find_class('container-fluid')->find_id('metacpan_search-input')->type('Test::More');
+        $firefox->find_class('page-content')->find_id('metacpan_search-input')->type('Test::More');
     
-        $firefox->find('//button[@name="lucky"]')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     
-        $firefox->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
+        $firefox->find_partial('Download')->click();
     
         while(!$firefox->downloads()) { sleep 1 }
     
@@ -994,7 +992,7 @@ SUBROUTINES/METHODS
         $firefox->go("http://metacpan.org/");
     
         $firefox->find('//input[@id="metacpan_search-input"]')->type('Test::More');
-        $firefox->find_name('lucky')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
     
         my $har = Archive::Har->new();
         $har->hashref($firefox->har());
@@ -1256,7 +1254,7 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_id('metacpan_search-input')->type('Type::More');
-        $firefox->find('//button[@name="lucky"]')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
         while(!$firefox->interactive()) {
             # redirecting to Test::More page
         }
@@ -1340,7 +1338,7 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
         $firefox->find_id('metacpan_search-input')->type('Type::More');
-        $firefox->find('//button[@name="lucky"]')->click();
+        $firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click();
         while(!$firefox->loaded()) {
             # redirecting to Test::More page
         }
@@ -2043,7 +2041,7 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new()->go('https://metacpan.org/');
     
-        if (my $element = $firefox->script('return document.getElementsByName("lucky")[0];')) {
+        if (my $element = $firefox->script('return document.getElementsByName("metacpan_search-input")[0];')) {
             say "Lucky find is a " . $element->tag_name() . " element";
         }
     
