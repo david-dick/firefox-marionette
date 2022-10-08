@@ -1633,6 +1633,19 @@ _JS_
     return $self->_translate_firefox_logins( @{$result} );
 }
 
+sub _untaint_binary {
+    my ( $self, $binary, $remote_path_to_binary ) = @_;
+    if ( defined $remote_path_to_binary ) {
+        my $quoted_binary = quotemeta $binary;
+        if ( $remote_path_to_binary =~
+            /^([[:alnum:]\-\/\\:()~]*$quoted_binary)$/smx )
+        {
+            return $1;
+        }
+    }
+    return;
+}
+
 sub _binary_directory {
     my ($self) = @_;
     if ( exists $self->{_binary_directory} ) {
@@ -1658,9 +1671,13 @@ sub _binary_directory {
                   File::Spec::Unix->catdir( $volume, $directories );
             }
             else {
-                my $remote_path_to_binary =
-                  $self->_execute_via_ssh( { ignore_exit_status => 1 },
-                    'which', $binary );
+                my $remote_path_to_binary = $self->_untaint_binary(
+                    $binary,
+                    $self->_execute_via_ssh(
+                        { ignore_exit_status => 1 },
+                        'which', $binary
+                    )
+                );
                 if ( defined $remote_path_to_binary ) {
                     chomp $remote_path_to_binary;
                     if (
@@ -5835,9 +5852,6 @@ sub _get_file_via_scp {
     if ( $OSNAME eq 'MSWin32' ) {
         $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
-    else {
-        $remote_path = "\"$remote_path\"";
-    }
     my @arguments = (
         $self->_scp_arguments(),
         $self->_ssh_address() . ":$remote_path", $local_path,
@@ -5896,9 +5910,6 @@ sub _put_file_via_scp {
         "Failed to close $local_path:$EXTENDED_OS_ERROR");
     if ( $OSNAME eq 'MSWin32' ) {
         $remote_path = $self->_quoting_for_cmd_exe($remote_path);
-    }
-    else {
-        $remote_path = "\"$remote_path\"";
     }
     my @arguments = (
         $self->_scp_arguments(),
