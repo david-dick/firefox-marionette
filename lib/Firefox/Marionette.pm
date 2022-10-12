@@ -3039,8 +3039,7 @@ sub _get_microsoft_updates_sub_directory {
     {
         if ( $entry =~ /^Mozilla/smx ) {
             my $first_updates_directory =
-              $self->_remote_catfile( $common_appdata_directory,
-                $entry, 'updates' );
+              $self->_catfile( $common_appdata_directory, $entry, 'updates' );
             foreach my $entry (
                 $self->_directory_listing(
                     { ignore_missing_directory => 1 },
@@ -3051,20 +3050,15 @@ sub _get_microsoft_updates_sub_directory {
             {
                 if ( $entry =~ /^[[:xdigit:]]{16}$/smx ) {
                     if (
-                        my $handle = $self->_get_file_via_scp(
-                            { ignore_exit_status => 1 },
-                            $self->_remote_catfile(
-                                $first_updates_directory, $entry,
-                                'updates',                '0',
-                                'update.status'
-                            ),
-                            'update.status file'
+                        my $handle = $self->_open_handle_for_reading(
+                            $first_updates_directory, $entry,
+                            'updates',                '0',
+                            'update.status'
                         )
                       )
                     {
                         $sub_directory =
-                          $self->_remote_catfile( $first_updates_directory,
-                            $entry );
+                          $self->_catfile( $first_updates_directory, $entry );
                         last ENTRY;
                     }
                 }
@@ -3072,6 +3066,28 @@ sub _get_microsoft_updates_sub_directory {
         }
     }
     return $sub_directory;
+}
+
+sub _open_handle_for_reading {
+    my ( $self, @path ) = @_;
+    my $path = $self->_catfile(@path);
+    if ( $self->_ssh() ) {
+        if (
+            my $handle = $self->_get_file_via_scp(
+                { ignore_exit_status => 1 },
+                $path, $path[-1], ' file'
+            )
+          )
+        {
+            return $handle;
+        }
+    }
+    else {
+        if ( my $handle = FileHandle->new( $path, Fcntl::O_RDONLY() ) ) {
+            return $handle;
+        }
+    }
+    return;
 }
 
 sub _active_update_xml_path {
