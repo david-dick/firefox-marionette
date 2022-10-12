@@ -30,6 +30,7 @@ Makefile.PL
 MANIFEST			This list of files
 LICENSE
 README
+README.md
 ca-bundle-for-firefox
 check-firefox-certificate-authorities
 setup-for-firefox-marionette-build.sh
@@ -50,6 +51,7 @@ t/data/last_pass_example.csv
 t/00.load.t
 t/01-marionette.t
 t/02-taint.t
+t/manifest.t
 t/pod-coverage.t
 t/pod.t
 t/addons/test.xpi
