@@ -1640,6 +1640,10 @@ returns the current [title](https://developer.mozilla.org/en-US/docs/Web/HTML/El
 
 accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and a string as the second parameter.  It sends the string to the specified [element](https://metacpan.org/pod/Firefox::Marionette::Element) in the current page, such as filling out a text box. This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## uname
+
+returns the $^O ($OSNAME) compatible string to describe the plaform where firefox is running.
+
 ## update
 
 queries the Update Services and applies any available updates.  [Restarts](https://metacpan.org/pod/Firefox::Marionette#restart) the browser if necessary to complete the update.  This function is experimental and currently has not been successfully tested on Win32 or MacOS.

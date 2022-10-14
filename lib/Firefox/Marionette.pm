@@ -8512,6 +8512,16 @@ sub _get_remote_root_directory {
     return $remote_root_directory;
 }
 
+sub uname {
+    my ($self) = @_;
+    if ( my $ssh = $self->_ssh() ) {
+        return $self->_remote_uname();
+    }
+    else {
+        return $OSNAME;
+    }
+}
+
 sub _get_remote_environment_command {
     my ( $self, $name ) = @_;
     my $command;
@@ -11418,6 +11428,10 @@ returns the current L<title|https://developer.mozilla.org/en-US/docs/Web/HTML/El
 =head2 type
 
 accepts an L<element|Firefox::Marionette::Element> as the first parameter and a string as the second parameter.  It sends the string to the specified L<element|Firefox::Marionette::Element> in the current page, such as filling out a text box. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 uname
+
+returns the $^O ($OSNAME) compatible string to describe the plaform where firefox is running.
 
 =head2 update
 

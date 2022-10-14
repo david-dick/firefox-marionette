@@ -2247,6 +2247,11 @@ SUBROUTINES/METHODS
     page, such as filling out a text box. This method returns itself to aid
     in chaining methods.
 
+ uname
+
+    returns the $^O ($OSNAME) compatible string to describe the plaform
+    where firefox is running.
+
  update
 
     queries the Update Services and applies any available updates. Restarts

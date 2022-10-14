@@ -1852,6 +1852,7 @@ SKIP: {
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
+my $uname;
 SKIP: {
 	diag("Starting new firefox for testing custom headers");
 	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
@@ -1889,6 +1890,8 @@ SKIP: {
 		skip("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version(), 3);
 	}
 	ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
+	$uname = $firefox->uname();
+	ok($uname, "Firefox is currently running in $uname");
 	if ($ENV{RELEASE_TESTING}) { # har sometimes hangs and sometimes metacpan.org fails certificate checks.  for example. http://www.cpantesters.org/cpan/report/e71bfb3b-7413-1014-98e6-045206f7812f
 		if (!$tls_tests_ok) {
 			skip("TLS test infrastructure seems compromised", 5);
@@ -1950,9 +1953,9 @@ SKIP: {
 				last GET_HAR;
 			}
 		}
-		if (($^O eq 'cygwin') || ($^O eq 'MSWin32')) {
+		if (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
 			TODO: {
-				local $TODO = "$^O can fail this test";
+				local $TODO = "$uname can fail this test";
 				ok($correct == 4, "Correct headers have been set");
 			}
 		} else {
@@ -3744,12 +3747,12 @@ SKIP: {
 		if (($major_version < 50) && (!defined $window_rect)) {
 			skip("Firefox $major_version does not appear to support the \$firefox->window_rect() method", 2);
 		}
-		local $TODO = $^O eq 'linux' ? '' : "Initial width/height parameters not entirely stable in $^O";
+		local $TODO = $uname eq 'linux' ? '' : "Initial width/height parameters not entirely stable in $uname";
 		ok($window_rect->width() >= 800, "Window has a width of 800 (" . $window_rect->width() . ")");
 		ok($window_rect->height() >= 600, "Window has a height of 600 (" . $window_rect->height() . ")");
 		if (($window_rect->width() >= 800) && ($window_rect->height() >= 600)) {
 		} else {
-			diag("Width/Height for $^O set to 800x600, but returned " . $window_rect->width() . "x" . $window_rect->height());
+			diag("Width/Height for $uname set to 800x600, but returned " . $window_rect->width() . "x" . $window_rect->height());
 		}
 	}
 	my $capabilities = $firefox->capabilities();
@@ -3763,30 +3766,30 @@ SKIP: {
 			my $other = $firefox->script(q[return ("WebGLRenderingContext" in window) ? true : false;]);
 			my $webgl_ok = 1;
 			if ($webgl2) {
-				diag("WebGL (webgl2) is working correctly for " . $capabilities->browser_version() . " on $^O");
+				diag("WebGL (webgl2) is working correctly for " . $capabilities->browser_version() . " on $uname");
 			} elsif ($experimental) {
-				diag("WebGL (experimental) is working correctly for " . $capabilities->browser_version() . " on $^O");
+				diag("WebGL (experimental) is working correctly for " . $capabilities->browser_version() . " on $uname");
 			} elsif ($other) {
-				diag("WebGL (WebGLRenderingContext) is providing some sort of support for " . $capabilities->browser_version() . " on $^O");
+				diag("WebGL (WebGLRenderingContext) is providing some sort of support for " . $capabilities->browser_version() . " on $uname");
 			} elsif (($^O eq 'cygwin') ||
 				($^O eq 'darwin') ||
 				($^O eq 'MSWin32'))
 			{
 				$webgl_ok = 0;
-				diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O");
+				diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $uname");
 			} else {
 				my $glxinfo = `glxinfo 2>&1`;
 				$glxinfo =~ s/\s+/ /smxg;
 				if ($? == 0) {
 					if ($glxinfo =~ /^Error:/smx) {
-						diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O, probably because glxinfo has failed:$glxinfo");
+						diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $uname, probably because glxinfo has failed:$glxinfo");
 					} else {
 						$webgl_ok = 0;
-						diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O but glxinfo has run successfully:$glxinfo");
+						diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $uname but glxinfo has run successfully:$glxinfo");
 					}
 				} else {
 					$webgl_ok = 0;
-					diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $^O and glxinfo cannot be run:$?");
+					diag("WebGL is NOT working correctly for " . $capabilities->browser_version() . " on $uname and glxinfo cannot be run:$?");
 				}
 			}
 			ok($webgl_ok, "WebGL is enabled when visible and addons are turned on");
