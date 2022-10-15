@@ -2507,6 +2507,58 @@ sub _restart_profile_directory {
     return $profile_directory;
 }
 
+sub _get_remote_profile_directory {
+    my ( $self, $profile_name ) = @_;
+    my $profile_directory;
+    if (   ( $self->_remote_uname() eq 'cygwin' )
+        || ( $self->_remote_uname() eq 'MSWin32' ) )
+    {
+        my $appdata_directory =
+          $self->_get_remote_environment_variable_via_ssh('APPDATA');
+        if ( $self->_remote_uname() eq 'cygwin' ) {
+            $appdata_directory =~ s/\\/\//smxg;
+            $appdata_directory =
+              $self->_execute_via_ssh( {}, 'cygpath', '-u',
+                $appdata_directory );
+            chomp $appdata_directory;
+        }
+        my $profile_ini_directory =
+          $self->_remote_catfile( $appdata_directory, 'Mozilla', 'Firefox' );
+        my $profile_ini_path =
+          $self->_remote_catfile( $profile_ini_directory, 'profiles.ini' );
+        my $handle = $self->_get_file_via_scp( {}, $profile_ini_path,
+            'profiles.ini file' );
+        my $config = Config::INI::Reader->read_handle($handle);
+        $profile_directory = $self->_remote_catfile(
+            Firefox::Marionette::Profile->directory(
+                $profile_name, $config, $profile_ini_directory
+            )
+        );
+    }
+    else {
+        my $profile_ini_directory;
+        if ( $self->_remote_uname() eq 'darwin' ) {
+            $profile_ini_directory = $self->_remote_catfile( 'Library',
+                'Application Support', 'Firefox' );
+        }
+        else {
+            $profile_ini_directory =
+              $self->_remote_catfile( '.mozilla', 'firefox' );
+        }
+        my $profile_ini_path =
+          $self->_remote_catfile( $profile_ini_directory, 'profiles.ini' );
+        my $handle = $self->_get_file_via_scp( {}, $profile_ini_path,
+            'profiles.ini file' );
+        my $config = Config::INI::Reader->read_handle($handle);
+        $profile_directory = $self->_remote_catfile(
+            Firefox::Marionette::Profile->directory(
+                $profile_name, $config, $profile_ini_directory
+            )
+        );
+    }
+    return $profile_directory;
+}
+
 sub _setup_arguments {
     my ( $self, %parameters ) = @_;
     my @arguments = qw(-marionette);
@@ -2525,6 +2577,19 @@ sub _setup_arguments {
     }
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
+    push @arguments, $self->_profile_arguments(%parameters);
+    if ( ( $self->{_har} ) || ( $parameters{devtools} ) ) {
+        push @arguments, '--devtools';
+    }
+    if ( $parameters{kiosk} ) {
+        push @arguments, '--kiosk';
+    }
+    return @arguments;
+}
+
+sub _profile_arguments {
+    my ( $self, %parameters ) = @_;
+    my @arguments;
     if ( $parameters{restart} ) {
         push @arguments,
           (
@@ -2534,10 +2599,19 @@ sub _setup_arguments {
     }
     elsif ( $parameters{profile_name} ) {
         $self->{profile_name} = $parameters{profile_name};
-        $self->{_profile_directory} =
-          Firefox::Marionette::Profile->directory( $parameters{profile_name} );
-        $self->{profile_path} =
-          File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
+        if ( $self->_ssh() ) {
+            $self->{_profile_directory} =
+              $self->_get_remote_profile_directory( $parameters{profile_name} );
+            $self->{profile_path} =
+              $self->_remote_catfile( $self->{_profile_directory}, 'prefs.js' );
+        }
+        else {
+            $self->{_profile_directory} =
+              Firefox::Marionette::Profile->directory(
+                $parameters{profile_name} );
+            $self->{profile_path} =
+              File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
+        }
         push @arguments, ( '-P', $self->{profile_name} );
     }
     else {
@@ -2578,12 +2652,6 @@ sub _setup_arguments {
         }
         push @arguments,
           ( '-profile', $profile_directory, '--no-remote', '--new-instance' );
-    }
-    if ( ( $self->{_har} ) || ( $parameters{devtools} ) ) {
-        push @arguments, '--devtools';
-    }
-    if ( $parameters{kiosk} ) {
-        push @arguments, '--kiosk';
     }
     return @arguments;
 }
@@ -5059,6 +5127,36 @@ sub _using_unix_sockets_for_ssh_connection {
     return 0;
 }
 
+sub _network_connection_and_initial_read_from_marionette {
+    my ( $self, $socket, $sock_addr ) = @_;
+    my ( $port, $host ) = Socket::unpack_sockaddr_in($sock_addr);
+    $host = Socket::inet_ntoa($host);
+    my $connected;
+    if ( connect $socket, $sock_addr ) {
+        my $number_of_bytes = sysread $socket,
+          $self->{_initial_octet_read_from_marionette_socket}, 1;
+        if ($number_of_bytes) {
+            $connected = 1;
+        }
+        else {
+            sleep 1;
+        }
+    }
+    elsif ( $EXTENDED_OS_ERROR == POSIX::ECONNREFUSED() ) {
+        sleep 1;
+    }
+    elsif (( $OSNAME eq 'MSWin32' )
+        && ( $EXTENDED_OS_ERROR == _WIN32_CONNECTION_REFUSED() ) )
+    {
+        sleep 1;
+    }
+    else {
+        Firefox::Marionette::Exception->throw(
+            "Failed to connect to $host on port $port:$EXTENDED_OS_ERROR");
+    }
+    return $connected;
+}
+
 sub _setup_local_connection_to_firefox {
     my ( $self, @arguments ) = @_;
     my $host = _DEFAULT_HOST();
@@ -5084,21 +5182,9 @@ sub _setup_local_connection_to_firefox {
         $sock_addr ||= $self->_get_sock_addr( $host, $port );
         next if ( !defined $sock_addr );
 
-        if ( connect $socket, $sock_addr ) {
-            $connected = 1;
-        }
-        elsif ( $EXTENDED_OS_ERROR == POSIX::ECONNREFUSED() ) {
-            sleep 1;
-        }
-        elsif (( $OSNAME eq 'MSWin32' )
-            && ( $EXTENDED_OS_ERROR == _WIN32_CONNECTION_REFUSED() ) )
-        {
-            sleep 1;
-        }
-        else {
-            Firefox::Marionette::Exception->throw(
-                "Failed to connect to $host on port $port:$EXTENDED_OS_ERROR");
-        }
+        $connected =
+          $self->_network_connection_and_initial_read_from_marionette( $socket,
+            $sock_addr );
     }
     $self->_reap();
     if ( ( $self->alive() ) && ($socket) ) {
@@ -9539,27 +9625,41 @@ sub _send_request {
     return;
 }
 
+sub _handle_socket_read_failure {
+    my ($self) = @_;
+    my $socket_error = $EXTENDED_OS_ERROR;
+    if ( $self->alive() ) {
+        Firefox::Marionette::Exception->throw(
+"Failed to read size of response from socket to firefox:$socket_error"
+        );
+    }
+    else {
+        my $error_message =
+          $self->error_message() ? $self->error_message() : q[];
+        Firefox::Marionette::Exception->throw($error_message);
+    }
+    return;
+}
+
 sub _read_from_socket {
     my ($self) = @_;
     my $number_of_bytes_in_response;
     my $initial_buffer;
     while ( ( !defined $number_of_bytes_in_response ) && ( $self->alive() ) ) {
-        my $number_of_bytes = sysread $self->_socket(), my $octet, 1;
+        my $number_of_bytes;
+        my $octet;
+        if ( $self->{_initial_octet_read_from_marionette_socket} ) {
+            $octet = delete $self->{_initial_octet_read_from_marionette_socket};
+            $number_of_bytes = length $octet;
+        }
+        else {
+            $number_of_bytes = sysread $self->_socket(), $octet, 1;
+        }
         if ( defined $number_of_bytes ) {
             $initial_buffer .= $octet;
         }
         else {
-            my $socket_error = $EXTENDED_OS_ERROR;
-            if ( $self->alive() ) {
-                Firefox::Marionette::Exception->throw(
-"Failed to read size of response from socket to firefox:$socket_error"
-                );
-            }
-            else {
-                my $error_message =
-                  $self->error_message() ? $self->error_message() : q[];
-                Firefox::Marionette::Exception->throw($error_message);
-            }
+            $self->_handle_socket_read_failure();
         }
         if ( $initial_buffer =~ s/^(\d+)://smx ) {
             ($number_of_bytes_in_response) = ($1);

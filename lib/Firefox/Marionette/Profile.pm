@@ -51,13 +51,19 @@ sub profile_ini_directory {
 }
 
 sub _read_ini_file {
-    my ( $class, $profile_ini_directory ) = @_;
-    if ( -d $profile_ini_directory ) {
-        my $profile_ini_path =
-          File::Spec->catfile( $profile_ini_directory, 'profiles.ini' );
-        if ( -f $profile_ini_path ) {
-            my $config = Config::INI::Reader->read_file($profile_ini_path);
-            return $config;
+    my ( $class, $profile_ini_directory, $handle ) = @_;
+    if ( defined $handle ) {
+        my $config = Config::INI::Reader->read_handle($handle);
+        return $config;
+    }
+    else {
+        if ( -d $profile_ini_directory ) {
+            my $profile_ini_path =
+              File::Spec->catfile( $profile_ini_directory, 'profiles.ini' );
+            if ( -f $profile_ini_path ) {
+                my $config = Config::INI::Reader->read_file($profile_ini_path);
+                return $config;
+            }
         }
     }
     return {};
@@ -104,11 +110,9 @@ sub path {
     return;
 }
 
-sub directory {
-    my ( $class, $name ) = @_;
-    my $profile_ini_directory = $class->profile_ini_directory();
-    my $config                = $class->_read_ini_file($profile_ini_directory);
-    my $path;
+sub _parse_config_for_path {
+    my ( $class, $name, $config, $profile_ini_directory ) = @_;
+    my @path;
     my $first_key;
     foreach my $key ( sort { $a cmp $b } keys %{$config} ) {
         if ( ( !defined $first_key ) && ( defined $config->{$key}->{Name} ) ) {
@@ -126,31 +130,49 @@ sub directory {
         }
         if ($selected) {
             if ( $config->{$key}->{IsRelative} ) {
-                $path = File::Spec->catfile( $profile_ini_directory,
-                    $config->{$key}->{Path} );
+                @path = ( $profile_ini_directory, $config->{$key}->{Path} );
             }
             elsif ( $config->{$key}->{Path} ) {
-                $path =
-                  File::Spec->catfile( $config->{$key}->{Path} );
+                @path = ( $config->{$key}->{Path} );
             }
             else {
-                $path =
-                  File::Spec->catfile( $profile_ini_directory,
-                    $config->{$key}->{Default} );
+                @path = ( $profile_ini_directory, $config->{$key}->{Default} );
             }
         }
     }
-    if ( ( !$path ) && ( !defined $name ) && ( defined $first_key ) ) {
+    if ( ( !@path ) && ( !defined $name ) && ( defined $first_key ) ) {
         if ( $config->{$first_key}->{IsRelative} ) {
-            $path = File::Spec->catfile( $profile_ini_directory,
-                $config->{$first_key}->{Path} );
+            @path = ( $profile_ini_directory, $config->{$first_key}->{Path} );
         }
         else {
-            $path =
-              File::Spec->catfile( $config->{$first_key}->{Path} );
+            @path = ( $config->{$first_key}->{Path} );
         }
     }
-    return $path;
+    return @path;
+}
+
+sub directory {
+    my ( $class, $name, $config, $profile_ini_directory ) = @_;
+    $profile_ini_directory =
+        $profile_ini_directory
+      ? $profile_ini_directory
+      : $class->profile_ini_directory();
+    $config =
+      $config ? $config : $class->_read_ini_file($profile_ini_directory);
+    my @path =
+      $class->_parse_config_for_path( $name, $config, $profile_ini_directory );
+    if ( !@path ) {
+        Firefox::Marionette::Exception->throw(
+"Failed to find Firefox profile for '$name' in $profile_ini_directory"
+        );
+    }
+    if (wantarray) {
+        return @path;
+    }
+    else {
+        my $path = File::Spec->catfile(@path);
+        return $path;
+    }
 }
 
 sub existing {

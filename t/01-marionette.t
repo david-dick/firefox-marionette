@@ -887,7 +887,40 @@ SKIP: {
 	if (!$ENV{FIREFOX_HOST}) {
 		ok(!process_alive($firefox_pid), "Cannot contact firefox process ($firefox_pid)");
 	}
-	if (!$ENV{FIREFOX_HOST}) {
+	if ($ENV{FIREFOX_HOST}) {
+		if ($ENV{FIREFOX_BINARY}) {
+			skip("No profile testing when the FIREFOX_BINARY override is used", 6);
+		}
+		if (!$ENV{RELEASE_TESTING}) {
+			skip("No profile testing except for RELEASE_TESTING", 6);
+		}
+		if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
+			skip("No profile testing when any WATERFOX override is used", 6);
+		}
+		my $name = 'throw';
+		($skip_message, $firefox) = start_firefox(0, debug => 1, profile_name => $name );
+		if (!$skip_message) {
+			$at_least_one_success = 1;
+		}
+		if ($skip_message) {
+			skip($skip_message, 6);
+		}
+		ok($firefox, "Firefox has started in Marionette mode with a profile_name");
+		my $capabilities = $firefox->capabilities();
+		ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
+		my $firefox_pid = $capabilities->moz_process_id();
+		ok($firefox_pid, "Firefox process has a process id of $firefox_pid when using a profile_name");
+		my $child_error = $firefox->quit();
+		if ($child_error != 0) {
+			diag("Firefox exited with a \$? of $child_error");
+		}
+		ok($child_error =~ /^\d+$/, "Firefox has closed with an integer exit status of " . $child_error);
+		if ($major_version < 50) {
+			$correct_exit_status = $child_error;
+		}
+		ok($firefox->child_error() == $child_error, "Firefox returns $child_error for the child error, matching the return value of quit():$child_error:" . $firefox->child_error());
+		ok(!$firefox->alive(), "Firefox is not still alive");
+	} else {
 		if ($ENV{FIREFOX_BINARY}) {
 			skip("No profile testing when the FIREFOX_BINARY override is used", 6);
 		}
