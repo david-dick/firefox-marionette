@@ -5889,6 +5889,14 @@ sub _get_file_via_scp {
     if ( $OSNAME eq 'MSWin32' ) {
         $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
+    else {
+        if (   ( $self->_remote_uname() eq 'MSWin32' )
+            || ( $self->_remote_uname() eq 'cygwin' ) )
+        {
+            $remote_path =~ s/\\/\//smxg;
+        }
+    }
+    $remote_path =~ s/[ ]/\\ /smxg;
     my @arguments = (
         $self->_scp_arguments(),
         $self->_ssh_address() . ":$remote_path", $local_path,
@@ -5948,6 +5956,7 @@ sub _put_file_via_scp {
     if ( $OSNAME eq 'MSWin32' ) {
         $remote_path = $self->_quoting_for_cmd_exe($remote_path);
     }
+    $remote_path =~ s/[ ]/\\ /smxg;
     my @arguments = (
         $self->_scp_arguments(),
         $local_path, $self->_ssh_address() . ":$remote_path",
@@ -6029,6 +6038,7 @@ sub _get_marionette_port_via_ssh {
 
 sub _search_file_via_ssh {
     my ( $self, $path, $description, $patterns ) = @_;
+    $path =~ s/[ ]/\\ /smxg;
     my $output = $self->_execute_via_ssh( {}, 'grep',
         ( map { ( q[-e], $_ ) } @{$patterns} ), $path );
     my $handle = File::Temp::tempfile(
