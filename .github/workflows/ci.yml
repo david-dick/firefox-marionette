@@ -19,6 +19,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Show available environment varialbes
+      run: |
+        set
+
     - name: Set up firefox
       uses: browser-actions/setup-firefox@latest
       with:
