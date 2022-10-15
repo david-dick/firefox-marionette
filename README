@@ -1286,6 +1286,22 @@ SUBROUTINES/METHODS
     <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select>
     dropdown.
 
+ is_trusted
+
+    accepts an certificate as the first parameter. This method returns true
+    or false depending on if the certificate is a trusted CA certificate in
+    the current profile.
+
+        use Firefox::Marionette();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+        foreach my $certificate ($firefox->certificates()) {
+            if (($certificate->is_ca_cert()) && ($firefox->is_trusted($certificate))) {
+                say $certificate->display_name() . " is a trusted CA cert in the current profile";
+            } 
+        } 
+
  json
 
     returns a JSON object that has been parsed from the page source of the

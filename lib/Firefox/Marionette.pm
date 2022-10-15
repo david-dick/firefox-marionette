@@ -2133,6 +2133,27 @@ _JS_
     return $self;
 }
 
+sub is_trusted {
+    my ( $self, $certificate ) = @_;
+    my $db_key = $certificate->db_key();
+    chomp $db_key;
+    my $encoded_db_key = URI::Escape::uri_escape($db_key);
+    my $old            = $self->_context('chrome');
+    my $trusted        = $self->script(
+        $self->_compress_script(
+            $self->_certificate_interface_preamble()
+              . <<'_JS_'), args => [$encoded_db_key] );
+let certificate = certificateDatabase.findCertByDBKey(decodeURIComponent(arguments[0]), {});
+if (certificateDatabase.isCertTrusted(certificate, Components.interfaces.nsIX509Cert.CA_CERT, Components.interfaces.nsIX509CertDB.TRUSTED_SSL)) {
+    return true;
+} else {
+    return false;
+}
+_JS_
+    $self->_context($old);
+    return $trusted ? 1 : 0;
+}
+
 sub certificates {
     my ($self)       = @_;
     my $old          = $self->_context('chrome');
@@ -10697,6 +10718,20 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This
 =head2 is_selected
 
 accepts an L<element|Firefox::Marionette::Element> as the first parameter.  This method returns true or false depending on if the element L<is selected|https://w3c.github.io/webdriver/#dfn-is-element-selected>.  Note that this method only makes sense for L<checkbox|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox> or L<radio|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio> inputs or L<option|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option> elements in a L<select|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select> dropdown.
+
+=head2 is_trusted
+
+accepts an L<certificate|Firefox::Marionette::Certificate> as the first parameter.  This method returns true or false depending on if the certificate is a trusted CA certificate in the current profile.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    foreach my $certificate ($firefox->certificates()) {
+        if (($certificate->is_ca_cert()) && ($firefox->is_trusted($certificate))) {
+            say $certificate->display_name() . " is a trusted CA cert in the current profile";
+        } 
+    } 
 
 =head2 json
 

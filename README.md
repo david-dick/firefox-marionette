@@ -1006,6 +1006,20 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
 
 accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter.  This method returns true or false depending on if the element [is selected](https://w3c.github.io/webdriver/#dfn-is-element-selected).  Note that this method only makes sense for [checkbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/checkbox) or [radio](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/radio) inputs or [option](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/option) elements in a [select](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select) dropdown.
 
+## is\_trusted
+
+accepts an [certificate](https://metacpan.org/pod/Firefox::Marionette::Certificate) as the first parameter.  This method returns true or false depending on if the certificate is a trusted CA certificate in the current profile.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new( profile_name => 'default' );
+    foreach my $certificate ($firefox->certificates()) {
+        if (($certificate->is_ca_cert()) && ($firefox->is_trusted($certificate))) {
+            say $certificate->display_name() . " is a trusted CA cert in the current profile";
+        } 
+    } 
+
 ## json
 
 returns a [JSON](https://metacpan.org/pod/JSON) object that has been parsed from the page source of the content document.  This is a convenience method that wraps the [strip](https://metacpan.org/pod/Firefox::Marionette#strip) method.

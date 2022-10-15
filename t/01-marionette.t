@@ -3587,6 +3587,14 @@ SKIP: {
 			diag("\$firefox->certificates is not supported for $major_version.$minor_version.$patch_version:$@");
 			skip("\$firefox->certificates is not supported for $major_version.$minor_version.$patch_version", 57);
 		}
+		my $count = 0;
+		foreach my $certificate (sort { display_name($a) cmp display_name($b) } $firefox->certificates()) {
+			if ($firefox->is_trusted($certificate)) {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is trusted in the current profile");
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT trusted in the current profile");
+			}
+		}
 		eval { $firefox->add_certificate( ) };
 		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->add_certificate(path => \$value) throws an exception if nothing is added");
 		eval { $firefox->add_certificate( path => '/this/does/not/exist' ) };
@@ -3604,7 +3612,7 @@ _CERT_
 		if (defined $ca_cert_handle) {
 			ok($firefox->add_certificate(path => $ca_cert_handle->filename(), trust => ',,,'), "Adding a certificate with no permissions");
 		}
-		my $count = 0;
+		$count = 0;
 		foreach my $certificate (sort { display_name($a) cmp display_name($b) } $firefox->certificates()) {
 			ok($certificate, "Found the " . Encode::encode('UTF-8', display_name($certificate)) . " from the certificate database");
 			ok($firefox->certificate_as_pem($certificate) =~ /BEGIN[ ]CERTIFICATE.*MII.*END[ ]CERTIFICATE\-+\s$/smx, Encode::encode('UTF-8', display_name($certificate)) . " looks like a PEM encoded X.509 certificate");
