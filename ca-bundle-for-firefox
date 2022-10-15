@@ -11,48 +11,84 @@ use Encode();
 our $VERSION = '1.28';
 
 my %options;
-Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s', 'file:s' );
-if ( $options{help} ) {
-    require Pod::Simple::Text;
-    my $parser = Pod::Simple::Text->new();
-    $parser->parse_from_file($PROGRAM_NAME);
-    exit 0;
-}
-elsif ( $options{version} ) {
-    print "$VERSION\n"
-      or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
-    exit 0;
-}
-my %parameters;
-if ( $options{binary} ) {
-    $parameters{binary} = $options{binary};
-}
-my $firefox = Firefox::Marionette->new(%parameters);
 
-my $handle      = *{STDOUT};
-my $output_name = 'STDOUT';
-if ( $options{file} ) {
-    $handle = FileHandle->new(
-        $options{file},
-        Fcntl::O_CREAT() | Fcntl::O_WRONLY() | Fcntl::O_EXCL(),
-        Fcntl::S_IRUSR() | Fcntl::S_IWUSR() | Fcntl::S_IRGRP() |
-          Fcntl::S_IROTH()
-    ) or die "Failed to open $options{file} for writing:$EXTENDED_OS_ERROR\n";
-    $output_name = $options{file};
-}
-foreach my $certificate ( sort { $a->display_name() cmp $b->display_name }
-    $firefox->certificates() )
-{
-    if ( $certificate->is_ca_cert() ) {
-        my $output_line = q[# ]
-          . $certificate->display_name() . "\n"
-          . $firefox->certificate_as_pem($certificate) . "\n";
-        $handle->print( Encode::encode( 'UTF-8', $output_line, 1 ) )
-          or die "Failed to print to $output_name:$EXTENDED_OS_ERROR\n";
+MAIN: {
+    Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s',
+        'file:s', 'issuer-organization', 'trusted-only', 'profile-name:s' );
+    my %parameters = _validate_options_and_parse_parameters();
+    my $firefox    = Firefox::Marionette->new(%parameters);
+
+    my $handle      = *{STDOUT};
+    my $output_name = 'STDOUT';
+    if ( $options{file} ) {
+        $handle = FileHandle->new(
+            $options{file},
+            Fcntl::O_CREAT() | Fcntl::O_WRONLY() | Fcntl::O_EXCL(),
+            Fcntl::S_IRUSR() | Fcntl::S_IWUSR() | Fcntl::S_IRGRP() |
+              Fcntl::S_IROTH()
+          )
+          or die
+          "Failed to open $options{file} for writing:$EXTENDED_OS_ERROR\n";
+        $output_name = $options{file};
+    }
+    my %sort_name;
+    foreach my $certificate (
+        sort {
+            ( $sort_name{$a} ||=
+                     $options{'issuer-organization'} ? $a->issuer_organization()
+                  || $a->display_name() : $a->display_name() )
+              cmp( $sort_name{$b} ||=
+                     $options{'issuer-organization'} ? $b->issuer_organization()
+                  || $b->display_name() : $b->display_name() )
+        } $firefox->certificates()
+      )
+    {
+        if ( $certificate->is_ca_cert() ) {
+            if (   ( $options{'trusted-only'} )
+                && ( !$firefox->is_trusted($certificate) ) )
+            {
+                next;
+            }
+            my $output_line = q[# ]
+              . (
+                $options{'issuer-organization'}
+                ? ( $certificate->issuer_organization()
+                      || $certificate->display_name() )
+                  . q[ -- ]
+                : q[]
+              )
+              . $certificate->display_name() . "\n"
+              . $firefox->certificate_as_pem($certificate) . "\n";
+            $handle->print( Encode::encode( 'UTF-8', $output_line, 1 ) )
+              or die "Failed to print to $output_name:$EXTENDED_OS_ERROR\n";
+        }
+    }
+    if ( $options{file} ) {
+        $handle->close()
+          or die "Failed to close $output_name:$EXTENDED_OS_ERROR\n";
     }
 }
-if ( $options{file} ) {
-    $handle->close() or die "Failed to close $output_name:$EXTENDED_OS_ERROR\n";
+
+sub _validate_options_and_parse_parameters {
+    if ( $options{help} ) {
+        require Pod::Simple::Text;
+        my $parser = Pod::Simple::Text->new();
+        $parser->parse_from_file($PROGRAM_NAME);
+        exit 0;
+    }
+    elsif ( $options{version} ) {
+        print "$VERSION\n"
+          or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
+        exit 0;
+    }
+    my %mapping = ( 'profile-name' => 'profile_name', binary => 'binary' );
+    my %parameters;
+    foreach my $key_name (qw( binary profile-name )) {
+        if ( defined $options{$key_name} ) {
+            $parameters{ $mapping{$key_name} } = $options{$key_name};
+        }
+    }
+    return %parameters;
 }
 
 __END__
@@ -70,6 +106,7 @@ Version 1.28
   $ ca-bundle-for-firefox --file current.crt
   $ ca-bundle-for-firefox --binary=/path/to/old/firefox --file old.crt
   $ diff -Naur old.crt current.crt
+  $ ca-bundle-for-firefox --issuer-organization --trusted-only --profile-name default
 
 =head1 DESCRIPTION
 
@@ -92,6 +129,12 @@ sensitive.
 =item * --help - This page.
 
 =item * --binary - Use this firefox binary instead of the default firefox instance
+
+=item * --issuer-organization - Print the Issuer Organisation as well as the Display Name in the comment line.  The Issuer Organisation is used in Firefox's Certificate Manager.
+
+=item * --trusted-only - Only output certificates that are trusted in the current profile
+
+=item * --profile-name - Use the certificate database for a particular profile
 
 =item * --file - Write the Certificate Authority bundle out to this file
 
