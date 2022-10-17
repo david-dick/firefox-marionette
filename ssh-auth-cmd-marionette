@@ -1,4 +1,4 @@
-#! /usr/bin/perl -wT
+#! /usr/bin/env -S perl -wT
 
 use strict;
 use warnings;
@@ -12,7 +12,8 @@ use File::Spec();
 
 delete $ENV{PATH};
 
-local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin';
+local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
+  . ( $OSNAME eq 'freebsd' ? ':/usr/local/bin' : q[] );
 
 our $VERSION = '1.28';
 
@@ -135,15 +136,14 @@ s/^(${tmp_directory_regex}\/firefox_marionette_remote\w+)(?:\/tmp)?$/$1/smx
       qr/(?:[ ]\-MOZ_LOG=[[:alnum:],:]+)?/smx,
       qr/(?:[ ]-safe\-mode)?/smx,
       qr/(?:[ ]\-headless)?/smx,
-      qr/[ ]\-profile[ ]$root_dir_regex\/profile/smx,
-      qr/[ ]\-\-no\-remote/smx,
-      qr/[ ]\-\-new\-instance/smx,
+      qr/[ ](?:\-profile[ ]$root_dir_regex\/profile|\-P[ ][[:alnum:]]+)/smx,
+      qr/(?:[ ]\-\-no\-remote)?/smx,
+      qr/(?:[ ]\-\-new\-instance)?/smx,
       qr/(?:[ ]\-\-devtools)?/smx,
       qr/(?:[ ]\-\-kiosk)?/smx;
     my $prefs_grep_patterns_regex = join q[],
-      qr/\-e[ ]marionette\\.port[ ]/smx,
-      qr/\-e[ ]security\\.sandbox\\.content\\.tempDirSuffix[ ]/smx,
-      qr/\-e[ ]security\\.sandbox\\.plugin\\.tempDirSuffix[ ]/smx;
+      qr/\-e[ ]marionette[ ]/smx,
+      qr/\-e[ ]security[ ]/smx;
     my @darwin_regexes;
 
     if ( $OSNAME eq 'darwin' ) {
@@ -161,6 +161,8 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
             quotemeta '/usr/libexec/sftp-server',            # FreeBSD
         )
     );
+    my $profile_path_regex =
+      qr/(?:$root_dir_regex\/profile|[.]mozilla\/firefox\/[[:alnum:].]+)/smx;
     my $scp_parameters_regex =
       qr/(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ](?:-P[ ]\d{2}[ ])?(?:\-v[ ])?/smx;
     my $allowed_commands_regex = join q[|],
@@ -185,7 +187,7 @@ qr/ls[ ]-1[ ]"$allowed_binary_directories_regex(?:\/updates(?:\/\d+)?)?"/smx,
       qr/ls[ ]-1[ ]"$root_dir_regex\/downloads"/smx,
       qr/certutil$certutil_arguments_regex/smx,
       qr/(?:$xvfb_regex)?"$allowed_binary_regex"$firefox_arguments_regex/smx,
-qr/grep[ ]$prefs_grep_patterns_regex$root_dir_regex\/profile\/prefs[.]js/smx;
+      qr/grep[ ]$prefs_grep_patterns_regex$profile_path_regex\/prefs[.]js/smx;
 
     if ( $ENV{SSH_ORIGINAL_COMMAND} =~ m/^($allowed_commands_regex)$/smx ) {
         my ($command_and_arguments) = ($1);
@@ -308,6 +310,10 @@ sub _filesystem_regexes {
             push @allowed_binaries,           'firefox';
             push @allowed_binary_paths,       '/usr/bin/firefox';
             push @allowed_binary_directories, '/usr/bin';
+            if ( $OSNAME eq 'freebsd' ) {
+                push @allowed_binary_paths,       '/usr/local/bin/firefox';
+                push @allowed_binary_directories, '/usr/local/lib/firefox';
+            }
         }
         else {
             push @allowed_binaries,     $binary;

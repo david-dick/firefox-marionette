@@ -6100,9 +6100,8 @@ sub _get_marionette_port_via_ssh {
             $self->{profile_path},
             'profile path',
             [
-                'marionette\\.port',
-                'security\\.sandbox\\.content\\.tempDirSuffix',
-                'security\\.sandbox\\.plugin\\.tempDirSuffix'
+                'marionette',
+                'security',
             ]
         );
     }
