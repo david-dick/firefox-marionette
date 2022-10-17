@@ -17,7 +17,7 @@ jobs:
     name: OS ${{matrix.runner}} Perl ${{matrix.perl}}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Show available environment varialbes
       run: |
