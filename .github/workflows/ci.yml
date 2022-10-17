@@ -36,7 +36,7 @@ jobs:
       uses: shogo82148/actions-setup-perl@v1
       with:
           perl-version: ${{ matrix.perl }}
-          install-modules: 'JSON Archive::Zip Config::INI::Reader Encode File::Temp IPC::Open3 JSON Scalar::Util Text::CSV_XS Time::Local Term::ReadKey URI URI::Escape URI::URL'
+          install-modules: 'Archive::Zip Config::INI::Reader Crypt::URandom Encode File::Temp HTTP::Daemon IPC::Open3 JSON PDF::API2 Scalar::Util Text::CSV_XS Time::Local Term::ReadKey Test::CheckManifest URI URI::Escape URI::URL XML::Parser'
           install-modules-with: cpanm
           install-modules-args: --with-develop --with-configure
           enable-modules-cache: true
