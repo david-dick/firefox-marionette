@@ -36,6 +36,10 @@ jobs:
       uses: shogo82148/actions-setup-perl@v1
       with:
           perl-version: ${{ matrix.perl }}
+          install-modules: [ 'JSON', 'Archive::Zip', 'Config::INI::Reader', 'Encode', 'File::Temp', 'IPC::Open3', 'JSON', 'Scalar::Util', 'Text::CSV_XS', 'Time::Local', 'Term::ReadKey', 'URI', 'URI::Escape', 'URI::URL' ]
+          install-modules-with: cpanm
+          install-modules-args: --with-develop --with-configure
+          enable-modules-cache: true
           distribution: ${{ ( startsWith( matrix.runner, 'windows-' ) && 'strawberry' ) || 'default' }}
 
     - name: Show Perl Version
