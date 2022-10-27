@@ -11,6 +11,7 @@ use English qw( -no_match_vars );
 use File::Spec();
 
 delete $ENV{PATH};
+delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 
 local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
   . ( $OSNAME eq 'freebsd' ? ':/usr/local/bin' : q[] );
@@ -162,9 +163,13 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
         )
     );
     my $profile_path_regex =
-      qr/(?:$root_dir_regex\/profile|[.]mozilla\/firefox\/[[:alnum:].]+)/smx;
+      qr/(?:$root_dir_regex\/profile|(?:[.]mozilla\/firefox|Library\/Application\\\ Support\/Firefox\/Profiles)\/[[:alnum:].]+)/smx;
     my $scp_parameters_regex =
       qr/(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ](?:-P[ ]\d{2}[ ])?(?:\-v[ ])?/smx;
+    my $quoted_linux_profiles_ini  = quotemeta q[.mozilla/firefox];
+    my $quoted_darwin_profiles_ini = quotemeta q[Library/Application Support/Firefox];
+    my $profiles_ini_regex =
+qr/(?:$quoted_linux_profiles_ini|$quoted_darwin_profiles_ini)\/profiles[.]ini/smx;
     my $allowed_commands_regex = join q[|],
       qr/"$allowed_binary_regex"[ ]\-\-version/smx,
       @darwin_regexes,
@@ -179,6 +184,7 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
       qr/scp[ ]\-p[ ]\-t[ ]"$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer"/smx,
 qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?"$allowed_binary_directories_regex\/$version_updates_regex"/smx,
 qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]"$root_dir_regex\/$downloads_regex"/smx,
+      qr/scp[ ]\-p[ ]\-[tf][ ]"$profiles_ini_regex"/smx,
       qr/kill[ ]\-0[ ]\d{1,8}/smx,
       qr/which[ ]$allowed_binary_regex/smx,
       qr/readlink[ ]\-f[ ]$allowed_binary_paths_regex/smx,
@@ -440,6 +446,10 @@ L<Pod::Simple::Text|Pod::Simple::Text>
 =head1 DIAGNOSTICS
 
 Check syslog for any errors
+
+The following command will show syslog on OS X.
+
+C<log show --info --predicate 'process=="perl5.18"' --last 10m>
 
 =head1 INCOMPATIBILITIES
 
