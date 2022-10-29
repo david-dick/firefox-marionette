@@ -6122,16 +6122,20 @@ sub _get_marionette_port_via_ssh {
             [ 'marionette', 'security', ] );
     }
     my $port;
-    while ( my $line = <$handle> ) {
-        if ( $line =~ /^user_pref[(]"marionette[.]port",[ ]*(\d+)[)];\s*$/smx )
-        {
-            $port = $1;
-        }
-        elsif ( $line =~
-            /^user_pref[(]"$sandbox_regex",[ ]*"[{]?([^"}]+)[}]?"[)];\s*$/smx )
-        {
-            my ( $sandbox, $uuid ) = ( $1, $2 );
-            $self->{_ssh}->{sandbox}->{$sandbox} = $uuid;
+    if ( defined $handle ) {
+        while ( my $line = <$handle> ) {
+            if ( $line =~
+                /^user_pref[(]"marionette[.]port",[ ]*(\d+)[)];\s*$/smx )
+            {
+                $port = $1;
+            }
+            elsif ( $line =~
+/^user_pref[(]"$sandbox_regex",[ ]*"[{]?([^"}]+)[}]?"[)];\s*$/smx
+              )
+            {
+                my ( $sandbox, $uuid ) = ( $1, $2 );
+                $self->{_ssh}->{sandbox}->{$sandbox} = $uuid;
+            }
         }
     }
     return $port;
