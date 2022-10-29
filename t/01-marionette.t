@@ -137,6 +137,9 @@ sub start_firefox {
 		$parameters{$key} = $ENV{FIREFOX_BINARY};
 		diag("Overriding firefox binary to $parameters{$key}");
 	}
+	if ($ENV{FIREFOX_FORCE_SCP}) {
+		$parameters{scp} = 1;
+	}
 	if ($parameters{manual_certificate_add}) {
 		delete $parameters{manual_certificate_add};
 	} elsif (defined $ca_cert_handle) {

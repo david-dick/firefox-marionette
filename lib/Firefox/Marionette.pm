@@ -673,10 +673,12 @@ sub _init {
     my ( $class, %parameters ) = @_;
     my $self = bless {}, $class;
     $self->_store_restart_parameters(%parameters);
-    $self->{last_message_id}  = 0;
-    $self->{creation_pid}     = $PROCESS_ID;
-    $self->{sleep_time_in_ms} = $parameters{sleep_time_in_ms};
-    $self->{visible}          = $parameters{visible};
+    $self->{last_message_id}    = 0;
+    $self->{creation_pid}       = $PROCESS_ID;
+    $self->{sleep_time_in_ms}   = $parameters{sleep_time_in_ms};
+    $self->{force_scp_protocol} = $parameters{scp};
+    $self->{visible}            = $parameters{visible};
+
     foreach my $type (qw(nightly developer waterfox)) {
         if ( defined $parameters{$type} ) {
             $self->{requested_version}->{$type} = $parameters{$type};
@@ -5855,6 +5857,9 @@ sub _scp_t_ok {
 sub _scp_arguments {
     my ( $self, %parameters ) = @_;
     my @arguments = qw(-p);
+    if ( $self->{force_scp_protocol} ) {
+        push @arguments, qw(-O);
+    }
     if ( $self->_scp_t_ok() ) {
         push @arguments, qw(-T);
     }
@@ -11096,6 +11101,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * profile_name - pick a specific existing profile to automate, rather than creating a new profile.  L<Firefox|https://firefox.com> refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the L<Firefox::Marionette::Profile::names()|Firefox::Marionette::Profile#names> method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|Firefox::Marionette#set_pref> and L<clear_pref|Firefox::Marionette#clear_pref> methods to make changes while firefox is running.
 
 =item * reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
+
+=item * scp - force the scp protocol when transferring files to remote hosts via ssh. See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>.
 
 =item * script - a shortcut to allow directly providing the L<script|Firefox::Marionette::Timeout#script> timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 

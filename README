@@ -1637,6 +1637,9 @@ SUBROUTINES/METHODS
       firefox that a connection has been discontinued. See the survive
       parameter.
 
+      * scp - force the scp protocol when transferring files to remote
+      hosts via ssh. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
+
       * script - a shortcut to allow directly providing the script timeout,
       instead of needing to use timeouts from the capabilities parameter.
       Overrides all longer ways.

@@ -405,6 +405,10 @@ MAIN: {
 		_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], {});
 		{
 			local $ENV{FIREFOX_ALARM} = 1800;
+			_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], { FIREFOX_HOST => 'localhost', FIREFOX_FORCE_SCP => 1 });
+		}
+		{
+			local $ENV{FIREFOX_ALARM} = 1800;
 			_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], { FIREFOX_HOST => 'localhost' });
 		}
 		{
