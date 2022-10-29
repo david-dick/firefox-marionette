@@ -6104,14 +6104,9 @@ sub _get_marionette_port_via_ssh {
             $self->{profile_path}, 'profile path' );
     }
     else {
-        $handle = $self->_search_file_via_ssh(
-            $self->{profile_path},
-            'profile path',
-            [
-                'marionette',
-                'security',
-            ]
-        );
+        $handle =
+          $self->_search_file_via_ssh( $self->{profile_path}, 'profile path',
+            [ 'marionette', 'security', ] );
     }
     my $port;
     while ( my $line = <$handle> ) {
