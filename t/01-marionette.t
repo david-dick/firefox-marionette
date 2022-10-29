@@ -2586,7 +2586,11 @@ SKIP: {
 			diag("Nested find_by_link can break for $major_version.$minor_version.$patch_version:$@");
 			skip("Nested find_by_link can break for $major_version.$minor_version.$patch_version", 2);
 		}
-		ok($count == 1, "Found elements with nested find_by_link:$count");
+		if ($major_version >= 61) {
+			ok($count == 1, "Found elements with nested find_by_link:$count");
+		} else {
+			ok((($count == 1) or ($count == 2)), "Found elements with nested find_by_link:$count");
+		}
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_link('API')) {
@@ -2598,7 +2602,11 @@ SKIP: {
 			skip("Firefox $major_version.$minor_version.$patch_version does not correctly implement returning multiple elements for find_by_link", 2);
 		}
 	} else {
-		ok($count == 1, "Found elements with wantarray find_by_link:$count");
+		if ($major_version >= 61) {
+			ok($count == 1, "Found elements with wantarray find_by_link:$count");
+		} else {
+			ok((($count == 1) or ($count == 2)), "Found elements with wantarray find_by_link:$count");
+		}
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_link('API')) {
@@ -2610,7 +2618,11 @@ SKIP: {
 			skip("Firefox $major_version.$minor_version.$patch_version does not correctly implement returning multiple elements for find_link", 2);
 		}
 	} else {
-		ok($count == 1, "Found elements with wantarray find_link:$count");
+		if ($major_version >= 61) {
+			ok($count == 1, "Found elements with wantarray find_link:$count");
+		} else {
+			ok((($count == 1) or ($count == 2)), "Found elements with wantarray find_link:$count");
+		}
 	}
 	ok($firefox->find('AP', 'partial link text')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element when searching by partial link text");
 	ok($firefox->find('AP', BY_PARTIAL())->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element when searching by partial link text");
@@ -2633,7 +2645,11 @@ SKIP: {
 			skip("Firefox $major_version.$minor_version.$patch_version does not correctly implement returning multiple elements for list_by_partial", 1);
 		}
 	} else {
-		ok($count == 1, "Found elements with nested list_by_partial:$count");
+		if ($major_version >= 61) {
+			ok($count == 1, "Found elements with nested list_by_partial:$count");
+		} else {
+			ok((($count == 1) or ($count == 2)), "Found elements with nested list_by_partial:$count");
+		}
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_class($footer_links)->find_by_partial('AP')) {
@@ -2647,20 +2663,32 @@ SKIP: {
 			skip("Firefox $major_version.$minor_version.$patch_version does not correctly implement returning multiple elements for find_by_partial", 1);
 		}
 	} else {
-		ok($count == 1, "Found elements with nested find_by_partial:$count");
+		if ($major_version >= 61) {
+			ok($count == 1, "Found elements with nested find_by_partial:$count");
+		} else {
+			ok((($count == 1) or ($count == 2)), "Found elements with nested find_by_partial:$count");
+		}
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_partial('AP')) {
 		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found wantarray element with find_by_partial");
 		$count +=1;
 	}
-	ok($count == 1, "Found elements with wantarray find_by_partial:$count");
+	if ($major_version >= 61) {
+		ok($count == 1, "Found elements with wantarray find_by_partial:$count");
+	} else {
+		ok((($count == 1) or ($count == 2)), "Found elements with wantarray find_by_partial:$count");
+	}
 	$count = 0;
 	foreach my $element ($firefox->find_partial('AP')) {
 		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found wantarray element with find_partial");
 		$count +=1;
 	}
-	ok($count == 1, "Found elements with wantarray find_partial:$count");
+	if ($major_version >= 61) {
+		ok($count == 1, "Found elements with wantarray find_partial:$count");
+	} else {
+		ok((($count == 1) or ($count == 2)), "Found elements with wantarray find_partial:$count");
+	}
 	my $css_rule;
 	ok($css_rule = $firefox->find('//input[@id="' . $search_box_id . '"]')->css('display'), "The value of the css rule 'display' is '$css_rule'");
 	my $result = $firefox->find('//input[@id="' . $search_box_id . '"]')->is_enabled();
