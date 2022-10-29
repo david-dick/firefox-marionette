@@ -4820,8 +4820,16 @@ sub _win32_remote_process_running {
 
 sub _generic_remote_process_running {
     my ( $self, $remote_pid ) = @_;
-    my $result = $self->_execute_via_ssh( { return_exit_status => 1 },
-        'kill', '-0', $remote_pid );
+    my $result = $self->_execute_via_ssh(
+        { return_exit_status => 1 },
+        (
+            $self->_remote_uname() eq 'cygwin'
+            ? ( '/bin/kill', '-W' )
+            : ('kill')
+        ),
+        '-0',
+        $remote_pid
+    );
     if ( $result == 0 ) {
         $self->{last_remote_alive_status} = 1;
     }
