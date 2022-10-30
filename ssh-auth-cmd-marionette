@@ -66,7 +66,7 @@ eval {
         'version',                          'facility:s',
         'allow-binary:s@',                  'force-binary:s',
         'regex-allow-binary-directories:s', 'regex-allow-binary-paths:s',
-        'regex-allow-binary:s',
+        'regex-allow-binary:s',             'scp-only',
     );
     if ( $options{help} ) {
         require Pod::Simple::Text;
@@ -156,18 +156,25 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
         );
     }
 
-    my @sftp_server_regexs = (
-        map { qr/$_/smx } (
-            quotemeta '/usr/libexec/openssh/sftp-server',    # Redhat, Debian
-            quotemeta '/usr/libexec/sftp-server',            # FreeBSD
-        )
-    );
+    my @sftp_server_regexs;
+    if ( !$options{'scp-only'} ) {
+        @sftp_server_regexs = (
+            map { qr/$_/smx } (
+                quotemeta '/usr/libexec/openssh/sftp-server',   # Redhat, Debian
+                quotemeta '/usr/libexec/sftp-server',           # FreeBSD
+            )
+        );
+    }
+    my $darwin_profile_regex = qr/Application[ ]Support\/Firefox\/Profiles/smx;
+    my $named_profile_regex =
+      qr/(?:[.]mozilla\/firefox|$darwin_profile_regex)/smx;
     my $profile_path_regex =
-      qr/(?:$root_dir_regex\/profile|(?:[.]mozilla\/firefox|Library\/Application\\\ Support\/Firefox\/Profiles)\/[[:alnum:].\-]+)/smx;
+      qr/(?:$root_dir_regex\/profile|$named_profile_regex\/[[:alnum:].\-]+)/smx;
     my $scp_parameters_regex =
       qr/(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ](?:-P[ ]\d{2}[ ])?(?:\-v[ ])?/smx;
-    my $quoted_linux_profiles_ini  = quotemeta q[.mozilla/firefox];
-    my $quoted_darwin_profiles_ini = quotemeta q[Library/Application Support/Firefox];
+    my $quoted_linux_profiles_ini = quotemeta q[.mozilla/firefox];
+    my $quoted_darwin_profiles_ini =
+      quotemeta q[Library/Application Support/Firefox];
     my $profiles_ini_regex =
 qr/(?:$quoted_linux_profiles_ini|$quoted_darwin_profiles_ini)\/profiles[.]ini/smx;
     my $allowed_commands_regex = join q[|],
@@ -183,7 +190,7 @@ qr/(?:$quoted_linux_profiles_ini|$quoted_darwin_profiles_ini)\/profiles[.]ini/sm
       qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-t[ ]$root_dir_regex\/$addons_regex/smx,
       qr/scp[ ]\-p[ ]\-t[ ]$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer/smx,
 qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?$allowed_binary_directories_regex\/$version_updates_regex/smx,
-qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]$root_dir_regex\/$downloads_regex/smx,
+      qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]$root_dir_regex\/$downloads_regex/smx,
       qr/scp[ ]\-p[ ]\-[tf][ ]$profiles_ini_regex/smx,
       qr/kill[ ]\-0[ ]\d{1,8}/smx,
       qr/which[ ]$allowed_binary_regex/smx,
@@ -425,7 +432,9 @@ sensitive.
 =item * --allow-binary - allow this path to be used in calls to L<new|Firefox::Marionette#new>.  This option may be specified multiple times
 
 =item * --force-binary - regardless of the settings that L<new()|Firefox::Marionette#new> requests, send all requests for the firefox binary to the path requested.
-
+ 
+=item * --scp-only - do not allow use of the SFTP protocol.  See the scp parameter in the L<new()|Firefox::Marionette#new> method.
+ 
 =back
 
 =head1 CONFIGURATION

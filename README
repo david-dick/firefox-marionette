@@ -1638,7 +1638,9 @@ SUBROUTINES/METHODS
       parameter.
 
       * scp - force the scp protocol when transferring files to remote
-      hosts via ssh. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
+      hosts via ssh. See REMOTE AUTOMATION OF FIREFOX VIA SSH and the
+      --scp-only option in the ssh-auth-cmd-marionette script in this
+      distribution.
 
       * script - a shortcut to allow directly providing the script timeout,
       instead of needing to use timeouts from the capabilities parameter.
