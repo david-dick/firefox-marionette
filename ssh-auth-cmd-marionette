@@ -163,7 +163,7 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
         )
     );
     my $profile_path_regex =
-      qr/(?:$root_dir_regex\/profile|(?:[.]mozilla\/firefox|Library\/Application\\\ Support\/Firefox\/Profiles)\/[[:alnum:].]+)/smx;
+      qr/(?:$root_dir_regex\/profile|(?:[.]mozilla\/firefox|Library\/Application\\\ Support\/Firefox\/Profiles)\/[[:alnum:].\-]+)/smx;
     my $scp_parameters_regex =
       qr/(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ](?:-P[ ]\d{2}[ ])?(?:\-v[ ])?/smx;
     my $quoted_linux_profiles_ini  = quotemeta q[.mozilla/firefox];
