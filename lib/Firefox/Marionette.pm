@@ -79,7 +79,6 @@ sub _MIN_VERSION_FOR_NEW_SENDKEYS   { return 55 }
 sub _MIN_VERSION_FOR_HEADLESS       { return 55 }
 sub _MIN_VERSION_FOR_WD_HEADLESS    { return 56 }
 sub _MIN_VERSION_FOR_SAFE_MODE      { return 55 }
-sub _MIN_VERSION_FOR_MODERN_EXIT    { return 40 }
 sub _MIN_VERSION_FOR_AUTO_LISTEN    { return 55 }
 sub _MIN_VERSION_FOR_HOSTPORT_PROXY { return 57 }
 sub _MIN_VERSION_FOR_XVFB           { return 12 }
@@ -8545,23 +8544,10 @@ sub _quit_over_marionette {
         $self->_wait_for_firefox_to_exit();
     }
     else {
-        if (
-            !$self->_is_firefox_major_version_at_least(
-                _MIN_VERSION_FOR_MODERN_EXIT()
-            )
-          )
-        {
-            close $socket
-              or Firefox::Marionette::Exception->throw(
-                "Failed to close socket to firefox:$EXTENDED_OS_ERROR");
-            $socket = undef;
-        }
-        elsif ( $self->_ssh() ) {
-            close $socket
-              or Firefox::Marionette::Exception->throw(
-                "Failed to close socket to firefox:$EXTENDED_OS_ERROR");
-            $socket = undef;
-        }
+        close $socket
+          or Firefox::Marionette::Exception->throw(
+            "Failed to close socket to firefox:$EXTENDED_OS_ERROR");
+        $socket = undef;
         $self->_wait_for_firefox_to_exit();
     }
     if ( defined $socket ) {
