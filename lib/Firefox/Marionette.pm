@@ -5986,7 +5986,7 @@ sub _get_file_via_scp {
     my $local_path =
       File::Spec->catfile( $self->{_local_scp_get_directory}, $local_name );
     if (   ( $self->_remote_uname() eq 'MSWin32' )
-        && ( $remote_path !~ /^[[:alnum:]:\-\+\\\/.]+$/smx ) )
+        && ( $remote_path !~ /^[[:alnum:]:\-+\\\/.]+$/smx ) )
     {
         $remote_path = $self->_execute_via_ssh( {},
             q[for %A in ("] . $remote_path . q[") do ] . q[@] . q[echo %~sA] );
