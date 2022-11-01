@@ -2206,8 +2206,9 @@ SKIP: {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 224);
 	}
 	my $uri = $firefox->uri();
-	ok($uri =~ /metacpan/smx, "\$firefox->uri() contains /metacpan/:$uri");
-	if ($uri ne $metacpan_uri) {
+	if ($uri eq $metacpan_uri) {
+		ok($uri =~ /metacpan/smx, "\$firefox->uri() contains /metacpan/:$uri");
+	} else {
 		if (my $proxy = $firefox->capabilities()->proxy()) {
 			diag("Proxy type is " . $firefox->capabilities()->proxy()->type());
 			if ($firefox->capabilities()->proxy()->pac()) {
