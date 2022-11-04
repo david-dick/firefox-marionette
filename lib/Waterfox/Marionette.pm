@@ -26,7 +26,7 @@ sub macos_binary_paths {
 }
 
 my %_known_win32_organisations = (
-    'Waterfox'         => 'Waterfox',
+    'Waterfox'         => 'WaterfoxLimited',
     'Waterfox Current' => 'Waterfox',
     'Waterfox Classic' => 'Waterfox',
 );
