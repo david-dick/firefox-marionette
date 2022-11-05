@@ -91,6 +91,14 @@ foreach my $sig_name (@sig_names) {
 $SIG{INT} = sub { $terminated = 1; die "Caught an INT signal"; };
 $SIG{TERM} = sub { $terminated = 1; die "Caught a TERM signal"; };
 
+sub empty_port {
+	socket my $socket, Socket::PF_INET(), Socket::SOCK_STREAM(), 0 or die "Failed to create a socket:$!";
+	bind $socket, Socket::sockaddr_in( 0, Socket::INADDR_LOOPBACK() ) or die "Failed to bind socket:$!";
+	my $port = ( Socket::sockaddr_in( getsockname $socket ) )[0];
+	close $socket or die "Failed to close random socket:$!";
+	return $port;
+}
+
 sub process_alive {
 	my ($pid) = @_;
 	if ($^O eq 'MSWin32') {
@@ -1012,10 +1020,16 @@ SKIP: {
 	diag("Starting new firefox for testing capabilities and accessing proxies");
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
 	my $localPort = URI->new($daemon->url())->port();
-	my %proxy_parameters = (http => 'localhost:' . $localPort, https => 'proxy.example.org:4343', none => [ 'local.example.org' ], socks => 'socks.example.org:1081');
+	my $proxyPort = empty_port();
+	diag("Using proxy port TCP/$proxyPort");
+	my $socksPort = empty_port();
+	diag("Using SOCKS port TCP/$socksPort");
+	my %proxy_parameters = (http => 'localhost:' . $localPort, https => 'localhost:' . $proxyPort, none => [ 'local.example.org' ], socks => 'localhost:' . $socksPort);
+	my $ftpPort = empty_port();
 	if ($binary =~ /waterfox/i) {
 	} elsif ((defined $major_version) && ($major_version < 90)) {
-		$proxy_parameters{ftp} = 'ftp.example.org:2121';
+		diag("Using FTP port TCP/$ftpPort");
+		$proxy_parameters{ftp} = 'localhost:' . $ftpPort;
 	}
 	my $proxy = Firefox::Marionette::Proxy->new(%proxy_parameters);
 	($skip_message, $firefox) = start_firefox(0, kiosk => 1, sleep_time_in_ms => 5, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy, moz_headless => 1, strict_file_interactability => 1, accept_insecure_certs => 1, page_load_strategy => 'eager', unhandled_prompt_behavior => 'accept and notify', moz_webdriver_click => 1, moz_accessibility_checks => 1, moz_use_non_spec_compliant_pointer_origin => 1, timeouts => Firefox::Marionette::Timeouts->new(page_load => 54_321, script => 4567, implicit => 6543)));
@@ -1108,9 +1122,9 @@ SKIP: {
 		}
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
 		ok($capabilities->proxy()->http() eq 'localhost:' . $localPort, "\$capabilities->proxy()->http() is 'localhost:" . $localPort . "':" . $capabilities->proxy()->http());
-		ok($capabilities->proxy()->https() eq 'proxy.example.org:4343', "\$capabilities->proxy()->https() is 'proxy.example.org:4343'");
+		ok($capabilities->proxy()->https() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->https() is 'localhost:" . $proxyPort . "'");
 		if ($major_version < 90) {
-			ok($capabilities->proxy()->ftp() eq 'ftp.example.org:2121', "\$capabilities->proxy()->ftp() is 'ftp.example.org:2121'");
+			ok($capabilities->proxy()->ftp() eq 'localhost:' . $ftpPort, "\$capabilities->proxy()->ftp() is 'localhost:$ftpPort'");
 		}
 		ok($capabilities->timeouts()->page_load() == 54_321, "\$capabilities->timeouts()->page_load() is '54,321'");
 		ok($capabilities->timeouts()->script() == 4567, "\$capabilities->timeouts()->script() is '4,567'");
@@ -1119,7 +1133,7 @@ SKIP: {
 		foreach my $host ($capabilities->proxy()->none()) {
 			$none += 1;
 		}
-		ok($capabilities->proxy()->socks() eq 'socks.example.org:1081', "\$capabilities->proxy()->socks() is 'socks.example.org:1081':" . $capabilities->proxy()->socks() );
+		ok($capabilities->proxy()->socks() eq 'localhost:' . $socksPort, "\$capabilities->proxy()->socks() is 'localhost:$socksPort':" . $capabilities->proxy()->socks() );
 		ok($capabilities->proxy()->socks_version() == 5, "\$capabilities->proxy()->socks_version() is 5");
 		TODO: {
 			local $TODO = $major_version < 58 ? $capabilities->browser_version() . " does not have support for \$firefox->capabilities()->none()" : q[];
@@ -1217,8 +1231,9 @@ SKIP: {
 }
 
 SKIP: {
-	diag("Starting new firefox for testing proxies");
-	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, debug => 'timestamp,cookie:2', page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('https://proxy.example.org')), moz_headless => 1));
+	my $proxyPort = empty_port();
+	diag("Starting new firefox for testing proxies with proxy port TCP/$proxyPort");
+	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, debug => 'timestamp,cookie:2', page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('http://localhost:' . $proxyPort)), moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1234,19 +1249,20 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 2);
 		}
 		ok($capabilities->proxy()->type() eq 'pac', "\$capabilities->proxy()->type() is 'pac'");
-		ok($capabilities->proxy()->pac()->host() eq 'proxy.example.org', "\$capabilities->proxy()->pac()->host() is 'proxy.example.org'");
+		ok($capabilities->proxy()->pac()->host() eq 'localhost', "\$capabilities->proxy()->pac()->host() is 'localhost'");
 	}
 	ok($capabilities->timeouts()->page_load() == 65432, "\$firefox->capabilities()->timeouts()->page_load() correctly reflects the page_load shortcut timeout");
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
 SKIP: {
-	diag("Starting new firefox for testing proxies again");
+	my $proxyPort = empty_port();
+	diag("Starting new firefox for testing proxies again using proxy port TCP/$proxyPort");
 	my $visible = 1;
 	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_USER})) {
 		$visible = 'local';
 	}
-	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'proxy.example.org:3128')));
+	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost:' . $proxyPort)));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1262,8 +1278,8 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
 		}
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
-		ok($capabilities->proxy()->https() eq 'proxy.example.org:3128', "\$capabilities->proxy()->https() is 'proxy.example.org:3128'");
-		ok($capabilities->proxy()->http() eq 'proxy.example.org:3128', "\$capabilities->proxy()->http() is 'proxy.example.org:3128'");
+		ok($capabilities->proxy()->https() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->https() is 'localhost:$proxyPort'");
+		ok($capabilities->proxy()->http() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->http() is 'localhost:$proxyPort'");
 	}
 	if (($ENV{RELEASE_TESTING}) && ($visible eq 'local')) {
 		`xwininfo -version 2>/dev/null`;
@@ -3532,8 +3548,9 @@ SKIP: {
 		diag("Skipping proxy by argument, capabilities, window switching and certificates tests because these tests fail when metacpan connections are re-routed above");
 		skip("Skipping proxy by argument, capabilities, window switching and certificates tests because these tests fail when metacpan connections are re-routed above", 32);
 	}
-	diag("Starting new firefox for testing proxy by argument, capabilities, window switching and certificates");
-	my $proxy_host = 'all.example.org';
+	my $proxyPort = empty_port();
+	diag("Starting new firefox for testing proxy by argument, capabilities, window switching and certificates using proxy port TCP/$proxyPort");
+	my $proxy_host = 'localhost:' . $proxyPort;
 	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json', 't/data/key4.db' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -3562,8 +3579,8 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
 		}
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
-		ok($capabilities->proxy()->http() eq "$proxy_host:80", "\$capabilities->proxy()->http() is '$proxy_host:80'");
-		ok($capabilities->proxy()->https() eq "$proxy_host:80", "\$capabilities->proxy()->https() is '$proxy_host:80'");
+		ok($capabilities->proxy()->http() eq "$proxy_host", "\$capabilities->proxy()->http() is '$proxy_host'");
+		ok($capabilities->proxy()->https() eq "$proxy_host", "\$capabilities->proxy()->https() is '$proxy_host'");
 	}
 	SKIP: {
 		if (!grep /^page_load_strategy$/, $capabilities->enumerate()) {
@@ -3792,9 +3809,12 @@ sub check_for_window {
 SKIP: {
 	diag("Starting new firefox for testing \%ENV proxy, min/maxing and killing firefox");
 	local %ENV = %ENV;
-	$ENV{http_proxy} = 'http://localhost:8080';
-	$ENV{https_proxy} = 'http://proxy2.example.org:4343';
-	$ENV{ftp_proxy} = 'ftp://ftp2.example.org:2121';
+	my $proxyHttpPort = empty_port();
+	my $proxyHttpsPort = empty_port();
+	my $proxyFtpPort = empty_port();
+	$ENV{http_proxy} = 'http://localhost:' . $proxyHttpPort;
+	$ENV{https_proxy} = 'http://localhost:' . $proxyHttpsPort;
+	$ENV{ftp_proxy} = 'ftp://localhost:' . $proxyFtpPort;
 	($skip_message, $firefox) = start_firefox(1, addons => 1, visible => 1, width => 800, height => 600);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -3874,10 +3894,10 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
 		}
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
-		ok($capabilities->proxy()->http() eq 'localhost:8080', "\$capabilities->proxy()->http() is 'localhost:8080':" . $capabilities->proxy()->http());
-		ok($capabilities->proxy()->https() eq 'proxy2.example.org:4343', "\$capabilities->proxy()->https() is 'proxy2.example.org:4343'");
+		ok($capabilities->proxy()->http() eq 'localhost:' . $proxyHttpPort, "\$capabilities->proxy()->http() is 'localhost:$proxyHttpPort':" . $capabilities->proxy()->http());
+		ok($capabilities->proxy()->https() eq 'localhost:' . $proxyHttpsPort, "\$capabilities->proxy()->https() is 'localhost:$proxyHttpsPort'");
 		if ($major_version < 90) {
-			ok($capabilities->proxy()->ftp() eq 'ftp2.example.org:2121', "\$capabilities->proxy()->ftp() is 'ftp2.example.org:2121'");
+			ok($capabilities->proxy()->ftp() eq 'localhost:' . $proxyFtpPort, "\$capabilities->proxy()->ftp() is 'localhost:$proxyFtpPort'");
 		}
 	}
 	SKIP: {
