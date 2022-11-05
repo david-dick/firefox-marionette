@@ -65,8 +65,8 @@ MAIN: {
 		die "Failed to open $servers_path for reading: $EXTENDED_OS_ERROR";
 	}
 
-	my $win32_remote_alarm = 3600;
-	my $win32_via_alarm = 3600;
+	my $win32_remote_alarm = 7200;
+	my $win32_via_alarm = 7200;
 	my $background_pids = {};
 	foreach my $server (@servers) {
 		if (my $pid = fork) {
@@ -75,9 +75,10 @@ MAIN: {
 			eval {
 				my $win32_local_alarm = 600;
 				my $cygwin_local_alarm = 2700;
-				my $cygwin_remote_alarm = 3600;
+				my $cygwin_remote_alarm = 7200;
 				my $physical_local_alarm = 600;
 				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
+				$ENV{FIREFOX_NO_RECONNECT} = 1;
 				if ((lc $server->{type}) eq 'virsh') {
 					if (_virsh_node_running($server)) {
 						_determine_address($server);
@@ -167,15 +168,15 @@ MAIN: {
 							foreach my $command (
 											$server->{cygwin} ? (
 												{ cygwin => 1, alarm_after => $cygwin_local_alarm, command_line => "cd $cygwin_tmp_directory/firefox-marionette; RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
-												{ alarm_after => $cygwin_local_alarm, command_line => "C:\\\\cygwin64\\\\bin\\\\bash --login -c 'cd $cygwin_tmp_directory/firefox-marionette; RELEASE_TESTING=1 WATERFOX=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
+												{ alarm_after => $cygwin_local_alarm, command_line => "C:\\\\cygwin64\\\\bin\\\\bash --login -c 'cd $cygwin_tmp_directory/firefox-marionette; RELEASE_TESTING=1 FIREFOX_NO_NETWORK=1 FIREFOX_NO_RECONNECT=1 WATERFOX=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 												{ cygwin => 1, alarm_after => $cygwin_remote_alarm, command_line => "cd $cygwin_tmp_directory/firefox-marionette; FIREFOX_HOST=$local_ip_address FIREFOX_USER=$local_username RELEASE_TESTING=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 											) : (),
 											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
 											{ alarm_after => $win32_remote_alarm, force_pseudo_terminal => 1, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_NO_RECONNECT=1 && set RELEASE_TESTING=1 && set FIREFOX_HOST=$local_ip_address && set FIREFOX_USER=firefox && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
-											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_DEVELOPER=1 && set RELEASE_TESTING=1 && set FIREFOX_DEBUG=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
+											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_DEVELOPER=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
 											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set FIREFOX_NIGHTLY=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
-											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set WATERFOX=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
-											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set WATERFOX_VIA_FIREFOX=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
+											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set WATERFOX=1 && set FIREFOX_NO_RECONNECT=1 set FIREFOX_NO_NETWORK=1 && set RELEASE_TESTING=1 perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
+											{ alarm_after => $win32_local_alarm, command_line => "set FIREFOX_NO_UPDATE=1 && set WATERFOX_VIA_FIREFOX=1 && set FIREFOX_NO_RECONNECT=1 && set FIREFOX_NO_NETWORK=1 && set RELEASE_TESTING=1 && perl$devel_cover_inc_with_space -Ilib " . _win32_path($test_marionette_file) },
 
 											) {
 								$count = 0;
@@ -265,11 +266,11 @@ MAIN: {
 						}
 						foreach my $command (
 										{ alarm_after => $win32_via_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON RELEASE_TESTING=1 FIREFOX_VIA=$via_address FIREFOX_USER=$remote_user FIREFOX_HOST=$remote_address FIREFOX_NO_RECONNECT=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
-										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
-										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_DEVELOPER=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
-										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NIGHTLY=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
-										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON WATERFOX=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
-										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON WATERFOX_VIA_FIREFOX=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
+										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NO_VISIBLE=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
+										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NO_VISIBLE=1 FIREFOX_DEVELOPER=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
+										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NO_VISIBLE=1 FIREFOX_NIGHTLY=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
+										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NO_VISIBLE=1 WATERFOX=1 FIREFOX_NO_RECONNECT=1 FIREFOX_NO_NETWORK=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
+										{ alarm_after => $physical_local_alarm, command_line => "DEVEL_COVER_DB_FORMAT=JSON FIREFOX_NO_VISIBLE=1 WATERFOX_VIA_FIREFOX=1 FIREFOX_NO_RECONNECT=1 FIREFOX_NO_NETWORK=1 RELEASE_TESTING=1 FIREFOX_NO_UPDATE=1 perl$devel_cover_inc_with_space -Ilib $test_marionette_file" },
 										) {
 							$count = 0;
 							REMOTE_FIREFOX: {
@@ -428,15 +429,22 @@ MAIN: {
 	_check_for_background_processes($background_pids, @servers);
 	my $firefox_nightly_failed;
 	ENTRY: foreach my $entry (reverse sort { $a cmp $b } @entries) {
+		local %ENV = %ENV;
 		my $old_version = $old_versions{$entry};
+		if (($entry =~ /firefox/smx) && ($old_version =~ /^[234]\d[.]/smx)) {
+			$ENV{FIREFOX_NO_NETWORK} = 1;
+			warn "Enabling FIREFOX_NO_NETWORK for Firefox version $old_version\n";
+		} else {
+			delete $ENV{FIREFOX_NO_NETWORK};
+		}
 		my $count = 0;
 		my $path_to_binary = $paths_to_binary{$entry};
 		$ENV{FIREFOX_BINARY} = $path_to_binary;
 		if ($entry =~ /^waterfox/smx) {
-			_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], { WATERFOX => 1, FIREFOX_BINARY => $paths_to_binary{$entry} });
-			_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], { WATERFOX_VIA_FIREFOX => 1, FIREFOX_BINARY => $paths_to_binary{$entry} });
-		}
-		if (-e $ENV{FIREFOX_BINARY}) {
+			warn "Disabling NETWORK and RECONNECT for Waterfox version $old_version\n";
+			_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], { FIREFOX_NO_RECONNECT => 1, FIREFOX_NO_NETWORK => 1, WATERFOX => 1, FIREFOX_BINARY => $paths_to_binary{$entry} });
+			_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $test_marionette_file ], { FIREFOX_NO_RECONNECT => 1, FIREFOX_NO_NETWORK => 1, WATERFOX_VIA_FIREFOX => 1, FIREFOX_BINARY => $paths_to_binary{$entry} });
+		} else {
 			$count = 0;
 			LOCAL: {
 				$count += 1;
@@ -461,7 +469,7 @@ MAIN: {
 			if ($entry eq 'firefox-upgrade') {
 				setup_upgrade();
 			}
-			my $bash_command = 'cd ' . Cwd::cwd() . '; FIREFOX_ALARM=' . $ENV{FIREFOX_ALARM} . ' DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ' RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X$devel_cover_inc_with_space -Ilib $test_marionette_file";
+			my $bash_command = 'cd ' . Cwd::cwd() . '; FIREFOX_ALARM=' . $ENV{FIREFOX_ALARM} . ' DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ($ENV{FIREFOX_NO_NETWORK} ? ' FIREFOX_NO_NETWORK=1' : q[]) . ' RELEASE_TESTING=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X$devel_cover_inc_with_space -Ilib $test_marionette_file";
 			if ($entry eq 'firefox-nightly') {
 				if (!_multiple_attempts_execute('ssh', [ 'localhost', $bash_command ], undef, 1)) {
 					$firefox_nightly_failed = 1;
@@ -473,7 +481,7 @@ MAIN: {
 			if ($entry eq 'firefox-upgrade') {
 				setup_upgrade();
 			}
-			$bash_command = 'cd ' . Cwd::cwd() . '; FIREFOX_ALARM=' . $ENV{FIREFOX_ALARM} . ' DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ' RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X$devel_cover_inc_with_space -Ilib $test_marionette_file";
+			$bash_command = 'cd ' . Cwd::cwd() . '; FIREFOX_ALARM=' . $ENV{FIREFOX_ALARM} . ' DEVEL_COVER_DB_FORMAT=' . $devel_cover_db_format . ($ENV{FIREFOX_NO_NETWORK} ? ' FIREFOX_NO_NETWORK=1' : q[]) . ' RELEASE_TESTING=1 FIREFOX_VISIBLE=1 FIREFOX_BINARY="' . $ENV{FIREFOX_BINARY} . "\" $^X$devel_cover_inc_with_space -Ilib $test_marionette_file";
 			if ($entry eq 'firefox-nightly') {
 				if (!_multiple_attempts_execute('ssh', [ 'localhost', $bash_command ], undef, 1)) {
 					$firefox_nightly_failed = 1;
@@ -692,6 +700,7 @@ sub _check_parent_alive {
 sub _sleep_until_shutdown {
 	my ($server) = @_;
 	while (_virsh_node_running($server)) {
+		_virsh_shutdown($server);
 		_log_stderr($server, "Waiting for $server->{name} to shutdown");
 		sleep 1;
 	}

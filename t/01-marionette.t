@@ -291,6 +291,41 @@ sub start_firefox {
 		diag("Overriding firefox visibility");
 	} elsif ($ENV{FIREFOX_NO_VISIBLE}) {
 		$parameters{visible} = 0;
+		if ((defined $parameters{capabilities}) && (!$parameters{capabilities}->moz_headless())) {
+			my $old = $parameters{capabilities};
+			my %new = ( moz_headless => 1 );
+			if (defined $old->proxy()) {
+				$new{proxy} = $old->proxy();
+			}
+			if (defined $old->moz_use_non_spec_compliant_pointer_origin()) {
+				$new{moz_use_non_spec_compliant_pointer_origin} = $old->moz_use_non_spec_compliant_pointer_origin();
+			}
+			if (defined $old->accept_insecure_certs()) {
+				$new{accept_insecure_certs} = $old->accept_insecure_certs();
+			}
+			if (defined $old->strict_file_interactability()) {
+				$new{strict_file_interactability} = $old->strict_file_interactability();
+			}
+			if (defined $old->unhandled_prompt_behavior()) {
+				$new{unhandled_prompt_behavior} = $old->unhandled_prompt_behavior();
+			}
+			if (defined $old->set_window_rect()) {
+				$new{set_window_rect} = $old->set_window_rect();
+			}
+			if (defined $old->page_load_strategy()) {
+				$new{page_load_strategy} = $old->page_load_strategy();
+			}
+			if (defined $old->moz_webdriver_click()) {
+				$new{moz_webdriver_click} = $old->moz_webdriver_click();
+			}
+			if (defined $old->moz_accessibility_checks()) {
+				$new{moz_accessibility_checks} = $old->moz_accessibility_checks();
+			}
+			if (defined $old->timeouts()) {
+				$new{timeouts} = $old->timeouts();
+			}
+			$parameters{capabilities} = Firefox::Marionette::Capabilities->new(%new);
+		}
 	} else {
 		$parameters{visible} = $require_visible;
 	}
@@ -602,14 +637,17 @@ if ($ENV{RELEASE_TESTING}) {
 }
 my $skip_message;
 SKIP: {
-	if ($ENV{FIREFOX_HOST}) {
-		skip("No profile testing when the FIREFOX_HOST override is used", 6);
-	}
 	if ($ENV{FIREFOX_BINARY}) {
 		skip("No profile testing when the FIREFOX_BINARY override is used", 6);
 	}
 	if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
 		skip("No profile testing when any WATERFOX override is used", 6);
+	}
+	if ($ENV{FIREFOX_DEVELOPER}) {
+		skip("No profile testing when the FIREFOX_DEVELOPER override is used", 6);
+	}
+	if ($ENV{FIREFOX_NIGHTLY}) {
+		skip("No profile testing when the FIREFOX_NIGHTLY override is used", 6);
 	}
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("No profile testing except for RELEASE_TESTING", 6);
@@ -908,6 +946,12 @@ SKIP: {
 		if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
 			skip("No profile testing when any WATERFOX override is used", 6);
 		}
+		if ($ENV{FIREFOX_DEVELOPER}) {
+			skip("No profile testing when the FIREFOX_DEVELOPER override is used", 6);
+		}
+		if ($ENV{FIREFOX_NIGHTLY}) {
+			skip("No profile testing when the FIREFOX_NIGHTLY override is used", 6);
+		}
 		my $name = 'throw';
 		($skip_message, $firefox) = start_firefox(0, debug => 1, profile_name => $name );
 		if (!$skip_message) {
@@ -940,6 +984,12 @@ SKIP: {
 		}
 		if (($ENV{WATERFOX}) || ($ENV{WATERFOX_VIA_FIREFOX})) {
 			skip("No profile testing when any WATERFOX override is used", 6);
+		}
+		if ($ENV{FIREFOX_DEVELOPER}) {
+			skip("No profile testing when the FIREFOX_DEVELOPER override is used", 6);
+		}
+		if ($ENV{FIREFOX_NIGHTLY}) {
+			skip("No profile testing when the FIREFOX_NIGHTLY override is used", 6);
 		}
 		my $found;
 		my @names = Firefox::Marionette::Profile->names();
@@ -1944,7 +1994,7 @@ SKIP: {
 	ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
 	$uname = $firefox->uname();
 	ok($uname, "Firefox is currently running in $uname");
-	if ($ENV{RELEASE_TESTING}) { # har sometimes hangs and sometimes metacpan.org fails certificate checks.  for example. http://www.cpantesters.org/cpan/report/e71bfb3b-7413-1014-98e6-045206f7812f
+	if (($ENV{RELEASE_TESTING}) && (!$ENV{FIREFOX_NO_NETWORK})) { # har sometimes hangs and sometimes metacpan.org fails certificate checks.  for example. http://www.cpantesters.org/cpan/report/e71bfb3b-7413-1014-98e6-045206f7812f
 		if (!$tls_tests_ok) {
 			skip("TLS test infrastructure seems compromised", 5);
 		}
@@ -2213,7 +2263,7 @@ SKIP: {
 		}
 		ok($firefox->switch_to_window($new_window_handle), "\$firefox->switch_to_window() used to move back to the original window");
 	}
-	if (!$ENV{RELEASE_TESTING}) {
+	if (!($ENV{RELEASE_TESTING}) || ($ENV{FIREFOX_NO_NETWORK})) {
 		skip("Skipping network tests", 225);
 	}
 	my $metacpan_uri = 'https://metacpan.org/';
@@ -3621,6 +3671,9 @@ SKIP: {
 		if ($ENV{FIREFOX_HOST}) {
 			diag("\$capabilities->headless is forced on for FIREFOX_HOST testing");
 			skip("\$capabilities->headless is forced on for FIREFOX_HOST testing", 1);
+		} elsif ($ENV{FIREFOX_NO_VISIBLE}) {
+			diag("\$capabilities->headless is forced on for FIREFOX_NO_VISIBLE testing");
+			skip("\$capabilities->headless is forced on for FIREFOX_NO_VISIBLE testing", 1);
 		}
 		ok(not($capabilities->moz_headless()), "\$capabilities->moz_headless() is set to false");
 	}
@@ -3850,7 +3903,15 @@ SKIP: {
 	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
-	ok(!$capabilities->moz_headless(), "\$capabilities->moz_headless() is set to false");
+	if ($ENV{FIREFOX_HOST}) {
+		diag("\$capabilities->headless is forced on for FIREFOX_HOST testing");
+		skip("\$capabilities->headless is forced on for FIREFOX_HOST testing", 1);
+	} elsif ($ENV{FIREFOX_NO_VISIBLE}) {
+		diag("\$capabilities->headless is forced on for FIREFOX_NO_VISIBLE testing");
+		skip("\$capabilities->headless is forced on for FIREFOX_NO_VISIBLE testing", 1);
+	} else {
+		ok(!$capabilities->moz_headless(), "\$capabilities->moz_headless() is set to false");
+	}
 	diag("Final Browser version is " . $capabilities->browser_version());
 	if ($major_version >= 51) {
 		SKIP: {
