@@ -152,7 +152,12 @@ sub _parse_config_for_path {
 }
 
 sub directory {
-    my ( $class, $name, $config, $profile_ini_directory ) = @_;
+    my ( $class, $name, $config, $profile_ini_directory, $remote_address ) = @_;
+    if ( !$name ) {
+        Firefox::Marionette::Exception->throw(
+            'No profile name has been supplied');
+    }
+    $remote_address = $remote_address ? "$remote_address:" : q[];
     $profile_ini_directory =
         $profile_ini_directory
       ? $profile_ini_directory
@@ -163,7 +168,7 @@ sub directory {
       $class->_parse_config_for_path( $name, $config, $profile_ini_directory );
     if ( !@path ) {
         Firefox::Marionette::Exception->throw(
-"Failed to find Firefox profile for '$name' in $profile_ini_directory"
+"Failed to find Firefox profile for '$name' in $remote_address$profile_ini_directory"
         );
     }
     if (wantarray) {

@@ -2548,12 +2548,17 @@ sub _get_remote_profile_directory {
         }
         my $profile_ini_path =
           $self->_remote_catfile( $profile_ini_directory, 'profiles.ini' );
-        my $handle = $self->_get_file_via_scp( {}, $profile_ini_path,
-            'profiles.ini file' );
+        my $handle = $self->_get_file_via_scp( { ignore_exit_status => 1 },
+            $profile_ini_path, 'profiles.ini file' )
+          or Firefox::Marionette::Exception->throw( 'Failed to find the file '
+              . $self->_ssh_address()
+              . ":$profile_ini_path which would indicate where the prefs.js file for the '$profile_name' is stored"
+          );
         my $config = Config::INI::Reader->read_handle($handle);
         $profile_directory = $self->_remote_catfile(
             Firefox::Marionette::Profile->directory(
-                $profile_name, $config, $profile_ini_directory
+                $profile_name,          $config,
+                $profile_ini_directory, $self->_ssh_address()
             )
         );
     }
