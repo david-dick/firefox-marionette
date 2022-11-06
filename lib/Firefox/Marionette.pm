@@ -7950,6 +7950,28 @@ sub pause {
     return { type => 'pause', duration => $duration };
 }
 
+sub wheel {
+    my ( $self, @parameters ) = @_;
+    my %arguments;
+    if (
+        $self->_is_marionette_object(
+            $parameters[0], 'Firefox::Marionette::Element'
+        )
+      )
+    {
+        my $origin = shift @parameters;
+        %arguments = $self->_calculate_xy_from_element( $origin, %arguments );
+    }
+    while (@parameters) {
+        my $key = shift @parameters;
+        $arguments{$key} = shift @parameters;
+    }
+    foreach my $key (qw(x y duration deltaX deltaY)) {
+        $arguments{$key} ||= 0;
+    }
+    return { type => 'scroll', %arguments };
+}
+
 sub mouse_move {
     my ( $self, @parameters ) = @_;
     my %arguments;
@@ -7960,21 +7982,27 @@ sub mouse_move {
       )
     {
         my $origin = shift @parameters;
-        my $rect   = $origin->rect();
-        $arguments{x} = $rect->pos_x() + ( $rect->width() / 2 );
-        if ( $arguments{x} != int $arguments{x} ) {
-            $arguments{x} = int $arguments{x} + 1;
-        }
-        $arguments{y} = $rect->pos_y() + ( $rect->height() / 2 );
-        if ( $arguments{y} != int $arguments{y} ) {
-            $arguments{y} = int $arguments{y} + 1;
-        }
+        %arguments = $self->_calculate_xy_from_element( $origin, %arguments );
     }
     while (@parameters) {
         my $key = shift @parameters;
         $arguments{$key} = shift @parameters;
     }
     return { type => 'pointerMove', pointerType => 'mouse', %arguments };
+}
+
+sub _calculate_xy_from_element {
+    my ( $self, $origin, %arguments ) = @_;
+    my $rect = $origin->rect();
+    $arguments{x} = $rect->pos_x() + ( $rect->width() / 2 );
+    if ( $arguments{x} != int $arguments{x} ) {
+        $arguments{x} = int $arguments{x} + 1;
+    }
+    $arguments{y} = $rect->pos_y() + ( $rect->height() / 2 );
+    if ( $arguments{y} != int $arguments{y} ) {
+        $arguments{y} = int $arguments{y} + 1;
+    }
+    return %arguments;
 }
 
 sub mouse_down {
@@ -8006,11 +8034,17 @@ sub perform {
             $marionette_action->{$key} = $parameter_action->{$key};
         }
         my $type;
+        my %type_map = (
+            keyUp   => 'key',
+            keyDown => 'key',
+            scroll  => 'wheel',
+        );
         my %arguments;
         if (   ( $marionette_action->{type} eq 'keyUp' )
-            || ( $marionette_action->{type} eq 'keyDown' ) )
+            || ( $marionette_action->{type} eq 'keyDown' )
+            || ( $marionette_action->{type} eq 'scroll' ) )
         {
-            $type = 'key';
+            $type = $type_map{ $marionette_action->{type} };
         }
         elsif (( $marionette_action->{type} eq 'pointerMove' )
             || ( $marionette_action->{type} eq 'pointerDown' )
@@ -8031,7 +8065,7 @@ sub perform {
         }
         else {
             Firefox::Marionette::Exception->throw(
-'Unknown action type in sequence.  keyUp, keyDown, pointerMove, pointerDown, pointerUp or pause are the only known types'
+'Unknown action type in sequence.  keyUp, keyDown, pointerMove, pointerDown, pointerUp, pause and wheel are the only known types'
             );
         }
         $self->{next_action_sequence_id}++;
@@ -11628,6 +11662,22 @@ accepts the GUID for the addon to uninstall.  The GUID is returned when from the
 =head2 uri
 
 returns the current L<URI|URI> of current top level browsing context for Desktop.  It is equivalent to the javascript C<document.location.href>
+
+=head2 wheel
+
+accepts a L<element|Firefox::Marionette::Element> parameter, or a C<( x =E<gt> 0, y =E<gt> 0 )> type hash manually describing exactly where to move the mouse from and returns an action for use in the L<perform|Firefox::Marionette#perform> method that corresponding with such a wheel action, either to the specified co-ordinates or to the middle of the supplied L<element|Firefox::Marionette::Element> parameter.  Other parameters that may be passed are listed below;
+
+=over 4
+
+=item * origin - the origin of the C(<x =E<gt> 0, y =E<gt> 0)> co-ordinates.  Should be either C<viewport>, C<pointer> or an L<element|Firefox::Marionette::Element>.
+
+=item * duration - Number of milliseconds over which to distribute the move. If not defined, the duration defaults to 0.
+
+=item * deltaX - the change in X co-ordinates during the wheel.  If not defined, deltaX defaults to 0.
+
+=item * deltaY - the change in Y co-ordinates during the wheel.  If not defined, deltaY defaults to 0.
+
+=back
 
 =head2 win32_organisation
 

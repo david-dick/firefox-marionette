@@ -3124,6 +3124,10 @@ SKIP: {
 		};
 		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->perform() throws an exception when passed an unknown action:$@");
 		ok($firefox->release(), "\$firefox->release()");
+		if ($major_version >= 106) {
+			my $origin = $firefox->find_id($search_box_id);
+			ok($firefox->perform($firefox->wheel($origin, deltaY => 500, origin => 'viewport')), "\$firefox->perform() with a wheel action");
+		}
 	}
 	SKIP: {
 		if ((!$context) && ($major_version < 50)) {

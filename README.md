@@ -1698,6 +1698,15 @@ accepts the GUID for the addon to uninstall.  The GUID is returned when from the
 
 returns the current [URI](https://metacpan.org/pod/URI) of current top level browsing context for Desktop.  It is equivalent to the javascript `document.location.href`
 
+## wheel
+
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter, or a `( x => 0, y => 0 )` type hash manually describing exactly where to move the mouse from and returns an action for use in the [perform](https://metacpan.org/pod/Firefox::Marionette#perform) method that corresponding with such a wheel action, either to the specified co-ordinates or to the middle of the supplied [element](https://metacpan.org/pod/Firefox::Marionette::Element) parameter.  Other parameters that may be passed are listed below;
+
+- origin - the origin of the C(&lt;x => 0, y => 0)> co-ordinates.  Should be either `viewport`, `pointer` or an [element](https://metacpan.org/pod/Firefox::Marionette::Element).
+- duration - Number of milliseconds over which to distribute the move. If not defined, the duration defaults to 0.
+- deltaX - the change in X co-ordinates during the wheel.  If not defined, deltaX defaults to 0.
+- deltaY - the change in Y co-ordinates during the wheel.  If not defined, deltaY defaults to 0.
+
 ## win32\_organisation
 
 accepts a parameter of a Win32 product name and returns the matching organisation.  Only of interest when sub-classing.
