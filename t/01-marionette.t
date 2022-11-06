@@ -780,6 +780,9 @@ SKIP: {
 				if (defined $update->app_version()) {
 					diag("New Browser version is " . $update->app_version());
 					($major_version, $minor_version, $patch_version) = split /[.]/smx, $update->app_version();
+					if ($major_version == 102) { # This was a bad firefox version for marionette.  It blew up when loading metacpan.org
+						$ENV{FIREFOX_NO_NETWORK} = 1;
+					}
 				}
 			}
 		} elsif (defined $update->number_of_updates()) {
