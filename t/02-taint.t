@@ -4,7 +4,7 @@ use strict;
 use Firefox::Marionette();
 use Test::More;
 
-$ENV{PATH} = '/bin:/usr/bin:/sbin:/bin';
+$ENV{PATH} = '/bin:/usr/bin:/sbin:/bin:/usr/local/bin';
 delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 
 my %parameters;
