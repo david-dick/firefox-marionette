@@ -2058,7 +2058,7 @@ SKIP: {
 				last GET_HAR;
 			}
 		}
-		if (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+		if (($uname eq 'cygwin') || ($uname eq 'MSWin32') || ($uname eq 'FreeBSD')) {
 			TODO: {
 				local $TODO = "$uname can fail this test";
 				ok($correct == 4, "Correct headers have been set");
