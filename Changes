@@ -1,6 +1,9 @@
 Revision history for Firefox-Marionette
 
-1.30  Mon Nov 07 15:55 2022
+1.31  Mon Nov 07 20:43 2022
+       Fixing taint test suite failures in github actions 
+
+1.30  Mon Nov 07 16:26 2022
        Fixing test suite for FreeBSD by adding /usr/local/bin to PATH
 
 1.29  Sun Nov 06 15:55 2022

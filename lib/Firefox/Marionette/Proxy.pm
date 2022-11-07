@@ -3,7 +3,7 @@ package Firefox::Marionette::Proxy;
 use strict;
 use warnings;
 
-our $VERSION = '1.30';
+our $VERSION = '1.31';
 
 sub new {
     my ( $class, %parameters ) = @_;
@@ -82,7 +82,7 @@ Firefox::Marionette::Proxy - Represents a Proxy used by Firefox Capabilities usi
 
 =head1 VERSION
 
-Version 1.30
+Version 1.31
 
 =head1 SYNOPSIS
 
