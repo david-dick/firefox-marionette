@@ -84,7 +84,7 @@ case $OSNAME in
 		;;
 	FreeBSD)
 		${SUDO}pkg install \
-					firefox-esr \
+					firefox \
 					perl5 \
 					p5-Archive-Zip \
 					p5-JSON \
