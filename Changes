@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.30  Mon Nov 07 15:55 2022
+       Fixing test suite for FreeBSD by adding /usr/local/bin to PATH
+
 1.29  Sun Nov 06 15:55 2022
        Adding wheel, scroll, is_trusted, uname method
        Adding support for remotely opening profiles by name
