@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.32  Tue Nov 08 19:42 2022
+       Win32 test suite fixes
+
 1.31  Mon Nov 07 20:43 2022
        Fixing taint test suite failures in github actions 
 

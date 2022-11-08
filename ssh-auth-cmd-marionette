@@ -16,7 +16,7 @@ delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
   . ( $OSNAME eq 'freebsd' ? ':/usr/local/bin' : q[] );
 
-our $VERSION = '1.31';
+our $VERSION = '1.32';
 
 my $binary  = 'firefox';
 my $ident   = 'ssh-auth-cmd-marionette';
@@ -375,7 +375,7 @@ ssh-auth-cmd-marionette - ssh ~/.ssh/authorized_keys command for Firefox::Marion
 
 =head1 VERSION
 
-Version 1.31
+Version 1.32
 
 =head1 USAGE
 
