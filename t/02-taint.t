@@ -7,7 +7,7 @@ use File::Spec();
 
 my $dev_null = File::Spec->devnull();
 my $run_taint_checks = 1;
-if ($^O eq 'Win32') {
+if ($^O eq 'MSWin32') {
 	diag("Checking taint under $^O");
 } else {
 	delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};

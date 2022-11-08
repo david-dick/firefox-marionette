@@ -3230,7 +3230,7 @@ SKIP: {
 		ok(defined $capabilities->platform_version() && $capabilities->platform_version() =~ /\d+/, "\$capabilities->platform_version() contains a number:" . ($capabilities->platform_version() || ''));
 	}
 	TODO: {
-		local $TODO = ($ENV{FIREFOX_HOST} || $^O eq 'cygwin' || $^O eq 'Win32') ? "\$capabilities->moz_profiles() can contain shorted profile directory names" : undef;
+		local $TODO = ($ENV{FIREFOX_HOST} || $^O eq 'cygwin' || $^O eq 'MSWin32') ? "\$capabilities->moz_profiles() can contain shorted profile directory names" : undef;
 		ok($capabilities->moz_profile() =~ /firefox_marionette/, "\$capabilities->moz_profile() contains 'firefox_marionette':" . $capabilities->moz_profile());
 	}
 	SKIP: {
