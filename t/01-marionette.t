@@ -103,7 +103,10 @@ sub process_alive {
 	my ($pid) = @_;
 	if ($^O eq 'MSWin32') {
 		if (Win32::Process::Open(my $process, $pid, 0)) {
-			return 1;
+			$process->GetExitCode( my $exit_code );
+			if ( $exit_code == Win32::Process::STILL_ACTIVE() ) {
+				return 1;
+			}
 		} else {
 			return 0;
 		}
