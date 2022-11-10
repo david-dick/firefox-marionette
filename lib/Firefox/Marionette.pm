@@ -5238,7 +5238,7 @@ sub _ssh_address {
 
 sub _ssh_arguments {
     my ( $self, %parameters ) = @_;
-    my @arguments = ( '-2', );
+    my @arguments = qw(-2 -a);
     if ( ( $parameters{graphical} ) || ( $parameters{master} ) ) {
         if ( ( defined $self->_visible() ) && ( $self->_visible() eq 'local' ) )
         {
