@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Getopt::Long();
+use Getopt::Long qw(:config bundling);
 use English qw( -no_match_vars );
 use Firefox::Marionette();
 use FileHandle();
@@ -13,8 +13,13 @@ our $VERSION = '1.32';
 my %options;
 
 MAIN: {
-    Getopt::Long::GetOptions( \%options, 'help', 'version', 'binary:s',
-        'file:s', 'issuer-organization', 'trusted-only', 'profile-name:s' );
+    Getopt::Long::GetOptions(
+        \%options,        'help|h',
+        'version|v',      'binary|b:s',
+        'file|f:s',       'issuer-organization|i',
+        'trusted-only|t', 'profile-name|p:s',
+        'default-profile|d',
+    );
     my %parameters = _validate_options_and_parse_parameters();
     my $firefox    = Firefox::Marionette->new(%parameters);
 
@@ -81,12 +86,24 @@ sub _validate_options_and_parse_parameters {
           or die "Failed to print to STDOUT:$EXTENDED_OS_ERROR\n";
         exit 0;
     }
-    my %mapping = ( 'profile-name' => 'profile_name', binary => 'binary' );
+    my %mapping = (
+        'profile-name' => 'profile_name',
+        binary         => 'binary',
+    );
     my %parameters;
     foreach my $key_name (qw( binary profile-name )) {
         if ( defined $options{$key_name} ) {
             $parameters{ $mapping{$key_name} } = $options{$key_name};
         }
+    }
+    if ( ( $parameters{profile_name} ) || ( $options{'default-profile'} ) ) {
+        my $profile_name = delete $parameters{profile_name}
+          || Firefox::Marionette::Profile->default_name();
+        my $profile_directory =
+          Firefox::Marionette::Profile->directory($profile_name);
+        my $cert_db_path =
+          File::Spec->catfile( $profile_directory, 'cert9.db' );
+        $parameters{import_profile_paths} = [$cert_db_path];
     }
     return %parameters;
 }
@@ -107,6 +124,8 @@ Version 1.32
   $ ca-bundle-for-firefox --binary=/path/to/old/firefox --file old.crt
   $ diff -Naur old.crt current.crt
   $ ca-bundle-for-firefox --issuer-organization --trusted-only --profile-name default
+  $ ca-bundle-for-firefox --issuer-organization --trusted-only --default-profile
+  $ ca-bundle-for-firefox -dit
 
 =head1 DESCRIPTION
 
@@ -129,6 +148,8 @@ sensitive.
 =item * --help - This page.
 
 =item * --binary - Use this firefox binary instead of the default firefox instance
+
+=item * --default-profile - Use the certificate database from the default profile
 
 =item * --issuer-organization - Print the Issuer Organisation as well as the Display Name in the comment line.  The Issuer Organisation is used in Firefox's Certificate Manager.
 
