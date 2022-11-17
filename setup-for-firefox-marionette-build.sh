@@ -123,6 +123,29 @@ _APK_REPO_
 			fi
 		fi
 		;;
+	DragonFly)
+		${SUDO}pkg install -y \
+					firefox \
+					mesa-dri-gallium \
+					perl5 \
+					p5-Archive-Zip \
+					p5-JSON \
+					p5-Config-INI \
+					p5-Crypt-URandom \
+					p5-File-HomeDir \
+					p5-Digest-SHA \
+					p5-HTTP-Daemon \
+					p5-HTTP-Message \
+					p5-IO-Socket-SSL \
+					p5-PDF-API2 \
+					p5-Text-CSV_XS \
+					p5-Term-ReadKey \
+					p5-Test-Simple \
+					p5-XML-Parser \
+					xauth \
+					xorg-vfbserver
+		${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+		;;
 	FreeBSD)
 		${SUDO}pkg install \
 					firefox \
