@@ -81,6 +81,47 @@ case $OSNAME in
 						make \
 						xvfb
 		fi
+		if [ -e "/etc/alpine-release" ]
+		then
+			${SUDO}apk add \
+				dbus-x11 \
+				firefox \
+				mesa-dri-nouveau \
+				perl \
+				perl-archive-zip \
+				perl-config-ini \
+				perl-crypt-urandom \
+				perl-file-homedir \
+				perl-http-daemon \
+				perl-http-message \
+				perl-io-socket-ssl \
+				perl-json \
+				perl-pdf-api2 \
+				perl-term-readkey \
+				perl-test-simple \
+				perl-text-csv_xs \
+				perl-uri \
+				perl-xml-parser \
+				make \
+				xauth \
+				xvfb
+			if [ $? != 0 ]
+			then
+				cat <<"_APK_REPO_";
+
+Check the /etc/apk/repositories file as it needs to have the community and main repos uncommented and
+probably the edge repositories as well, like so;
+
+#/media/cdrom/apks
+http://dl-cdn.alpinelinux.org/alpine/v3.16/main
+http://dl-cdn.alpinelinux.org/alpine/v3.16/community
+http://dl-cdn.alpinelinux.org/alpine/edge/main
+http://dl-cdn.alpinelinux.org/alpine/edge/community
+http://dl-cdn.alpinelinux.org/alpine/edge/testing
+
+_APK_REPO_
+			fi
+		fi
 		;;
 	FreeBSD)
 		${SUDO}pkg install \
