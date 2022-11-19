@@ -1,6 +1,7 @@
 #! /bin/sh
 
 SUDO="sudo ";
+SUDO_WITH_ENVIRONMENT="$SUDO -E ";
 OSNAME=`uname`;
 case $OSNAME in
 	Linux)
@@ -168,6 +169,28 @@ _APK_REPO_
 					xorg-vfbserver
 		${SUDO}mount -t fdescfs fdesc /dev/fd
 		${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+		;;
+	OpenBSD)
+		${SUDO}pkg_add \
+					firefox \
+					p5-Archive-Zip \
+					p5-JSON \
+					p5-Config-INI \
+					p5-Crypt-URandom \
+					p5-File-HomeDir \
+					p5-HTTP-Daemon \
+					p5-HTTP-Message \
+					p5-IO-Socket-SSL \
+					p5-Params-Util \
+					p5-PerlIO-utf8_strict \
+					p5-PDF-API2 \
+					p5-Sub-Exporter \
+					p5-Sub-Uplevel \
+					p5-Sub-Install \
+					p5-Text-CSV_XS \
+					p5-XML-Parser
+		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Config::INI
+		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Crypt::URandom
 		;;
 	*)
 		echo "Any help with patching '$OSNAME' support would be awesome???"
