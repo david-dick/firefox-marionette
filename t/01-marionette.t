@@ -15,6 +15,7 @@ use HTTP::Daemon();
 use HTTP::Status();
 use HTTP::Response();
 use IO::Socket::SSL();
+use File::HomeDir();
 BEGIN: {
     if ( $^O eq 'MSWin32' ) {
         require Win32::Process;
@@ -25,6 +26,7 @@ my $segv_detected;
 my $at_least_one_success;
 my $terminated;
 my $class;
+my $quoted_home_directory = quotemeta File::HomeDir->my_home();
 
 my $oldfh = select STDOUT; $| = 1; select $oldfh;
 $oldfh = select STDERR; $| = 1; select $oldfh;
@@ -1379,7 +1381,10 @@ SKIP: {
 	} else {
 		diag("WebGL is disabled by default when visible and addons are turned off");
 	}
-	if (!$ENV{FIREFOX_HOST}) {
+	if ($ENV{FIREFOX_HOST}) {
+	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} else {
 		my $shadow_root;
 		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
 		if ($^O eq 'cygwin') {
@@ -2089,7 +2094,11 @@ SKIP: {
 	} or do {
 		diag("\$firefox->chrome_window_handle is not supported for $major_version.$minor_version.$patch_version:$@");
 	};
-	if (!$ENV{FIREFOX_HOST}) {
+	if ($ENV{FIREFOX_HOST}) {
+	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} else {
+		# Coping with OpenBSD unveil - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271
 		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
 		if ($^O eq 'cygwin') {
 			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
