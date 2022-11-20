@@ -14,6 +14,7 @@ case $OSNAME in
 						dbus-x11 \
 						firefox \
 						make \
+						mesa-dri-drivers \
 						perl-Archive-Zip \
 						perl-Config-INI \
 						perl-Crypt-URandom \
