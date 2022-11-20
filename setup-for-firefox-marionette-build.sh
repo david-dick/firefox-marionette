@@ -192,6 +192,35 @@ _APK_REPO_
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Config::INI
 		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Crypt::URandom
 		;;
+	NetBSD)
+		PKG_PATH="http://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
+		${SUDO}pkg_add \
+					${PKG_PATH}firefox \
+					${PKG_PATH}p5-Archive-Zip \
+					${PKG_PATH}p5-JSON \
+					${PKG_PATH}p5-Config-INI \
+					${PKG_PATH}p5-Crypt-URandom \
+					${PKG_PATH}p5-File-HomeDir \
+					${PKG_PATH}p5-HTTP-Daemon \
+					${PKG_PATH}p5-HTTP-Message \
+					${PKG_PATH}p5-IO-Socket-SSL \
+					${PKG_PATH}p5-Params-Util \
+					${PKG_PATH}p5-PerlIO-utf8_strict \
+					${PKG_PATH}p5-PDF-API2 \
+					${PKG_PATH}p5-Sub-Exporter \
+					${PKG_PATH}p5-Sub-Uplevel \
+					${PKG_PATH}p5-Sub-Install \
+					${PKG_PATH}p5-Text-CSV_XS \
+					${PKG_PATH}p5-XML-Parser
+		if [ $? != 0 ]
+		then
+			cat <<_PKG_PATH_
+
+pkg_add failed. PKG_PATH was set to $PKG_PATH
+
+_PKG_PATH_
+		fi
+		;;
 	*)
 		echo "Any help with patching '$OSNAME' support would be awesome???"
 		;;
