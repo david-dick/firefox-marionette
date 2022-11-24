@@ -13,8 +13,14 @@ use File::Spec();
 delete $ENV{PATH};
 delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 
-local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
-  . ( $OSNAME eq 'freebsd' ? ':/usr/local/bin' : q[] );
+my %os_paths = (
+    freebsd   => '/usr/local/bin',
+    dragonfly => '/usr/local/bin',
+);
+local $ENV{PATH} =
+    '/usr/bin:/bin:/usr/sbin:/sbin' . defined $os_paths{$OSNAME}
+  ? q[:] . $os_paths{$OSNAME}
+  : q[];
 
 our $VERSION = '1.32';
 
