@@ -222,6 +222,31 @@ pkg_add failed. PKG_PATH was set to $PKG_PATH
 _PKG_PATH_
 		fi
 		;;
+	CYGWIN_NT*)
+		PACKAGE_LIST="perl-Archive-Zip"
+		for PACKAGE in perl-JSON \
+					perl-Config-INI \
+					perl-File-HomeDir \
+					perl-Digest-SHA \
+					perl-HTTP-Daemon \
+					perl-HTTP-Message \
+					perl-IO-Socket-SSL \
+					perl-PDF-API2 \
+					perl-PerlIO-utf8_strict \
+					perl-Sub-Exporter \
+					perl-Sub-Uplevel \
+					perl-Text-CSV_XS \
+					perl-Term-ReadKey \
+					perl-Test-Simple \
+					perl-XML-Parser
+		do
+			PACKAGE_LIST="$PACKAGE_LIST,$PACKAGE"
+		done
+		SETUP_EXE=`find /cygdrive -name 'setup-x86_64.exe' -exec grep -ail 'Cygwin installation tool' {} \;`
+		$SETUP_EXE -q -P $PACKAGE_LIST
+		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Config::INI
+		perl -MPDF::API2 -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan PDF::API2
+		;;
 	*)
 		echo "Any help with patching '$OSNAME' support would be awesome???"
 		;;
