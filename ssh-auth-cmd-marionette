@@ -16,6 +16,7 @@ delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 my %os_paths = (
     freebsd   => '/usr/local/bin',
     dragonfly => '/usr/local/bin',
+    netbsd    => '/usr/pkg/bin',
 );
 local $ENV{PATH} =
     '/usr/bin:/bin:/usr/sbin:/sbin' . defined $os_paths{$OSNAME}

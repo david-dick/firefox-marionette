@@ -13,6 +13,9 @@ if ($^O eq 'MSWin32') {
 	delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 	if (defined $ENV{PATH}) {
 		$ENV{PATH} = '/usr/bin:/bin:/usr/local/bin';	
+		if ($^O eq 'netbsd') {
+			$ENV{PATH} .= ":/usr/pkg/bin";
+		}
 		if (my $pid = fork) {
 			waitpid $pid, 0;
 			if ($? == 0) {
