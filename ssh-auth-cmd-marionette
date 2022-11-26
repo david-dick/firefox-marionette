@@ -18,10 +18,12 @@ my %os_paths = (
     dragonfly => '/usr/local/bin',
     netbsd    => '/usr/pkg/bin',
 );
-local $ENV{PATH} =
-    '/usr/bin:/bin:/usr/sbin:/sbin' . defined $os_paths{$OSNAME}
-  ? q[:] . $os_paths{$OSNAME}
-  : q[];
+local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
+  . (
+    defined $os_paths{$OSNAME}
+    ? q[:] . $os_paths{$OSNAME}
+    : q[]
+  );
 
 our $VERSION = '1.32';
 
