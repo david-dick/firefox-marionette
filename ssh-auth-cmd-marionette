@@ -332,9 +332,22 @@ sub _filesystem_regexes {
             push @allowed_binaries,           'firefox';
             push @allowed_binary_paths,       '/usr/bin/firefox';
             push @allowed_binary_directories, '/usr/bin';
-            if ( $OSNAME eq 'freebsd' ) {
-                push @allowed_binary_paths,       '/usr/local/bin/firefox';
-                push @allowed_binary_directories, '/usr/local/lib/firefox';
+            my %os_allowed_binary_paths = (
+                freebsd   => '/usr/local/bin/firefox',
+                dragonfly => '/usr/local/bin/firefox',
+                netbsd    => '/usr/pkg/bin/firefox',
+            );
+            if ( $os_allowed_binary_paths{$OSNAME} ) {
+                push @allowed_binary_paths, $os_allowed_binary_paths{$OSNAME};
+            }
+            my %os_allowed_binary_directories = (
+                freebsd   => '/usr/local/lib',
+                dragonfly => '/usr/local/lib/firefox',
+                netbsd    => '/usr/pkg/bin',
+            );
+            if ( $os_allowed_binary_directories{$OSNAME} ) {
+                push @allowed_binary_directories,
+                  $os_allowed_binary_directories{$OSNAME};
             }
         }
         else {
