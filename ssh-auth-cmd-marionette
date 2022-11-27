@@ -192,6 +192,7 @@ qr/(?:$quoted_linux_profiles_ini|$quoted_darwin_profiles_ini)\/profiles[.]ini/sm
       @sftp_server_regexs,
       qr/uname[ ][|][|][ ]ver/smx,
       qr/echo[ ]"TMPDIR=\\"\$TMPDIR\\""/smx,
+      qr/echo[ ]"DISPLAY=\\"\$DISPLAY\\""/smx,
       qr/echo[ ]"TMP=\\"\$TMP\\""/smx,
       qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex/smx,
       qr/mkdir[ ](?:\-m[ ]700[ ])?$root_dir_regex\/$sub_directory_regex/smx,

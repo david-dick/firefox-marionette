@@ -602,6 +602,13 @@ sub _setup_ssh {
         }
     }
     $self->_initialise_remote_uname();
+    if ( ( defined $self->_visible() ) && ( $self->_visible() eq 'local' ) ) {
+        if ( !$self->_get_remote_environment_variable_via_ssh('DISPLAY') ) {
+            Firefox::Marionette::Exception->throw(
+                $self->_ssh_address() . ' is not allowing X11 Forwarding' );
+        }
+
+    }
     return;
 }
 
@@ -8690,6 +8697,11 @@ sub _get_remote_environment_command {
     {
         $command = q[echo ] . $name . q[="%] . $name . q[%"];
     }
+    elsif (( $self->_remote_uname() )
+        && ( $self->_remote_uname() =~ /^(?:freebsd|dragonfly)$/smx ) )
+    {
+        $command = 'echo ' . $name . q[=] . q[\\"] . q[$] . $name . q[\\"];
+    }
     else {
         $command =
           'echo "' . $name . q[=] . q[\\] . q["] . q[$] . $name . q[\\] . q[""];
@@ -8700,7 +8712,11 @@ sub _get_remote_environment_command {
 sub _get_remote_environment_variable_via_ssh {
     my ( $self, $name ) = @_;
     my $value;
-    my $output = $self->_execute_via_ssh( {},
+    my $parameters = { ignore_exit_status => 1 };
+    if ( $name eq 'DISPLAY' ) {
+        $parameters->{graphical} = 1;
+    }
+    my $output = $self->_execute_via_ssh( $parameters,
         $self->_get_remote_environment_command($name) );
     if ( defined $output ) {
         foreach my $line ( split /\r?\n/smx, $output ) {
