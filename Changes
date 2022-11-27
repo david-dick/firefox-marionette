@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.33  Sun Nov 27 21:38 2022
+       Improving cross platform support
+       Forcing no agent forwarding for ssh
+       Trying to use the DISPLAY variable to detect X11 Forwarding being disabled
+
 1.32  Tue Nov 08 19:42 2022
        Win32 test suite fixes
 

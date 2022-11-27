@@ -3,7 +3,7 @@ package Firefox::Marionette::Login;
 use strict;
 use warnings;
 
-our $VERSION = '1.32';
+our $VERSION = '1.33';
 
 sub _NUMBER_OF_MILLISECONDS_IN_A_SECOND { return 1000 }
 
@@ -131,7 +131,7 @@ Firefox::Marionette::Login - Represents a login from the Firefox Password Manage
 
 =head1 VERSION
 
-Version 1.32
+Version 1.33
 
 =head1 SYNOPSIS
 
