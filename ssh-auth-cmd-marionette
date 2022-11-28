@@ -17,6 +17,7 @@ my %os_paths = (
     freebsd   => '/usr/local/bin',
     dragonfly => '/usr/local/bin',
     netbsd    => '/usr/pkg/bin',
+    openbsd   => '/usr/local/bin',
 );
 local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
   . (
@@ -337,6 +338,7 @@ sub _filesystem_regexes {
                 freebsd   => '/usr/local/bin/firefox',
                 dragonfly => '/usr/local/bin/firefox',
                 netbsd    => '/usr/pkg/bin/firefox',
+                openbsd   => '/usr/local/bin/firefox',
             );
             if ( $os_allowed_binary_paths{$OSNAME} ) {
                 push @allowed_binary_paths, $os_allowed_binary_paths{$OSNAME};
@@ -345,6 +347,7 @@ sub _filesystem_regexes {
                 freebsd   => '/usr/local/lib',
                 dragonfly => '/usr/local/lib/firefox',
                 netbsd    => '/usr/pkg/bin',
+                openbsd   => '/usr/local/lib/firefox',
             );
             if ( $os_allowed_binary_directories{$OSNAME} ) {
                 push @allowed_binary_directories,
