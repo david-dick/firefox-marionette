@@ -33,6 +33,7 @@ README
 README.md
 ca-bundle-for-firefox
 check-firefox-certificate-authorities
+mozilla-head-check
 setup-for-firefox-marionette-build.sh
 ssh-auth-cmd-marionette
 firefox-passwords

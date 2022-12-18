@@ -1,0 +1,131 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+use Cwd();
+use File::Temp();
+use File::Spec();
+use FileHandle();
+use English qw( -no_match_vars );
+use Carp();
+use Sys::Syslog();
+
+our $VERSION = '1.33';
+
+MAIN: {
+    my $facility = 'LOG_LOCAL0';
+    my $absolute_program_name;
+    if ( File::Spec->file_name_is_absolute($PROGRAM_NAME) ) {
+        $absolute_program_name = $PROGRAM_NAME;
+    }
+    else {
+        $absolute_program_name =
+          File::Spec->catfile( Cwd::cwd(), $PROGRAM_NAME );
+    }
+    my ( $original_volume, $original_directories, $original_name ) =
+      File::Spec->splitpath($absolute_program_name);
+    my $ident = $original_name;
+    my $base_directory =
+      File::Spec->catdir( $original_volume, $original_directories );
+    my $mozilla_central_directory = File::Spec->canonpath(
+        File::Spec->catdir( $base_directory, q[..], 'mozilla-central' ) );
+    build_firefox($mozilla_central_directory);
+    my $changeset = most_recent_firefox_changeset($mozilla_central_directory);
+    my $firefox_path = File::Spec->catfile( $mozilla_central_directory,
+        'obj-x86_64-pc-linux-gnu', 'dist', 'bin', 'firefox' );
+    local $ENV{FIREFOX_BINARY}  = $firefox_path;
+    local $ENV{RELEASE_TESTING} = 1;
+    system {'perl'} 'perl', '-Ilib', 't/01-marionette.t'
+      and Carp::croak(q[Failed to 'perl -Ilib t/01-marionette.t']);
+    Sys::Syslog::openlog( $ident, 'cons', $facility );
+    Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
+        "Passed t/01-marionette.t at mozilla-central changeset $changeset" );
+    Sys::Syslog::closelog();
+}
+
+sub build_firefox {
+    my ($mozilla_central_directory) = @_;
+    my ( $mozilla_volume, $mozilla_directories, $mozilla_name ) =
+      File::Spec->splitpath($mozilla_central_directory);
+    my $mozilla_parent_directory =
+      File::Spec->catdir( $mozilla_volume, $mozilla_directories );
+    if ( my $pid = fork ) {
+        waitpid $pid, 0;
+        if ( $CHILD_ERROR != 0 ) {
+            Carp::croak("Failed to checkout on $mozilla_central_directory");
+        }
+    }
+    elsif ( defined $pid ) {
+        eval {
+            if ( !-d $mozilla_central_directory ) {
+                chdir $mozilla_parent_directory
+                  or Carp::croak(
+"Failed to chdir $mozilla_parent_directory:$EXTENDED_OS_ERROR"
+                  );
+                system {'hg'} 'hg', 'clone',
+                  'https://hg.mozilla.org/mozilla-central/', $mozilla_name
+                  and Carp::croak(
+"Failed to 'hg clone https://hg.mozilla.org/mozilla-central/ $mozilla_name:$EXTENDED_OS_ERROR"
+                  );
+            }
+            chdir $mozilla_central_directory
+              or Carp::croak(
+                "Failed to chdir $mozilla_central_directory:$EXTENDED_OS_ERROR"
+              );
+            system {'hg'} 'hg', 'pull'
+              and
+              Carp::croak("Failed to 'hg pull' on $mozilla_central_directory");
+            system {'hg'} 'hg', 'update', '--clean'
+              and Carp::croak(
+                "Failed to 'hg update --clean' on $mozilla_central_directory");
+            system {'./mach'} './mach', 'clobber'
+              and Carp::croak(
+                "Failed to './mach clobber' on $mozilla_central_directory");
+            system {'./mach'} './mach', 'build'
+              and Carp::croak(
+                "Failed to './mach build' on $mozilla_central_directory");
+            exit 0;
+        } or do {
+            chomp $EVAL_ERROR;
+            Carp::carp($EVAL_ERROR);
+        };
+        exit 1;
+    }
+    else {
+        Carp::croak("Failed to fork:$OS_ERROR");
+    }
+    return;
+}
+
+sub most_recent_firefox_changeset {
+    my ($mozilla_central_directory) = @_;
+    my $handle = FileHandle->new();
+    my $changeset;
+    if ( my $pid = $handle->open(q[-|]) ) {
+        while ( my $line = <$handle> ) {
+            if ( $line =~ /^changeset:[ ]+(\d+:[[:xdigit:]]+)\s*$/smx ) {
+                ($changeset) = ($1);
+            }
+        }
+        close $handle or Carp::croak(q[Failed to successfully run 'hg heads']);
+
+    }
+    elsif ( defined $pid ) {
+        eval {
+            chdir $mozilla_central_directory
+              or Carp::croak(
+                "Failed to chdir $mozilla_central_directory:$EXTENDED_OS_ERROR"
+              );
+            exec {'hg'} 'hg', 'heads'
+              or Carp::croak("Failed to exec 'hg':$EXTENDED_OS_ERROR");
+        } or do {
+            chomp $EVAL_ERROR;
+            Carp::carp($EVAL_ERROR);
+        };
+        exit 1;
+    }
+    else {
+        Carp::croak("Failed to fork:$OS_ERROR");
+    }
+    return $changeset;
+}
