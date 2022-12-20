@@ -4017,6 +4017,19 @@ SKIP: {
 		};
 		alarm 0;
 		ok($maximise, "\$firefox->maximise()");
+		if ($maximise) {
+			my $count = 0;
+			foreach my $display ($firefox->displays()) {
+				$count += 1;
+				if ($firefox->resize($display->width(), $display->height())) {
+					ok(1, "Resized the display to " . $display->width . "x" . $display->height());
+					last unless ($ENV{RELEASE_TESTING});
+				} else {
+					ok(1, "Not able to resize the display to " . $display->width . "x" . $display->height());
+				}
+			}
+			ok($count, "$count displays are currently known to firefox");
+		}
 	}
 	if ($ENV{FIREFOX_HOST}) {
 		SKIP: {

@@ -5,6 +5,7 @@ use strict;
 use Firefox::Marionette::Response();
 use Firefox::Marionette::Element();
 use Firefox::Marionette::Cookie();
+use Firefox::Marionette::Display();
 use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
 use Firefox::Marionette::Timeouts();
@@ -1813,6 +1814,391 @@ sub _wait_for_any_background_update_status {
         $update_status = $self->_get_update_status();
     }
     return;
+}
+
+sub _displays {
+    my ($self) = @_;
+
+# Retrieved and translated from https://en.wikipedia.org/wiki/List_of_common_resolutions
+    my $displays = <<"_DISPLAYS_";
+0.26K1	Microvision	16	16	1:1	1:1	1:1	256
+0.46K1	Timex Datalink USB[1][2]	42	11	42:11	1:1	5:9	462
+1.02K1	PocketStation	32	32	1:1	1:1	1:1	1,024
+1.2K3	Etch A Sketch Animator	40	30	4:3	4:3	1:1	1,200
+1.34K1	Epson RC-20[3]	42	32	42:32	1:1	0.762	1,344
+1.54K2	GameKing I (GM-218), VMU	48	32	3:2	3:2	1:1	1,536
+2.4K2	Etch A Sketch Animator 2000	60	40	3:2	3:2	1:1	2,400
+4.03K7:4	Nokia 3210 and many other early Nokia Phones	84	48	7:4	2:1	1.143	4,032
+4.1K1	Hartung Game Master	64	64	1:1	1:1	1:1	4,096
+4.61K1	Field Technology CxMP smart watch[2]	72	64	72:64	1:1	0.889	4,608
+4.61K1	Montblanc e-Strap[4]	128	36	128:36	1:1	0.281	4,608
+4.8K1	Epoch Game Pocket Computer	75	64	75:64	1:1	1:1.171875	4,800
+0.01M3.75	Entex Adventure Vision	150	40	150:40	3.75	1:1	6,000
+0.01M2	First graphing calculators: Casio fx-7000G, TI-81	96	64	3:2	3:2	1:1	6,144
+0.01M2	Pok\x{E9}mon Mini	96	64	3:2	3:2	1:1	6,144
+0.01M2	TRS-80	128	48	128:48	3:2	0.563	6,144
+0.01M2	Early Nokia colour screen phones	96	65	96:65	3:2	1.016	6,240
+0.01MA	Ruputer	102	64	102:64	8:5	1.004	6,528
+0.01M4	Sony Ericsson T68i, T300, T310 and other early colour screen phones	101	80	101:80	5:4	0.99	8,080
+0.01M1	MetaWatch Strata & Frame watches	96	96	1:1	1:1	1:1	9,216
+0.02M3.75	Atari Portfolio, TRS-80 Model 100	240	64	240:64	3.75	1:1	15,360
+0.02MA	Atari Lynx	160	102	160:102	8:5	1.02	16,320
+0.02M1	Sony SmartWatch, Sifteo cubes, early color screen phones (square display)	128	128	1:1	1:1	1:1	16,384
+QQVGA	Quarter Quarter VGA	160	120	4:3	4:3	1:1	19,200
+0.02M1.111	Nintendo Game Boy (GB), Game Boy Color (GBC); Sega Game Gear (GG)	160	144	160:144	10:9	1:1	23,040
+0.02M0.857	Pebble E-Paper Watch	144	168	144:168	6:7	1:1	24,192
+0.02M1.053	Neo Geo Pocket Color	160	152	160:152	20:19	1:1	24,320
+0.03M1	Palm LoRes	160	160	1:1	1:1	1:1	25,600
+0.03M3	Apple II HiRes (6 color) and Apple IIe Double HiRes (16 color), grouping subpixels	140	192	140:192	4:3	1.828	26,880
+0.03M3	VIC-II multicolor, IBM PCjr 16-color, Amstrad CPC 16-color	160	200	160:200	4:3	5:3	32,000
+0.03M9	WonderSwan	224	144	14:9	14:9	1:1	32,256
+0.04M13:11	Nokia Series 60 smartphones (Nokia 7650, plus First and Second Edition models only)	208	176	13:11	13:11	1:1	36,608
+HQVGA	Half QVGA: Nintendo Game Boy Advance	240	160	3:2	3:2	1:1	38,400
+0.04M4	Older Java MIDP devices like Sony Ericsson K600	220	176	5:4	5:4	1:1	38,720
+0.04M3	Acorn BBC 20 column modes	160	256	160:256	4:3	2.133	40,960
+0.04M1	Nokia 5500 Sport, Nokia 6230i, Nokia 8800	208	208	1:1	1:1	1:1	43,264
+0.05M3	TMS9918 modes 1 (e.g. TI-99/4A) and 2, ZX Spectrum, MSX, Sega Master System, Nintendo DS (each screen)	256	192	4:3	4:3	1:1	49,152
+0.05M3	Apple II HiRes (1 bit per pixel)	280	192	280:192	4:3	0.914	53,760
+0.05M3	MSX2	256	212	256:212	4:3	1.104	54,272
+0.06M1	Samsung Gear Fit	432	128	432:128	1:1	0.296	55,296
+0.06M3	Nintendo Entertainment System, Super Nintendo Entertainment System, Sega Mega Drive	256	224	256:224	4:3	7:6	57,344
+0.06M1	Apple iPod Nano 6G	240	240	1:1	1:1	1:1	57,600
+0.06M3	Sony PlayStation (e.g. Rockman Complete Works)	256	240	256:240	4:3	5:4	61,440
+0.06M6	Atari 400/800 PAL	320	192	5:3	5:3	1:1	61,440
+0.06M5:3	Atari 400/800 NTSC	320	192	5:3	50:35	6:7	61,440
+Color Graphics Adapter (CGA)	CGA 4-color, ATM 16 color, Atari ST 16 color, Commodore 64 VIC-II Hires, Amiga OCS NTSC Lowres, Apple IIGS LoRes, MCGA, Amstrad CPC 4-color	320	200	8:5	4:3	0.833	64,000
+0.07M1	Elektronika BK	256	256	1:1	1:1	1:1	65,536
+0.07M3	Sinclair QL	256	256	1:1	4:3	4:3	65,536
+0.07M2	UIQ 2.x based smartphones	320	208	320:208	3:2	0.975	66,560
+0.07M2	Sega Mega Drive, Sega Nomad, Neo Geo AES	320	224	10:7	3:2	1.05	71,680
+QVGA	Quarter VGA: Apple iPod Nano 3G, Sony PlayStation, Nintendo 64, Nintendo 3DS (lower screen)	320	240	4:3	4:3	1:1	76,800
+0.08M4	Acorn BBC 40 column modes, Amiga OCS PAL Lowres	320	256	5:4	5:4	1:1	81,920
+0.09M3	Capcom CP System (CPS, CPS2, CPS3) arcade system boards	384	224	384:224	4:3	0.778	86,016
+0.09M3	Sony PlayStation (e.g. X-Men vs. Street Fighter)	368	240	368:240	4:3	0.869	88,320
+0.09M9	Apple iPod Nano 5G	376	240	376:240	14:9	0.993	90,240
+0.09M0.8	Apple Watch 38mm	272	340	272:340	4:5	1:1	92,480
+WQVGA	Wide QVGA: Common on Windows Mobile 6 handsets	400	240	5:3	5:3	1:1	96,000
+0.1M3	Timex Sinclair 2068, Timex Computer 2048	512	192	512:192	4:3	0.5	98,304
+0.1M3	IGS PolyGame Master arcade system board	448	224	2:1	4:3	0.667	100,352
+0.1M1	Palm (PDA) HiRes, Samsung Galaxy Gear	320	320	1:1	1:1	1:1	102,400
+WQVGA	Wide QVGA: Apple iPod Nano 7G	432	240	9:5	9:5	1:1	103,680
+0.11M3	Apple IIe Double Hires (1 bit per pixel)[5]	560	192	560:192	4:3	0.457	107,520
+0.11M2	TurboExpress	400	270	400:270	3:2	1.013	108,000
+0.11M3	MSX2	512	212	512:212	4:3	0.552	108,544
+0.11M3	Common Intermediate Format	384	288	4:3	4:3	1:1	110,592
+WQVGA*	Variant used commonly for portable DVD players, digital photo frames, GPS receivers and devices such as the Kenwood DNX-5120 and Glospace SGK-70; often marketed as "16:9"	480	234	480:234	16:9	0.866	112,320
+qSVGA	Quarter SVGA: Selectable in some PC shooters	400	300	4:3	4:3	1:1	120,000
+0.12M3	Teletext and Viewdata 40x25 character screens (PAL non-interlaced)	480	250	480:250	4:3	0.694	120,000
+0.12M0.8	Apple Watch 42mm	312	390	312:390	4:5	1:1	121,680
+0.12M3	Sony PlayStation (e.g. Tekken and Tekken 2)	512	240	512:240	4:3	0.625	122,880
+0.13M3	Amiga OCS NTSC Lowres interlaced	320	400	320:400	4:3	5:3	128,000
+Color Graphics Adapter (CGA)	Atari ST 4 color, ATM, CGA mono, Amiga OCS NTSC Hires, Apple IIGS HiRes, Nokia Series 80 smartphones, Amstrad CPC 2-color	640	200	640:200	4:3	0.417	128,000
+0.13M9	Sony PlayStation Portable, Zune HD, Neo Geo X	480	272	480:272	16:9	1.007	130,560
+0.13M2:1	Elektronika BK, Polyplay	512	256	2:1	2:1	1:1	131,072
+0.13M3	Sinclair QL	512	256	2:1	4:3	0.667	131,072
+0.15M13:11	Nokia Series 60 smartphones (E60, E70, N80, N90)	416	352	13:11	13:11	1:1	146,432
+HVGA	Palm Tungsten T3, Apple iPhone, HTC Dream, Palm (PDA) HiRES+	480	320	3:2	3:2	1:1	153,600
+HVGA	Handheld PC	640	240	640:240	8:3	1:1	153,600
+0.15M3	Sony PlayStation	640	240	640:240	4:3	0.5	153,600
+0.16M3	Acorn BBC 80 column modes, Amiga OCS PAL Hires	640	256	640:256	4:3	0.533	163,840
+0.18M2	Black & white Macintosh (9")	512	342	512:342	3:2	1.002	175,104
+0.18M3	Sony PlayStation (e.g. Tekken 3) (interlaced)	368	480	368:480	4:3	1.739	176,640
+0.19M3	Sega Model 1 (e.g. Virtua Fighter) and Model 2 (e.g. Daytona USA) arcade system boards	496	384	496:384	4:3	1.032	190,464
+0.19M6	Nintendo 3DS (upper screen in 3D mode: 2x 400 x 240, one for each eye)	800	240	800:240	5:3	0.5	192,000
+0.2M3	Macintosh LC (12")/Color Classic (also selectable in many PC shooters)	512	384	4:3	4:3	1:1	196,608
+0.2M2:1	Nokia Series 90 smartphones (7700, 7710)	640	320	2:1	2:1	1:1	204,800
+EGA	Enhanced Graphics Adapter	640	350	640:350	4:3	0.729	224,000
+0.23M9	nHD, used by Nokia 5800, Nokia 5530, Nokia X6, Nokia N97, Nokia N8[6]	640	360	16:9	16:9	1:1	230,400
+0.24M3	Teletext and Viewdata 40x25 character screens (PAL interlaced)	480	500	480:500	4:3	1.389	240,000
+0.25M3	Namco System 12 arcade system board (e.g. Soulcalibur, Tekken 3, Tekken Tag Tournament) (interlaced)	512	480	512:480	4:3	5:4	245,760
+0.25M3	HGC	720	348	720:348	4:3	0.644	250,560
+0.25M3	MDA	720	350	720:350	4:3	0.648	252,000
+0.26M3	Atari ST mono, Amiga OCS NTSC Hires interlaced	640	400	8:5	4:3	0.833	256,000
+0.26M3	Apple Lisa	720	364	720:364	4:3	0.674	262,080
+0.28M2.273	Nokia E90 Communicator	800	352	800:352	25:11	1:1	281,600
+0.29M4	Some older monitors	600	480	5:4	5:4	1:1	288,000
+VGA	Video Graphics Array:MCGA (in monochome), Sun-1 color, Sony PlayStation (e.g. Tobal No.1 and Ehrgeiz), Nintendo 64 (e.g. various Expansion Pak enhanced games), 6th Generation Consoles, Nintendo Wii	640	480	4:3	4:3	1:1	307,200
+0.33M3	Amiga OCS PAL Hires interlaced	640	512	5:4	4:3	1.066	327,680
+WVGA	Wide VGA	768	480	8:5	8:5	1:1	368,640
+WGA	Wide VGA: List of mobile phones with WVGA display	800	480	5:3	5:3	1:1	384,000
+W-PAL	Wide PAL	848	480	848:480	16:9	1.006	407,040
+FWVGA	List of mobile phones with FWVGA display	854	480	854:480	16:9	0.999	409,920
+SVGA	Super VGA	800	600	4:3	4:3	1:1	480,000
+qHD	Quarter FHD: AACS ICT, HRHD, Motorola Atrix 4G, Sony XEL-1[7][unreliable source?]	960	540	16:9	16:9	1:1	518,400
+0.52M3	Apple Macintosh Half Megapixel[8]	832	624	4:3	4:3	1:1	519,168
+0.52M9	PlayStation Vita (PSV)	960	544	960:544	16:9	1.007	522,240
+0.59M9	PAL 16:9	1024	576	16:9	16:9	1:1	589,824
+DVGA	Double VGA: Apple iPhone 4S,[9][unreliable source?][10] 4th Generation iPod Touch[11]	960	640	3:2	3:2	1:1	614,400
+WSVGA	Wide SVGA: 10" netbooks	1024	600	1024:600	16:9	1.041	614,400
+0.66MA	Close to WSVGA	1024	640	8:5	8:5	1:1	655,360
+0.69M3	Panasonic DVCPRO100 for 50/60 Hz over 720p - SMPTE Resolution	960	720	4:3	4:3	1:1	691,200
+0.73M9	Apple iPhone 5, iPhone 5S, iPhone 5C, iPhone SE (1st)	1136	640	1136:640	16:9	1.001	727,040
+0.73M9	Occasional Chromebook resolution with 96 DPI; see HP Chromebook 14A G5.	1138	640	16:9	16:9	0.999	728,320
+XGA	Extended Graphics Array:Common on 14"/15" TFTs and the Apple iPad	1024	768	4:3	4:3	1:1	786,432
+0.82M3	Sun-1 monochrome	1024	800	32:25	4:3	1.041	819,200
+0.83MA	Supported by some GPUs, monitors, and games	1152	720	8:5	8:5	1:1	829,440
+0.88M2	Apple PowerBook G4 (original Titanium version)	1152	768	3:2	3:2	1:1	884,736
+WXGA-H	Wide XGA:Minimum, 720p HDTV	1280	720	16:9	16:9	1:1	921,600
+0.93M3	NeXT MegaPixel Display	1120	832	1120:832	4:3	0.99	931,840
+WXGA	Wide XGA:Average, BrightView	1280	768	5:3	5:3	1:1	983,040
+XGA+	Apple XGA[note 2]	1152	864	4:3	4:3	1:1	995,328
+1M9	Apple iPhone 6, iPhone 6S, iPhone 7, iPhone 8, iPhone SE (2nd)	1334	750	1334:750	16:9	0.999	1,000,500
+WXGA	Wide XGA:Maximum	1280	800	8:5	8:5	1:1	1,024,000
+1.04M32:25	Sun-2 Prime Monochrome or Color Video, also common in Sun-3 and Sun-4 workstations	1152	900	32:25	32:25	1:1	1,036,800
+1.05M1:1	Network Computing Devices	1024	1024	1:1	1:1	1:1	1,048,576
+1.05M9	Standardized HDTV 720p/1080i displays or "HD ready", used in most cheaper notebooks	1366	768	1366:768	16:9	0.999	1,049,088
+1.09M2	Apple PowerBook G4	1280	854	1280:854	3:2	1.001	1,093,120
+SXGA-	Super XGA "Minus"	1280	960	4:3	4:3	1:1	1,228,800
+1.23M2.083	Sony VAIO P series	1600	768	1600:768	25:12	1:1	1,228,800
+1.3M0.9	HTC Vive (per eye)	1080	1200	1080:1200	9:10	1:1	1,296,000
+WSXGA	Wide SXGA	1440	900	8:5	8:5	1:1	1,296,000
+WXGA+	Wide XGA+	1440	900	8:5	8:5	1:1	1,296,000
+SXGA	Super XGA	1280	1024	5:4	5:4	1:1	1,310,720
+1.38M2	Apple PowerBook G4	1440	960	3:2	3:2	1:1	1,382,400
+HD+	900p	1600	900	16:9	16:9	1:1	1,440,000
+SXGA+	Super XGA Plus, Lenovo Thinkpad X61 Tablet	1400	1050	4:3	4:3	1:1	1,470,000
+1.47M5	Similar to A4 paper format (~123 dpi for A4 size)	1440	1024	1440:1024	7:5	0.996	1,474,560
+1.56M3	HDV 1080i	1440	1080	4:3	4:3	1:1	1,555,200
+1.64M10	SGI 1600SW	1600	1024	25:16	25:16	1:1	1,638,400
+WSXGA+	Wide SXGA+	1680	1050	8:5	8:5	1:1	1,764,000
+1.78M9	Available in some monitors	1776	1000	1776:1000	16:9	1.001	1,776,000
+UXGA	Ultra XGA:Lenovo Thinkpad T60	1600	1200	4:3	4:3	1:1	1,920,000
+2.05M4	Sun3 Hi-res monochrome	1600	1280	5:4	5:4	1:1	2,048,000
+FHD	Full HD:1080 HDTV (1080i, 1080p)	1920	1080	16:9	16:9	1:1	2,073,600
+2.07M1	Windows Mixed Reality headsets (per eye)	1440	1440	1:1	1:1	1:1	2,073,600
+DCI 2K	DCI 2K	2048	1080	2048:1080	1.90:1	1.002	2,211,840
+WUXGA	Wide UXGA	1920	1200	8:5	8:5	1:1	2,304,000
+QWXGA	Quad WXGA, 2K	2048	1152	16:9	16:9	1:1	2,359,296
+2.41M3	Supported by some GPUs, monitors, and games	1792	1344	4:3	4:3	1:1	2,408,448
+FHD+	Full HD Plus:Microsoft Surface 3	1920	1280	3:2	3:2	1:1	2,457,600
+2.46M2.10:1	Samsung Galaxy S10e, Xiaomi Mi A2 Lite, Huawei P20 Lite	2280	1080	2.10:1	2.10:1	1:1	2,462,400
+2.53M2.167	Samsung Galaxy A8s, Xiaomi Redmi Note 7, Honor Play	2340	1080	19\x{BD}:9	19\x{BD}:9	1:1	2,527,200
+2.58M3	Supported by some GPUs, monitors, and games	1856	1392	4:3	4:3	1:1	2,583,552
+2.59M09?	Samsung Galaxy A70, Samsung Galaxy S21/+, Xiaomi Redmi Note 9S, default for many 3200x1440 phones[12]	2400	1080	20:9	20:9	1:1	2,592,000
+2.59M4	Supported by some GPUs, monitors, and games	1800	1440	5:4	5:4	1:1	2,592,000
+CWSXGA	NEC CRV43,[13] Ostendo CRVD,[14] Alienware Curved Display[15][16]	2880	900	2880:900	16:5	1:1	2,592,000
+2.59M9	HTC Vive, Oculus Rift (both eyes)	2160	1200	9:5	9:5	1:1	2,592,000
+2.62MA	Supported by some GPUs, monitors, and games	2048	1280	8:5	8:5	1:1	2,621,440
+TXGA	Tesselar XGA	1920	1400	1920:1400	7:5	1.021	2,688,000
+2.72M1A	Motorola One Vision, Motorola One Action and Sony Xperia 10 IV	2520	1080	21:9	21:9	1:1	2,721,600
+2.74M2.165	Apple iPhone X, iPhone XS and iPhone 11 Pro	2436	1125	2436:1125	2.165	1:1	2,740,500
+2.74M1AD	Avielo Optix SuperWide 235 projector[17]	2538	1080	2.35:1	2.35:1	1.017	2,741,040
+2.76M3	Supported by some GPUs, monitors, and games	1920	1440	4:3	4:3	1:1	2,764,800
+UW-FHD	UltraWide FHD:Cinema TV from Philips and Vizio, Dell UltraSharp U2913WM, ASUS MX299Q, NEC EA294WMi, Philips 298X4QJAB, LG 29EA93, AOC Q2963PM	2560	1080	21:9	21:9	1:1	2,764,800
+3.11M2	Microsoft Surface Pro 3	2160	1440	3:2	3:2	1:1	3,110,400
+QXGA	Quad XGA:iPad (3rd Generation), iPad Mini (2nd Generation)	2048	1536	4:3	4:3	1:1	3,145,728
+3.32MA	Maximum resolution of the Sony GDM-FW900, Hewlett Packard A7217A and the Retina Display MacBook	2304	1440	8:5	8:5	1:1	3,317,760
+3.39MA	Surface Laptop	2256	1504	3:2	8:5	1.067	3,393,024
+WQHD	Wide Quad HD:Dell UltraSharp U2711, Dell XPS One 27, Apple iMac	2560	1440	16:9	16:9	1:1	3,686,400
+3.98M3	Supported by some displays and graphics cards[18][unreliable source?][19]	2304	1728	4:3	4:3	1:1	3,981,312
+WQXGA	Wide QXGA:Apple Cinema HD 30, Apple 13" MacBook Pro Retina Display, Dell Ultrasharp U3011, Dell 3007WFP, Dell 3008WFP, Gateway XHD3000, Samsung 305T, HP LP3065, HP ZR30W, Nexus 10	2560	1600	8:5	8:5	1:1	4,096,000
+4.15M2:1	LG G6, LG V30, Pixel 2 XL, HTC U11+, Windows Mixed Reality headsets (both eyes)	2880	1440	2:1	2:1	1:1	4,147,200
+Infinity Display	Samsung Galaxy S8, S8+, S9, S9+, Note 8	2960	1440	18\x{BD}:9	18\x{BD}:9	1:1	4,262,400
+4.35M2	Chromebook Pixel	2560	1700	3:2	3:2	1:1	4,352,000
+4.61M1.422	Pixel C	2560	1800	64:45	64:45	1:1	4,608,000
+4.67MA	Lenovo Thinkpad W541	2880	1620	16:9	8:5	0.9	4,665,600
+4.92M3	Max. CRT resolution, supported by the Viewsonic P225f and some graphics cards	2560	1920	4:3	4:3	1:1	4,915,200
+Ultra-Wide QHD	LG, Samsung, Acer, HP and Dell UltraWide monitors	3440	1440	21:9	21:9	1:1	4,953,600
+4.99M2	Microsoft Surface Pro 4	2736	1824	3:2	3:2	1:1	4,990,464
+5.18MA	Apple 15" MacBook Pro Retina Display	2880	1800	8:5	8:5	1:1	5,184,000
+QSXGA	Quad SXGA	2560	2048	5:4	5:4	1:1	5,242,880
+5.6M3	iPad Pro 12.9"	2732	2048	4:3	4:3	0.999	5,595,136
+WQXGA+	Wide QXGA+:HP Envy TouchSmart 14, Fujitsu Lifebook UH90/L, Lenovo Yoga 2 Pro	3200	1800	16:9	16:9	1:1	5,760,000
+QSXGA+	Quad SXGA+	2800	2100	4:3	4:3	1:1	5,880,000
+5.9MA	Apple 16" MacBook Pro Retina Display	3072	1920	8:5	8:5	1:1	5,898,240
+3K	Microsoft Surface Book, Huawei MateBook X Pro[20]	3000	2000	3:2	3:2	1:1	6,000,000
+UW4K	Ultra-Wide 4K	3840	1600	2.35:1	21:9	0.988	6,144,000
+WQSXGA	Wide QSXGA	3200	2048	25:16	25:16	1:1	6,553,600
+7M2	Microsoft Surface Book 2 15"	3240	2160	3:2	3:2	1:1	6,998,400
+DWQHD	Dual Wide Quad HD: Philips 499P9H, Dell U4919DW, Samsung C49RG94SSU	5120	1440	32:9	32:9	1:1	7,372,800
+QUXGA	Quad UXGA	3200	2400	4:3	4:3	1:1	7,680,000
+4K UHD-1	4K Ultra HD 1:2160p, 4000-lines UHDTV (4K UHD)	3840	2160	16:9	16:9	1:1	8,294,400
+DCI 4K	DCI 4K	4096	2160	1.90:1	1.90:1	1.002	8,847,360
+WQUXGA	Wide QUXGA:IBM T221	3840	2400	8:5	8:5	1:1	9,216,000
+9.44M9	LG Ultrafine 21.5, Apple 21.5" iMac 4K Retina Display	4096	2304	16:9	16:9	1:1	9,437,184
+UW5K (WUHD)	Ultra-Wide 5K:21:9 aspect ratio TVs	5120	2160	21:9	21:9	1:1	11,059,200
+11.29M9	Apple 24" iMac 4.5K Retina Display	4480	2520	16:9	16:9	1:1	11,289,600
+HXGA	Hex XGA	4096	3072	4:3	4:3	1:1	12,582,912
+13.5M2	Surface Studio	4500	3000	3:2	3:2	1:1	13,500,000
+5K	Dell UP2715K, LG Ultrafine 27, Apple 27" iMac 5K Retina Display	5120	2880	16:9	16:9	1:1	14,745,600
+WHXGA	Wide HXGA	5120	3200	8:5	8:5	1:1	16,384,000
+HSXGA	Hex SXGA	5120	4096	5:4	5:4	1:1	20,971,520
+6K	Apple 32" Pro Display XDR[21] 6K Retina Display	6016	3384	16:9	16:9	1:1	20,358,144
+WHSXGA	Wide HSXGA	6400	4096	25:16	25:16	1:1	26,214,400
+HUXGA	Hex UXGA	6400	4800	4:3	4:3	1:1	30,720,000
+-		6480	3240	2:1	2:1	1:1	20,995,200
+8K UHD-2	8K Ultra HD 2:4320p, 8000-lines UHDTV (8K UHD)	7680	4320	16:9	16:9	1:1	33,177,600
+WHUXGA	Wide HUXGA	7680	4800	8:5	8:5	1:1	36,864,000
+8K Full Format	DCI 8K	8192	4320	1.90:1	1.90:1	1.002	35,389,440
+-		8192	4608	16:9	16:9	1:1	37,748,736
+UW10K	Ultra-Wide 10K	10240	4320	21:9	21:9	1:1	44,236,800
+8K Fulldome	8K Fulldome	8192	8192	1:1	1:1	1:1	67,108,864
+16K	16K	15360	8640	16:9	16:9	1:1	132,710,400
+_DISPLAYS_
+    my @displays;
+    my $csv = Text::CSV_XS->new(
+        {
+            auto_diag          => 2,
+            sep_char           => "\t",
+            binary             => 1,
+            allow_loose_quotes => 1
+        }
+    );
+    foreach my $line ( split /\r?\n/smx, $displays ) {
+        $csv->parse($line);
+        my @fields = $csv->fields();
+        my $index  = 0;
+        push @displays,
+          Firefox::Marionette::Display->new(
+            designation => $fields[ $index++ ],
+            usage       => $fields[ $index++ ],
+            width       => $fields[ $index++ ],
+            height      => $fields[ $index++ ],
+            sar         => $fields[ $index++ ],
+            dar         => $fields[ $index++ ],
+            par         => $fields[ $index++ ]
+          );
+    }
+    @displays = sort { $a->total() < $b->total() } @displays;
+    return @displays;
+}
+
+my $cached_per_display_key_name = '_cached_per_display';
+
+sub _check_for_min_max_sizes {
+    my ($self) = @_;
+    if ( $self->{$cached_per_display_key_name} ) {
+    }
+    else {
+        my ( $current_width, $current_height ) = @{
+            $self->script(
+                $self->_compress_script(
+                    q[return [window.outerWidth, window.outerHeight]])
+            )
+        };
+        $self->maximise();
+        my ( $maximum_width, $maximum_height ) = @{
+            $self->script(
+                $self->_compress_script(
+                    q[return [window.outerWidth, window.outerHeight]])
+            )
+        };
+        if ( $current_width > $maximum_width ) {
+            $current_width = $maximum_width;
+        }
+        if ( $current_height > $maximum_height ) {
+            $current_height = $maximum_height;
+        }
+        $self->_resize( 0, 0 );    # getting minimum size
+        my ( $minimum_width, $minimum_height ) = @{
+            $self->script(
+                $self->_compress_script(
+                    q[return [window.outerWidth, window.outerHeight]])
+            )
+        };
+        $self->{$cached_per_display_key_name} = {
+            maximum => { width => $maximum_width, height => $maximum_height },
+            minimum => { width => $minimum_width, height => $minimum_height }
+        };
+        if (   ( $current_width == $minimum_width )
+            && ( $current_height == $minimum_height ) )
+        {
+        }
+        else {
+            $self->resize( $current_width, $current_height );
+        }
+    }
+    return;
+}
+
+sub displays {
+    my ( $self, $filter ) = @_;
+    my $csv = Text::CSV_XS->new(
+        {
+            auto_diag          => 2,
+            sep_char           => "\t",
+            binary             => 1,
+            allow_loose_quotes => 1
+        }
+    );
+    my @displays;
+    foreach my $display ( $self->_displays() ) {
+        if ( ( defined $filter ) && ( $display->usage() !~ /$filter/smx ) ) {
+            next;
+        }
+        push @displays, $display;
+    }
+    return @displays;
+}
+
+sub _resize {
+    my ( $self, $width, $height ) = @_;
+    $self->chrome();
+
+    # https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo
+    # https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event
+    my $result = $self->script(
+        $self->_compress_script(
+            <<"_JS_"
+let expectedWidth = arguments[0];
+let expectedHeight = arguments[1];
+if ((window.outerWidth == expectedWidth) && (window.outerHeight == expectedHeight)) {
+  return true;
+} else if ((window.screen.availWidth < expectedWidth) || (window.screen.availHeight < expectedHeight)) {
+  return false;
+} else {
+  let windowResized = function(argumentWidth, argumentHeight) {
+    return new Promise((resolve) => {
+      let waitForResize = function(event) {
+        window.removeEventListener('resize', waitForResize);
+        if ((window.outerWidth == argumentWidth) && (window.outerHeight == argumentHeight)) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      };
+      window.addEventListener('resize', waitForResize);
+      window.resizeTo(expectedWidth, expectedHeight);
+    })
+  };
+  let result = (async function() {
+      let awaitResult = await windowResized(expectedWidth, expectedHeight);
+      return awaitResult;
+  })();
+  return result;
+}
+_JS_
+        ),
+        args => [ $width, $height ]
+    );
+    $self->content();
+    return $result;
+}
+
+sub resize {
+    my ( $self, $width, $height ) = @_;
+    $self->_check_for_min_max_sizes();
+    my $return_value;
+    if ( $self->{$cached_per_display_key_name}->{maximum}->{height} < $height )
+    {
+        $return_value = 0;
+    }
+    if ( $self->{$cached_per_display_key_name}->{maximum}->{width} < $width ) {
+        $return_value = 0;
+    }
+    if ( $self->{$cached_per_display_key_name}->{minimum}->{height} > $height )
+    {
+        $return_value = 0;
+    }
+    if ( $self->{$cached_per_display_key_name}->{minimum}->{width} > $width ) {
+        $return_value = 0;
+    }
+    if ( defined $return_value ) {
+        return $return_value;
+    }
+    else {
+        return $self->_resize( $width, $height ) ? $self : undef;
+    }
 }
 
 sub restart {
@@ -10359,6 +10745,27 @@ returns true if the L<current version|Firefox::Marionette#browser_version> of fi
 
 dismisses a currently displayed modal message box
 
+=head2 displays
+
+returns a list of all the L<known displays|https://en.wikipedia.org/wiki/List_of_common_resolutions> as a L<Firefox::Marionette::Display|Firefox::Marionette::Display>.
+
+    use Firefox::Marionette();
+    use Encode();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
+    my $element = $firefox->find_id('metacpan_search-input');
+    foreach my $display ($firefox->displays()) {
+        say 'Can Firefox resize for "' . Encode::encode('UTF-8', $display->usage(), 1) . '"?';
+        if ($firefox->resize($display->width(), $display->height())) {
+            say 'Now displaying with a Pixel aspect ratio of ' . $display->par();
+            say 'Now displaying with a Storage aspect ratio of ' . $display->sar();
+            say 'Now displaying with a Display aspect ratio of ' . $display->dar();
+        } else {
+            say 'Apparently NOT!';
+        }
+    }
+
 =head2 download
 
 accepts a filesystem path and returns a matching filehandle.  This is trivial for locally running firefox, but sufficiently complex to justify the method for a remote firefox running over ssh.
@@ -11425,6 +11832,43 @@ completes any outstanding actions issued by the L<perform|Firefox::Marionette#pe
 			          $firefox->mouse_down(RIGHT_BUTTON()),
 			          $firefox->pause(4),
 		)->release();
+
+=head2 resize
+
+accepts width and height parameters in a list and then attempts to resize the entire browser to match those parameters.  Due to the oddities of various window managers, this function needs to manually calculate what the maximum and minimum sizes of the display is.  It does this by;
+
+=over 4
+
+=item 1 performing a L<maximise|Firefox::Marionette::maximise>, then
+
+=item 2 caching the browser's current width and height as the maximum width and height. It
+
+=item 3 then calls L<resizeTo|https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo> to resize the window to 0,0
+
+=item 4 wait for the browser to send a L<resize|https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>.
+
+=item 5 cache the browser's current width and height as the minimum width and height
+
+=item 6 if the requested width and height are outside of the maximum and minimum widths and heights return false
+
+=item 7 if the requested width and height matches the current width and height return L<itself|Firefox::Marionette> to aid in chaining methods. Otherwise,
+
+=item 8 call L<resizeTo|https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo> for the requested width and height
+
+=item 9 wait for the L<resize|https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event> event and return L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=back
+
+    use Firefox::Marionette();
+    use Encode();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
+    if ($firefox->resize(1024, 768)) {
+        say 'We are showing an XGA display';
+    } else {
+       say 'Resize failed to work';
+    }
 
 =head2 restart
 

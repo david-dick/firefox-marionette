@@ -13,6 +13,7 @@ lib/Firefox/Marionette/Profile.pm
 lib/Firefox/Marionette/Proxy.pm
 lib/Firefox/Marionette/ShadowRoot.pm
 lib/Firefox/Marionette/Window/Rect.pm
+lib/Firefox/Marionette/Display.pm
 lib/Firefox/Marionette/Element.pm
 lib/Firefox/Marionette/Element/Rect.pm
 lib/Firefox/Marionette/Exception.pm

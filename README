@@ -619,6 +619,29 @@ SUBROUTINES/METHODS
 
     dismisses a currently displayed modal message box
 
+ displays
+
+    returns a list of all the known displays
+    <https://en.wikipedia.org/wiki/List_of_common_resolutions> as a
+    Firefox::Marionette::Display.
+
+        use Firefox::Marionette();
+        use Encode();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
+        my $element = $firefox->find_id('metacpan_search-input');
+        foreach my $display ($firefox->displays()) {
+            say 'Can Firefox resize for "' . Encode::encode('UTF-8', $display->usage(), 1) . '"?';
+            if ($firefox->resize($display->width(), $display->height())) {
+                say 'Now displaying with a Pixel aspect ratio of ' . $display->par();
+                say 'Now displaying with a Storage aspect ratio of ' . $display->sar();
+                say 'Now displaying with a Display aspect ratio of ' . $display->dar();
+            } else {
+                say 'Apparently NOT!';
+            }
+        }
+
  download
 
     accepts a filesystem path and returns a matching filehandle. This is
@@ -1992,6 +2015,54 @@ SUBROUTINES/METHODS
                                       $firefox->mouse_down(RIGHT_BUTTON()),
                                       $firefox->pause(4),
                     )->release();
+
+ resize
+
+    accepts width and height parameters in a list and then attempts to
+    resize the entire browser to match those parameters. Due to the
+    oddities of various window managers, this function needs to manually
+    calculate what the maximum and minimum sizes of the display is. It does
+    this by;
+
+    1 performing a maximise, then
+
+    2 caching the browser's current width and height as the maximum width
+    and height. It
+
+    3 then calls resizeTo
+    <https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo> to
+    resize the window to 0,0
+
+    4 wait for the browser to send a resize
+    <https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>.
+
+    5 cache the browser's current width and height as the minimum width and
+    height
+
+    6 if the requested width and height are outside of the maximum and
+    minimum widths and heights return false
+
+    7 if the requested width and height matches the current width and
+    height return itself to aid in chaining methods. Otherwise,
+
+    8 call resizeTo
+    <https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo> for
+    the requested width and height
+
+    9 wait for the resize
+    <https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>
+    event and return itself to aid in chaining methods.
+
+        use Firefox::Marionette();
+        use Encode();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
+        if ($firefox->resize(1024, 768)) {
+            say 'We are showing an XGA display';
+        } else {
+           say 'Resize failed to work';
+        }
 
  restart
 
