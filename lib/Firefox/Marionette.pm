@@ -2133,7 +2133,7 @@ sub displays {
 
 sub _resize {
     my ( $self, $width, $height ) = @_;
-    $self->chrome();
+    my $old = $self->_context('chrome');
 
     # https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo
     # https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event
@@ -2171,7 +2171,7 @@ _JS_
         ),
         args => [ $width, $height ]
     );
-    $self->content();
+    $self->_context($old);
     return $result;
 }
 
