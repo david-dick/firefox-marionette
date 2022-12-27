@@ -2034,7 +2034,8 @@ SUBROUTINES/METHODS
     resize the window to 0,0
 
     4 wait for the browser to send a resize
-    <https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>.
+    <https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>
+    event.
 
     5 cache the browser's current width and height as the minimum width and
     height
@@ -2051,7 +2052,10 @@ SUBROUTINES/METHODS
 
     9 wait for the resize
     <https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>
-    event and return itself to aid in chaining methods.
+    event
+
+    This method returns itself to aid in chaining methods if the method
+    succeeds, otherwise it returns false.
 
         use Firefox::Marionette();
         use Encode();

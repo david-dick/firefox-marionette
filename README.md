@@ -1490,12 +1490,14 @@ accepts width and height parameters in a list and then attempts to resize the en
 - 1 performing a [maximise](https://metacpan.org/pod/Firefox::Marionette::maximise), then
 - 2 caching the browser's current width and height as the maximum width and height. It
 - 3 then calls [resizeTo](https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo) to resize the window to 0,0
-- 4 wait for the browser to send a [resize](https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event).
+- 4 wait for the browser to send a [resize](https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event) event.
 - 5 cache the browser's current width and height as the minimum width and height
 - 6 if the requested width and height are outside of the maximum and minimum widths and heights return false
 - 7 if the requested width and height matches the current width and height return [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods. Otherwise,
 - 8 call [resizeTo](https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo) for the requested width and height
-- 9 wait for the [resize](https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event) event and return [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+- 9 wait for the [resize](https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event) event
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods if the method succeeds, otherwise it returns false.
 
     use Firefox::Marionette();
     use Encode();

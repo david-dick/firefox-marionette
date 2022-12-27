@@ -11845,7 +11845,7 @@ accepts width and height parameters in a list and then attempts to resize the en
 
 =item 3 then calls L<resizeTo|https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo> to resize the window to 0,0
 
-=item 4 wait for the browser to send a L<resize|https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event>.
+=item 4 wait for the browser to send a L<resize|https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event> event.
 
 =item 5 cache the browser's current width and height as the minimum width and height
 
@@ -11855,9 +11855,11 @@ accepts width and height parameters in a list and then attempts to resize the en
 
 =item 8 call L<resizeTo|https://developer.mozilla.org/en-US/docs/Web/API/Window/resizeTo> for the requested width and height
 
-=item 9 wait for the L<resize|https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event> event and return L<itself|Firefox::Marionette> to aid in chaining methods.
+=item 9 wait for the L<resize|https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event> event
 
 =back
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods if the method succeeds, otherwise it returns false.
 
     use Firefox::Marionette();
     use Encode();
