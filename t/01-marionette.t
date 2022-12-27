@@ -1976,6 +1976,8 @@ SKIP: {
 		skip($skip_message, 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	$uname = $firefox->uname();
+	ok($uname, "Firefox is currently running in $uname");
 	ok(scalar $firefox->logins() == 0, "\$firefox->logins() has no entries:" . scalar $firefox->logins());
         my $testing_header_name = 'X-CPAN-Testing';
         my $testing_header_value = (ref $firefox) . q[ All ] . $Firefox::Marionette::VERSION;
@@ -2003,8 +2005,6 @@ SKIP: {
 		skip("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version(), 3);
 	}
 	ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
-	$uname = $firefox->uname();
-	ok($uname, "Firefox is currently running in $uname");
 	if (($ENV{RELEASE_TESTING}) && (!$ENV{FIREFOX_NO_NETWORK})) { # har sometimes hangs and sometimes metacpan.org fails certificate checks.  for example. http://www.cpantesters.org/cpan/report/e71bfb3b-7413-1014-98e6-045206f7812f
 		if (!$tls_tests_ok) {
 			skip("TLS test infrastructure seems compromised", 5);
