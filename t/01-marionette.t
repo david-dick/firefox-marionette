@@ -809,7 +809,7 @@ SKIP: {
 	ok($window_type && $window_type eq 'navigator:browser', "\$firefox->window_type() returns 'navigator:browser':$window_type");
 	ok($firefox->sleep_time_in_ms() == 1, "\$firefox->sleep_time_in_ms() is 1 millisecond");
 	my $new_x = 3;
-	my $new_y = 9;
+	my $new_y = 23;
 	my $new_height = 452;
 	my $new_width = 326;
 	my $new = Firefox::Marionette::Window::Rect->new( pos_x => $new_x, pos_y => $new_y, height => $new_height, width => $new_width );
