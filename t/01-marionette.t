@@ -4017,11 +4017,28 @@ SKIP: {
 		};
 		alarm 0;
 		ok($maximise, "\$firefox->maximise()");
-		if ($maximise) {
+		if ($major_version < 52) {
+			diag("Not attempting to resize for Firefox $major_version");
+		} elsif ($maximise) {
+			local $TODO = q[];
 			my $count = 0;
+			my $resize_works;
 			foreach my $display ($firefox->displays()) {
 				$count += 1;
-				if ($firefox->resize($display->width(), $display->height())) {
+				my $result;
+				eval {
+					$result = $firefox->resize($display->width(), $display->height());
+					$resize_works = 1;
+				} or do {
+					if ($major_version < 60) {
+						chomp $@;
+						diag("Failed to resize browser for old browser version $major_version:$@");
+					} else {
+						ok(0, "Failed to resize browser for a modern browser:$@");
+						diag("Failed to resize browser for a modern browser:$@");
+					}
+				};
+				if ($result) {
 					ok(1, "Resized the display to " . $display->width . "x" . $display->height());
 					last unless ($ENV{RELEASE_TESTING});
 				} else {
