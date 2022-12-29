@@ -3924,10 +3924,8 @@ SKIP: {
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	if ($ENV{FIREFOX_HOST}) {
 		diag("\$capabilities->headless is forced on for FIREFOX_HOST testing");
-		skip("\$capabilities->headless is forced on for FIREFOX_HOST testing", 1);
 	} elsif ($ENV{FIREFOX_NO_VISIBLE}) {
 		diag("\$capabilities->headless is forced on for FIREFOX_NO_VISIBLE testing");
-		skip("\$capabilities->headless is forced on for FIREFOX_NO_VISIBLE testing", 1);
 	} else {
 		ok(!$capabilities->moz_headless(), "\$capabilities->moz_headless() is set to false");
 	}
@@ -3981,11 +3979,6 @@ SKIP: {
 		}
 	}
 	SKIP: {
-		if ((exists $ENV{XAUTHORITY}) && (defined $ENV{XAUTHORITY}) && ($ENV{XAUTHORITY} =~ /xvfb/smxi)) {
-			skip("Unable to change firefox screen size when xvfb is running", 3);	
-		} elsif ($firefox->xvfb_pid()) {
-			skip("Unable to change firefox screen size when xvfb is running", 3);	
-		}
 		local $TODO = "Not entirely stable in firefox";
 		my $full_screen;
 		local $SIG{ALRM} = sub { die "alarm during full screen\n" };
