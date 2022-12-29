@@ -4039,6 +4039,30 @@ SKIP: {
 				}
 			}
 			ok($count, "$count displays are currently known to firefox");
+			if ($ENV{FIREFOX_HOST}) {
+			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+			} else {
+				# Coping with OpenBSD unveil - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271
+				my $path = File::Spec->catfile(Cwd::cwd(), qw(t data visible.html));
+				if ($^O eq 'cygwin') {
+					$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+				}
+				my $url = "file://$path";
+				ok($firefox->go($url), "$url has been loaded");
+				my $element = $firefox->find_id('username');
+				if (($resize_works) && ($firefox->resize(800, 600))) {
+					my $percentage = $firefox->percentage_visible($element);
+					ok($percentage == 0, "Percentage visible is 0% for the username field:$percentage");
+					if ($major_version >= 59) {
+						ok($firefox->scroll($element, { block => 'center' }), "Scroll until the username field is in the center of the screen");
+						$percentage = $firefox->percentage_visible($element);
+						ok($percentage == 100, "Percentage visible is 100% for the username field:$percentage");
+					}
+				} else {
+					diag("Skipping checks that require resize to work");
+				}
+			}
 		}
 	}
 	if ($ENV{FIREFOX_HOST}) {

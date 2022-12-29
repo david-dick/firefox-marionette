@@ -1334,6 +1334,26 @@ returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a 
             ...
     }
 
+## percentage\_visible
+
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and returns the percentage of that [element](https://metacpan.org/pod/Firefox::Marionette::Element) that is currently visible in the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/Viewport).  It achieves this by determining the co-ordinates of the [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) with a [getBoundingClientRect](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) call and then using [elementsFromPoint](https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint) and [getComputedStyle](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) calls to determine how the percentage of the [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) that is visible to the user.
+
+    use Firefox::Marionette();
+    use Encode();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
+    my $element = $firefox->find_id('metacpan_search-input');
+    my $totally_viewable_percentage = $firefox->percentage_visible($element); # search box is slightly hidden by different effects
+    foreach my $display ($firefox->displays()) {
+        if ($firefox->resize($display->width(), $display->height())) {
+            if ($firefox->percentage_visible($element) < $totally_viewable_percentage) {
+               say 'Search box stops being viewable with ' . Encode::encode('UTF-8', $display->usage());
+               last;
+            }
+        }
+    }
+
 ## perform
 
 accepts a list of actions (see [mouse\_up](https://metacpan.org/pod/Firefox::Marionette#mouse_up), [mouse\_down](https://metacpan.org/pod/Firefox::Marionette#mouse_down), [mouse\_move](https://metacpan.org/pod/Firefox::Marionette#mouse_move), [pause](https://metacpan.org/pod/Firefox::Marionette#pause), [key\_down](https://metacpan.org/pod/Firefox::Marionette#key_down) and [key\_up](https://metacpan.org/pod/Firefox::Marionette#key_up)) and performs these actions in sequence.  This allows fine control over interactions, including sending right clicks to the browser and sending Control, Alt and other special keys.  The [release](https://metacpan.org/pod/Firefox::Marionette#release) method will complete outstanding actions (such as [mouse\_up](https://metacpan.org/pod/Firefox::Marionette#mouse_up) or [key\_up](https://metacpan.org/pod/Firefox::Marionette#key_up) actions).

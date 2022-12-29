@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-au">
+  <head>
+    <meta charset="utf-8">
+    <title>Percentage Visible test</title>
+    <style>
+      .navbar {
+        position: fixed;
+        background-color: green;
+        top: 0px;
+        left: 0px;
+        height: 25%;
+        width: 100%;
+        z-index: 10;
+      }
+      .content {
+        background-color: yellow;
+        height: 650px;
+      }
+      .display_none {
+        position: fixed;
+        background-color: blue;
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        z-index: 20;
+        display: none;
+      }
+      .visibility_hidden {
+        position: fixed;
+        background-color: red;
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        z-index: 20;
+        visibility: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">Navigation Bar</div>
+    <div class="display_none">Should not see me</div>
+    <div class="visibility_hidden">Should not see me either</div>
+    <div class="content">Content</div>
+    <form action="http://localhost">
+      <input type="text" id="username"/>
+    </form>
+    <div class="content">Content</div>
+  </body>
+</html>

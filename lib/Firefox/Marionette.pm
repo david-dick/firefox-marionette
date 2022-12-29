@@ -2201,6 +2201,65 @@ sub resize {
     }
 }
 
+sub percentage_visible {
+    my ( $self, $element ) = @_;
+    my $percentage = $self->script(
+        $self->_compress_script(
+            <<"_JS_"
+let selectedElement = arguments[0];
+let position = selectedElement.getBoundingClientRect();
+let computedStyle = window.getComputedStyle(selectedElement);
+let totalVisible = 0;
+let totalPixels = 0;
+let visibleAtPoint = function(x,y) {
+  let elementsAtPoint = document.elementsFromPoint(x, y);
+  let visiblePoint = false;
+  let foundAnotherVisibleElement = false;
+  for (let i = 0; i < elementsAtPoint.length; i++) {
+    let computedStyle = window.getComputedStyle(elementsAtPoint[i]);
+    if ((computedStyle.visibility === 'hidden') && (computedStyle.display === 'none')) {
+      if (elementsAtPoint[i].isEqualNode(selectedElement)) {
+        visiblePoint = false;
+        break;
+      }
+    } else {
+      if (elementsAtPoint[i].isEqualNode(selectedElement)) {
+        if (foundAnotherVisibleElement) {
+          visiblePoint = false;
+        } else {
+          visiblePoint = true;
+          break;
+        }
+      } else {
+        foundAnotherVisibleElement = true;
+      }
+    }
+  }
+  return visiblePoint;
+};
+for (let x = parseInt(position.left); x < parseInt(position.left + position.width); x++) {
+  for (let y = parseInt(position.top); y < parseInt(position.top + position.height); y++) {
+    let result = visibleAtPoint(x,y);
+    if (result === false) {
+      totalPixels = totalPixels + 1;
+    } else if (result == true) {
+      totalVisible = totalVisible + 1;
+      totalPixels = totalPixels + 1;
+    }
+  }
+}
+if (totalPixels > 0) {
+	return (totalVisible / totalPixels) * 100;
+} else {
+	return 0;
+}
+_JS_
+        ),
+        args => [$element]
+    );
+    return $percentage;
+}
+
 sub restart {
     my ($self)       = @_;
     my $capabilities = $self->capabilities();
@@ -11682,6 +11741,26 @@ returns a L<File::Temp|File::Temp> object containing a PDF encoded version of th
             ...
 	    print $firefox->pdf(page => { width => 21, height => 27 }, raw => 1);
             ...
+    }
+
+=head2 percentage_visible
+
+accepts an L<element|Firefox::Marionette::Element> as the first parameter and returns the percentage of that L<element|Firefox::Marionette::Element> that is currently visible in the L<viewport|https://developer.mozilla.org/en-US/docs/Glossary/Viewport>.  It achieves this by determining the co-ordinates of the L<DOMRect|https://developer.mozilla.org/en-US/docs/Web/API/DOMRect> with a L<getBoundingClientRect|https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect> call and then using L<elementsFromPoint|https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint> and L<getComputedStyle|https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle> calls to determine how the percentage of the L<DOMRect|https://developer.mozilla.org/en-US/docs/Web/API/DOMRect> that is visible to the user.
+
+    use Firefox::Marionette();
+    use Encode();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
+    my $element = $firefox->find_id('metacpan_search-input');
+    my $totally_viewable_percentage = $firefox->percentage_visible($element); # search box is slightly hidden by different effects
+    foreach my $display ($firefox->displays()) {
+        if ($firefox->resize($display->width(), $display->height())) {
+            if ($firefox->percentage_visible($element) < $totally_viewable_percentage) {
+               say 'Search box stops being viewable with ' . Encode::encode('UTF-8', $display->usage());
+               last;
+            }
+        }
     }
 
 =head2 perform
