@@ -2281,6 +2281,7 @@ SKIP: {
 	if (!($ENV{RELEASE_TESTING}) || ($ENV{FIREFOX_NO_NETWORK})) {
 		skip("Skipping network tests", 225);
 	}
+	ok($firefox->refresh(), "\$firefox->refresh()");
 	my $metacpan_uri = 'https://metacpan.org/';
 	ok($firefox->go($metacpan_uri), "$metacpan_uri has been loaded in the new window");
 	if (out_of_time()) {
@@ -2322,7 +2323,6 @@ SKIP: {
 	}
 	ok($firefox->page_source() =~ /Search[ ]the[ ]CPAN/smx, "metacpan.org contains the phrase 'Search the CPAN' in page source");
 	ok($firefox->html() =~ /Search[ ]the[ ]CPAN/smx, "metacpan.org contains the phrase 'Search the CPAN' in html");
-	ok($firefox->refresh(), "\$firefox->refresh()");
 	my $element = $firefox->active_element();
 	ok($element, "\$firefox->active_element() returns an element");
 	TODO: {
