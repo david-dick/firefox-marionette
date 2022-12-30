@@ -4039,6 +4039,13 @@ SKIP: {
 				}
 			}
 			ok($count, "$count displays are currently known to firefox");
+			my $iphone_count = 0;
+			foreach my $display ($firefox->displays(qr/iphone/smxi)) {
+				$iphone_count += 1;
+				ok($display->usage() =~ /iphone/smxi, "iPhone display detected:" . $display->usage());
+			}
+			ok($iphone_count, "$iphone_count displays are for an iphone");
+			ok($firefox->displays(qr/iphone/i) < $firefox->displays(), "There are fewer displays for iphones than all displays");
 			if ($ENV{FIREFOX_HOST}) {
 			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
