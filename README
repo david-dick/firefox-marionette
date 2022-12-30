@@ -621,7 +621,8 @@ SUBROUTINES/METHODS
 
  displays
 
-    returns a list of all the known displays
+    accepts an optional regex to filter against the usage for the display
+    and returns a list of all the known displays
     <https://en.wikipedia.org/wiki/List_of_common_resolutions> as a
     Firefox::Marionette::Display.
 
@@ -631,7 +632,7 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
         my $element = $firefox->find_id('metacpan_search-input');
-        foreach my $display ($firefox->displays()) {
+        foreach my $display ($firefox->displays(qr/iphone/smxi)) {
             say 'Can Firefox resize for "' . Encode::encode('UTF-8', $display->usage(), 1) . '"?';
             if ($firefox->resize($display->width(), $display->height())) {
                 say 'Now displaying with a Pixel aspect ratio of ' . $display->par();
@@ -1851,7 +1852,11 @@ SUBROUTINES/METHODS
     and getComputedStyle
     <https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle>
     calls to determine how the percentage of the DOMRect that is visible to
-    the user.
+    the user. The getComputedStyle call is used to determine the state of
+    the visibility
+    <https://developer.mozilla.org/en-US/docs/Web/CSS/visibility> and
+    display <https://developer.mozilla.org/en-US/docs/Web/CSS/display>
+    attributes.
 
         use Firefox::Marionette();
         use Encode();
@@ -1863,7 +1868,7 @@ SUBROUTINES/METHODS
         foreach my $display ($firefox->displays()) {
             if ($firefox->resize($display->width(), $display->height())) {
                 if ($firefox->percentage_visible($element) < $totally_viewable_percentage) {
-                   say 'Search box stops being viewable with ' . Encode::encode('UTF-8', $display->usage());
+                   say 'Search box stops being fully viewable with ' . Encode::encode('UTF-8', $display->usage());
                    last;
                 }
             }

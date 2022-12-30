@@ -489,7 +489,7 @@ dismisses a currently displayed modal message box
 
 ## displays
 
-returns a list of all the [known displays](https://en.wikipedia.org/wiki/List_of_common_resolutions) as a [Firefox::Marionette::Display](https://metacpan.org/pod/Firefox::Marionette::Display).
+accepts an optional regex to filter against the [usage for the display](https://metacpan.org/pod/Firefox::Marionette::Display#usage) and returns a list of all the [known displays](https://en.wikipedia.org/wiki/List_of_common_resolutions) as a [Firefox::Marionette::Display](https://metacpan.org/pod/Firefox::Marionette::Display).
 
     use Firefox::Marionette();
     use Encode();
@@ -497,7 +497,7 @@ returns a list of all the [known displays](https://en.wikipedia.org/wiki/List_of
 
     my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
     my $element = $firefox->find_id('metacpan_search-input');
-    foreach my $display ($firefox->displays()) {
+    foreach my $display ($firefox->displays(qr/iphone/smxi)) {
         say 'Can Firefox resize for "' . Encode::encode('UTF-8', $display->usage(), 1) . '"?';
         if ($firefox->resize($display->width(), $display->height())) {
             say 'Now displaying with a Pixel aspect ratio of ' . $display->par();
@@ -1336,7 +1336,7 @@ returns a [File::Temp](https://metacpan.org/pod/File::Temp) object containing a 
 
 ## percentage\_visible
 
-accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and returns the percentage of that [element](https://metacpan.org/pod/Firefox::Marionette::Element) that is currently visible in the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/Viewport).  It achieves this by determining the co-ordinates of the [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) with a [getBoundingClientRect](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) call and then using [elementsFromPoint](https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint) and [getComputedStyle](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) calls to determine how the percentage of the [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) that is visible to the user.
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and returns the percentage of that [element](https://metacpan.org/pod/Firefox::Marionette::Element) that is currently visible in the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/Viewport).  It achieves this by determining the co-ordinates of the [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) with a [getBoundingClientRect](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect) call and then using [elementsFromPoint](https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint) and [getComputedStyle](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) calls to determine how the percentage of the [DOMRect](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect) that is visible to the user.  The [getComputedStyle](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle) call is used to determine the state of the [visibility](https://developer.mozilla.org/en-US/docs/Web/CSS/visibility) and [display](https://developer.mozilla.org/en-US/docs/Web/CSS/display) attributes.
 
     use Firefox::Marionette();
     use Encode();
@@ -1348,7 +1348,7 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
     foreach my $display ($firefox->displays()) {
         if ($firefox->resize($display->width(), $display->height())) {
             if ($firefox->percentage_visible($element) < $totally_viewable_percentage) {
-               say 'Search box stops being viewable with ' . Encode::encode('UTF-8', $display->usage());
+               say 'Search box stops being fully viewable with ' . Encode::encode('UTF-8', $display->usage());
                last;
             }
         }

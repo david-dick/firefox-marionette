@@ -10806,7 +10806,7 @@ dismisses a currently displayed modal message box
 
 =head2 displays
 
-returns a list of all the L<known displays|https://en.wikipedia.org/wiki/List_of_common_resolutions> as a L<Firefox::Marionette::Display|Firefox::Marionette::Display>.
+accepts an optional regex to filter against the L<usage for the display|Firefox::Marionette::Display#usage> and returns a list of all the L<known displays|https://en.wikipedia.org/wiki/List_of_common_resolutions> as a L<Firefox::Marionette::Display|Firefox::Marionette::Display>.
 
     use Firefox::Marionette();
     use Encode();
@@ -10814,7 +10814,7 @@ returns a list of all the L<known displays|https://en.wikipedia.org/wiki/List_of
 
     my $firefox = Firefox::Marionette->new( visible => 1, kiosk => 1 )->go('http://metacpan.org');;
     my $element = $firefox->find_id('metacpan_search-input');
-    foreach my $display ($firefox->displays()) {
+    foreach my $display ($firefox->displays(qr/iphone/smxi)) {
         say 'Can Firefox resize for "' . Encode::encode('UTF-8', $display->usage(), 1) . '"?';
         if ($firefox->resize($display->width(), $display->height())) {
             say 'Now displaying with a Pixel aspect ratio of ' . $display->par();
@@ -11745,7 +11745,7 @@ returns a L<File::Temp|File::Temp> object containing a PDF encoded version of th
 
 =head2 percentage_visible
 
-accepts an L<element|Firefox::Marionette::Element> as the first parameter and returns the percentage of that L<element|Firefox::Marionette::Element> that is currently visible in the L<viewport|https://developer.mozilla.org/en-US/docs/Glossary/Viewport>.  It achieves this by determining the co-ordinates of the L<DOMRect|https://developer.mozilla.org/en-US/docs/Web/API/DOMRect> with a L<getBoundingClientRect|https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect> call and then using L<elementsFromPoint|https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint> and L<getComputedStyle|https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle> calls to determine how the percentage of the L<DOMRect|https://developer.mozilla.org/en-US/docs/Web/API/DOMRect> that is visible to the user.
+accepts an L<element|Firefox::Marionette::Element> as the first parameter and returns the percentage of that L<element|Firefox::Marionette::Element> that is currently visible in the L<viewport|https://developer.mozilla.org/en-US/docs/Glossary/Viewport>.  It achieves this by determining the co-ordinates of the L<DOMRect|https://developer.mozilla.org/en-US/docs/Web/API/DOMRect> with a L<getBoundingClientRect|https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect> call and then using L<elementsFromPoint|https://developer.mozilla.org/en-US/docs/Web/API/Document/elementsFromPoint> and L<getComputedStyle|https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle> calls to determine how the percentage of the L<DOMRect|https://developer.mozilla.org/en-US/docs/Web/API/DOMRect> that is visible to the user.  The L<getComputedStyle|https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle> call is used to determine the state of the L<visibility|https://developer.mozilla.org/en-US/docs/Web/CSS/visibility> and L<display|https://developer.mozilla.org/en-US/docs/Web/CSS/display> attributes.
 
     use Firefox::Marionette();
     use Encode();
@@ -11757,7 +11757,7 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and re
     foreach my $display ($firefox->displays()) {
         if ($firefox->resize($display->width(), $display->height())) {
             if ($firefox->percentage_visible($element) < $totally_viewable_percentage) {
-               say 'Search box stops being viewable with ' . Encode::encode('UTF-8', $display->usage());
+               say 'Search box stops being fully viewable with ' . Encode::encode('UTF-8', $display->usage());
                last;
             }
         }
