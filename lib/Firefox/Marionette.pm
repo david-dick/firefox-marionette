@@ -1972,7 +1972,7 @@ QWXGA	Quad WXGA, 2K	2048	1152	16:9	16:9	1:1	2,359,296
 2.41M3	Supported by some GPUs, monitors, and games	1792	1344	4:3	4:3	1:1	2,408,448
 FHD+	Full HD Plus:Microsoft Surface 3	1920	1280	3:2	3:2	1:1	2,457,600
 2.46M2.10:1	Samsung Galaxy S10e, Xiaomi Mi A2 Lite, Huawei P20 Lite	2280	1080	2.10:1	2.10:1	1:1	2,462,400
-2.53M2.167	Samsung Galaxy A8s, Xiaomi Redmi Note 7, Honor Play	2340	1080	19\x{BD}:9	19\x{BD}:9	1:1	2,527,200
+2.53M2.167	Samsung Galaxy A8s, Xiaomi Redmi Note 7, Honor Play	2340	1080	19.5:9	19.5:9	1:1	2,527,200
 2.58M3	Supported by some GPUs, monitors, and games	1856	1392	4:3	4:3	1:1	2,583,552
 2.59M09?	Samsung Galaxy A70, Samsung Galaxy S21/+, Xiaomi Redmi Note 9S, default for many 3200x1440 phones[12]	2400	1080	20:9	20:9	1:1	2,592,000
 2.59M4	Supported by some GPUs, monitors, and games	1800	1440	5:4	5:4	1:1	2,592,000
@@ -1993,7 +1993,7 @@ WQHD	Wide Quad HD:Dell UltraSharp U2711, Dell XPS One 27, Apple iMac	2560	1440	1
 3.98M3	Supported by some displays and graphics cards[18][unreliable source?][19]	2304	1728	4:3	4:3	1:1	3,981,312
 WQXGA	Wide QXGA:Apple Cinema HD 30, Apple 13" MacBook Pro Retina Display, Dell Ultrasharp U3011, Dell 3007WFP, Dell 3008WFP, Gateway XHD3000, Samsung 305T, HP LP3065, HP ZR30W, Nexus 10	2560	1600	8:5	8:5	1:1	4,096,000
 4.15M2:1	LG G6, LG V30, Pixel 2 XL, HTC U11+, Windows Mixed Reality headsets (both eyes)	2880	1440	2:1	2:1	1:1	4,147,200
-Infinity Display	Samsung Galaxy S8, S8+, S9, S9+, Note 8	2960	1440	18\x{BD}:9	18\x{BD}:9	1:1	4,262,400
+Infinity Display	Samsung Galaxy S8, S8+, S9, S9+, Note 8	2960	1440	18.5:9	18.5:9	1:1	4,262,400
 4.35M2	Chromebook Pixel	2560	1700	3:2	3:2	1:1	4,352,000
 4.61M1.422	Pixel C	2560	1800	64:45	64:45	1:1	4,608,000
 4.67MA	Lenovo Thinkpad W541	2880	1620	16:9	8:5	0.9	4,665,600
@@ -2217,7 +2217,7 @@ let visibleAtPoint = function(x,y) {
   let foundAnotherVisibleElement = false;
   for (let i = 0; i < elementsAtPoint.length; i++) {
     let computedStyle = window.getComputedStyle(elementsAtPoint[i]);
-    if ((computedStyle.visibility === 'hidden') && (computedStyle.display === 'none')) {
+    if ((computedStyle.visibility === 'hidden') || (computedStyle.visibility === 'collapse') || (computedStyle.display === 'none')) {
       if (elementsAtPoint[i].isEqualNode(selectedElement)) {
         visiblePoint = false;
         break;

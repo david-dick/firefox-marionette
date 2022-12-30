@@ -37,12 +37,23 @@
         z-index: 20;
         visibility: hidden;
       }
+      .visibility_collapse {
+        position: fixed;
+        background-color: purple;
+        top: 0px;
+        left: 0px;
+        height: 100%;
+        width: 100%;
+        z-index: 20;
+        visibility: collapse;
+      }
     </style>
   </head>
   <body>
     <div class="navbar">Navigation Bar</div>
     <div class="display_none">Should not see me</div>
     <div class="visibility_hidden">Should not see me either</div>
+    <div class="visibility_collapse">Should have collapsed</div>
     <div class="content">Content</div>
     <form action="http://localhost">
       <input type="text" id="username"/>

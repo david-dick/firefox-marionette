@@ -4018,6 +4018,11 @@ SKIP: {
 			my $resize_works;
 			foreach my $display ($firefox->displays()) {
 				$count += 1;
+				ok(defined $display->usage(), "\$display->usage() is defined:" . $display->usage());
+				ok(defined $display->designation(), "\$display->designation() is defined:" . $display->designation());
+				ok($display->sar() =~ /^\d+(?:[.]\d+)?:\d+$/smx, "\$display->sar() is a ratio:" . $display->sar());
+				ok($display->dar() =~ /^\d+(?:[.]\d+)?(?::\d+)?$/smx, "\$display->dar() is a ratio or a floating point number:" . $display->dar());
+				ok($display->par() =~ /^\d+(?:[.]\d+)?(?::\d+(?:[.]\d+)?)?$/smx, "\$display->par() is a ratio or a floating point number:" . $display->par());
 				my $result;
 				eval {
 					$result = $firefox->resize($display->width(), $display->height());
