@@ -3878,6 +3878,7 @@ sub check_for_window {
 	return 0;
 }
 
+my $maximise;
 SKIP: {
 	diag("Starting new firefox for testing \%ENV proxy, min/maxing and killing firefox");
 	local %ENV = %ENV;
@@ -4000,7 +4001,6 @@ SKIP: {
 		};
 		alarm 0;
 		ok($minimise, "\$firefox->minimise()");
-		my $maximise;
 		local $SIG{ALRM} = sub { die "alarm during maximise\n" };
 		alarm 15;
 		eval {
@@ -4010,72 +4010,6 @@ SKIP: {
 		};
 		alarm 0;
 		ok($maximise, "\$firefox->maximise()");
-		if ($major_version < 52) {
-			diag("Not attempting to resize for Firefox $major_version");
-		} elsif ($maximise) {
-			local $TODO = q[];
-			my $count = 0;
-			my $resize_works;
-			foreach my $display ($firefox->displays()) {
-				$count += 1;
-				ok(defined $display->usage(), "\$display->usage() is defined:" . $display->usage());
-				ok(defined $display->designation(), "\$display->designation() is defined:" . $display->designation());
-				ok($display->sar() =~ /^\d+(?:[.]\d+)?:\d+$/smx, "\$display->sar() is a ratio:" . $display->sar());
-				ok($display->dar() =~ /^\d+(?:[.]\d+)?(?::\d+)?$/smx, "\$display->dar() is a ratio or a floating point number:" . $display->dar());
-				ok($display->par() =~ /^\d+(?:[.]\d+)?(?::\d+(?:[.]\d+)?)?$/smx, "\$display->par() is a ratio or a floating point number:" . $display->par());
-				my $result;
-				eval {
-					$result = $firefox->resize($display->width(), $display->height());
-					$resize_works = 1;
-				} or do {
-					if ($major_version < 60) {
-						chomp $@;
-						diag("Failed to resize browser for old browser version $major_version:$@");
-					} else {
-						ok(0, "Failed to resize browser for a modern browser:$@");
-						diag("Failed to resize browser for a modern browser:$@");
-					}
-				};
-				if ($result) {
-					ok(1, "Resized the display to " . $display->width . "x" . $display->height());
-					last unless ($ENV{RELEASE_TESTING});
-				} else {
-					ok(1, "Not able to resize the display to " . $display->width . "x" . $display->height());
-				}
-			}
-			ok($count, "$count displays are currently known to firefox");
-			my $iphone_count = 0;
-			foreach my $display ($firefox->displays(qr/iphone/smxi)) {
-				$iphone_count += 1;
-				ok($display->usage() =~ /iphone/smxi, "iPhone display detected:" . $display->usage());
-			}
-			ok($iphone_count, "$iphone_count displays are for an iphone");
-			ok($firefox->displays(qr/iphone/i) < $firefox->displays(), "There are fewer displays for iphones than all displays");
-			if ($ENV{FIREFOX_HOST}) {
-			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
-				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
-			} else {
-				# Coping with OpenBSD unveil - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271
-				my $path = File::Spec->catfile(Cwd::cwd(), qw(t data visible.html));
-				if ($^O eq 'cygwin') {
-					$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
-				}
-				my $url = "file://$path";
-				ok($firefox->go($url), "$url has been loaded");
-				my $element = $firefox->find_id('username');
-				if (($resize_works) && ($firefox->resize(800, 600))) {
-					my $percentage = $firefox->percentage_visible($element);
-					ok($percentage == 0, "Percentage visible is 0% for the username field:$percentage");
-					if ($major_version >= 59) {
-						ok($firefox->scroll($element, { block => 'center' }), "Scroll until the username field is in the center of the screen");
-						$percentage = $firefox->percentage_visible($element);
-						ok($percentage == 100, "Percentage visible is 100% for the username field:$percentage");
-					}
-				} else {
-					diag("Skipping checks that require resize to work");
-				}
-			}
-		}
 	}
 	if ($ENV{FIREFOX_HOST}) {
 		SKIP: {
@@ -4115,6 +4049,86 @@ SKIP: {
 		}
 	}
 }
+
+SKIP: {
+	diag("Starting new firefox for testing visibility");
+	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600);
+	if (!$skip_message) {
+		$at_least_one_success = 1;
+	}
+	if ($skip_message) {
+		skip($skip_message, 451);
+	}
+	ok($firefox, "Firefox has started in Marionette mode with visible set to 1");
+	if ($major_version < 52) {
+		diag("Not attempting to resize for Firefox $major_version");
+	} elsif ($maximise) {
+		local $TODO = q[];
+		my $count = 0;
+		my $resize_works;
+		foreach my $display ($firefox->displays()) {
+			$count += 1;
+			ok(defined $display->usage(), "\$display->usage() is defined:" . $display->usage());
+			ok(defined $display->designation(), "\$display->designation() is defined:" . $display->designation());
+			ok($display->sar() =~ /^\d+(?:[.]\d+)?:\d+$/smx, "\$display->sar() is a ratio:" . $display->sar());
+			ok($display->dar() =~ /^\d+(?:[.]\d+)?(?::\d+)?$/smx, "\$display->dar() is a ratio or a floating point number:" . $display->dar());
+			ok($display->par() =~ /^\d+(?:[.]\d+)?(?::\d+(?:[.]\d+)?)?$/smx, "\$display->par() is a ratio or a floating point number:" . $display->par());
+			my $result;
+			eval {
+				$result = $firefox->resize($display->width(), $display->height());
+				$resize_works = 1;
+			} or do {
+				if ($major_version < 60) {
+					chomp $@;
+					diag("Failed to resize browser for old browser version $major_version:$@");
+				} else {
+					ok(0, "Failed to resize browser for a modern browser:$@");
+					diag("Failed to resize browser for a modern browser:$@");
+				}
+			};
+			if ($result) {
+				ok(1, "Resized the display to " . $display->width . "x" . $display->height());
+				last unless ($ENV{RELEASE_TESTING});
+			} else {
+				ok(1, "Not able to resize the display to " . $display->width . "x" . $display->height());
+			}
+		}
+		ok($count, "$count displays are currently known to firefox");
+		my $iphone_count = 0;
+		foreach my $display ($firefox->displays(qr/iphone/smxi)) {
+			$iphone_count += 1;
+			ok($display->usage() =~ /iphone/smxi, "iPhone display detected:" . $display->usage());
+		}
+		ok($iphone_count, "$iphone_count displays are for an iphone");
+		ok($firefox->displays(qr/iphone/i) < $firefox->displays(), "There are fewer displays for iphones than all displays");
+		if ($ENV{FIREFOX_HOST}) {
+		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+			diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+		} else {
+			# Coping with OpenBSD unveil - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271
+			my $path = File::Spec->catfile(Cwd::cwd(), qw(t data visible.html));
+			if ($^O eq 'cygwin') {
+				$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+			}
+			my $url = "file://$path";
+			ok($firefox->go($url), "$url has been loaded");
+			my $element = $firefox->find_id('username');
+			if (($resize_works) && ($firefox->resize(800, 600))) {
+				my $percentage = $firefox->percentage_visible($element);
+				ok($percentage == 0, "Percentage visible is 0% for the username field:$percentage");
+				if ($major_version >= 59) {
+					ok($firefox->scroll($element, { block => 'center' }), "Scroll until the username field is in the center of the screen");
+					$percentage = $firefox->percentage_visible($element);
+					ok($percentage == 100, "Percentage visible is 100% for the username field:$percentage");
+				}
+			} else {
+				diag("Skipping checks that require resize to work");
+			}
+		}
+	}
+	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+}
+
 SKIP: {
 	if (($^O eq 'cygwin') ||
 		($^O eq 'darwin') ||
