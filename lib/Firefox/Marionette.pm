@@ -186,7 +186,7 @@ sub BY_PARTIAL {
 
 sub _prefs_interface_preamble {
     my ($self) = @_;
-    return <<'_JS_';    # security/manager/ssl/nsIPK11Token.idl
+    return <<'_JS_';    # modules/libpref/nsIPrefService.idl
 let prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
 let branch = prefs.getBranch("");
 _JS_
