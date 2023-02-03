@@ -2979,9 +2979,6 @@ ACKNOWLEDGEMENTS
       * Marionette Protocol
       <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html>
 
-      * Marionette Documentation
-      <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html>
-
       * Marionette driver.js
       <https://hg.mozilla.org/mozilla-central/file/tip/remote/marionette/driver.js>
 
