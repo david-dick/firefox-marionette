@@ -2980,7 +2980,7 @@ ACKNOWLEDGEMENTS
       <https://firefox-source-docs.mozilla.org/testing/marionette/marionette/index.html>
 
       * Marionette driver.js
-      <https://hg.mozilla.org/mozilla-central/file/tip/remote/marionette/driver.js>
+      <https://hg.mozilla.org/mozilla-central/file/tip/remote/marionette/driver.sys.mjs>
 
       * about:config <http://kb.mozillazine.org/About:config_entries>
 
