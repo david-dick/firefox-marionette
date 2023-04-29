@@ -7670,8 +7670,16 @@ sub capabilities {
     );
     my $response = $self->_get_response($message_id);
     if ( $self->marionette_protocol() == _MARIONETTE_PROTOCOL_VERSION_3() ) {
-        return $self->_create_capabilities(
-            $response->result()->{capabilities} );
+        if (   ( $response->result()->{value} )
+            && ( $response->result()->{value}->{capabilities} ) )
+        {
+            return $self->_create_capabilities(
+                $response->result()->{value}->{capabilities} );
+        }
+        else {
+            return $self->_create_capabilities(
+                $response->result()->{capabilities} );
+        }
     }
     else {
         return $self->_create_capabilities( $response->result()->{value} );
