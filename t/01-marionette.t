@@ -4127,7 +4127,7 @@ SKIP: {
 					ok($firefox->scroll($element, { block => 'center' }), "Scroll until the username field is in the center of the screen");
 					$percentage = $firefox->percentage_visible($element);
 					TODO: {
-						local $TODO = $firefox->capabilities()->platform_name() eq 'darwin' ? "darwin sometimes doesn't have the correct 100% value, more like 95%" : q[];
+						local $TODO = $firefox->capabilities()->platform_name() eq 'mac' ? "mac sometimes doesn't have the correct 100% value, more like 95%" : q[];
 						ok($percentage == 100, "Percentage visible is 100% for the username field:$percentage");
 					}
 				}
