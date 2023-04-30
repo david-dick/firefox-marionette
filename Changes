@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.36  Sun Apr 30 15:59 2023
+       Fixes to cope with Firefox 112 capabilities changes.  Thanks to toreau
+       Documentation and test suite fixes
+
 1.35  Sat Jan 21 21:04 2023
        Documentation and test suite fixes
 
