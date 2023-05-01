@@ -73,10 +73,10 @@ MAIN: {
 			$background_pids->{$pid} = $server;
 		} elsif (defined $pid) {
 			eval {
-				my $win32_local_alarm = 600;
+				my $win32_local_alarm = 900;
 				my $cygwin_local_alarm = 2700;
 				my $cygwin_remote_alarm = 7200;
-				my $physical_local_alarm = 600;
+				my $physical_local_alarm = 900;
 				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
 				$ENV{FIREFOX_NO_RECONNECT} = 1;
 				if ((lc $server->{type}) eq 'virsh') {
