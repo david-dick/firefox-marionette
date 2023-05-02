@@ -516,6 +516,7 @@ MAIN: {
 		if ((lc $server->{type}) eq 'virsh') {
 			if (_virsh_node_running($server)) {
 				_virsh_shutdown($server);
+				_sleep_until_shutdown($server);
 			}
 		}
 	}
@@ -644,6 +645,7 @@ sub _check_for_background_processes {
 		foreach my $server (@{$servers}) {
 			if ((lc $server->{type}) eq 'virsh') {
 				_virsh_shutdown($server);
+				_sleep_until_shutdown($server);
 			}
 		}
 	}
