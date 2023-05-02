@@ -1799,7 +1799,7 @@ sub _get_update_status {
         }
         else {
             Firefox::Marionette::Exception->throw(
-"Failed to open $updates_status_path for reading:$EXTENDED_OS_ERROR"
+"Failed to open '$updates_status_path' for reading:$EXTENDED_OS_ERROR"
             );
         }
     }
@@ -3708,7 +3708,7 @@ sub _active_update_version {
             $active_update_handle =
               FileHandle->new( $active_update_path, Fcntl::O_RDONLY() )
               or Firefox::Marionette::Exception->throw(
-"Failed to open $active_update_path for reading:$EXTENDED_OS_ERROR"
+"Failed to open '$active_update_path' for reading:$EXTENDED_OS_ERROR"
               );
         }
         if ($active_update_handle) {
@@ -5830,7 +5830,7 @@ sub _write_local_proxy {
       FileHandle->new( $local_proxy_path,
         Fcntl::O_CREAT() | Fcntl::O_EXCL() | Fcntl::O_WRONLY() )
       or Firefox::Marionette::Exception->throw(
-        "Failed to open $local_proxy_path for writing:$EXTENDED_OS_ERROR");
+        "Failed to open '$local_proxy_path' for writing:$EXTENDED_OS_ERROR");
     my $local_proxy = {};
     if ( defined $local_proxy->{version} ) {
         foreach my $key (qw(major minor patch)) {
@@ -6143,7 +6143,7 @@ sub _copy_content_to_profile_directory {
           FileHandle->new( $path,
             Fcntl::O_CREAT() | Fcntl::O_EXCL() | Fcntl::O_WRONLY() )
           or Firefox::Marionette::Exception->throw(
-            "Failed to open $path for writing:$EXTENDED_OS_ERROR");
+            "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
         $handle->print($content)
           or Firefox::Marionette::Exception->throw(
             "Failed to write to $path:$EXTENDED_OS_ERROR");
@@ -10002,7 +10002,7 @@ sub install {
           File::Spec->splitpath("$xpi_path");
         my $handle = FileHandle->new( $xpi_path, Fcntl::O_RDONLY() )
           or Firefox::Marionette::Exception->throw(
-            "Failed to open $xpi_path for reading:$EXTENDED_OS_ERROR");
+            "Failed to open '$xpi_path' for reading:$EXTENDED_OS_ERROR");
         binmode $handle;
         my $addons_directory = $self->{_addons_directory};
         $actual_path = $self->_remote_catfile( $addons_directory, $name );
