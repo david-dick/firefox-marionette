@@ -9054,9 +9054,12 @@ sub _quit_over_marionette {
         $self->_wait_for_firefox_to_exit();
     }
     else {
-        close $socket
-          or Firefox::Marionette::Exception->throw(
-            "Failed to close socket to firefox:$EXTENDED_OS_ERROR");
+        if ( !close $socket ) {
+            my $error = $EXTENDED_OS_ERROR;
+            $self->_terminate_xvfb();
+            Firefox::Marionette::Exception->throw(
+                "Failed to close socket to firefox:$error");
+        }
         $socket = undef;
         $self->_wait_for_firefox_to_exit();
     }
