@@ -4255,9 +4255,11 @@ sub _xvfb_binary {
 
 sub _dev_fd_works {
     my ($self) = @_;
-    my $test_handle =
-      File::Temp::tempfile( File::Spec->tmpdir(),
-        'firefox_marionette_dev_fd_test_XXXXXXXXXXX' )
+    my $test_handle = File::Temp::tempfile(
+        File::Spec->catfile(
+            File::Spec->tmpdir(), 'firefox_marionette_dev_fd_test_XXXXXXXXXXX'
+        )
+      )
       or Firefox::Marionette::Exception->throw(
         "Failed to open temporary file for writing:$EXTENDED_OS_ERROR");
     my @stats = stat '/dev/fd/' . fileno $test_handle;
@@ -4340,9 +4342,11 @@ sub _launch_xauth {
         "Failed to close '$ENV{XAUTHORITY}':$EXTENDED_OS_ERROR");
     my $mcookie = unpack 'H*',
       Crypt::URandom::urandom( _NUMBER_OF_MCOOKIE_BYTES() );
-    my $source_handle =
-      File::Temp::tempfile( File::Spec->tmpdir(),
-        'firefox_marionette_xauth_source_XXXXXXXXXXX' )
+    my $source_handle = File::Temp::tempfile(
+        File::Spec->catfile(
+            File::Spec->tmpdir(), 'firefox_marionette_xauth_source_XXXXXXXXXXX'
+        )
+      )
       or Firefox::Marionette::Exception->throw(
         "Failed to open temporary file for writing:$EXTENDED_OS_ERROR");
     fcntl $source_handle, Fcntl::F_SETFD(), 0
