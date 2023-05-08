@@ -339,7 +339,7 @@ sub _directory_listing {
     else {
         my $handle = DirHandle->new($directory);
         if ($handle) {
-            while ( my $entry = $handle->read() ) {
+            while ( defined( my $entry = $handle->read() ) ) {
                 next if ( $entry eq File::Spec->updir() );
                 next if ( $entry eq File::Spec->curdir() );
                 if ($short) {
