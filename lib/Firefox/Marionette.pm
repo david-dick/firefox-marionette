@@ -349,7 +349,7 @@ sub _directory_listing {
                     push @entries, File::Spec->catfile( $directory, $entry );
                 }
             }
-            $handle->close()
+            closedir $handle
               or Firefox::Marionette::Exception->throw(
                 "Failed to close directory '$directory':$EXTENDED_OS_ERROR");
         }
@@ -448,7 +448,7 @@ sub _get_max_scp_file_index {
             }
         }
     }
-    $directory_handle->close()
+    closedir $directory_handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close directory '$directory_path':$EXTENDED_OS_ERROR");
     return $maximum_index;
@@ -536,7 +536,7 @@ sub _setup_ssh_with_reconnect {
             }
         }
     }
-    $temp_handle->close()
+    closedir $temp_handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close directory '$temp_directory':$EXTENDED_OS_ERROR");
     if ( $self->_ssh() ) {
@@ -899,7 +899,7 @@ sub _get_local_reconnect_pid {
             }
         }
     }
-    $temp_handle->close();
+    closedir $temp_handle;
     return $alive_pid;
 }
 
@@ -1138,18 +1138,18 @@ sub _import_profile_paths {
                     $read_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() )
                   )
                 {
-                    $write_handle->print($buffer)
+                    print {$write_handle} $buffer
                       or Firefox::Marionette::Exception->throw(
                         "Failed to write to '$write_path':$EXTENDED_OS_ERROR");
                 }
                 defined $result
                   or Firefox::Marionette::Exception->throw(
                     "Failed to read from '$path':$EXTENDED_OS_ERROR");
-                $write_handle->close()
+                close $write_handle
                   or Firefox::Marionette::Exception->throw(
                     "Failed to close '$write_path':$EXTENDED_OS_ERROR");
             }
-            $read_handle->close()
+            close $read_handle
               or Firefox::Marionette::Exception->throw(
                 "Failed to close '$path':$EXTENDED_OS_ERROR");
         }
@@ -2727,14 +2727,12 @@ sub _post_launch_checks_and_setup {
           or Firefox::Marionette::Exception->throw(
             "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
         binmode $handle;
-        $handle->print(
-            MIME::Base64::decode_base64(
-                Firefox::Marionette::Extension::HarExportTrigger->as_string()
-            )
-          )
+        print {$handle}
+          MIME::Base64::decode_base64(
+            Firefox::Marionette::Extension::HarExportTrigger->as_string() )
           or Firefox::Marionette::Exception->throw(
             "Failed to write to '$path':$EXTENDED_OS_ERROR");
-        $handle->close()
+        close $handle
           or Firefox::Marionette::Exception->throw(
             "Failed to close '$path':$EXTENDED_OS_ERROR");
         $self->install( $path, 0 );
@@ -2810,7 +2808,7 @@ sub _clean_local_extension_directory {
                 $entry );
             unlink $path or $cleaned = 0;
         }
-        $handle->close()
+        closedir $handle
           or Firefox::Marionette::Exception->throw(
 "Failed to close directory '$self->{_local_extension_directory}':$EXTENDED_OS_ERROR"
           );
@@ -3101,10 +3099,10 @@ sub _profile_arguments {
               )
               or Firefox::Marionette::Exception->throw(
                 "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
-            $handle->print($mime_types_content)
+            print {$handle} $mime_types_content
               or Firefox::Marionette::Exception->throw(
                 "Failed to write to '$path':$EXTENDED_OS_ERROR");
-            $handle->close
+            close $handle
               or Firefox::Marionette::Exception->throw(
                 "Failed to close '$path':$EXTENDED_OS_ERROR");
         }
@@ -3466,7 +3464,7 @@ sub _read_and_close_handle {
     defined $result
       or Firefox::Marionette::Exception->throw(
         "Failed to read from '$path':$EXTENDED_OS_ERROR");
-    $handle->close()
+    close $handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close '$path':$EXTENDED_OS_ERROR");
     return $content;
@@ -4337,7 +4335,7 @@ sub _launch_xauth {
       )
       or Firefox::Marionette::Exception->throw(
         "Failed to open '$ENV{XAUTHORITY}' for writing:$EXTENDED_OS_ERROR");
-    $auth_handle->close()
+    close $auth_handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close '$ENV{XAUTHORITY}':$EXTENDED_OS_ERROR");
     my $mcookie = unpack 'H*',
@@ -5859,10 +5857,10 @@ sub _write_local_proxy {
         $local_proxy->{firefox}->{binary}  = $self->_binary();
         $local_proxy->{firefox}->{version} = $self->{_initial_version};
     }
-    $local_proxy_handle->print( JSON::encode_json($local_proxy) )
+    print {$local_proxy_handle} JSON::encode_json($local_proxy)
       or Firefox::Marionette::Exception->throw(
         "Failed to write to $local_proxy_path:$EXTENDED_OS_ERROR");
-    $local_proxy_handle->close()
+    close $local_proxy_handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close '$local_proxy_path':$EXTENDED_OS_ERROR");
     return;
@@ -6144,10 +6142,10 @@ sub _copy_content_to_profile_directory {
             Fcntl::O_CREAT() | Fcntl::O_EXCL() | Fcntl::O_WRONLY() )
           or Firefox::Marionette::Exception->throw(
             "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
-        $handle->print($content)
+        print {$handle} $content
           or Firefox::Marionette::Exception->throw(
             "Failed to write to $path:$EXTENDED_OS_ERROR");
-        $handle->close()
+        close $handle
           or Firefox::Marionette::Exception->throw(
             "Failed to close '$path':$EXTENDED_OS_ERROR");
         if ( $OSNAME eq 'cygwin' ) {
@@ -6264,7 +6262,7 @@ sub _get_local_command_output {
       or Firefox::Marionette::Exception->throw( "Failed to read from $binary "
           . ( join q[ ], @arguments )
           . ":$EXTENDED_OS_ERROR" );
-         $handle->close()
+    close $handle
       or $parameters->{ignore_exit_status}
       or $parameters->{return_exit_status}
       or Firefox::Marionette::Exception->throw( q[Command ']
@@ -6506,7 +6504,7 @@ sub _put_file_via_scp {
     while ( $result =
         $original_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) )
     {
-        $temp_handle->print($buffer)
+        print {$temp_handle} $buffer
           or Firefox::Marionette::Exception->throw(
             "Failed to write to '$local_path':$EXTENDED_OS_ERROR");
     }
@@ -6610,10 +6608,10 @@ sub _search_file_via_ssh {
       )
       or Firefox::Marionette::Exception->throw(
         "Failed to open temporary file for writing:$EXTENDED_OS_ERROR");
-    $handle->print($output)
+    print {$handle} $output
       or Firefox::Marionette::Exception->throw(
         "Failed to write to temporary file:$EXTENDED_OS_ERROR");
-    $handle->seek( 0, Fcntl::SEEK_SET() )
+    seek $handle, 0, Fcntl::SEEK_SET()
       or Firefox::Marionette::Exception->throw(
         "Failed to seek to start of temporary file:$EXTENDED_OS_ERROR");
     return $handle;
@@ -6642,7 +6640,7 @@ sub _get_marionette_port {
                     $port = $1;
                 }
             }
-            $profile_handle->close()
+            close $profile_handle
               or Firefox::Marionette::Exception->throw(
                 "Failed to close '$self->{profile_path}':$EXTENDED_OS_ERROR");
         }
@@ -8229,10 +8227,10 @@ sub pdf {
             "Failed to open temporary file for writing:$EXTENDED_OS_ERROR");
         binmode $handle;
         my $content = $self->_response_result_value($response);
-        $handle->print( MIME::Base64::decode_base64($content) )
+        print {$handle} MIME::Base64::decode_base64($content)
           or Firefox::Marionette::Exception->throw(
             "Failed to write to temporary file:$EXTENDED_OS_ERROR");
-        $handle->seek( 0, Fcntl::SEEK_SET() )
+        seek $handle, 0, Fcntl::SEEK_SET()
           or Firefox::Marionette::Exception->throw(
             "Failed to seek to start of temporary file:$EXTENDED_OS_ERROR");
         return $handle;
@@ -8322,10 +8320,10 @@ sub selfie {
         binmode $handle;
         my $content = $self->_response_result_value($response);
         $content =~ s/^data:image\/png;base64,//smx;
-        $handle->print( MIME::Base64::decode_base64($content) )
+        print {$handle} MIME::Base64::decode_base64($content)
           or Firefox::Marionette::Exception->throw(
             "Failed to write to temporary file:$EXTENDED_OS_ERROR");
-        $handle->seek( 0, Fcntl::SEEK_SET() )
+        seek $handle, 0, Fcntl::SEEK_SET()
           or Firefox::Marionette::Exception->throw(
             "Failed to seek to start of temporary file:$EXTENDED_OS_ERROR");
         return $handle;
