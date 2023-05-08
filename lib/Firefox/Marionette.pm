@@ -899,7 +899,9 @@ sub _get_local_reconnect_pid {
             }
         }
     }
-    closedir $temp_handle;
+    closedir $temp_handle
+      or Firefox::Marionette::Exception->throw(
+        "Failed to close directory '$temp_directory':$EXTENDED_OS_ERROR");
     return $alive_pid;
 }
 
@@ -4354,7 +4356,9 @@ sub _launch_xauth {
 "Failed to clear the close-on-exec flag on a temporary file:$EXTENDED_OS_ERROR"
       );
     my $xauth_proto = q[.];
-    $source_handle->print("add :$display_number $xauth_proto $mcookie\n");
+    print {$source_handle} "add :$display_number $xauth_proto $mcookie\n"
+      or Firefox::Marionette::Exception->throw(
+        "Failed to write to temporary file:$EXTENDED_OS_ERROR");
     seek $source_handle, 0, Fcntl::SEEK_SET()
       or Firefox::Marionette::Exception->throw(
         "Failed to seek to start of temporary file:$EXTENDED_OS_ERROR");
@@ -5606,8 +5610,13 @@ sub _network_connection_and_initial_read_from_marionette {
         if ($number_of_bytes) {
             $connected = 1;
         }
-        else {
+        elsif ( defined $number_of_bytes ) {
             sleep 1;
+        }
+        else {
+            Firefox::Marionette::Exception->throw(
+"Failed to read from connection to $host on port $port:$EXTENDED_OS_ERROR"
+            );
         }
     }
     elsif ( $EXTENDED_OS_ERROR == POSIX::ECONNREFUSED() ) {
