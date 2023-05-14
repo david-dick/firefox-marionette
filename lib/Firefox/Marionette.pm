@@ -880,29 +880,32 @@ sub _get_local_reconnect_pid {
             }
             $self->{_initial_version} = $local_proxy->{firefox}->{version};
             $self->{_root_directory}  = $possible_root_directory;
-            if ( $self->{profile_name} ) {
-                $self->{_profile_directory} =
-                  Firefox::Marionette::Profile->directory(
-                    $self->{profile_name} );
-                $self->{profile_path} =
-                  File::Spec->catfile( $self->{_profile_directory},
-                    'prefs.js' );
-            }
-            else {
-                $self->{_profile_directory} =
-                  File::Spec->catfile( $self->{_root_directory}, 'profile' );
-                $self->{_download_directory} =
-                  File::Spec->catfile( $self->{_root_directory}, 'downloads' );
-                $self->{profile_path} =
-                  File::Spec->catfile( $self->{_profile_directory},
-                    'prefs.js' );
-            }
+            $self->_setup_profile();
         }
     }
     closedir $temp_handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close directory '$temp_directory':$EXTENDED_OS_ERROR");
     return $alive_pid;
+}
+
+sub _setup_profile {
+    my ($self) = @_;
+    if ( $self->{profile_name} ) {
+        $self->{_profile_directory} =
+          Firefox::Marionette::Profile->directory( $self->{profile_name} );
+        $self->{profile_path} =
+          File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
+    }
+    else {
+        $self->{_profile_directory} =
+          File::Spec->catfile( $self->{_root_directory}, 'profile' );
+        $self->{_download_directory} =
+          File::Spec->catfile( $self->{_root_directory}, 'downloads' );
+        $self->{profile_path} =
+          File::Spec->catfile( $self->{_profile_directory}, 'prefs.js' );
+    }
+    return;
 }
 
 sub _reconnect {
@@ -4245,7 +4248,11 @@ sub _launch {
 
 sub _launch_win32 {
     my ( $self, @arguments ) = @_;
-    my $binary  = $self->_binary();
+    my $binary = $self->_binary();
+    if ( $binary =~ /[.]pl$/smx ) {
+        unshift @arguments, $binary;
+        $binary = $EXECUTABLE_NAME;
+    }
     my $process = $self->_start_win32_process( $binary, @arguments );
     $self->{_win32_firefox_process} = $process;
     return $process->GetProcessID();
@@ -9006,10 +9013,14 @@ sub quit {
         $self->_terminate_xvfb();
     }
     elsif ( $self->_socket() ) {
-        if ( $self->_session_id() ) {
-            $self->_quit_over_marionette($flags);
-            delete $self->{session_id};
-        }
+        eval {
+            if ( $self->_session_id() ) {
+                $self->_quit_over_marionette($flags);
+                delete $self->{session_id};
+            }
+        } or do {
+            warn "Caught an exception while quitting:$EVAL_ERROR\n";
+        };
         $self->_terminate_process();
     }
     else {

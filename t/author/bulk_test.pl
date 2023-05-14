@@ -40,6 +40,19 @@ $ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
 system { 'cover' } 'cover', '-delete' and die "Failed to 'cover' for " . ($ENV{FIREFOX_BINARY} || 'firefox');
 MAIN: {
 	my $cwd = Cwd::cwd();
+	my $test_directory = File::Spec->catdir($cwd, 't');
+	my $test_directory_handle = DirHandle->new($test_directory);
+	my @syscall_entries;
+	if ($test_directory_handle) {
+		while(my $entry = $test_directory_handle->read()) {
+			next if ($entry eq File::Spec->updir());
+			next if ($entry eq File::Spec->curdir());
+			next if ($entry !~ /03\-/smx);
+			push @syscall_entries, File::Spec->catfile($test_directory, $entry);
+		}
+	} else {
+		die "Failed to open test directory:$!";
+	}
 	my @servers;
         my $csv = Text::CSV_XS->new ({ binary => 1, auto_diag => 1 });
 	my $servers_path = $cwd . '/servers.csv';
@@ -509,6 +522,9 @@ MAIN: {
 		}
 		_check_for_background_processes($background_pids, @servers);
 	}
+	foreach my $syscall_entry (@syscall_entries) {
+		_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $syscall_entry ], {});
+	}
 	while (_check_for_background_processes($background_pids, @servers)) {
 		sleep 10;
 	}
@@ -523,7 +539,7 @@ MAIN: {
 	chdir $cwd or die "Failed to chdir to '$cwd':$EXTENDED_OS_ERROR";
 	if (-d "$cwd/$cover_db_name") {
 		$ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
-		system { 'cover' } 'cover', '-ignore', $test_marionette_file and die "Failed to 'cover'";
+		system { 'cover' } 'cover', '-ignore_re', '^t/*' and die "Failed to 'cover'";
 	} else {
 		warn "No coverage generated\n";
 	}

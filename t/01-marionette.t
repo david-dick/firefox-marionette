@@ -797,6 +797,12 @@ SKIP: {
 			diag("Unable to determine the number of updates available");
 			ok(1, "Unable to determine the number of updates available");
 		}
+		$update = Firefox::Marionette::UpdateStatus->new(elevation_failure => 0, unsupported => undef, is_complete_update => 1, install_date => undef);
+		ok(ref $update eq 'Firefox::Marionette::UpdateStatus', "Firefox::Marionette::UpdateStatus->new() produces a Firefox::Marionette::UpdateStatus object");
+		ok($update->elevation_failure() == 0, "\$update->elevation_failure() == 0 when parameter is 0");
+		ok(!defined $update->unsupported(), "\$update->unsupported() is not defined when parameter is not defined");
+		ok($update->is_complete_update() == 1, "\$update->is_complete_update() == 1 when parameter is 1");
+		ok(!defined $update->install_date(), "\$update->install_date() is not defined when parameter is not defined");
 	}
 	if ($ENV{FIREFOX_HOST}) {
 		ok(-d $firefox->ssh_local_directory(), "Firefox::Marionette->ssh_local_directory() returns the existing ssh local directory:" . $firefox->ssh_local_directory());
@@ -2374,7 +2380,7 @@ SKIP: {
 		}
 		ok($count, "Link from metacpan.org has $count attributes");
 		my @scroll_arguments = test_scroll_arguments($number_of_links++);
-		ok($firefox->scroll($link, @scroll_arguments), "Firefox scrolled to the link with arguments of:" . join q[, ], stringify_scroll_arguments(@scroll_arguments));
+		ok($link->scroll(@scroll_arguments), "Firefox scrolled to the link with arguments of:" . join q[, ], stringify_scroll_arguments(@scroll_arguments));
 	}
 	my @images = $firefox->images();
 	foreach my $image (@images) {
