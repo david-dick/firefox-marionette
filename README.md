@@ -508,7 +508,7 @@ accepts an optional regex to filter against the [usage for the display](https://
         }
     }
 
-## download
+## downloaded
 
 accepts a filesystem path and returns a matching filehandle.  This is trivial for locally running firefox, but sufficiently complex to justify the method for a remote firefox running over ssh.
 
@@ -527,7 +527,7 @@ accepts a filesystem path and returns a matching filehandle.  This is trivial fo
 
     foreach my $path ($firefox->downloads()) {
 
-        my $handle = $firefox->download($path);
+        my $handle = $firefox->downloaded($path);
 
         # do something with downloaded file handle
 

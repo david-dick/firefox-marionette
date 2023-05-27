@@ -288,6 +288,14 @@ sub mime_types {
 
 sub download {
     my ( $self, $path ) = @_;
+    Carp::carp( '**** DEPRECATED - The download(' . q[$]
+          . 'path) method HAS BEEN REPLACED BY downloaded(' . q[$]
+          . 'path) ****' );
+    return $self->downloaded($path);
+}
+
+sub downloaded {
+    my ( $self, $path ) = @_;
     my $handle;
     if ( my $ssh = $self->_ssh() ) {
         $handle = $self->_get_file_via_scp( {}, $path, 'downloaded file' );
@@ -10858,7 +10866,7 @@ accepts an optional regex to filter against the L<usage for the display|Firefox:
         }
     }
 
-=head2 download
+=head2 downloaded
 
 accepts a filesystem path and returns a matching filehandle.  This is trivial for locally running firefox, but sufficiently complex to justify the method for a remote firefox running over ssh.
 
@@ -10877,7 +10885,7 @@ accepts a filesystem path and returns a matching filehandle.  This is trivial fo
 
     foreach my $path ($firefox->downloads()) {
 
-        my $handle = $firefox->download($path);
+        my $handle = $firefox->downloaded($path);
 
         # do something with downloaded file handle
 

@@ -643,7 +643,7 @@ SUBROUTINES/METHODS
             }
         }
 
- download
+ downloaded
 
     accepts a filesystem path and returns a matching filehandle. This is
     trivial for locally running firefox, but sufficiently complex to
@@ -664,7 +664,7 @@ SUBROUTINES/METHODS
     
         foreach my $path ($firefox->downloads()) {
     
-            my $handle = $firefox->download($path);
+            my $handle = $firefox->downloaded($path);
     
             # do something with downloaded file handle
     
