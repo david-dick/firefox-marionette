@@ -344,7 +344,7 @@ sub _filesystem_regexes {
                 push @allowed_binary_paths, $os_allowed_binary_paths{$OSNAME};
             }
             my %os_allowed_binary_directories = (
-                freebsd   => '/usr/local/lib',
+                freebsd   => '/usr/local/lib/firefox',
                 dragonfly => '/usr/local/lib/firefox',
                 netbsd    => '/usr/pkg/bin',
                 openbsd   => '/usr/local/lib/firefox',
