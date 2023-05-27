@@ -64,7 +64,7 @@ our @EXPORT_OK =
   qw(BY_XPATH BY_ID BY_NAME BY_TAG BY_CLASS BY_SELECTOR BY_LINK BY_PARTIAL);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-our $VERSION = '1.37';
+our $VERSION = '1.38';
 
 sub _ANYPROCESS                     { return -1 }
 sub _COMMAND                        { return 0 }
@@ -1994,7 +1994,7 @@ HVGA	Handheld PC	640	240	640:240	8:3	1:1	153,600
 0.2M2:1	Nokia Series 90 smartphones (7700, 7710)	640	320	2:1	2:1	1:1	204,800
 EGA	Enhanced Graphics Adapter	640	350	640:350	4:3	0.729	224,000
 0.23M9	nHD, used by Nokia 5800, Nokia 5530, Nokia X6, Nokia N97, Nokia N8[6]	640	360	16:9	16:9	1:1	230,400
-0.24M3	Teletext and Viewdata 40x25 character screens (PAL interlaced)	480	500	480:500	4:3	1.379	240,000
+0.24M3	Teletext and Viewdata 40x25 character screens (PAL interlaced)	480	500	480:500	4:3	1.389	240,000
 0.25M3	Namco System 12 arcade system board (e.g. Soulcalibur, Tekken 3, Tekken Tag Tournament) (interlaced)	512	480	512:480	4:3	5:4	245,760
 0.25M3	HGC	720	348	720:348	4:3	0.644	250,560
 0.25M3	MDA	720	350	720:350	4:3	0.648	252,000
@@ -2039,7 +2039,7 @@ SXGA-	Super XGA "Minus"	1280	960	4:3	4:3	1:1	1,228,800
 WSXGA	Wide SXGA	1440	900	8:5	8:5	1:1	1,296,000
 WXGA+	Wide XGA+	1440	900	8:5	8:5	1:1	1,296,000
 SXGA	Super XGA	1280	1024	5:4	5:4	1:1	1,310,720
-1.37M2	Apple PowerBook G4	1440	960	3:2	3:2	1:1	1,382,400
+1.38M2	Apple PowerBook G4	1440	960	3:2	3:2	1:1	1,382,400
 HD+	900p	1600	900	16:9	16:9	1:1	1,440,000
 SXGA+	Super XGA Plus, Lenovo Thinkpad X61 Tablet	1400	1050	4:3	4:3	1:1	1,470,000
 1.47M5	Similar to A4 paper format (~123 dpi for A4 size)	1440	1024	1440:1024	7:5	0.996	1,474,560
@@ -10418,7 +10418,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 =head1 VERSION
 
-Version 1.37
+Version 1.38
 
 =head1 SYNOPSIS
 

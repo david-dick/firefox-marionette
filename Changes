@@ -1,5 +1,11 @@
 Revision history for Firefox-Marionette
 
+1.38  Sun May 28 06:57 2023
+       Fixing ssh-auth-cmd-marionette for FreeBSD in GH#24.  Thanks to prozorecJP
+       Adding cache_keys, check_cache_key and clear_cache methods
+       Renaming download method to downloaded
+       Test coverage improvements and related fixes
+
 1.37  Sun Apr 30 19:12 2023
        Another test suite fix
 
