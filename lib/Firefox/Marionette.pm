@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use Firefox::Marionette::Response();
 use Firefox::Marionette::Element();
+use Firefox::Marionette::Cache();
 use Firefox::Marionette::Cookie();
 use Firefox::Marionette::Display();
 use Firefox::Marionette::Window::Rect();
@@ -253,6 +254,77 @@ _JS_
         args => [ $name, $value ]
     );
     $self->content();
+    return $self;
+}
+
+sub _clear_data_service_interface_preamble {
+    my ($self) = @_;
+    return <<'_JS_';    # toolkit/components/cleardata/nsIClearDataService.idl
+let clearDataService = Components.classes["@mozilla.org/clear-data-service;1"].getService(Components.interfaces.nsIClearDataService);
+_JS_
+}
+
+sub cache_keys {
+    my ($self) = @_;
+    my @names;
+    foreach my $name (@Firefox::Marionette::Cache::EXPORT_OK) {
+        if ( defined $self->check_cache_key($name) ) {
+            push @names, $name;
+        }
+    }
+    return @names;
+}
+
+sub check_cache_key {
+    my ( $self, $name ) = @_;
+    my $class = ref $self;
+    defined $name
+      or Firefox::Marionette::Exception->throw(
+        "$class->check_cache_value() must be passed an argument.");
+    $name =~ /^[[:upper:]_]+$/smx
+      or Firefox::Marionette::Exception->throw(
+"$class->check_cache_key() must be passed an argument consisting of uppercase characters and underscores."
+      );
+    my $script = <<"_JS_";
+if (typeof clearDataService.$name === undefined) {
+  return;
+} else {
+  return clearDataService.$name;
+}
+_JS_
+    my $old    = $self->_context('chrome');
+    my $result = $self->script(
+        $self->_compress_script(
+            $self->_clear_data_service_interface_preamble() . $script
+        )
+    );
+    $self->_context($old);
+    return $result;
+}
+
+sub clear_cache {
+    my ( $self, $flags ) = @_;
+    $flags = defined $flags ? $flags : Firefox::Marionette::Cache::CLEAR_ALL();
+    my $script = <<'_JS_';
+let argument_flags = arguments[0];
+let clearCache = function(flags) {
+  return new Promise((resolve) => {
+    clearDataService.deleteData(flags, function() { resolve(); });
+  })};
+let result = (async function() {
+  let awaitResult = await clearCache(argument_flags);
+  return awaitResult;
+})();
+return arguments[0];
+_JS_
+    my $old    = $self->_context('chrome');
+    my $result = $self->script(
+        $self->_compress_script(
+            $self->_clear_data_service_interface_preamble() . $script
+        ),
+        args => [$flags]
+    );
+    $self->_context($old);
     return $self;
 }
 
@@ -1922,7 +1994,7 @@ HVGA	Handheld PC	640	240	640:240	8:3	1:1	153,600
 0.2M2:1	Nokia Series 90 smartphones (7700, 7710)	640	320	2:1	2:1	1:1	204,800
 EGA	Enhanced Graphics Adapter	640	350	640:350	4:3	0.729	224,000
 0.23M9	nHD, used by Nokia 5800, Nokia 5530, Nokia X6, Nokia N97, Nokia N8[6]	640	360	16:9	16:9	1:1	230,400
-0.24M3	Teletext and Viewdata 40x25 character screens (PAL interlaced)	480	500	480:500	4:3	1.389	240,000
+0.24M3	Teletext and Viewdata 40x25 character screens (PAL interlaced)	480	500	480:500	4:3	1.379	240,000
 0.25M3	Namco System 12 arcade system board (e.g. Soulcalibur, Tekken 3, Tekken Tag Tournament) (interlaced)	512	480	512:480	4:3	5:4	245,760
 0.25M3	HGC	720	348	720:348	4:3	0.644	250,560
 0.25M3	MDA	720	350	720:350	4:3	0.648	252,000
@@ -1967,7 +2039,7 @@ SXGA-	Super XGA "Minus"	1280	960	4:3	4:3	1:1	1,228,800
 WSXGA	Wide SXGA	1440	900	8:5	8:5	1:1	1,296,000
 WXGA+	Wide XGA+	1440	900	8:5	8:5	1:1	1,296,000
 SXGA	Super XGA	1280	1024	5:4	5:4	1:1	1,310,720
-1.38M2	Apple PowerBook G4	1440	960	3:2	3:2	1:1	1,382,400
+1.37M2	Apple PowerBook G4	1440	960	3:2	3:2	1:1	1,382,400
 HD+	900p	1600	900	16:9	16:9	1:1	1,440,000
 SXGA+	Super XGA Plus, Lenovo Thinkpad X61 Tablet	1400	1050	4:3	4:3	1:1	1,470,000
 1.47M5	Similar to A4 paper format (~123 dpi for A4 size)	1440	1024	1440:1024	7:5	0.996	1,474,560
@@ -10582,6 +10654,21 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     $firefox->bye(sub { $firefox->find_name('metacpan_search-input') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
+=head2 cache_keys
+
+returns the set of all cache keys from L<Firefox::Marionette::Cache|Firefox::Marionette::Cache>.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $key_name ($firefox->cache_keys()) {
+      my $key_value = $firefox->check_cache_key($key_name);
+      if (Firefox::Marionette::Cache->$key_name() != $key_value) {
+        warn "This module this the value of $key_name is " . Firefox::Marionette::Cache->$key_name();
+        warn "Firefox thinks the value of   $key_name is $key_value";
+      }
+    }
+
 =head2 capabilities
 
 returns the L<capabilities|Firefox::Marionette::Capabilities> of the current firefox binary.  You can retrieve L<timeouts|Firefox::Marionette::Timeouts> or a L<proxy|Firefox::Marionette::Proxy> with this method.
@@ -10621,6 +10708,23 @@ returns a list of all known L<certificates in the Firefox database|Firefox::Mari
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 check_cache_key
+
+accepts a L<cache_key|Firefox::Marionette::Cache> as a parameter.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $key_name ($firefox->cache_keys()) {
+      my $key_value = $firefox->check_cache_key($key_name);
+      if (Firefox::Marionette::Cache->$key_name() != $key_value) {
+        warn "This module this the value of $key_name is " . Firefox::Marionette::Cache->$key_name();
+        warn "Firefox thinks the value of   $key_name is $key_value";
+      }
+    }
+
+This method returns the L<cache_key|Firefox::Marionette::Cache>'s actual value from firefox as a number.  This may differ from the current value of the key from L<Firefox::Marionette::Cache|Firefox::Marionette::Cache> as these values have changed as firefox has evolved.
+
 =head2 child_error
 
 This method returns the $? (CHILD_ERROR) for the Firefox process, or undefined if the process has not yet exited.
@@ -10649,6 +10753,19 @@ returns identifiers for each open chrome window for tests interested in managing
 =head2 clear
 
 accepts a L<element|Firefox::Marionette::Element> as the first parameter and clears any user supplied input
+
+=head2 clear_cache
+
+accepts a single flag parameter, which can be an ORed set of keys from L<Firefox::Marionette::Cache|Firefox::Marionette::Cache> and clears the appropriate sections of the cache.  If no flags parameter is supplied, the default is L<CLEAR_ALL|Firefox::Marionette::Cache#CLEAR_ALL>.  Note that this method, unlike L<delete_cookies|/delete_cookies> will actually delete all cookies for all hosts, not just the current webpage.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Cache qw(:all);
+
+    my $firefox = Firefox::Marionette->new()->go('https://do.lots.of.evil/')->clear_cache(); # default clear all
+
+    $firefox->go('https://cookies.r.us')->clear_cache(CLEAR_COOKIES());
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 clear_pref
 
@@ -10777,7 +10894,7 @@ deletes a single cookie by name.  Accepts a scalar containing the cookie name as
 
 =head2 delete_cookies
 
-here be cookie monsters! This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+Here be cookie monsters! Note that this method will only delete cookies for the current site.  See L<clear_cache|/clear_cache> for an alternative.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods. 
 
 =head2 delete_header
 

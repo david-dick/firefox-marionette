@@ -224,6 +224,21 @@ accepts a subroutine reference as a parameter and then executes the subroutine. 
 
     $firefox->bye(sub { $firefox->find_name('metacpan_search-input') })->await(sub { $firefox->interactive() && $firefox->find_partial('Download') })->click();
 
+## cache\_keys
+
+returns the set of all cache keys from [Firefox::Marionette::Cache](https://metacpan.org/pod/Firefox::Marionette::Cache).
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $key_name ($firefox->cache_keys()) {
+      my $key_value = $firefox->check_cache_key($key_name);
+      if (Firefox::Marionette::Cache->$key_name() != $key_value) {
+        warn "This module this the value of $key_name is " . Firefox::Marionette::Cache->$key_name();
+        warn "Firefox thinks the value of   $key_name is $key_value";
+      }
+    }
+
 ## capabilities
 
 returns the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) of the current firefox binary.  You can retrieve [timeouts](https://metacpan.org/pod/Firefox::Marionette::Timeouts) or a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy) with this method.
@@ -263,6 +278,23 @@ returns a list of all known [certificates in the Firefox database](https://metac
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
+## check\_cache\_key
+
+accepts a [cache\_key](https://metacpan.org/pod/Firefox::Marionette::Cache) as a parameter.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $key_name ($firefox->cache_keys()) {
+      my $key_value = $firefox->check_cache_key($key_name);
+      if (Firefox::Marionette::Cache->$key_name() != $key_value) {
+        warn "This module this the value of $key_name is " . Firefox::Marionette::Cache->$key_name();
+        warn "Firefox thinks the value of   $key_name is $key_value";
+      }
+    }
+
+This method returns the [cache\_key](https://metacpan.org/pod/Firefox::Marionette::Cache)'s actual value from firefox as a number.  This may differ from the current value of the key from [Firefox::Marionette::Cache](https://metacpan.org/pod/Firefox::Marionette::Cache) as these values have changed as firefox has evolved.
+
 ## child\_error
 
 This method returns the $? (CHILD\_ERROR) for the Firefox process, or undefined if the process has not yet exited.
@@ -291,6 +323,19 @@ returns identifiers for each open chrome window for tests interested in managing
 ## clear
 
 accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and clears any user supplied input
+
+## clear\_cache
+
+accepts a single flag parameter, which can be an ORed set of keys from [Firefox::Marionette::Cache](https://metacpan.org/pod/Firefox::Marionette::Cache) and clears the appropriate sections of the cache.  If no flags parameter is supplied, the default is [CLEAR\_ALL](https://metacpan.org/pod/Firefox::Marionette::Cache#CLEAR_ALL).  Note that this method, unlike [delete\_cookies](#delete_cookies) will actually delete all cookies for all hosts, not just the current webpage.
+
+    use Firefox::Marionette();
+    use Firefox::Marionette::Cache qw(:all);
+
+    my $firefox = Firefox::Marionette->new()->go('https://do.lots.of.evil/')->clear_cache(); # default clear all
+
+    $firefox->go('https://cookies.r.us')->clear_cache(CLEAR_COOKIES());
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## clear\_pref
 
@@ -419,7 +464,7 @@ deletes a single cookie by name.  Accepts a scalar containing the cookie name as
 
 ## delete\_cookies
 
-here be cookie monsters! This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+Here be cookie monsters! Note that this method will only delete cookies for the current site.  See [clear\_cache](#clear_cache) for an alternative.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods. 
 
 ## delete\_header
 
