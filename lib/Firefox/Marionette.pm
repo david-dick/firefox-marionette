@@ -209,7 +209,7 @@ switch (branch.getPrefType(arguments[0])) {
 }
 return result;
 _JS_
-    $self->chrome();
+    my $old = $self->_context('chrome');
     my ( $result, $type ) = @{
         $self->script(
             $self->_compress_script(
@@ -218,7 +218,7 @@ _JS_
             args => [$name]
         )
     };
-    $self->content();
+    $self->_context($old);
     if ($type) {
         if ( $type eq 'integer' ) {
             $result += 0;
@@ -248,12 +248,12 @@ switch (branch.getPrefType(arguments[0])) {
     }
 }
 _JS_
-    $self->chrome();
+    my $old = $self->_context('chrome');
     $self->script(
         $self->_compress_script( $self->_prefs_interface_preamble() . $script ),
         args => [ $name, $value ]
     );
-    $self->content();
+    $self->_context($old);
     return $self;
 }
 
@@ -333,12 +333,12 @@ sub clear_pref {
     my $script = <<'_JS_';
 branch.clearUserPref(arguments[0]);
 _JS_
-    $self->chrome();
+    my $old = $self->_context('chrome');
     $self->script(
         $self->_compress_script( $self->_prefs_interface_preamble() . $script ),
         args => [$name]
     );
-    $self->content();
+    $self->_context($old);
     return $self;
 }
 
@@ -1107,13 +1107,13 @@ if (('hasPassword' in token) && (!token.hasPassword)) {
   return true;
 }
 _JS_
-    $self->chrome();
+    my $old    = $self->_context('chrome');
     my $result = $self->script(
         $self->_compress_script(
             $self->_pk11_tokendb_interface_preamble() . $script
         )
     );
-    $self->content();
+    $self->_context($old);
     return $result;
 }
 
@@ -1122,13 +1122,13 @@ sub pwd_mgr_logout {
     my $script = <<'_JS_';
 token.logoutAndDropAuthenticatedResources();
 _JS_
-    $self->chrome();
+    my $old = $self->_context('chrome');
     $self->script(
         $self->_compress_script(
             $self->_pk11_tokendb_interface_preamble() . $script
         )
     );
-    $self->content();
+    $self->_context($old);
     return $self;
 }
 
@@ -1145,14 +1145,14 @@ if (token.needsUserInit) {
   token.changePassword("",arguments[0]);
 }
 _JS_
-    $self->chrome();
+    my $old = $self->_context('chrome');
     $self->script(
         $self->_compress_script(
             $self->_pk11_tokendb_interface_preamble() . $script
         ),
         args => [$password]
     );
-    $self->content();
+    $self->_context($old);
     return $self;
 }
 
@@ -1169,7 +1169,7 @@ if (token.checkPassword(arguments[0])) {
   return false;
 }
 _JS_
-    $self->chrome();
+    my $old = $self->_context('chrome');
     if (
         $self->script(
             $self->_compress_script(
@@ -1179,10 +1179,10 @@ _JS_
         )
       )
     {
-        $self->content();
+        $self->_context($old);
     }
     else {
-        $self->content();
+        $self->_context($old);
         Firefox::Marionette::Exception->throw('Incorrect Primary Password');
     }
     return $self;
