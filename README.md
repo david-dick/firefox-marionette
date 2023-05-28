@@ -1971,6 +1971,12 @@ With all those conditions being met, [WebGL](https://en.wikipedia.org/wiki/WebGL
         die "WebGL is not supported";
     }
 
+# WEBSITES THAT BLOCK AUTOMATION
+
+Marionette [by design](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver) allows web sites to detect that the browser is being automated.  Firefox [no longer (since version 88)](https://bugzilla.mozilla.org/show_bug.cgi?id=1632821) allows you to disable this functionality while you are automating the browser.  If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
+
+At the very least, under these circumstances, it would be a good idea to be aware that there's an [ongoing arms race](https://en.wikipedia.org/wiki/Web_scraping#Methods_to_prevent_web_scraping), and potential [legal issues](https://en.wikipedia.org/wiki/Web_scraping#Legal_issues) in this area.
+
 # X11 FORWARDING WITH FIREFOX
 
 This is an experimental addition to this module.  [X11 Forwarding](https://man.openbsd.org/ssh#X) allows you to launch a [remote firefox via ssh](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH) and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
