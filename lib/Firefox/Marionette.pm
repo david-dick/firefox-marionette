@@ -11745,7 +11745,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, L<connections to firefox.settings.services.mozilla.com will still be made|https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via L</etc/hosts|https://en.wikipedia.org/wiki//etc/hosts>.  NOTE: that this option only works when profile_name/profile is not specified.
 
-=item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.  This defaults to "0" (off).
+=item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.  This defaults to "0" (off).  See L<CONSOLE LOGGING|/CONSOLE-LOGGING> for a discussion of how to send log messages to the console.
 
 =item * debug - should firefox's debug to be available via STDERR. This defaults to "0". Any ssh connections will also be printed to STDERR.  This defaults to "0" (off).  This setting may be updated by the L<debug|Firefox::Marionette#debug> method.  If this option is not a boolean (0|1), the value will be passed to the L<MOZ_LOG|https://firefox-source-docs.mozilla.org/networking/http/logging.html> option on the command line of the firefox binary to allow extra levels of debug.
 
@@ -12468,6 +12468,24 @@ And used to fill in login prompts without explicitly knowing the account details
     $firefox->go('https://pause.perl.org/pause/authenquery')->accept_alert(); # this goes to the page and submits the http auth popup
 
     $firefox->go('https://github.com/login')->fill_login(); # fill the login and password fields without needing to see them
+
+=head1 CONSOLE LOGGING
+
+Sending debug to the console can be quite confusing in firefox, as some techniques won't work in L<chrome|/chrome> context.  The following example can be quite useful.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( visible => 1, devtools => 1, console => 1, devtools => 1 );
+
+    $firefox->script( q[console.log("This goes to devtools b/c it's being generated in content mode")]);
+
+    $firefox->chrome()->script( q[console.log("Can't be seen b/c it's in chrome mode")]);
+
+    $firefox->chrome()->script( q[const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm"); console.log("Find me in the browser console in chrome mode")]);
+
+    # This won't work b/c of permissions
+    #
+    # $firefox->content()->script( q[const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm"); console.log("Find me in the browser console in content mode")]);
 
 =head1 REMOTE AUTOMATION OF FIREFOX VIA SSH
 
