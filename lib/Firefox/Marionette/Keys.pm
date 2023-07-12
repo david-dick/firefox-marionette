@@ -129,7 +129,7 @@ Version 1.38
 
 This module handles the implementation of the Firefox Marionette human readable special keys
 
-=head1 SUBROUTINES/METHODS
+=head1 CONSTANTS
 
 =head2 ALT
 
@@ -306,6 +306,10 @@ returns the Tab codepoint, which is 0xE004
 =head2 ZENKAKU_HANKAKU
 
 returns the Zenkaku (full-width) - Hankaku (half-width) codepoint, which is 0xE040
+
+=head1 SUBROUTINES/METHODS
+
+None.
 
 =head1 DIAGNOSTICS
 

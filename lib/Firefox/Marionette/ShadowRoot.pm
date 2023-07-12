@@ -55,11 +55,13 @@ Version 1.38
 
 This module handles the implementation of a Firefox Shadow Root using the Marionette protocol
 
-=head1 SUBROUTINES/METHODS
+=head1 CONSTANTS
 
 =head2 IDENTIFIER
 
 returns the L<shadow root identifier|https://www.w3.org/TR/webdriver/#shadow-root>
+
+=head1 SUBROUTINES/METHODS
 
 =head2 new
 

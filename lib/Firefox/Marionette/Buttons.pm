@@ -47,7 +47,7 @@ Version 1.38
 
 This module handles the implementation of the Firefox Marionette human readable mouse buttons
 
-=head1 SUBROUTINES/METHODS
+=head1 CONSTANTS
 
 =head2 LEFT_BUTTON
 
@@ -60,6 +60,10 @@ returns the middle mouse button code, which is 1.
 =head2 RIGHT_BUTTON
 
 returns the right mouse button code, which is 2.
+
+=head1 SUBROUTINES/METHODS
+
+None.
 
 =head1 DIAGNOSTICS
 
