@@ -1436,6 +1436,18 @@ SUBROUTINES/METHODS
             # redirecting to Test::More page
         }
 
+ logins
+
+    returns a list of all Firefox::Marionette::Login objects available.
+
+        use Firefox::Marionette();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new();
+        foreach my $login ($firefox->logins()) {
+           say "Found login for " . $login->host() . " and user " . $login->user();
+        }
+
  logins_from_csv
 
     accepts a filehandle as a parameter and then reads the filehandle for

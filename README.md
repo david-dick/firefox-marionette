@@ -1139,6 +1139,18 @@ returns true if `document.readyState === "complete"`
         # redirecting to Test::More page
     }
 
+## logins
+
+returns a list of all [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::Login) objects available.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $login ($firefox->logins()) {
+       say "Found login for " . $login->host() . " and user " . $login->user();
+    }
+
 ## logins\_from\_csv
 
 accepts a filehandle as a parameter and then reads the filehandle for exported logins as CSV.  This is known to work with the following formats;
