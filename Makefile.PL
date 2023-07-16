@@ -395,6 +395,7 @@ WriteMakefile(
         'base'                => 0,
         'Config'              => 0,
         'Config::INI::Reader' => 0,
+        'Crypt::URandom'      => 0,
         'DirHandle'           => 0,
         'Encode'              => 0,
         'English'             => 0,
@@ -418,6 +419,7 @@ WriteMakefile(
         'Time::HiRes'         => 0,
         'URI'                 => 1.61,
         'URI::Escape'         => 0,
+        'URI::data'           => 0,
         'URI::URL'            => 0,
         (
             $OSNAME eq 'MSWin32'
@@ -429,14 +431,6 @@ WriteMakefile(
             : ()
         ),
         'XML::Parser' => 0,
-        (
-            (
-                      $OSNAME ne 'MSWin32'
-                  and $OSNAME ne 'darwin'
-                  and $OSNAME ne 'cygwin'
-            ) ? ( 'Crypt::URandom' => 0, )
-            : ()
-        ),
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES    => 'Firefox-Marionette-*' },

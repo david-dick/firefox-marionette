@@ -1,5 +1,6 @@
 Changes
 lib/Firefox/Marionette.pm
+lib/Firefox/Marionette/Bookmark.pm
 lib/Firefox/Marionette/Buttons.pm
 lib/Firefox/Marionette/Cache.pm
 lib/Firefox/Marionette/Capabilities.pm
@@ -40,6 +41,12 @@ setup-for-firefox-marionette-build.sh
 ssh-auth-cmd-marionette
 firefox-passwords
 t/author/bulk_test.pl
+t/data/bookmarks_chrome.html
+t/data/bookmarks_edge.html
+t/data/bookmarks_empty.html
+t/data/bookmarks_firefox.html
+t/data/bookmarks_firefox.json
+t/data/bookmarks_truncated.html
 t/data/elements.html
 t/data/iframe.html
 t/data/visible.html

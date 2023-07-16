@@ -3,6 +3,7 @@ package Firefox::Marionette;
 use warnings;
 use strict;
 use Firefox::Marionette::Response();
+use Firefox::Marionette::Bookmark();
 use Firefox::Marionette::Element();
 use Firefox::Marionette::Cache();
 use Firefox::Marionette::Cookie();
@@ -24,6 +25,7 @@ use Firefox::Marionette::ShadowRoot();
 use Waterfox::Marionette::Profile();
 use Compress::Zlib();
 use Config::INI::Reader();
+use Crypt::URandom();
 use Archive::Zip();
 use Symbol();
 use JSON();
@@ -113,6 +115,7 @@ sub _MIN_VERSION_FOR_MODERN_SWITCH  { return 90 }
 sub _ACTIVE_UPDATE_XML_FILE_NAME    { return 'active-update.xml' }
 sub _NUMBER_OF_CHARS_IN_TEMPLATE    { return 11 }
 sub _DEFAULT_ADB_PORT               { return 5555 }
+sub _SHORT_GUID_BYTES               { return 9 }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -1184,6 +1187,510 @@ _JS_
     else {
         $self->_context($old);
         Firefox::Marionette::Exception->throw('Incorrect Primary Password');
+    }
+    return $self;
+}
+
+sub _bookmark_interface_preamble {
+    my ($self) = @_;
+
+    # toolkit/components/places/nsITaggingService.idl
+    # netwerk/base/NetUtil.sys.mjs
+    # toolkit/components/places/PlacesUtils.sys.mjs
+    return <<'_JS_';    # toolkit/components/places/Bookmarks.sys.mjs
+let bookmarks = ChromeUtils.import("resource://gre/modules/Bookmarks.jsm");
+let placesUtils = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+let netUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+let taggingSvc = Components.classes["@mozilla.org/browser/tagging-service;1"].getService(Components.interfaces.nsITaggingService);
+_JS_
+}
+
+sub _get_bookmark_mapping {
+    my ($self) = @_;
+    my %mapping = (
+        url           => 'url',
+        guid          => 'guid',
+        parent_guid   => 'parentGuid',
+        index         => 'index',
+        guid_prefix   => 'guidPrefix',
+        icon_url      => 'iconUri',
+        icon          => 'icon',
+        tags          => 'tags',
+        type          => 'typeCode',
+        date_added    => 'dateAdded',
+        last_modified => 'lastModified',
+    );
+    return %mapping;
+}
+
+sub _map_bookmark_parameter {
+    my ( $self, $parameter ) = @_;
+    if ( ref $parameter ) {
+        my %mapping = $self->_get_bookmark_mapping();
+
+        foreach my $key ( sort { $a cmp $b } keys %mapping ) {
+            if ( exists $parameter->{$key} ) {
+                $parameter->{ $mapping{$key} } = delete $parameter->{$key};
+                if (   ( $key eq 'icon_url' )
+                    || ( $key eq 'icon' )
+                    || ( $key eq 'url' ) )
+                {
+                    $parameter->{ $mapping{$key} } =
+                      ref $parameter->{$key}
+                      ? $parameter->{$key}->as_string()
+                      : $parameter->{$key};
+                }
+            }
+        }
+    }
+    return $parameter;
+}
+
+sub _get_bookmark {
+    my ( $self, $parameter ) = @_;
+    $parameter = $self->_map_bookmark_parameter($parameter);
+    my $old    = $self->_context('chrome');
+    my $result = $self->script(
+        $self->_compress_script(
+            $self->_bookmark_interface_preamble()
+              . <<'_JS_'), args => [$parameter] );
+return (async function(guidOrInfo) {
+  let bookmark = await bookmarks.Bookmarks.fetch(guidOrInfo);
+  if (bookmark) {
+    for(let name of [ "dateAdded", "lastModified" ]) {
+      bookmark[name] = Math.floor(bookmark[name] / 1000);
+    }
+  }
+  if ((bookmark) && ("url" in bookmark)) {
+    let keyword = await placesUtils.PlacesUtils.keywords.fetch({ "url": bookmark["url"] });
+    if (keyword) {
+      bookmark["keyword"] = keyword["keyword"];
+    }
+    let url = netUtil.NetUtil.newURI(bookmark["url"]);
+    bookmark["tags"] = await placesUtils.PlacesUtils.tagging.getTagsForURI(url);
+
+    let addFavicon = function(pageUrl) {
+      return new Promise((resolve, reject) => {
+        PlacesUtils.favicons.getFaviconDataForPage(
+          pageUrl,
+          function (pageUrl, dataLen, data, mimeType, size) {
+            resolve([ pageUrl, dataLen, data, mimeType, size ]);
+          }
+        );
+      })};
+    let awaitResult = await addFavicon(placesUtils.PlacesUtils.toURI(bookmark["url"]));
+    if (awaitResult[0]) {
+      bookmark["iconUrl"] = awaitResult[0].spec;
+    }
+    let iconAscii = btoa(String.fromCharCode(...new Uint8Array(awaitResult[2])));
+    if (iconAscii) {
+      bookmark["icon"] = "data:" + awaitResult[3] + ";base64," + iconAscii;
+    }
+  }
+  return bookmark;
+})(arguments[0]);
+_JS_
+    $self->_context($old);
+    my $bookmark;
+    if ( defined $result ) {
+        $bookmark = Firefox::Marionette::Bookmark->new( %{$result} );
+    }
+    return $bookmark;
+}
+
+sub bookmarks {
+    my ( $self, @parameters ) = @_;
+    my $parameter;
+    if ( scalar @parameters >= 2 ) {
+        my %parameters = @parameters;
+        $parameter = \%parameters;
+    }
+    else {
+        $parameter = shift @parameters;
+    }
+    if ( !defined $parameter ) {
+        $parameter = {};
+    }
+    $parameter = $self->_map_bookmark_parameter($parameter);
+    my $old       = $self->_context('chrome');
+    my @bookmarks = map { $self->_get_bookmark( $_->{guid} ) } @{
+        $self->script(
+            $self->_compress_script(
+                $self->_bookmark_interface_preamble()
+                  . <<'_JS_'), args => [$parameter] ) };
+return bookmarks.Bookmarks.search(arguments[0]);
+_JS_
+    $self->_context($old);
+    return @bookmarks;
+}
+
+sub add_bookmark {
+    my ( $self, $bookmark ) = @_;
+    my $old = $self->_context('chrome');
+    $self->script(
+        $self->_compress_script(
+            $self->_bookmark_interface_preamble()
+              . <<'_JS_'), args => [$bookmark] );
+for(let name of [ "dateAdded", "lastModified" ]) {
+  if (arguments[0][name]) {
+    arguments[0][name] = new Date(parseInt(arguments[0][name] + "000", 10));
+  }
+}
+if (arguments[0]["tags"]) {
+  let tags = arguments[0]["tags"];
+  delete arguments[0]["tags"];
+  let url = netUtil.NetUtil.newURI(arguments[0]["url"]);
+  taggingSvc.tagURI(url, tags);
+}
+if (arguments[0]["keyword"]) {
+  let keyword = arguments[0]["keyword"];
+  delete arguments[0]["keyword"];
+  let url = arguments[0]["url"];
+  placesUtils.PlacesUtils.keywords.insert({ "url": url, "keyword": keyword });
+}
+let bookmarkStatus = (async function(bookmarkArguments) {
+  let exists = await bookmarks.Bookmarks.fetch({ "guid": bookmarkArguments["guid"] });
+  let bookmark;
+  if (exists) {
+    bookmarkArguments["index"] = exists["index"];
+    bookmark = bookmarks.Bookmarks.update(bookmarkArguments);
+  } else {
+    bookmark = bookmarks.Bookmarks.insert(bookmarkArguments);
+  }
+  let result = await bookmark;
+  if (bookmarkArguments["url"]) {
+    let iconUrl = bookmarkArguments["iconUrl"];
+    if (!iconUrl) {
+      iconUrl = 'fake-favicon-uri:' + bookmarkArguments["url"];
+    }
+    let url = netUtil.NetUtil.newURI(bookmarkArguments["url"]);
+    let rIconUrl = netUtil.NetUtil.newURI(iconUrl);
+    if (bookmarkArguments["icon"]) {
+      let icon = bookmarkArguments["icon"];
+      placesUtils.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+        rIconUrl,
+        icon,
+      );
+      let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
+          url,
+          rIconUrl,
+          false,
+          placesUtils.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+          null,
+          Services.scriptSecurityManager.getSystemPrincipal()
+        );
+    } else {
+      let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
+        url,
+        rIconUrl,
+        true,
+        placesUtils.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
+    }
+  }
+  return bookmark;
+})(arguments[0]);
+return bookmarkStatus;
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
+sub delete_bookmark {
+    my ( $self, $bookmark ) = @_;
+    my $guid = $bookmark->guid();
+    my $old  = $self->_context('chrome');
+    $self->script(
+        $self->_compress_script(
+            $self->_bookmark_interface_preamble()
+              . <<'_JS_'), args => [$guid] );
+return bookmarks.Bookmarks.remove(arguments[0]);
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
+sub _generate_history_guid {
+    my ($self) = @_;
+
+    # from GenerateGUID in ./toolkit/components/places/Helpers.cpp
+    my $guid = MIME::Base64::encode_base64(
+        Crypt::URandom::urandom( _SHORT_GUID_BYTES() ) );
+    $guid =~ s/\//-/smxg;
+    $guid =~ s/[+]/_/smxg;
+    chomp $guid;
+    return $guid;
+}
+
+sub import_bookmarks {
+    my ( $self, $path ) = @_;
+    my $read_handle = FileHandle->new( $path, Fcntl::O_RDONLY() )
+      or Firefox::Marionette::Exception->throw(
+        "Failed to open '$path' for reading:$EXTENDED_OS_ERROR");
+    binmode $read_handle;
+    my $contents;
+    my $result;
+    while ( $result =
+        $read_handle->read( my $buffer, _LOCAL_READ_BUFFER_SIZE() ) )
+    {
+        $contents .= $buffer;
+    }
+    my $default_menu_title = q[menu];
+    defined $result
+      or Firefox::Marionette::Exception->throw(
+        "Failed to read from '$path':$EXTENDED_OS_ERROR");
+    my $quoted_header_regex = quotemeta <<'_HTML_';
+<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+_HTML_
+    $quoted_header_regex =~ s/\\\r?\n/\\s+/smxg;
+    my $title_regex  = qr/[<]TITLE[>]Bookmarks[<]\/TITLE[>]\s+/smx;
+    my $header_regex = qr/[<]H1[>]Bookmarks(?:[ ]Menu)?[<]\/H1[>]\s+/smx;
+    my $list_regex   = qr/[<]DL[>][<]p[>]\s*/smx;
+
+    if ( $contents =~ s/\A\s*$quoted_header_regex\s*//smx ) {
+        $contents =~ s/\A\s*<meta[^>]+><\/meta>\s*//smx;
+        $contents =~ s/\A$title_regex$header_regex$list_regex//smx;
+        my %mapping    = $self->_get_bookmark_mapping();
+        my $processing = 1;
+        my $index      = 0;
+        my $json       = {
+            title          => q[],
+            index          => $index++,
+            $mapping{type} => Firefox::Marionette::Bookmark::FOLDER(),
+            guid           => Firefox::Marionette::Bookmark::ROOT(),
+            children       => [],
+        };
+        my @folders;
+        push @folders, $json;
+        my $folder_name_regex = qr/(UNFILED_BOOKMARKS|PERSONAL_TOOLBAR)/smx;
+        my $folder_regex =
+            qr/\s*[<]DT[>]/smx
+          . qr/[<]H3(?:[ ]ADD_DATE="(\d+)")?(?:[ ]LAST_MODIFIED="(\d+)")?/smx
+          . qr/(?:[ ]${folder_name_regex}_FOLDER="true")?[>]/smx
+          . qr/([^<]+)\s*<\/H3>/smx;
+        my $bookmark_regex =
+            qr/\s*[<]DT[>][<]A[ ]HREF="([^"]+)"[ ]/smx
+          . qr/ADD_DATE="(\d+)"(?:[ ]LAST_MODIFIED="(\d+)")?/smx
+          . qr/(?:[ ]ICON_URI="([^"]+)")?(?:[ ]ICON="([^"]+)")?/smx
+          . qr/(?:[ ]SHORTCUTURL="([^"]+)")?(?:[ ]TAGS="([^"]+)")?[>]/smx
+          . qr/([^<]+)[<]\/A[>]\s*/smx;
+
+        while ($processing) {
+            $processing = 0;
+            if ( $contents =~ s/\A$folder_regex//smx ) {
+                my ( $add_date, $last_modified, $type_of_folder, $text ) =
+                  ( $1, $2, $3, $4 );
+                $processing = 1;
+                if ( !$type_of_folder ) {
+                    my $implied_menu_folder = {
+                        title =>
+                          Encode::decode( 'UTF-8', $default_menu_title, 1 ),
+                        index          => $index++,
+                        $mapping{type} =>
+                          Firefox::Marionette::Bookmark::FOLDER(),
+                        guid     => Firefox::Marionette::Bookmark::MENU(),
+                        children => [],
+                    };
+                    push @{ $folders[-1]->{children} }, $implied_menu_folder;
+                    push @folders,                      $implied_menu_folder;
+                }
+                my $folder_name = $text;
+                my $folder      = {
+                    title => Encode::decode( 'UTF-8', $folder_name, 1 ),
+                    index => $index++,
+                    $mapping{type} => Firefox::Marionette::Bookmark::FOLDER(),
+                    (
+                        $type_of_folder
+                        ? (
+                            $type_of_folder eq 'PERSONAL_TOOLBAR'
+                            ? ( guid =>
+                                  Firefox::Marionette::Bookmark::TOOLBAR() )
+                            : ( guid =>
+                                  Firefox::Marionette::Bookmark::UNFILED() )
+                          )
+                        : ()
+                    ),
+                    $mapping{date_added} =>
+                      $self->_fix_bookmark_date_from_html($add_date),
+                    (
+                        $last_modified
+                        ? (
+                            $mapping{last_modified} =>
+                              $self->_fix_bookmark_date_from_html(
+                                $last_modified),
+                          )
+                        : ()
+                    ),
+                    children => [],
+                };
+                push @{ $folders[-1]->{children} }, $folder;
+                push @folders,                      $folder;
+            }
+            if ( $contents =~ s/\A\s*[<]DL[>][<]p[>]\s*//smx ) {
+                $processing = 1;
+            }
+            if ( $contents =~ s/\A$bookmark_regex//smx ) {
+                my ( $link, $add_date, $last_modified, $icon_uri, $icon,
+                    $keyword, $tags, $text )
+                  = ( $1, $2, $3, $4, $5, $6, $7, $8 );
+                my $link_name = $text;
+                $processing = 1;
+                my $bookmark = {
+                    title => Encode::decode( 'UTF-8', $link_name, 1 ),
+                    uri   => $link,
+                    $mapping{icon_url} => $icon_uri,
+                    icon               => $icon,
+                    index              => $index++,
+                    $mapping{type} => Firefox::Marionette::Bookmark::BOOKMARK(),
+                    $mapping{date_added} =>
+                      $self->_fix_bookmark_date_from_html($add_date),
+                    $mapping{last_modified} =>
+                      $self->_fix_bookmark_date_from_html($last_modified),
+                    tags    => Encode::decode( 'UTF-8', $tags,    1 ),
+                    keyword => Encode::decode( 'UTF-8', $keyword, 1 ),
+                };
+                push @{ $folders[-1]->{children} }, $bookmark;
+            }
+            if ( $contents =~ s/\A\s*[<]HR[>]\s*//smx ) {
+                $processing = 1;
+                my $separator = {
+                    index          => $index++,
+                    $mapping{type} =>
+                      Firefox::Marionette::Bookmark::SEPARATOR(),
+                };
+                push @{ $folders[-1]->{children} }, $separator;
+            }
+            if ( $contents =~ s/\A\s*[<]\/DL[>](?:[<]p[>])?\s*//smx ) {
+                $processing = 1;
+                pop @folders;
+            }
+        }
+        if ($contents) {
+            Firefox::Marionette::Exception->throw(
+                'Unrecognised format for bookmark import');
+        }
+        $json = $self->_find_existing_guids($json);
+        $self->_import_bookmark_json_children( {}, $json );
+    }
+    else {
+        my $json = JSON::decode_json($contents);
+        $self->_import_bookmark_json_children( {}, $json );
+    }
+    return $self;
+}
+
+sub _fix_bookmark_date_from_html {
+    my ( $self, $date ) = @_;
+    if ($date) {
+        $date .= '000000';
+    }
+    return $date;
+}
+
+sub _assign_guid_for_existing_child {
+    my ( $self, $result, $child, %mapping ) = @_;
+    if ( $result->type() == $child->{ $mapping{type} } ) {
+        if ( $result->type() == Firefox::Marionette::Bookmark::FOLDER() ) {
+            if ( $result->title() eq $child->{title} ) {
+                $child->{guid} = $result->guid();
+            }
+        }
+        elsif ( $result->type() == Firefox::Marionette::Bookmark::BOOKMARK() ) {
+            if ( $result->url() eq $child->{uri} ) {
+                $child->{guid} = $result->guid();
+            }
+        }
+        else {    # Firefox::Marionette::Bookmark::SEPARATOR()
+            $child->{guid} = $result->guid();
+        }
+    }
+    return;
+}
+
+sub _find_existing_guids {
+    my ( $self, $json ) = @_;
+    foreach my $child ( @{ $json->{children} } ) {
+        if ( $child->{guid} ) {
+        }
+        else {
+            my $index   = 0;
+            my %mapping = $self->_get_bookmark_mapping();
+            while ( ( !$child->{guid} ) && ( defined $index ) ) {
+                my $result = $self->_get_bookmark(
+                    { parent_guid => $json->{guid}, index => $index } );
+                if ( defined $result ) {
+                    $self->_assign_guid_for_existing_child( $result, $child,
+                        %mapping );
+                    $index += 1;
+                }
+                else {
+                    $child->{guid} = $self->_generate_history_guid();
+                    $index = undef;
+                }
+            }
+        }
+        if ( $child->{children} ) {
+            $self->_find_existing_guids($child);
+        }
+    }
+    return $json;
+}
+
+sub _import_bookmark_json_children {
+    my ( $self, $grand_parent, $parent ) = @_;
+    my $date_added = $parent->{dateAdded};
+    if ( defined $date_added ) {
+        $date_added =~ s/\d{6}$//smx;
+        $date_added += 0;
+    }
+    my $last_modified = $parent->{lastModified};
+    if ( defined $last_modified ) {
+        $last_modified =~ s/\d{6}$//smx;
+        $last_modified += 0;
+    }
+    my $bookmark = Firefox::Marionette::Bookmark->new(
+        guid          => $parent->{guid},
+        parent_guid   => $grand_parent->{guid},
+        title         => $parent->{title},
+        url           => $parent->{uri},
+        date_added    => $date_added,
+        last_modified => $last_modified,
+        type          => $parent->{typeCode},
+        icon_url      => $parent->{iconUri},
+        icon          => $parent->{icon},
+        (
+            $parent->{tags}
+            ? ( tags => [ split /\s*,\s*/smx, $parent->{tags} ] )
+            : ()
+        ),
+        keyword => $parent->{keyword},
+    );
+    if (   ( $bookmark->guid() )
+        && ( !$self->_get_bookmark( $bookmark->guid() ) ) )
+    {
+        $self->add_bookmark($bookmark);
+    }
+    elsif ( $bookmark->url() ) {
+        my $found;
+        foreach
+          my $existing ( $self->bookmarks( $bookmark->url()->as_string() ) )
+        {
+            if ( $existing->url() eq $bookmark->url() ) {
+                $found = 1;
+            }
+        }
+        if ( !$found ) {
+            $self->add_bookmark($bookmark);
+        }
+    }
+    foreach my $child ( @{ $parent->{children} } ) {
+        $self->_import_bookmark_json_children( $parent, $child );
     }
     return $self;
 }
@@ -2766,6 +3273,9 @@ sub _launch_and_connect {
                 string => $certificate,
                 trust  => _DEFAULT_CERT_TRUST()
             );
+        }
+        if ( $parameters{bookmarks} ) {
+            $self->import_bookmarks( $parameters{bookmarks} );
         }
     }
     return ( $session_id, $capabilities );
@@ -4373,10 +4883,6 @@ sub _xvfb_exists {
     if ( !$self->_dev_fd_works() ) {
         return 0;
     }
-    eval { require Crypt::URandom; } or do {
-        Carp::carp('Unable to load Crypt::URandom');
-        return 0;
-    };
     if ( my $pid = fork ) {
         waitpid $pid, 0;
         if ( $CHILD_ERROR == 0 ) {
@@ -10461,6 +10967,20 @@ Please note that when closing the connection via the client you can end-up in a 
 
 returns the active element of the current browsing context's document element, if the document element is non-null.
 
+=head2 add_bookmark
+
+accepts a L<bookmark|Firefox::Marionette::Bookmark> as a parameter and adds the specified bookmark to the Firefox places database.
+
+    use Firefox::Marionette();
+
+    my $bookmark = Firefox::Marionette::Bookmark->new(
+                     url   => 'https://metacpan.org',
+                     title => 'This is MetaCPAN!'
+                             );
+    my $firefox = Firefox::Marionette->new()->add_bookmark($bookmark);
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 add_certificate
 
 accepts a hash as a parameter and adds the specified certificate to the Firefox database with the supplied or default trust.  Allowed keys are below;
@@ -10635,6 +11155,41 @@ accept a boolean and return the current value of the debug setting.  This allows
 =head2 default_binary_name
 
 just returns the string 'firefox'.  Only of interest when sub-classing.
+
+=head2 bookmarks
+
+accepts either a scalar or a hash as a parameter.  The scalar may by the title of a bookmark or the L<URL|URI::URL> of the bookmark.  The hash may have the following keys;
+
+=over 4
+
+=item * title - The title of the bookmark.
+
+=item * url - The url of the bookmark.
+
+=back
+
+returns a list of all L<Firefox::Marionette::Bookmark|Firefox::Marionette::Bookmark> objects that match the supplied parameters (if any).
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+
+    foreach my $bookmark ($firefox->bookmarks(title => 'This is MetaCPAN!')) {
+      say "Bookmark found";
+    }
+
+    # OR
+
+    foreach my $bookmark ($firefox->bookmarks()) {
+      say "Bookmark found with URL " . $bookmark->url();
+    }
+
+    # OR
+
+    foreach my $bookmark ($firefox->bookmarks('https://metacpan.org')) {
+      say "Bookmark found";
+    }
 
 =head2 browser_version
 
@@ -10857,6 +11412,23 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and a 
 =head2 current_chrome_window_handle 
 
 see L<chrome_window_handle|Firefox::Marionette#chrome_window_handle>.
+
+=head2 delete_bookmark
+
+accepts a L<bookmark|Firefox::Marionette::Bookmark> as a parameter and deletes the bookmark from the Firefox database.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $bookmark (reverse $firefox->bookmarks()) {
+      if ($bookmark->parent_guid() ne Firefox::Marionette::Bookmark::ROOT()) {
+        $firefox->delete_bookmark($bookmark);
+      }
+    }
+    say "Bookmarks? We don't need no stinking bookmarks!";
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 delete_certificate
 
@@ -11426,6 +11998,17 @@ returns the page source of the content document.  This page source can be wrappe
     use v5.10;
 
     say Firefox::Marionette->new()->go('https://metacpan.org/')->html();
+
+=head2 import_bookmarks
+
+accepts a filesystem path to a bookmarks file and imports all the L<bookmarks|Firefox::Marionette::Bookmark> in that file.  It can deal with backups from L<Firefox|https://support.mozilla.org/en-US/kb/export-firefox-bookmarks-to-backup-or-transfer>, L<Chrome|https://support.google.com/chrome/answer/96816?hl=en> or Edge.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->import_bookmarks('/path/to/bookmarks_file.html');
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 images
 

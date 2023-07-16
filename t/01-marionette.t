@@ -169,6 +169,11 @@ sub start_firefox {
 		diag("HAR support is not available for Firefox versions less than 61");
 		delete $parameters{har};
 	}
+	if ((defined $major_version) && ($major_version >= 60)) {
+	} elsif ($parameters{bookmarks}) {
+		diag("Bookmark support is not available for Firefox versions less than 60");
+		delete $parameters{bookmarks};
+	}
 	if ($parameters{console}) {
 		$parameters{console} = 1;
 	}
@@ -910,6 +915,10 @@ $profile->set_value('browser.newtabpage.enabled', 'true');
 $profile->set_value('browser.pagethumbnails.capturing_disabled', 'false', 0); 
 $profile->set_value('startup.homepage_welcome_url', 'false', 0); 
 
+my $metacpan_bookmark_icon = 'data:image/png;base64,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';
+my $metacpan_bookmark_icon_url = 'fake-favicon-uri:https://metacpan.org/pod/Firefox::Marionette';
+my $metacpan_uri = 'https://metacpan.org/';
+
 SKIP: {
 	if (($ENV{FIREFOX_NO_RECONNECT})) {
 		if ($ENV{FIREFOX_HOST}) {
@@ -923,7 +932,8 @@ SKIP: {
 		skip("No survive testing except for RELEASE_TESTING", 8);
 	}
 	diag("Starting new firefox for testing reconnecting");
-	($skip_message, $firefox) = start_firefox(0, debug => 1, survive => 1);
+	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_edge.html));
+	($skip_message, $firefox) = start_firefox(0, debug => 1, survive => 1, bookmarks => $bookmarks_path);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -935,6 +945,26 @@ SKIP: {
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	my $firefox_pid = $capabilities->moz_process_id();
 	ok($firefox_pid, "Firefox process has a process id of $firefox_pid");
+	if ($major_version >= 60) {
+		my ($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark, "Retrieved bookmark from edge import");
+		ok(ref $bookmark->url() eq 'URI::URL', "\$bookmark->url() returns a URI::URL object");
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new('https://perlmonks.org/') });
+		ok($bookmark->url() eq 'https://perlmonks.org/', "\$bookmark->url() is 'https://perlmonks.org/':" . $bookmark->url());
+		ok($bookmark->date_added() == 1686364081, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->title() eq 'PerlMonks - The Monastery Gates', "\$bookmark->title() is 'PerlMonks - The Monastery Gates':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		ok(!defined $bookmark->icon_url(), "\$bookmark->icon_url() is not defined");
+		ok(!defined $bookmark->icon(), "\$bookmark->icon() is not defined");
+	}
 	if (!$ENV{FIREFOX_HOST}) {
 		ok(process_alive($firefox_pid), "Can contact firefox process ($firefox_pid)");
 	}
@@ -1377,9 +1407,11 @@ SKIP: {
 	ok($child_error == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->error_message());
 }
 
+my $uname;
 SKIP: {
 	diag("Starting new firefox for testing PDFs and script elements");
-	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, moz_headless => 1));
+	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_chrome.html));
+	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, moz_headless => 1), bookmarks => $bookmarks_path);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1387,12 +1419,33 @@ SKIP: {
 		skip($skip_message, 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	$uname = $firefox->uname();
+	ok($uname, "Firefox is currently running in $uname");
 	if ($major_version < 30) {
 		diag("Skipping WebGL as it can cause older browsers to hang");
 	} elsif ($firefox->script(q[let c = document.createElement('canvas'); return c.getContext('webgl2') ? true : c.getContext('experimental-webgl') ? true : false;])) {
 		diag("WebGL is enabled by default when visible and addons are turned off");
 	} else {
 		diag("WebGL is disabled by default when visible and addons are turned off");
+	}
+	if ($major_version >= 60) {
+		my ($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark, "Retrieved bookmark from chrome import as " . $bookmark->url());
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new('https://perlmonks.org/') });
+		ok($bookmark->url() eq 'https://perlmonks.org/', "\$bookmark->url() is 'https://perlmonks.org/':" . $bookmark->url());
+		ok($bookmark->date_added() == 1686364081, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->title() eq 'PerlMonks - The Monastery Gates', "\$bookmark->title() is 'PerlMonks - The Monastery Gates':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		ok(!defined $bookmark->icon_url(), "\$bookmark->icon_url() is not defined");
+		ok(!defined $bookmark->icon(), "\$bookmark->icon() is not defined");
 	}
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
@@ -1671,7 +1724,8 @@ sub centimetres_to_points {
 
 SKIP: {
 	diag("Starting new firefox for testing logins");
-	($skip_message, $firefox) = start_firefox(0, addons => 1, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
+	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_firefox.json));
+	($skip_message, $firefox) = start_firefox(0, addons => 1, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1), bookmarks => $bookmarks_path);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1685,6 +1739,323 @@ SKIP: {
 		diag("WebGL appears to be enabled in headless mode (with addons => 1)");
 	} else {
 		diag("WebGL appears to be disabled in headless mode (with addons => 1)");
+	}
+	if ($major_version >= 60) {
+		ok(ref $firefox->import_bookmarks($bookmarks_path) eq $class, "\$firefox->import_bookmarks('$bookmarks_path') returns itself for chaining");
+		my ($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark, "Retrieved bookmark from firefox export as " . $bookmark->url());
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->last_modified() == 1685610973, "\$bookmark->last_modified() is " . localtime $bookmark->last_modified());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid() eq 'utcxPgIOG05d', "\$bookmark->guid() is 'utcxPgIOG05d':" . $bookmark->guid());
+		my $count = 0;
+		foreach my $bookmark ($firefox->bookmarks($metacpan_uri)) {
+			$count += 1;
+		}
+		ok($count == 2, "\$firefox->search_bookmark('$metacpan_uri') produces 2 results:$count");
+		ok(ref $firefox->delete_bookmark($bookmark) eq $class, "\$firefox->delete_bookmark(\$bookmark) returns itself for chaining");
+		ok(!$firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') }), "Bookmark for " . $bookmark->url() . " has been deleted");
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new('https://perlmonks.org/') });
+		ok($bookmark->url() eq 'https://perlmonks.org/', "\$bookmark->url() is 'https://perlmonks.org/':" . $bookmark->url());
+		ok($bookmark->date_added() == 1686364081, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->last_modified() == 1686364095, "\$bookmark->last_modified() is " . localtime $bookmark->last_modified());
+		ok($bookmark->title() eq 'PerlMonks - The Monastery Gates', "\$bookmark->title() is 'PerlMonks - The Monastery Gates':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		ok(!defined $bookmark->icon_url(), "\$bookmark->icon_url() is not defined");
+		ok(!defined $bookmark->icon(), "\$bookmark->icon() is not defined");
+		$count = 0;
+		foreach my $bookmark ($firefox->bookmarks($metacpan_uri)) {
+			$count += 1;
+			ok($bookmark->type(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a type method:" . $bookmark->type());
+			ok($bookmark->guid(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a guid method:" . $bookmark->guid());
+			ok($bookmark->url(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a url method:" . $bookmark->url());
+			my $title = $bookmark->title();
+			$title = Encode::encode('UTF-8', $title, 1);
+			ok($title, "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a title method:" . $title);
+			ok($bookmark->parent_guid(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a parent_guid method:" . $bookmark->parent_guid());
+		}
+		ok($count == 1, "\$firefox->search_bookmark('$metacpan_uri') produces 1 result:$count");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			$count += 1;
+			ok($bookmark->type(), "\$firefox->search_bookmark() returns results ($count) that have a type method:" . $bookmark->type());
+			ok($bookmark->guid(), "\$firefox->search_bookmark() returns results ($count) that have a guid method:" . $bookmark->guid());
+			if ($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) {
+				ok($bookmark->url(), "\$firefox->search_bookmark() returns results ($count) that have a url method:" . $bookmark->url());
+			}
+			if (($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) || ($bookmark->type() == Firefox::Marionette::Bookmark::FOLDER())) {
+				my $title = $bookmark->title();
+				$title = Encode::encode('UTF-8', $title, 1);
+				ok($title, "\$firefox->search_bookmark() returns results ($count) that have a title method:" . $title);
+			}
+			my @tags = $bookmark->tags();
+			ok(scalar @tags >= 0, "\$firefox->search_bookmark() returns results ($count) that have a tag method that produces " . (scalar @tags) . " tags");
+			ok($bookmark->parent_guid(), "\$firefox->search_bookmark() returns results ($count) that have a parent_guid method:" . $bookmark->parent_guid());
+			if ($bookmark->parent_guid() ne Firefox::Marionette::Bookmark::ROOT()) {
+				ok($firefox->delete_bookmark($bookmark), "Deleting this bookmark");
+			}
+		}
+		my $original_guid;
+		ok($count >= 7, "\$firefox->search_bookmark('$metacpan_uri') produces more than 7 results:$count");
+		$bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_firefox.html));
+		ok(ref $firefox->import_bookmarks($bookmarks_path) eq $class, "\$firefox->import_bookmarks('$bookmarks_path') returns itself for chaining");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			$count += 1;
+			ok($bookmark->type(), "\$firefox->search_bookmark() returns results ($count) that have a type method:" . $bookmark->type());
+			ok($bookmark->guid(), "\$firefox->search_bookmark() returns results ($count) that have a guid method:" . $bookmark->guid());
+			ok(defined $bookmark->idx(), "\$firefox->search_bookmark() returns results ($count) that have a guid method:" . $bookmark->idx());
+			if ($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) {
+				ok($bookmark->url(), "\$firefox->search_bookmark() returns results ($count) that have a url method:" . $bookmark->url());
+			}
+			if (($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) || ($bookmark->type() == Firefox::Marionette::Bookmark::FOLDER())) {
+				my $title = $bookmark->title();
+				$title = Encode::encode('UTF-8', $title, 1);
+				ok($title, "\$firefox->search_bookmark() returns results ($count) that have a title method:" . $title);
+			}
+			ok($bookmark->parent_guid(), "\$firefox->search_bookmark() returns results ($count) that have a parent_guid method:" . $bookmark->parent_guid());
+		}
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark, "Retrieved bookmark from firefox export as " . $bookmark->url());
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok(defined $bookmark->idx(), "\$bookmark->idx() is defined:" . $bookmark->idx());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->last_modified() == 1685610973, "\$bookmark->last_modified() is " . localtime $bookmark->last_modified());
+		ok($bookmark->content_type() eq 'text/x-moz-place', "\$bookmark->content_type() is 'text/x-moz-place':" . $bookmark->content_type());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		if (!defined $original_guid) {
+			$original_guid = $bookmark->guid();
+		}
+		ok($bookmark->guid() eq $original_guid, "\$bookmark->guid() is '$original_guid':" . $bookmark->guid());
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "\$bookmark->icon_url() is '$metacpan_bookmark_icon_url':" . $bookmark->icon_url());
+		ok($bookmark->icon() eq $metacpan_bookmark_icon, "\$bookmark->icon() is correct:" . $bookmark->icon());
+		$count = 0;
+		foreach my $bookmark ($firefox->bookmarks($metacpan_uri)) {
+			$count += 1;
+		}
+		ok($count == 2, "\$firefox->search_bookmark('$metacpan_uri') produces 2 results:$count");
+		ok(ref $firefox->delete_bookmark($bookmark) eq $class, "\$firefox->delete_bookmark(\$bookmark) returns itself for chaining");
+		ok(!$firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') }), "Bookmark for " . $bookmark->url() . " has been deleted");
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new('https://perlmonks.org/') });
+		ok($bookmark->url() eq 'https://perlmonks.org/', "\$bookmark->url() is 'https://perlmonks.org/':" . $bookmark->url());
+		ok($bookmark->date_added() == 1686364081, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->last_modified() == 1686364095, "\$bookmark->last_modified() is " . localtime $bookmark->last_modified());
+		ok($bookmark->title() eq 'PerlMonks - The Monastery Gates', "\$bookmark->title() is 'PerlMonks - The Monastery Gates':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		ok(!defined $bookmark->icon_url(), "\$bookmark->icon_url() is not defined");
+		ok(!defined $bookmark->icon(), "\$bookmark->icon() is not defined");
+		$count = 0;
+		foreach my $bookmark ($firefox->bookmarks($metacpan_uri)) {
+			$count += 1;
+			ok($bookmark->type(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a type method:" . $bookmark->type());
+			ok($bookmark->guid(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a guid method:" . $bookmark->guid());
+			ok($bookmark->url(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a url method:" . $bookmark->url());
+			my $title = $bookmark->title();
+			$title = Encode::encode('UTF-8', $title, 1);
+			ok($title, "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a title method:" . $title);
+			ok($bookmark->parent_guid(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a parent_guid method:" . $bookmark->parent_guid());
+			ok($bookmark->icon() eq $metacpan_bookmark_icon, "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a icon method that is correct:" . $bookmark->icon());
+			my $starting_regex = quotemeta 'fake-favicon-uri:https://metacpan.org';
+			ok($bookmark->icon_url() =~ /^$starting_regex/smx, "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a icon_url method that look vaguely correct:" . $bookmark->icon_url());
+			ok(!defined $bookmark->keyword(), "\$firefox->search_bookmark('$metacpan_uri') returns results ($count) that have a keyword method that returns undefined");
+		}
+		ok($count == 1, "\$firefox->search_bookmark('$metacpan_uri') produces 1 result:$count");
+		my $icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADgElEQVQ4T6WTa0xbdRiHf/9259DT0pV2a7m4zo2OKTNjNo3TBNAtUbKQNigpQwOMLXHGTRN1yTAaNKCbW7yGqRnJdKibU2FkCMxZYFPi7FBhKW4tc4O2yCgUWmjp/fScHhm6TD/7fns/PL/kvTwE/7PIv/mxCoNCoOiyBKF20vFIIRVP0nFGEhYY+nea8IeYefZCdtdQbBESbnNLAYsdcT2xuYBk0G+ma+8xSUqrIMnbCMLz4LkE+EAAbF8bgvYBCxcIvpab/9sQaUDqFrsU4KzcvEm8QmNZWVabKb7XgKRnFNEL3Qi1tkKklkO+/RnIt1UAU07MfnlkLuwZNeWfvmpdCnBt2SIRrxe1qne+bEpGk/A17oXyxVcgK38W3GUrfO/UITk7DSEeg6axGTQtwsyppl7OM1qT2+nyktHqom0qQ+E5mXkvJswPQlpeC1XdYaT9M2TMfQ3+d+uQcF0HIhFkH/0OXNcn8NsGdg9yv7aQkeqii6tf/agwZu1BqPs0pE1t8MSl0KoZKDNkuDzFgfrgBWTY+5FMsJAbt2N5cQm8xw50RX/2mInD/EBYd6RdNrnrMSzLuhtM0xk4bvigVsqRr1Oi0+ZF5g/N0E2dRTwSR8rPIOfjbnjqa4KiYXs2cRk3CtqT/XBuzQNdoIfyYAug1IDiJpA2dx6iII/Yn4NgfcNgZwUE28exptuBmYYdmJq4IiPXyw3s2k8tlGePERyXgmz3fmSWmIHQWfC/PIWgVQNekEKkohC6JCDli2FVyzlMH9wzOWm7mkfsNUU/rn7ujUeig/1YOHMCTGkl7tr3FsDPg71yCmHLMdBEjOg8QXg4AHnZ01BsNWH6/X297HmnifxR9VDtCt19n8lq9mOyqhiUvhhZze2glx7Eg/nXa9Gzzo+1bgGakRlkfd2PVN9X8F/sfVz7xU+dZOxRg0KslZ5UV71kTAkUgu814GZjHY5Si+daCMI/7YZbk8Kh5hBKdzQBWcvhPf52n9/jqNB3uAN/f2K1fpM4I8eifvL5THqdHiPhMRye+xAkRVByU4lx5TKY1++C7sYEvB3H5xLjbpPuW9ulW07ccaFaXyBiVAcUGwxGUlKJ2EoF0lWZSIvzCDmGwH//DSLOaz2p0EJ9boHtvy7cNstasYrJluQ8zIKuF2Ls/Uw8ls7SaWySYQYocJ+z7ELHhjb74jrv2PgXU1mEH5MqexkAAAAASUVORK5CYII=';
+		my $icon_url = 'https://duckduckgo.com/favicon.ico';
+		$count = 0;
+		foreach my $bookmark ($firefox->bookmarks('https://duckduckgo.com')) {
+			$count += 1;
+			ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a type that is Firefox::Marionette::Bookmark::BOOKMARK()::" . $bookmark->type());
+			ok($bookmark->guid(), "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a guid method:" . $bookmark->guid());
+			ok(ref $bookmark->url() eq 'URI::URL', "\$bookmark->url() returns a URI::URL object");
+			ok($bookmark->url() eq 'https://duckduckgo.com/?va=v&t=ha&q=perl+%F0%9F%90%AB&ia=web', "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a url that is 'https://duckduckgo.com/?va=v&t=ha&q=perl+%F0%9F%90%AB&ia=web':" . $bookmark->url());
+			my $title = $bookmark->title();
+			$title = Encode::encode('UTF-8', $title, 1);
+			ok($title eq 'perl 🐫 at DuckDuckGo', "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a title method that is 'perl 🐫 at DuckDuckGo':" . $title);
+			ok($bookmark->date_added() == 1685670771, "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a date_added method that is " . localtime $bookmark->date_added());
+			ok($bookmark->last_modified() == 1685670772, "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a last_modified method that is " . localtime $bookmark->last_modified());
+			ok($bookmark->parent_guid(), "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a parent_guid method:" . $bookmark->parent_guid());
+			ok(ref $bookmark->icon_url() eq 'URI::URL', "\$bookmark->icon_url() returns a URI::URL object");
+			ok($bookmark->icon_url() eq $icon_url, "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a icon_url method that is '$icon_url':" . $bookmark->icon_url());
+			ok(ref $bookmark->icon() eq 'URI::data', "\$bookmark->icon() returns a URI::data object");
+			ok($bookmark->icon() eq $icon, "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a icon method that is :" . $bookmark->icon());
+			my $keyword = $bookmark->keyword();
+			$keyword = Encode::encode('UTF-8', $keyword, 1);
+			ok($keyword eq '🐫', "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a keyword method:" . $keyword);
+			my $tag_count = 0;
+			foreach my $tag ($bookmark->tags()) {
+				$tag_count += 1;
+				$tag = Encode::encode('UTF-8', $tag, 1);
+				ok($tag =~ /^(🐫|ddg|UTF8|perl)$/smx, "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a tag method with one of '🐫', 'ddg', 'UTF8' or 'perl':" . $tag);
+			}
+			ok($tag_count == 4, "\$firefox->search_bookmark('https://duckduckgo.com') returns results ($count) that have a tag method with 4 tags:" . $tag_count);
+		}
+		ok($count == 1, "\$firefox->search_bookmark('https://duckduckgo.com') produces 1 result:$count");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			$count += 1;
+			if ($bookmark->parent_guid() ne Firefox::Marionette::Bookmark::ROOT()) {
+				ok($firefox->delete_bookmark($bookmark), "Deleting this bookmark:" . $bookmark->guid());
+			}
+		}
+		$bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_firefox.json));
+		ok(ref $firefox->import_bookmarks($bookmarks_path) eq $class, "\$firefox->import_bookmarks('$bookmarks_path') returns itself for chaining");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			$count += 1;
+		}
+		my $original_count = $count;
+		my $metacpan_pod_guid = 'utcxPgIOG05d';
+		ok($firefox->delete_bookmark(Firefox::Marionette::Bookmark->new(guid => $metacpan_pod_guid)), "Deleting this bookmark:" . $metacpan_pod_guid);
+		ok(ref $firefox->import_bookmarks($bookmarks_path) eq $class, "\$firefox->import_bookmarks('$bookmarks_path') returns itself for chaining");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			if (my $title = $bookmark->title()) {
+				$title = Encode::encode('UTF-8', $title, 1);
+				ok($title, "Bookmark $count is " . $title);
+			} else {
+				ok($bookmark->guid(), "Bookmark $count is " . $bookmark->guid() . " with type " . $bookmark->type() . " with parent " . $bookmark->parent_guid());
+			}
+			$count += 1;
+		}
+		ok($original_count == $count, "Same number of bookmarks after importing the same json file:$original_count == $count");
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok(defined $bookmark->idx(), "\$bookmark->idx() is defined:" . $bookmark->idx());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->last_modified() == 1685610973, "\$bookmark->last_modified() is " . localtime $bookmark->last_modified());
+		ok($bookmark->content_type() eq 'text/x-moz-place', "\$bookmark->content_type() is 'text/x-moz-place':" . $bookmark->content_type());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid() eq $metacpan_pod_guid, "\$bookmark->guid() is '$metacpan_pod_guid':" . $bookmark->guid());
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "\$bookmark->icon_url() is '$metacpan_bookmark_icon_url':" . $bookmark->icon_url());
+		ok($bookmark->icon() eq $metacpan_bookmark_icon, "\$bookmark->icon() is correct:" . $bookmark->icon());
+		$bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_firefox.html));
+		ok(ref $firefox->import_bookmarks($bookmarks_path) eq $class, "\$firefox->import_bookmarks('$bookmarks_path') returns itself for chaining");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			if (my $title = $bookmark->title()) {
+				$title = Encode::encode('UTF-8', $title, 1);
+				ok($title, "Bookmark $count is " . $title);
+			} else {
+				ok($bookmark->guid(), "Bookmark $count is " . $bookmark->guid() . " with type " . $bookmark->type() . " with parent " . $bookmark->parent_guid());
+			}
+			$count += 1;
+		}
+		ok($original_count == $count, "Same number of bookmarks after importing the same json file:$original_count == $count");
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok(defined $bookmark->idx(), "\$bookmark->idx() is defined:" . $bookmark->idx());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->last_modified() == 1685610973, "\$bookmark->last_modified() is " . localtime $bookmark->last_modified());
+		ok($bookmark->content_type() eq 'text/x-moz-place', "\$bookmark->content_type() is 'text/x-moz-place':" . $bookmark->content_type());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid() eq $metacpan_pod_guid, "\$bookmark->guid() is '$metacpan_pod_guid':" . $bookmark->guid());
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "\$bookmark->icon_url() is '$metacpan_bookmark_icon_url':" . $bookmark->icon_url());
+		ok($bookmark->icon() eq $metacpan_bookmark_icon, "\$bookmark->icon() is correct:" . $bookmark->icon());
+		$bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_firefox.html));
+		ok(ref $firefox->import_bookmarks($bookmarks_path) eq $class, "\$firefox->import_bookmarks('$bookmarks_path') returns itself for chaining");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			if (my $title = $bookmark->title()) {
+				my $title = $bookmark->title();
+				$title = Encode::encode('UTF-8', $title, 1);
+				ok($title, "Bookmark $count is " . $title);
+			} else {
+				ok($bookmark->guid(), "Bookmark $count is " . $bookmark->guid() . " with type " . $bookmark->type() . " with parent " . $bookmark->parent_guid());
+			}
+			$count += 1;
+		}
+		ok($original_count == $count, "Same number of bookmarks after importing the same json file:$original_count == $count");
+		$count = 0;
+		foreach my $bookmark (reverse $firefox->bookmarks()) {
+			$count += 1;
+			ok($bookmark->type(), "\$firefox->search_bookmark() returns results ($count) that have a type method:" . $bookmark->type());
+			ok($bookmark->guid(), "\$firefox->search_bookmark() returns results ($count) that have a guid method:" . $bookmark->guid());
+			if ($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) {
+				ok($bookmark->url(), "\$firefox->search_bookmark() returns results ($count) that have a url method:" . $bookmark->url());
+			}
+			ok($bookmark->content_type(), "\$firefox->search_bookmark() returns results ($count) that have a content_type method:" . $bookmark->content_type());
+			if (($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) || ($bookmark->type() == Firefox::Marionette::Bookmark::FOLDER())) {
+				my $title = $bookmark->title();
+				$title = Encode::encode('UTF-8', $title, 1);
+				ok($title, "\$firefox->search_bookmark() returns results ($count) that have a title method:" . $title);
+			}
+			if ($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK()) {
+				if (defined $bookmark->icon_url()) {
+					ok($bookmark->icon_url(), "\$firefox->search_bookmark() returns results ($count) that have a icon_url method:" . $bookmark->icon_url());
+				}
+				if (defined $bookmark->icon()) {
+					ok($bookmark->icon(), "\$firefox->search_bookmark() returns results ($count) that have a icon method that is :" . $bookmark->icon());
+				}
+			}
+			ok($bookmark->parent_guid(), "\$firefox->search_bookmark() returns results ($count) that have a parent_guid method:" . $bookmark->parent_guid());
+			if ($bookmark->parent_guid() ne Firefox::Marionette::Bookmark::ROOT()) {
+				ok($firefox->delete_bookmark($bookmark), "Deleting this bookmark");
+			}
+		}
+		ok($count >= 7, "\$firefox->search_bookmark('$metacpan_uri') produces more than 7 results:$count");
+		$bookmark = Firefox::Marionette::Bookmark->new( parent_guid => Firefox::Marionette::Bookmark::MOBILE(), url => URI::URL->new($metacpan_uri), icon => URI::data->new($metacpan_bookmark_icon), icon_url => URI::URL->new($metacpan_bookmark_icon_url) );
+		ok($bookmark, "Firefox::Marionette::Bookmark->new() produces a new bookmark");
+		ok(ref $bookmark->url() eq 'URI::URL', "Firefox::Marionette::Bookmark->new()->url() returns a URI::URL object");
+		ok($bookmark->url() eq $metacpan_uri, "Firefox::Marionette::Bookmark->new()->url() returns '$metacpan_uri' as a string");
+		ok(ref $bookmark->icon_url() eq 'URI::URL', "Firefox::Marionette::Bookmark->new()->icon_url() returns a URI::URL object");
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "Firefox::Marionette::Bookmark->new()->icon_url() returns '$metacpan_bookmark_icon_url' as a string");
+		ok(ref $bookmark->icon() eq 'URI::data', "Firefox::Marionette::Bookmark->new()->icon() returns a URI::data object");
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "Firefox::Marionette::Bookmark->new()->icon() returns '$metacpan_bookmark_icon' as a string");
+		my $bookmark_name = "Meta Cpan for the win!";
+		$bookmark = Firefox::Marionette::Bookmark->new( title => $bookmark_name, url => $metacpan_uri, icon => $metacpan_bookmark_icon, icon_url => $metacpan_bookmark_icon_url );
+		ok($bookmark, "Firefox::Marionette::Bookmark->new() produces a new bookmark");
+		ok($bookmark->title() eq $bookmark_name, "Firefox::Marionette::Bookmark->new()->title() returns '$bookmark_name' as a string");
+		ok(ref $bookmark->url() eq 'URI::URL', "Firefox::Marionette::Bookmark->new()->url() returns a URI::URL object");
+		ok($bookmark->url() eq $metacpan_uri, "Firefox::Marionette::Bookmark->new()->url() returns '$metacpan_uri' as a string");
+		ok(ref $bookmark->icon_url() eq 'URI::URL', "Firefox::Marionette::Bookmark->new()->icon_url() returns a URI::URL object");
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "Firefox::Marionette::Bookmark->new()->icon_url() returns '$metacpan_bookmark_icon_url' as a string");
+		ok(ref $bookmark->icon() eq 'URI::data', "Firefox::Marionette::Bookmark->new()->icon() returns a URI::data object");
+		ok($bookmark->icon_url() eq $metacpan_bookmark_icon_url, "Firefox::Marionette::Bookmark->new()->icon() returns '$metacpan_bookmark_icon' as a string");
+		ok($bookmark->type() eq Firefox::Marionette::Bookmark::BOOKMARK(), "Firefox::Marionette::Bookmark->new()->type() returns a bookmark if a url and title is supplied");
+		ok($bookmark->content_type() eq 'text/x-moz-place', "Firefox::Marionette::Bookmark->new()->content_type() returns 'text/x-moz-place' if a url and title is supplied");
+		my $folder_name = "Samples";
+		$bookmark = Firefox::Marionette::Bookmark->new( title => $folder_name );
+		ok($bookmark->title() eq $folder_name, "Firefox::Marionette::Bookmark->new()->title() returns the supplied title");
+		ok($bookmark->type() eq Firefox::Marionette::Bookmark::FOLDER(), "Firefox::Marionette::Bookmark->new()->type() returns a folder if a title is supplied, with no url");
+		ok($bookmark->content_type() eq 'text/x-moz-place-container', "Firefox::Marionette::Bookmark->new()->content_type() returns 'text/x-moz-place-container' if a title is supplied, with no url");
+		$bookmark = Firefox::Marionette::Bookmark->new( type => 4, index => undef );
+		$bookmark = Firefox::Marionette::Bookmark->new( type => 4, index => undef );
+		ok($bookmark, "Firefox::Marionette::Bookmark->new() produces a new bookmark with an unknown type of 4");
+		ok(!defined $bookmark->content_type(), "If a bookmark does not have a known type, it does not have a content type");
+		ok(JSON->new()->convert_blessed()->encode($bookmark), "Bookmark with bad parameters can be turned into JSON:" . JSON->new()->convert_blessed()->encode($bookmark));
+		$bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_truncated.html));
+		eval {
+			$firefox->import_bookmarks($bookmarks_path);
+		};
+		chomp $@;
+		ok($@, "Exception correctly thrown when trying to import a truncated bookmarks file of $bookmarks_path:$@");
+	}
+	Firefox::Marionette::Bookmark->import(qw(:all));
+	foreach my $name (qw(BOOKMARK FOLDER SEPARATOR)) {
+		my $result = eval "return Firefox::Marionette::Bookmark::$name();";
+		no strict;
+		ok($result == &$name(), "Firefox::Marionette::Bookmark::$name() == $name() after Firefox::Marionette::Bookmark->import(:all)");
+		use strict;
+	}
+	foreach my $name (qw(MENU ROOT TOOLBAR TAGS UNFILED)) {
+		my $result = eval "return Firefox::Marionette::Bookmark::$name();";
+		no strict;
+		ok($result eq &$name(), "Firefox::Marionette::Bookmark::$name() eq $name() after Firefox::Marionette::Bookmark->import(:all)");
+		use strict;
 	}
 	my $new_max_url_length = 4321;
 	my $original_max_url_length = $firefox->get_pref('browser.history.maxStateObjectSize');
@@ -2053,7 +2424,6 @@ SKIP: {
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
-my $uname;
 SKIP: {
 	diag("Starting new firefox for testing custom headers");
 	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
@@ -2064,8 +2434,47 @@ SKIP: {
 		skip($skip_message, 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
-	$uname = $firefox->uname();
-	ok($uname, "Firefox is currently running in $uname");
+	if ($major_version >= 60) {
+		my $title = "This is MetaCPAN!";
+		my $bookmark = Firefox::Marionette::Bookmark->new( url => $metacpan_uri, title => $title);
+		ok($firefox->add_bookmark($bookmark), "Added a new bookmark to firefox");
+		TODO: {
+			local $TODO = $major_version <= 80 && $major_version >= 70 ? "Temporary problems with bookmarks" : q[];
+			my $guid;
+			my $count = 0;
+			foreach my $result ($firefox->bookmarks($metacpan_uri)) {
+				ok($result->url() eq $metacpan_uri, "Retrieved the correct bookmark");
+				$guid = $result->guid();
+				ok($guid, "Found $guid as the guid of the new bookmark");
+				$count += 1;
+			}
+			ok($count == 1, "Total number of bookmarks found when searching by url is 1:$count");
+			$count = 0;
+			foreach my $result ($firefox->bookmarks(url => $metacpan_uri)) {
+				ok($result->url() eq $metacpan_uri, "Retrieved the correct bookmark");
+				$count += 1;
+			}
+			ok($count == 1, "Total number of bookmarks found when searching by (url => '$metacpan_uri') is 1:$count");
+			$count = 0;
+			foreach my $result ($firefox->bookmarks(url => URI->new($metacpan_uri))) {
+				ok($result->url() eq $metacpan_uri, "Retrieved the correct bookmark");
+				$count += 1;
+			}
+			ok($count == 1, "Total number of bookmarks found when searching by (url => URI->new('$metacpan_uri')) is 1:$count");
+			$count = 0;
+			foreach my $result ($firefox->bookmarks($title)) {
+				ok($result->url() eq $metacpan_uri, "Retrieved the correct bookmark");
+				$count += 1;
+			}
+			ok($count == 1, "Total number of bookmarks found when searching by title is 1:$count");
+			$count = 0;
+			foreach my $result ($firefox->bookmarks(title => $title)) {
+				ok($result->url() eq $metacpan_uri, "Retrieved the correct bookmark");
+				$count += 1;
+			}
+			ok($count == 1, "Total number of bookmarks found when searching by (title => '$title') is 1:$count");
+		}
+	}
 	ok(scalar $firefox->logins() == 0, "\$firefox->logins() has no entries:" . scalar $firefox->logins());
         my $testing_header_name = 'X-CPAN-Testing';
         my $testing_header_value = (ref $firefox) . q[ All ] . $Firefox::Marionette::VERSION;
@@ -2370,7 +2779,6 @@ SKIP: {
 		skip("Skipping network tests", 225);
 	}
 	ok($firefox->refresh(), "\$firefox->refresh()");
-	my $metacpan_uri = 'https://metacpan.org/';
 	ok($firefox->go($metacpan_uri), "$metacpan_uri has been loaded in the new window");
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 224);

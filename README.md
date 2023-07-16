@@ -47,6 +47,20 @@ Please note that when closing the connection via the client you can end-up in a 
 
 returns the active element of the current browsing context's document element, if the document element is non-null.
 
+## add\_bookmark
+
+accepts a [bookmark](https://metacpan.org/pod/Firefox::Marionette::Bookmark) as a parameter and adds the specified bookmark to the Firefox places database.
+
+    use Firefox::Marionette();
+
+    my $bookmark = Firefox::Marionette::Bookmark->new(
+                     url   => 'https://metacpan.org',
+                     title => 'This is MetaCPAN!'
+                             );
+    my $firefox = Firefox::Marionette->new()->add_bookmark($bookmark);
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## add\_certificate
 
 accepts a hash as a parameter and adds the specified certificate to the Firefox database with the supplied or default trust.  Allowed keys are below;
@@ -205,6 +219,36 @@ accept a boolean and return the current value of the debug setting.  This allows
 ## default\_binary\_name
 
 just returns the string 'firefox'.  Only of interest when sub-classing.
+
+## bookmarks
+
+accepts either a scalar or a hash as a parameter.  The scalar may by the title of a bookmark or the [URL](https://metacpan.org/pod/URI::URL) of the bookmark.  The hash may have the following keys;
+
+- title - The title of the bookmark.
+- url - The url of the bookmark.
+
+returns a list of all [Firefox::Marionette::Bookmark](https://metacpan.org/pod/Firefox::Marionette::Bookmark) objects that match the supplied parameters (if any).
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+
+    foreach my $bookmark ($firefox->bookmarks(title => 'This is MetaCPAN!')) {
+      say "Bookmark found";
+    }
+
+    # OR
+
+    foreach my $bookmark ($firefox->bookmarks()) {
+      say "Bookmark found with URL " . $bookmark->url();
+    }
+
+    # OR
+
+    foreach my $bookmark ($firefox->bookmarks('https://metacpan.org')) {
+      say "Bookmark found";
+    }
 
 ## browser\_version
 
@@ -427,6 +471,23 @@ accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as t
 ## current\_chrome\_window\_handle 
 
 see [chrome\_window\_handle](https://metacpan.org/pod/Firefox::Marionette#chrome_window_handle).
+
+## delete\_bookmark
+
+accepts a [bookmark](https://metacpan.org/pod/Firefox::Marionette::Bookmark) as a parameter and deletes the bookmark from the Firefox database.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $bookmark (reverse $firefox->bookmarks()) {
+      if ($bookmark->parent_guid() ne Firefox::Marionette::Bookmark::ROOT()) {
+        $firefox->delete_bookmark($bookmark);
+      }
+    }
+    say "Bookmarks? We don't need no stinking bookmarks!";
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## delete\_certificate
 
@@ -996,6 +1057,17 @@ returns the page source of the content document.  This page source can be wrappe
     use v5.10;
 
     say Firefox::Marionette->new()->go('https://metacpan.org/')->html();
+
+## import\_bookmarks
+
+accepts a filesystem path to a bookmarks file and imports all the [bookmarks](https://metacpan.org/pod/Firefox::Marionette::Bookmark) in that file.  It can deal with backups from [Firefox](https://support.mozilla.org/en-US/kb/export-firefox-bookmarks-to-backup-or-transfer), [Chrome](https://support.google.com/chrome/answer/96816?hl=en) or Edge.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new()->import_bookmarks('/path/to/bookmarks_file.html');
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## images
 

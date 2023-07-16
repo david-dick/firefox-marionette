@@ -226,6 +226,7 @@ _PKG_PATH_
 		PACKAGE_LIST="perl-Archive-Zip"
 		for PACKAGE in perl-JSON \
 					perl-Config-INI \
+					perl-Crypt-URandom \
 					perl-File-HomeDir \
 					perl-Digest-SHA \
 					perl-HTTP-Daemon \
@@ -246,6 +247,7 @@ _PKG_PATH_
 		$SETUP_EXE -q -P $PACKAGE_LIST
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Config::INI
 		perl -MPDF::API2 -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan PDF::API2
+		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Crypt::URandom
 		;;
 	*)
 		echo "Any help with patching '$OSNAME' support would be awesome???"

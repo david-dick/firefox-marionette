@@ -65,6 +65,7 @@ sub run {
 			my $firefox = Firefox::Marionette->new(%parameters);
 			$firefox->pdf();
 			$firefox->selfie();
+			$firefox->import_bookmarks(File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_empty.html)));
 			my $final = $syscall_error_at_count;
 			$syscall_error_at_count = undef;
 			ok($syscall_count >= 0 && $firefox->quit() == 0, "Firefox exited okay after $final successful $function calls");
@@ -93,6 +94,7 @@ sub visible {
 			my $firefox = Firefox::Marionette->new(%parameters);
 			$firefox->pdf();
 			$firefox->selfie();
+			$firefox->import_bookmarks(File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_empty.html)));
 			my $final = $syscall_error_at_count;
 			$syscall_error_at_count = undef;
 			ok($syscall_count > 0 && $firefox->quit() == 0, "Firefox (visible => 1) exited okay after $final successful $function calls");
