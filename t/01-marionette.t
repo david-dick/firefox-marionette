@@ -4138,8 +4138,10 @@ SKIP: {
 }
 
 SKIP: {
-	diag("Starting new firefox for testing visibility");
-	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600);
+	diag("Starting new firefox for testing visibility and TLS proxy servers");
+	my $proxyPort = empty_port();
+	my $proxy_host = 'localhost:' . $proxyPort;
+	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600,capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, proxy => Firefox::Marionette::Proxy->new(tls => $proxy_host)));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -4147,6 +4149,16 @@ SKIP: {
 		skip($skip_message, 451);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with visible set to 1");
+	my $capabilities = $firefox->capabilities();
+	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
+	SKIP: {
+		if (!$capabilities->proxy()) {
+			diag("\$capabilities->proxy is not supported for " . $capabilities->browser_version());
+			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
+		}
+		ok($capabilities->proxy()->type() eq 'pac', "\$capabilities->proxy()->type() is 'pac'");
+		ok($capabilities->proxy()->pac() =~ /^data:text\/plain,function(?:[ ]|%20)FindProxyForURL[(][)](?:[{]|%7B)return(?:[ ]|%20)(?:"|%22)HTTPS(?:[ ]|%20)localhost:$proxyPort(?:"|%22)(?:[}]|%7D)$/smx, qq[\$capabilities->proxy()->pac() is 'data:text/plain,function FindProxyForURL(){return "HTTPS localhost:$proxyPort"}':] . $capabilities->proxy()->pac());
+	}
 	if ($major_version < 52) {
 		diag("Not attempting to resize for Firefox $major_version");
 	} elsif ($maximise) {

@@ -19,6 +19,10 @@ sub new {
         $parameters{http}  = $host;
         $parameters{https} = $host;
     }
+    elsif ( $parameters{tls} ) {
+        $parameters{pac} =
+qq[data:text/plain,function FindProxyForURL(){return "HTTPS $parameters{tls}"}];
+    }
     my $element = bless {%parameters}, $class;
     return $element;
 }
@@ -100,6 +104,13 @@ Version 1.38
     my $proxy = Firefox::Marionette::Proxy->new( host => 'squid.example.com:3128' );
     my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( proxy => $proxy ) );
 
+    # OR
+
+    my $tls_proxy = "ssl.proxy.example.org:443";
+    my $proxy = Firefox::Marionette::Proxy->new(tls => "$host:$port");
+    my $firefox = Firefox::Marionette->new(capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy));
+    $firefox->go("https://metacpan.org"); # secure proxying has been achieved!
+
 =head1 DESCRIPTION
 
 This module handles the implementation of a Proxy in Firefox Capabilities using the Marionette protocol
@@ -127,6 +138,8 @@ accepts a hash as a parameter.  Allowed keys are below;
 =item * socks - defines the proxy host for a SOCKS proxy traffic when the L<type|Firefox::Marionette::Proxy#type> is 'manual'.
 
 =item * socks_version - defines the SOCKS proxy version when the L<type|Firefox::Marionette::Proxy#type> is 'manual'.  It must be any integer between 0 and 255 inclusive, but it defaults to '5'.
+
+=item * tls - defines a L<pac|Firefox::Marionette::Proxy#type> function pointing to a TLS secured proxy for FTP, HTTP, and HTTPS traffic.  This was derived from L<bug 378637|https://bugzilla.mozilla.org/show_bug.cgi?id=378637>
 
 =back
 
