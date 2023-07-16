@@ -1326,7 +1326,7 @@ SKIP: {
 	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_USER})) {
 		$visible = 'local';
 	}
-	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost:' . $proxyPort)));
+	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost:' . $proxyPort, none => 'localhost')));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1344,6 +1344,13 @@ SKIP: {
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
 		ok($capabilities->proxy()->https() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->https() is 'localhost:$proxyPort'");
 		ok($capabilities->proxy()->http() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->http() is 'localhost:$proxyPort'");
+		local $TODO = $major_version < 58 ? $capabilities->browser_version() . " does not have support for \$firefox->capabilities()->none()" : q[];
+		my $none_count = 0;
+		foreach my $host ($capabilities->proxy()->none()) {
+			ok($host eq 'localhost', "\$capabilities->proxy()->none() is 'localhost'");
+			$none_count += 1;
+		}
+		ok($none_count == 1, "Number of none proxies is 1:$none_count");
 	}
 	if (($ENV{RELEASE_TESTING}) && ($visible eq 'local')) {
 		`xwininfo -version 2>/dev/null`;
