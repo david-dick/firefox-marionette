@@ -79,6 +79,7 @@ sub _MAX_DISPLAY_LENGTH             { return 10 }
 sub _NUMBER_OF_TERM_ATTEMPTS        { return 4 }
 sub _MAX_VERSION_FOR_ANCIENT_CMDS   { return 31 }
 sub _MAX_VERSION_FOR_NEW_CMDS       { return 61 }
+sub _MAX_VERSION_NO_POINTER_ORIGIN  { return 116 }
 sub _MIN_VERSION_FOR_NEW_SENDKEYS   { return 55 }
 sub _MIN_VERSION_FOR_HEADLESS       { return 55 }
 sub _MIN_VERSION_FOR_WD_HEADLESS    { return 56 }
@@ -7415,6 +7416,9 @@ sub _new_session_parameters {
               'moz:useNonSpecCompliantPointerOrigin',
             moz_accessibility_checks => 'moz:accessibilityChecks',
         );
+        if ($self->_is_firefox_major_version_at_least(_MAX_VERSION_NO_POINTER_ORIGIN())) {
+		delete $booleans{moz_use_non_spec_compliant_pointer_origin};
+	}
         foreach my $method ( sort { $a cmp $b } keys %booleans ) {
             if ( defined $capabilities->$method() ) {
                 $actual->{ $booleans{$method} } =

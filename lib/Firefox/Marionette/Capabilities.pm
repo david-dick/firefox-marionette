@@ -188,7 +188,7 @@ returns the value of L<moz:shutdownTimeout|https://github.com/mozilla/gecko-dev/
 
 returns a boolean value to indicate how the pointer origin for an action command will be calculated.
 
-With Firefox 59 the calculation will be based on the requirements by the WebDriver specification. This means that the pointer origin is no longer computed based on the top and left position of the referenced element, but on the in-view center point.
+With Firefox 59 the calculation will be based on the requirements by the WebDriver specification. This means that the pointer origin is no longer computed based on the top and left position of the referenced element, but on the in-view center point. With Firefox 116, this capability is L<no longer supported|https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html#moz-usenonspeccompliantpointerorigin>.
 
 To temporarily disable the WebDriver conformant behavior use 0 as value for this capability.
 
