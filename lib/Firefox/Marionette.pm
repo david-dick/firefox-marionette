@@ -2170,24 +2170,46 @@ sub add_login {
                 'loginInfo', $login
               )
               . <<"_JS_"), args => [$login] ); # xpcom/ds/nsIWritablePropertyBag2.idl
-loginManager.addLogin(loginInfo);
-let loginMetaInfo = Components.classes["\@mozilla.org/hash-property-bag;1"].createInstance(Components.interfaces.nsIWritablePropertyBag2);
-if ("guid" in arguments[0] && arguments[0].guid !== null) {
-	loginMetaInfo.setPropertyAsAUTF8String("guid", arguments[0].guid);
+
+let updateMeta = function(mLoginInfo, aMetaInfo) {
+  let loginMetaInfo = Components.classes["\@mozilla.org/hash-property-bag;1"].createInstance(Components.interfaces.nsIWritablePropertyBag2);
+  if ("guid" in aMetaInfo && aMetaInfo.guid !== null) {
+     loginMetaInfo.setPropertyAsAUTF8String("guid", aMetaInfo.guid);
+  }
+  if ("creation_in_ms" in aMetaInfo && aMetaInfo.creation_in_ms !== null) {
+     loginMetaInfo.setPropertyAsUint64("timeCreated", aMetaInfo.creation_in_ms);
+  }
+  if ("last_used_in_ms" in aMetaInfo && aMetaInfo.last_used_in_ms !== null) {
+     loginMetaInfo.setPropertyAsUint64("timeLastUsed", aMetaInfo.last_used_in_ms);
+  }
+  if ("password_changed_in_ms" in aMetaInfo && aMetaInfo.password_changed_in_ms !== null) {
+    loginMetaInfo.setPropertyAsUint64("timePasswordChanged", aMetaInfo.password_changed_in_ms);
+  }
+  if ("times_used" in aMetaInfo && aMetaInfo.times_used !== null) {
+    loginMetaInfo.setPropertyAsUint64("timesUsed", aMetaInfo.times_used);
+  }
+  loginManager.modifyLogin(mLoginInfo, loginMetaInfo);
+};
+
+if (loginManager.initializationPromise) {
+  return (async function(aLoginInfo, metaInfo) {
+    await loginManager.initializationPromise;
+    if (loginManager.addLoginAsync) {
+      const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm");
+      let rLoginInfo = await loginManager.addLoginAsync(aLoginInfo);
+      updateMeta(rLoginInfo, metaInfo);
+      return rLoginInfo;
+    } else {
+      loginManager.addLogin(loginInfo);
+      updateMeta(loginInfo, metaInfo);
+      return loginInfo;
+    }
+  })(loginInfo, arguments[0]);
+} else {
+  loginManager.addLogin(loginInfo);
+  updateMeta(loginInfo, arguments[0]);
+  return loginInfo;
 }
-if ("creation_in_ms" in arguments[0] && arguments[0].creation_in_ms !== null) {
-	loginMetaInfo.setPropertyAsUint64("timeCreated", arguments[0].creation_in_ms);
-}
-if ("last_used_in_ms" in arguments[0] && arguments[0].last_used_in_ms !== null) {
-	loginMetaInfo.setPropertyAsUint64("timeLastUsed", arguments[0].last_used_in_ms);
-}
-if ("password_changed_in_ms" in arguments[0] && arguments[0].password_changed_in_ms !== null) {
-	loginMetaInfo.setPropertyAsUint64("timePasswordChanged", arguments[0].password_changed_in_ms);
-}
-if ("times_used" in arguments[0] && arguments[0].times_used !== null) {
-	loginMetaInfo.setPropertyAsUint64("timesUsed", arguments[0].times_used);
-}
-loginManager.modifyLogin(loginInfo, loginMetaInfo);
 _JS_
     $self->_context($old);
     return $self;
