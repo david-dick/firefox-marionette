@@ -106,10 +106,8 @@ Version 1.39
 
     # OR
 
-    my $tls_proxy = "ssl.proxy.example.org:443";
-    my $proxy = Firefox::Marionette::Proxy->new(tls => "$host:$port");
+    my $proxy = Firefox::Marionette::Proxy->new( tls => "squid.example.org:443" );
     my $firefox = Firefox::Marionette->new(capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy));
-    $firefox->go("https://metacpan.org"); # secure proxying has been achieved!
 
 =head1 DESCRIPTION
 

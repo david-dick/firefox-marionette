@@ -209,26 +209,27 @@ Version 1.39
 =head1 SYNOPSIS
 
     use Firefox::Marionette();
+    use Firefox::Marionette::Bookmark qw(:all);
     use Encode();
     use v5.10;
 
     my $firefox = Firefox::Marionette->new();
     $firefox->import_bookmarks("/path/to/bookmarks.html");
 
-    foreach my $bookmark (reverse $firefox->search_bookmarks()) {
+    foreach my $bookmark (reverse $firefox->bookmarks()) {
         say "Bookmark guid is          :" . $bookmark->guid();
         say "Bookmark parent guid is   :" . $bookmark->parent_guid();
         say "Bookmark date added is    :" . localtime($bookmark->date_added());
         say "Bookmark last modified is :" . localtime($bookmark->last_modified());
         say "Bookmark index is         :" . $bookmark->idx();
-        if ($bookmark->type() eq BOOKMARK()) {
+        if ($bookmark->type() == BOOKMARK()) {
             say "Bookmark url              :" . $bookmark->url();
             say "Bookmark title is         :" . Encode::encode('UTF-8', $bookmark->title(), 1) if ($bookmark->title());
             say "Bookmark icon is          :" . $bookmark->icon() if ($bookmark->icon());
             say "Bookmark icon url is      :" . $bookmark->icon_url() if ($bookmark->icon_url());
             say "Bookmark keyword is       :" . Encode::encode('UTF-8', $bookmark->keyword(), 1) if ($bookmark->keyword());
             say "Bookmark tags are         :" . Encode::encode('UTF-8', (join q[, ], $bookmark->tags())) if ($bookmark->tags());
-        } elsif ($bookmark->type() eq FOLDER()) {
+        } elsif ($bookmark->type() == FOLDER()) {
             given ($bookmark->guid()) {
                 when (MENU() . q[])    { say "This is the menu folder" }
                 when (ROOT() . q[])    { say "This is the root folder" }
@@ -250,7 +251,7 @@ This module handles the implementation of a single Firefox bookmark using the Ma
 
 =head1 CONSTANTS
 
-Constants are sourced from L<toolkit/components/places/nsINavBookmarksService.idl|https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/places/nsINavBookmarksService.idl> and L<toolkit/components/places/Bookmarks.sys.mjs|https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/places/Bookmarks.sys.mjs>.
+Constants are sourced from L<toolkit/components/places/Bookmarks.sys.mjs|https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/places/Bookmarks.sys.mjs>.
 
 =head2 ROOT
 
@@ -312,9 +313,9 @@ accepts a hash as a parameter.  Allowed keys are below;
 
 =item * title - the title of the bookmark.  This can be a L<folder name|/FOLDER> name or a L<bookmark|/BOOKMARK> title.
 
-=item * type - an integer describing the type of this object.  It can be a L<bookmark|/BOOKMARK>, a L<folder|FOLDER> or a L<separator|SEPARATOR>.
+=item * type - an integer describing the type of this object.  It can be a L<bookmark|/BOOKMARK>, a L<folder|/FOLDER> or a L<separator|/SEPARATOR>.
 
-=item * url - the L<url|/url> of the bookmark.  Only bookmarks with a type of L<BOOKMARK|/BOOKMARK> will have a <url|/url> set.
+=item * url - the L<url|/url> of the bookmark.  Only bookmarks with a type of L<BOOKMARK|/BOOKMARK> will have a L<url|/url> set.
 
 =back
 
@@ -342,7 +343,7 @@ returns the index of the bookmark.  This will be an integer.
 
 =head2 guid
 
-returns the guid of the bookmark.  This will be a unique value for the hierarchy and 12 characters in length.  There are special guids, which are the L<ROOT|/ROOT>, L<MENU|/MENU>, L<TOOLBAR|/TOOLBAR>, L<UNFILED|/UNFILED> and the L<MOBILE|/MOBILE>.
+returns the guid of the bookmark.  This will be a unique value for the hierarchy and 12 characters in length.  There are special guids, which are the L<ROOT|/ROOT>, L<MENU|/MENU>, L<TOOLBAR|/TOOLBAR>, L<UNFILED|/UNFILED> and L<MOBILE|/MOBILE> guids.
 
 =head2 keyword
 
