@@ -3768,6 +3768,10 @@ SKIP: {
 				next;
 			}
 		}
+		if (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+			diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+			next;
+		}
 		my $install_id;
 		my $install_path = Cwd::abs_path($path);
 		diag("Original install path is $install_path");
