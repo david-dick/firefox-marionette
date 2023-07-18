@@ -1451,6 +1451,22 @@ SKIP: {
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} elsif ($major_version >= 113) { # https://bugzilla.mozilla.org/show_bug.cgi?id=1585622
+		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data aria.html));
+		if ($^O eq 'cygwin') {
+			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+		}
+		$firefox->go("file://$path");
+		my $element = $firefox->find_id('close');
+		ok($firefox->aria_label($element) eq 'Close', "Retrieved the ARIA label correctly:" . $firefox->aria_label($element));
+		ok($firefox->find_id('close')->aria_label() eq 'Close', "Retrieved the ARIA label correctly:" . $firefox->find_id('close')->aria_label());
+		$element = $firefox->find_id('save');
+		ok($firefox->aria_role($element) eq 'button', "Retrieved the ARIA role correctly:" . $firefox->aria_role($element));
+		ok($firefox->find_id('save')->aria_role() eq 'button', "Retrieved the ARIA label correctly:" . $firefox->find_id('save')->aria_role());
+	}
+	if ($ENV{FIREFOX_HOST}) {
+	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
 	} else {
 		my $shadow_root;
 		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
@@ -3474,6 +3490,8 @@ SKIP: {
 	}
 	my $dummy_object = bless {}, 'What::is::this::object';
 	foreach my $name (qw(
+				aria_label
+				aria_role
 				clear
 				click
 				is_displayed

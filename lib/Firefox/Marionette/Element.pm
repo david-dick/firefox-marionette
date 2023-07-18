@@ -35,6 +35,16 @@ sub TO_JSON {
     return $json;
 }
 
+sub aria_label {
+    my ($self) = @_;
+    return $self->browser()->aria_label($self);
+}
+
+sub aria_role {
+    my ($self) = @_;
+    return $self->browser()->aria_role($self);
+}
+
 sub uuid {
     my ($self) = @_;
     return $self->{ IDENTIFIER() };
@@ -374,6 +384,14 @@ This module handles the implementation of a Firefox Element using the Marionette
 returns the L<web element identifier|https://www.w3.org/TR/webdriver/#elements>
 
 =head1 SUBROUTINES/METHODS
+
+=head2 aria_label
+
+returns the L<ARIA label|https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label> for the L<element|Firefox::Marionette::Element>.
+
+=head2 aria_role
+
+returns the L<ARIA role|https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles> for the L<element|Firefox::Marionette::Element>.
 
 =head2 attribute 
 

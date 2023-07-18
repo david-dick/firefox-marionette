@@ -47,6 +47,7 @@ t/data/bookmarks_empty.html
 t/data/bookmarks_firefox.html
 t/data/bookmarks_firefox.json
 t/data/bookmarks_truncated.html
+t/data/aria.html
 t/data/elements.html
 t/data/iframe.html
 t/data/visible.html

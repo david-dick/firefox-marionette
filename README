@@ -235,6 +235,18 @@ SUBROUTINES/METHODS
     returns the application type for the Marionette protocol. Should be
     'gecko'.
 
+ aria_label
+
+    accepts an element as the parameter. It returns the ARIA label
+    <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label>
+    for the element.
+
+ aria_role
+
+    accepts an element as the parameter. It returns the ARIA role
+    <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles>
+    for the element.
+
  async_script
 
     accepts a scalar containing a javascript function that is executed in

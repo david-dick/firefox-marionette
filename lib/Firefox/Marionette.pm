@@ -8530,6 +8530,54 @@ sub clear {
     return $self;
 }
 
+sub aria_label {    # https://bugzilla.mozilla.org/show_bug.cgi?id=1585622
+    my ( $self, $element ) = @_;
+    if (
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
+        )
+      )
+    {
+        Firefox::Marionette::Exception->throw(
+'get_aria_label method requires a Firefox::Marionette::Element parameter'
+        );
+    }
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(), $message_id,
+            $self->_command('WebDriver:GetComputedLabel'),
+            { id => $element->uuid() }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return $self->_response_result_value($response);
+}
+
+sub aria_role {    # https://bugzilla.mozilla.org/show_bug.cgi?id=1585622
+    my ( $self, $element ) = @_;
+    if (
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
+        )
+      )
+    {
+        Firefox::Marionette::Exception->throw(
+'get_aria_role method requires a Firefox::Marionette::Element parameter'
+        );
+    }
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(), $message_id,
+            $self->_command('WebDriver:GetComputedRole'),
+            { id => $element->uuid() }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return $self->_response_result_value($response);
+}
+
 sub click {
     my ( $self, $element ) = @_;
     if (
@@ -11159,6 +11207,14 @@ This method returns true or false depending on if the Firefox process is still r
 =head2 application_type
 
 returns the application type for the Marionette protocol.  Should be 'gecko'.
+
+=head2 aria_label
+
+accepts an L<element|Firefox::Marionette::Element> as the parameter.  It returns the L<ARIA label|https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label> for the L<element|Firefox::Marionette::Element>.
+
+=head2 aria_role
+
+accepts an L<element|Firefox::Marionette::Element> as the parameter.  It returns the L<ARIA role|https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles> for the L<element|Firefox::Marionette::Element>.
 
 =head2 async_script 
 

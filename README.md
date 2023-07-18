@@ -178,6 +178,14 @@ This method returns true or false depending on if the Firefox process is still r
 
 returns the application type for the Marionette protocol.  Should be 'gecko'.
 
+## aria\_label
+
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the parameter.  It returns the [ARIA label](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label) for the [element](https://metacpan.org/pod/Firefox::Marionette::Element).
+
+## aria\_role
+
+accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the parameter.  It returns the [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles) for the [element](https://metacpan.org/pod/Firefox::Marionette::Element).
+
 ## async\_script 
 
 accepts a scalar containing a javascript function that is executed in the browser.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
