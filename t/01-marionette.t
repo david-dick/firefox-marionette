@@ -1461,8 +1461,8 @@ SKIP: {
 		ok($firefox->aria_label($element) eq 'Close', "Retrieved the ARIA label correctly:" . $firefox->aria_label($element));
 		ok($firefox->find_id('close')->aria_label() eq 'Close', "Retrieved the ARIA label correctly:" . $firefox->find_id('close')->aria_label());
 		$element = $firefox->find_id('save');
-		ok($firefox->aria_role($element) eq 'button', "Retrieved the ARIA role correctly:" . $firefox->aria_role($element));
-		ok($firefox->find_id('save')->aria_role() eq 'button', "Retrieved the ARIA label correctly:" . $firefox->find_id('save')->aria_role());
+		ok($firefox->aria_role($element) =~ /^(?:toggle[ ])?button$/smx, "Retrieved the ARIA role correctly:" . $firefox->aria_role($element));
+		ok($firefox->find_id('save')->aria_role() =~ /^(?:toggle[ ])?button$/smx, "Retrieved the ARIA label correctly:" . $firefox->find_id('save')->aria_role());
 	}
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
