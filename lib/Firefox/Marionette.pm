@@ -80,6 +80,7 @@ sub _NUMBER_OF_TERM_ATTEMPTS        { return 4 }
 sub _MAX_VERSION_FOR_ANCIENT_CMDS   { return 31 }
 sub _MAX_VERSION_FOR_NEW_CMDS       { return 61 }
 sub _MAX_VERSION_NO_POINTER_ORIGIN  { return 116 }
+sub _MIN_VERSION_FOR_AWAIT          { return 50 }
 sub _MIN_VERSION_FOR_NEW_SENDKEYS   { return 55 }
 sub _MIN_VERSION_FOR_HEADLESS       { return 55 }
 sub _MIN_VERSION_FOR_WD_HEADLESS    { return 56 }
@@ -2162,15 +2163,8 @@ sub add_login {
     else {
         $login = Firefox::Marionette::Login->new(@parameters);
     }
-    my $old = $self->_context('chrome');
-    $self->script(
-        $self->_compress_script(
-            $self->_login_interface_preamble()
-              . $self->_define_login_info_from_blessed_user(
-                'loginInfo', $login
-              )
-              . <<"_JS_"), args => [$login] ); # xpcom/ds/nsIWritablePropertyBag2.idl
-
+    my $old        = $self->_context('chrome');
+    my $javascript = <<"_JS_";    # xpcom/ds/nsIWritablePropertyBag2.idl
 let updateMeta = function(mLoginInfo, aMetaInfo) {
   let loginMetaInfo = Components.classes["\@mozilla.org/hash-property-bag;1"].createInstance(Components.interfaces.nsIWritablePropertyBag2);
   if ("guid" in aMetaInfo && aMetaInfo.guid !== null) {
@@ -2190,7 +2184,10 @@ let updateMeta = function(mLoginInfo, aMetaInfo) {
   }
   loginManager.modifyLogin(mLoginInfo, loginMetaInfo);
 };
-
+_JS_
+    if ( $self->_is_firefox_major_version_at_least( _MIN_VERSION_FOR_AWAIT() ) )
+    {
+        $javascript .= <<"_JS_";
 if (loginManager.initializationPromise) {
   return (async function(aLoginInfo, metaInfo) {
     await loginManager.initializationPromise;
@@ -2211,6 +2208,24 @@ if (loginManager.initializationPromise) {
   return loginInfo;
 }
 _JS_
+    }
+    else {
+        $javascript .= <<"_JS_";
+loginManager.addLogin(loginInfo);
+updateMeta(loginInfo, arguments[0]);
+return loginInfo;
+_JS_
+    }
+    $self->script(
+        $self->_compress_script(
+            $self->_login_interface_preamble()
+              . $self->_define_login_info_from_blessed_user(
+                'loginInfo', $login
+              )
+              . $javascript
+        ),
+        args => [$login]
+    );
     $self->_context($old);
     return $self;
 }
