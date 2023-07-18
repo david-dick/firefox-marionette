@@ -1,5 +1,11 @@
 Revision history for Firefox-Marionette
 
+1.39  Tue Jul 18 18:35 2023
+       Adding bookmark support
+       Adding tls parameter to Proxy->new method
+       Adding aria_label and aria_role methods
+       Documentation and test suite fixes
+
 1.38  Sun May 28 06:57 2023
        Fixing ssh-auth-cmd-marionette for FreeBSD in GH#24.  Thanks to prozorecJP
        Adding cache_keys, check_cache_key and clear_cache methods
