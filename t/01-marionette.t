@@ -3473,7 +3473,18 @@ SKIP: {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 36);
 	}
 	my $dummy_object = bless {}, 'What::is::this::object';
-	foreach my $name ('click', 'clear', 'is_selected', 'is_enabled', 'is_displayed', 'type', 'tag_name', 'rect', 'text', 'scroll') {
+	foreach my $name (qw(
+				clear
+				click
+				is_displayed
+				is_enabled
+				is_selected
+				rect
+				scroll
+				tag_name
+				text
+				type
+			)) {
 		eval {
 			$firefox->$name({});
 		};
