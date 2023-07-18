@@ -7438,9 +7438,14 @@ sub _new_session_parameters {
               'moz:useNonSpecCompliantPointerOrigin',
             moz_accessibility_checks => 'moz:accessibilityChecks',
         );
-        if ($self->_is_firefox_major_version_at_least(_MAX_VERSION_NO_POINTER_ORIGIN())) {
-		delete $booleans{moz_use_non_spec_compliant_pointer_origin};
-	}
+        if (
+            $self->_is_firefox_major_version_at_least(
+                _MAX_VERSION_NO_POINTER_ORIGIN()
+            )
+          )
+        {
+            delete $booleans{moz_use_non_spec_compliant_pointer_origin};
+        }
         foreach my $method ( sort { $a cmp $b } keys %booleans ) {
             if ( defined $capabilities->$method() ) {
                 $actual->{ $booleans{$method} } =
