@@ -26,7 +26,7 @@ local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'
     : q[]
   );
 
-our $VERSION = '1.39';
+our $VERSION = '1.40';
 
 my $binary  = 'firefox';
 my $ident   = 'ssh-auth-cmd-marionette';
@@ -401,7 +401,7 @@ ssh-auth-cmd-marionette - ssh ~/.ssh/authorized_keys command for Firefox::Marion
 
 =head1 VERSION
 
-Version 1.39
+Version 1.40
 
 =head1 USAGE
 
