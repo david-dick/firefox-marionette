@@ -2427,6 +2427,10 @@ SUBROUTINES/METHODS
             warn $element->tag_name();
         }
 
+    See the FINDING ELEMENTS IN A SHADOW DOM section for how to delve into
+    a shadow DOM
+    <https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>.
+
  shadowy
 
     accepts an element as a parameter and returns true if the element has a
@@ -2844,6 +2848,42 @@ WEBGL
         } else {
             die "WebGL is not supported";
         }
+
+FINDING ELEMENTS IN A SHADOW DOM
+
+    One aspect of Web Components
+    <https://developer.mozilla.org/en-US/docs/Web/API/Web_components> is
+    the shadow DOM
+    <https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>.
+    When you need to explore the structure of a custom element
+    <https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements>,
+    you need to access it via the shadow DOM. The following is an example
+    of navigating the shadow DOM via a html file included in the test suite
+    of this package.
+
+        use Firefox::Marionette();
+        use Cwd();
+    
+        my $firefox = Firefox::Marionette->new();
+        my $firefox_marionette_directory = Cwd::cwd();
+        $firefox->go("file://$firefox_marionette_directory/t/data/elements.html");
+    
+        my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
+    
+        my $outer_div = $firefox->find_id('outer-div', $shadow_root);
+
+    So, this module is designed to allow you to navigate the shadow DOM
+    using normal find methods, but you must get the shadow element's shadow
+    root and use that as the root for the search into the shadow DOM. An
+    important caveat is that Lxpath
+    <https://bugzilla.mozilla.org/show_bug.cgi?id=1822311> and tag name
+    <https://bugzilla.mozilla.org/show_bug.cgi?id=1822321> strategies do
+    not officially work yet (and also the class name and name strategies).
+    This module works around the tag name, class name and name deficiencies
+    by using the matching css selector search if the original search throws
+    a recognisable exception. Therefore these cases may be considered to be
+    extremely experimental and subject to change when Firefox gets the
+    "correct" functionality.
 
 WEBSITES THAT BLOCK AUTOMATION
 

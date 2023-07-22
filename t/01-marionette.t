@@ -1500,12 +1500,12 @@ SKIP: {
 			foreach my $element (@{$firefox->script('return arguments[0].children', args => [ $shadow_root ])}) {
 				if ($count == 0) {
 					ok($element->tag_name() eq 'style', "First element from ShadowRoot via script is a style tag");
-				} else {
+				} elsif ($count == 1) {
 					ok($element->tag_name() eq 'div', "Second element from ShadowRoot via script is a div tag");
 				}
 				$count += 1;
 			}
-			ok($count == 2, "\$firefox->has_tag('custom-square')->shadow_root() has 2 children");
+			ok($count == 6, "\$firefox->has_tag('custom-square')->shadow_root() has 2 children:$count");
 			ok(ref $shadow_root eq 'Firefox::Marionette::ShadowRoot', "\$firefox->has_tag('custom-square')->shadow_root() returns a Firefox::Marionette::ShadowRoot");
 			{
 				my $element = $firefox->script('return arguments[0].children[0]', args => [ $shadow_root ]);
@@ -1521,6 +1521,26 @@ SKIP: {
 				$count += 1;
 			}
 			ok($count == 2, "\$firefox->script() correctly returns an array with 2 elements");
+			if ($major_version >= 113) {
+				ok($firefox->find_id('outer-div', $shadow_root)->attribute('title') eq 'In the Shadow Realms', "Correctly found shadow element with find_id");
+				my $shadow_count = 0;
+				foreach my $span ($firefox->find_tag('span', $shadow_root)) {
+					ok($span->tag_name() eq 'span', "Correctly found shadow span with find_tag");
+				}
+				ok($count == 2, "There are 2 span elements in the custom-square element");
+				ok($firefox->find_name('meta-name', $shadow_root)->attribute('title') eq 'Very META', "Correctly found shadow element with find_name");
+				ok($firefox->find_class('outer-div-class', $shadow_root)->attribute('title') eq 'In the Shadow Realms', "Correctly found shadow element with find_class");
+				ok($firefox->find_link('MetaCPAN', $shadow_root)->attribute('href') eq 'https://metacpan.org', "Correctly found shadow element with find_link");
+				ok($firefox->find_partial('Meta', $shadow_root)->attribute('href') eq 'https://metacpan.org', "Correctly found shadow element with find_partial");
+				TODO: {
+					local $TODO = "xpath is not supported as a strategy for find in the shadow DOM";
+					my $title = q[];
+					eval {
+						$title = $firefox->find('//div', $shadow_root)->attribute('title');
+					};
+					ok($title eq 'In the Shadow Realms', "Correctly found shadow element with find (xpath):$title");
+				}
+			}
 		}
 		{
 			my $value = $firefox->script('return [2,1]', args => [ $span ]);

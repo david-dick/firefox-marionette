@@ -9578,27 +9578,99 @@ sub find_by_partial {
     return $self->find_partial( $value, $from );
 }
 
-sub _find {
-    my ( $self, $value, $using, $from, $options ) = @_;
-    $using ||= 'xpath';
-    my $message_id = $self->_new_message_id();
-    my $parameters = { using => $using, value => $value };
+sub _determine_from {
+    my ( $self, $from ) = @_;
+    my $parameters = {};
     if ( defined $from ) {
         if ( $self->marionette_protocol() == _MARIONETTE_PROTOCOL_VERSION_3() )
         {
-            $parameters->{element} = $from->uuid();
+            if (   ( defined $from )
+                && ( ref $from eq 'Firefox::Marionette::ShadowRoot' ) )
+            {
+                $parameters->{shadowRoot} = $from->uuid();
+            }
+            else {
+                $parameters->{element} = $from->uuid();
+            }
         }
         else {
             $parameters->{ELEMENT} = $from->uuid();
         }
     }
+    return %{$parameters};
+}
+
+sub _retry_find_response {
+    my ( $self, $command, $parameters, $options ) = @_;
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [ _COMMAND(), $message_id, $self->_command($command), $parameters ] );
+    return $self->_get_response( $message_id,
+        { using => $parameters->{using}, value => $parameters->{value} },
+        $options );
+}
+
+sub _get_and_retry_find_response {
+    my ( $self, $value, $using, $from, $options ) = @_;
+    my $want_array = delete $options->{want_array};
+    my $message_id = $self->_new_message_id();
+    my $parameters =
+      { using => $using, value => $value, $self->_determine_from($from) };
     my $command =
-      wantarray ? 'WebDriver:FindElements' : 'WebDriver:FindElement';
+      $want_array ? 'WebDriver:FindElements' : 'WebDriver:FindElement';
+    if ( $parameters->{shadowRoot} ) {
+        $command .= 'FromShadowRoot';
+    }
     $self->_send_request(
         [ _COMMAND(), $message_id, $self->_command($command), $parameters, ] );
+    my $response;
+    eval {
+        $response = $self->_get_response( $message_id,
+            { using => $using, value => $value }, $options );
+    } or do {
+        my $quoted_using = quotemeta $using;
+        my $quoted_value = quotemeta $value;
+        my $invalid_selector_re =
+            qr/invalid[ ]selector:[ ]/smx
+          . qr/Given[ ](?:$quoted_using)[ ]expression[ ]/smx
+          . qr/["](?:$quoted_value)["][ ]is[ ]invalid:[ ]/smx;
+        my $type_error_tag_re = qr/TypeError:[ ]/smx
+          . qr/startNode[.]getElementsByTagName[ ]is[ ]not[ ]a[ ]function/smx;
+        my $not_supported_re =
+          qr/NotSupportedError:[ ]Operation[ ]is[ ]not[ ]supported/smx;
+        my $type_error_class_re = qr/TypeError:[ ]/smx
+          . qr/startNode[.]getElementsByClassName[ ]is[ ]not[ ]a[ ]function/smx;
+        if ( $EVAL_ERROR =~ /^$invalid_selector_re$type_error_tag_re/smx ) {
+            $parameters->{using} = 'css selector';
+            $response =
+              $self->_retry_find_response( $command, $parameters, $options );
+        }
+        elsif ( $EVAL_ERROR =~ /^$invalid_selector_re$not_supported_re/smx ) {
+            $parameters->{using} = 'css selector';
+            $parameters->{value} = q{[name="} . $parameters->{value} . q["];
+            $response =
+              $self->_retry_find_response( $command, $parameters, $options );
+        }
+        elsif ( $EVAL_ERROR =~ /^$invalid_selector_re$type_error_class_re/smx )
+        {
+            $parameters->{using} = 'css selector';
+            $parameters->{value} = q[.] . $parameters->{value};
+            $response =
+              $self->_retry_find_response( $command, $parameters, $options );
+        }
+        else {
+            Carp::croak($EVAL_ERROR);
+        }
+    };
+    return $response;
+}
+
+sub _find {
+    my ( $self, $value, $using, $from, $options ) = @_;
+    $using ||= 'xpath';
+    $options->{want_array} = wantarray;
     my $response =
-      $self->_get_response( $message_id, { using => $using, value => $value },
-        $options );
+      $self->_get_and_retry_find_response( $value, $using, $from, $options );
     if (wantarray) {
         if ( $response->ignored_exception() ) {
             return ();
@@ -12930,6 +13002,8 @@ accepts an L<element|Firefox::Marionette::Element> as a parameter and returns it
         warn $element->tag_name();
     }
 
+See the L<FINDING ELEMENTS IN A SHADOW DOM|/FINDING-ELEMENTS-IN-A-SHADOW-DOM> section for how to delve into a L<shadow DOM|https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>.
+
 =head2 shadowy
 
 accepts an L<element|Firefox::Marionette::Element> as a parameter and returns true if the element has a L<ShadowRoot|https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot> or false otherwise.
@@ -13249,6 +13323,23 @@ With all those conditions being met, L<WebGL|https://en.wikipedia.org/wiki/WebGL
     } else {
         die "WebGL is not supported";
     }
+
+=head1 FINDING ELEMENTS IN A SHADOW DOM
+
+One aspect of L<Web Components|https://developer.mozilla.org/en-US/docs/Web/API/Web_components> is the L<shadow DOM|https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>.  When you need to explore the structure of a L<custom element|https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements>, you need to access it via the shadow DOM.  The following is an example of navigating the shadow DOM via a html file included in the test suite of this package.
+
+    use Firefox::Marionette();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new();
+    my $firefox_marionette_directory = Cwd::cwd();
+    $firefox->go("file://$firefox_marionette_directory/t/data/elements.html");
+
+    my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
+
+    my $outer_div = $firefox->find_id('outer-div', $shadow_root);
+
+So, this module is designed to allow you to navigate the shadow DOM using normal find methods, but you must get the shadow element's shadow root and use that as the root for the search into the shadow DOM.  An important caveat is that LL<xpath|https://bugzilla.mozilla.org/show_bug.cgi?id=1822311> and L<tag name|https://bugzilla.mozilla.org/show_bug.cgi?id=1822321> strategies do not officially work yet (and also the class name and name strategies).  This module works around the tag name, class name and name deficiencies by using the matching L<css selector|/find_selector> search if the original search throws a recognisable exception.  Therefore these cases may be considered to be extremely experimental and subject to change when Firefox gets the "correct" functionality.
 
 =head1 WEBSITES THAT BLOCK AUTOMATION
 
