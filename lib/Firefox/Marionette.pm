@@ -12440,7 +12440,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * capabilities - use the supplied L<capabilities|Firefox::Marionette::Capabilities> object, for example to set whether the browser should L<accept insecure certs|Firefox::Marionette::Capabilities#accept_insecure_certs> or whether the browser should use a L<proxy|Firefox::Marionette::Proxy>.
 
-=item * chatty - Firefox is extremely chatty on the network, including checking for the lastest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, L<connections to firefox.settings.services.mozilla.com will still be made|https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via L</etc/hosts|https://en.wikipedia.org/wiki//etc/hosts>.  NOTE: that this option only works when profile_name/profile is not specified.
+=item * chatty - Firefox is extremely chatty on the network, including checking for the latest malware/phishing sites, updates to firefox/etc.  This option is therefore off ("0") by default, however, it can be switched on ("1") if required.  Even with chatty switched off, L<connections to firefox.settings.services.mozilla.com will still be made|https://bugzilla.mozilla.org/show_bug.cgi?id=1598562#c13>.  The only way to prevent this seems to be to set firefox.settings.services.mozilla.com to 127.0.0.1 via L</etc/hosts|https://en.wikipedia.org/wiki//etc/hosts>.  NOTE: that this option only works when profile_name/profile is not specified.
 
 =item * console - show the L<browser console|https://developer.mozilla.org/en-US/docs/Tools/Browser_Console/> when the browser is launched.  This defaults to "0" (off).  See L<CONSOLE LOGGING|/CONSOLE-LOGGING> for a discussion of how to send log messages to the console.
 
@@ -13018,7 +13018,7 @@ accepts an L<element|Firefox::Marionette::Element> as the first parameter and a 
 
 =head2 uname
 
-returns the $^O ($OSNAME) compatible string to describe the plaform where firefox is running.
+returns the $^O ($OSNAME) compatible string to describe the platform where firefox is running.
 
 =head2 update
 

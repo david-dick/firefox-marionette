@@ -1721,7 +1721,7 @@ SUBROUTINES/METHODS
       browser should use a proxy.
 
       * chatty - Firefox is extremely chatty on the network, including
-      checking for the lastest malware/phishing sites, updates to
+      checking for the latest malware/phishing sites, updates to
       firefox/etc. This option is therefore off ("0") by default, however,
       it can be switched on ("1") if required. Even with chatty switched
       off, connections to firefox.settings.services.mozilla.com will still
@@ -2541,7 +2541,7 @@ SUBROUTINES/METHODS
 
  uname
 
-    returns the $^O ($OSNAME) compatible string to describe the plaform
+    returns the $^O ($OSNAME) compatible string to describe the platform
     where firefox is running.
 
  update
