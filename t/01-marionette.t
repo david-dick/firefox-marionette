@@ -1524,10 +1524,16 @@ SKIP: {
 			if ($major_version >= 113) {
 				ok($firefox->find_id('outer-div', $shadow_root)->attribute('title') eq 'In the Shadow Realms', "Correctly found shadow element with find_id");
 				my $shadow_count = 0;
-				foreach my $span ($firefox->find_tag('span', $shadow_root)) {
+				foreach my $span ($firefox->has_tag('span', $shadow_root)) {
 					ok($span->tag_name() eq 'span', "Correctly found shadow span with find_tag");
+					$shadow_count += 1;
 				}
-				ok($count == 2, "There are 2 span elements in the custom-square element");
+				ok($shadow_count == 2, "There are 2 span elements in the custom-square element");
+				$shadow_count = 0;
+				foreach my $span ($firefox->has_tag('notag', $shadow_root)) {
+					$shadow_count += 1;
+				}
+				ok($shadow_count == 0, "There are 0 notag elements in the custom-square element");
 				ok($firefox->find_name('meta-name', $shadow_root)->attribute('title') eq 'Very META', "Correctly found shadow element with find_name");
 				ok($firefox->find_class('outer-div-class', $shadow_root)->attribute('title') eq 'In the Shadow Realms', "Correctly found shadow element with find_class");
 				ok($firefox->find_link('MetaCPAN', $shadow_root)->attribute('href') eq 'https://metacpan.org', "Correctly found shadow element with find_link");
