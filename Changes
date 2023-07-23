@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.41  Sun Jul 23 17:12 2023
+       Adding support for finding elements in a shadow DOM
+
 1.40  Wed Jul 19 04:14 2023
        Documentation and test suite fixes
 
