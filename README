@@ -2875,7 +2875,7 @@ FINDING ELEMENTS IN A SHADOW DOM
     So, this module is designed to allow you to navigate the shadow DOM
     using normal find methods, but you must get the shadow element's shadow
     root and use that as the root for the search into the shadow DOM. An
-    important caveat is that Lxpath
+    important caveat is that xpath
     <https://bugzilla.mozilla.org/show_bug.cgi?id=1822311> and tag name
     <https://bugzilla.mozilla.org/show_bug.cgi?id=1822321> strategies do
     not officially work yet (and also the class name and name strategies).

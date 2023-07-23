@@ -13339,7 +13339,7 @@ One aspect of L<Web Components|https://developer.mozilla.org/en-US/docs/Web/API/
 
     my $outer_div = $firefox->find_id('outer-div', $shadow_root);
 
-So, this module is designed to allow you to navigate the shadow DOM using normal find methods, but you must get the shadow element's shadow root and use that as the root for the search into the shadow DOM.  An important caveat is that LL<xpath|https://bugzilla.mozilla.org/show_bug.cgi?id=1822311> and L<tag name|https://bugzilla.mozilla.org/show_bug.cgi?id=1822321> strategies do not officially work yet (and also the class name and name strategies).  This module works around the tag name, class name and name deficiencies by using the matching L<css selector|/find_selector> search if the original search throws a recognisable exception.  Therefore these cases may be considered to be extremely experimental and subject to change when Firefox gets the "correct" functionality.
+So, this module is designed to allow you to navigate the shadow DOM using normal find methods, but you must get the shadow element's shadow root and use that as the root for the search into the shadow DOM.  An important caveat is that L<xpath|https://bugzilla.mozilla.org/show_bug.cgi?id=1822311> and L<tag name|https://bugzilla.mozilla.org/show_bug.cgi?id=1822321> strategies do not officially work yet (and also the class name and name strategies).  This module works around the tag name, class name and name deficiencies by using the matching L<css selector|/find_selector> search if the original search throws a recognisable exception.  Therefore these cases may be considered to be extremely experimental and subject to change when Firefox gets the "correct" functionality.
 
 =head1 WEBSITES THAT BLOCK AUTOMATION
 
