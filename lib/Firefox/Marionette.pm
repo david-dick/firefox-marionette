@@ -2192,7 +2192,6 @@ if (loginManager.initializationPromise) {
   return (async function(aLoginInfo, metaInfo) {
     await loginManager.initializationPromise;
     if (loginManager.addLoginAsync) {
-      const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm");
       let rLoginInfo = await loginManager.addLoginAsync(aLoginInfo);
       updateMeta(rLoginInfo, metaInfo);
       return rLoginInfo;
