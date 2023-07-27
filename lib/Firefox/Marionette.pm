@@ -13348,7 +13348,7 @@ At the very least, under these circumstances, it would be a good idea to be awar
 
 =head1 X11 FORWARDING WITH FIREFOX
 
-This is an experimental addition to this module.  L<X11 Forwarding|https://man.openbsd.org/ssh#X> allows you to launch a L<remote firefox via ssh|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
+L<X11 Forwarding|https://man.openbsd.org/ssh#X> allows you to launch a L<remote firefox via ssh|Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
 
     use Firefox::Marionette();
 

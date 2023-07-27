@@ -2906,10 +2906,9 @@ WEBSITES THAT BLOCK AUTOMATION
 
 X11 FORWARDING WITH FIREFOX
 
-    This is an experimental addition to this module. X11 Forwarding
-    <https://man.openbsd.org/ssh#X> allows you to launch a remote firefox
-    via ssh and have it visually appear in your local X11 desktop. This can
-    be accomplished with the following code;
+    X11 Forwarding <https://man.openbsd.org/ssh#X> allows you to launch a
+    remote firefox via ssh and have it visually appear in your local X11
+    desktop. This can be accomplished with the following code;
 
         use Firefox::Marionette();
     

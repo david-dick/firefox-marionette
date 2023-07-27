@@ -2108,7 +2108,7 @@ At the very least, under these circumstances, it would be a good idea to be awar
 
 # X11 FORWARDING WITH FIREFOX
 
-This is an experimental addition to this module.  [X11 Forwarding](https://man.openbsd.org/ssh#X) allows you to launch a [remote firefox via ssh](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH) and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
+[X11 Forwarding](https://man.openbsd.org/ssh#X) allows you to launch a [remote firefox via ssh](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH) and have it visually appear in your local X11 desktop.  This can be accomplished with the following code;
 
     use Firefox::Marionette();
 
