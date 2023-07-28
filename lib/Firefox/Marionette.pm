@@ -799,6 +799,9 @@ sub _init {
         else {
             $parameters{user} ||= getpwuid $EFFECTIVE_USER_ID;
         }
+        if ( $parameters{host} =~ s/:(\d+)$//smx ) {
+            $parameters{port} = $1;
+        }
         $parameters{port} ||= scalar getservbyname 'ssh', 'tcp';
         $self->_setup_ssh(
             $parameters{host}, $parameters{port},
