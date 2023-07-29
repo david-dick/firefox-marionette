@@ -3278,7 +3278,7 @@ sub _read_certificates_from_disk {
     my ( $self, $trust ) = @_;
     my @certificates;
     if ($trust) {
-        if ( ref $trust ) {
+        if ( ref $trust eq 'ARRAY' ) {
             foreach my $path ( @{$trust} ) {
                 my $certificate = $self->_read_certificate_from_disk($path);
                 push @certificates, $certificate;
