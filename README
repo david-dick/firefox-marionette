@@ -1769,10 +1769,10 @@ SUBROUTINES/METHODS
 
       * host - use ssh <https://man.openbsd.org/ssh.1> to create and
       automate firefox on the specified host. See REMOTE AUTOMATION OF
-      FIREFOX VIA SSH. The user will default to the current user name (see
-      the user parameter to change this). Authentication should be via
-      public keys loaded into the local ssh-agent
-      <https://man.openbsd.org/ssh-agent>.
+      FIREFOX VIA SSH and NETWORK ARCHITECTURE. The user will default to
+      the current user name (see the user parameter to change this).
+      Authentication should be via public keys loaded into the local
+      ssh-agent <https://man.openbsd.org/ssh-agent>.
 
       * implicit - a shortcut to allow directly providing the implicit
       timeout, instead of needing to use timeouts from the capabilities
@@ -1796,7 +1796,8 @@ SUBROUTINES/METHODS
 
       * port - if the "host" parameter is also set, use ssh
       <https://man.openbsd.org/ssh.1> to create and automate firefox via
-      the specified port. See REMOTE AUTOMATION OF FIREFOX VIA SSH.
+      the specified port. See REMOTE AUTOMATION OF FIREFOX VIA SSH and
+      NETWORK ARCHITECTURE.
 
       * page_load - a shortcut to allow directly providing the page_load
       timeout, instead of needing to use timeouts from the capabilities
@@ -1859,10 +1860,10 @@ SUBROUTINES/METHODS
 
       * user - if the "host" parameter is also set, use ssh
       <https://man.openbsd.org/ssh.1> to create and automate firefox with
-      the specified user. See REMOTE AUTOMATION OF FIREFOX VIA SSH. The
-      user will default to the current user name. Authentication should be
-      via public keys loaded into the local ssh-agent
-      <https://man.openbsd.org/ssh-agent>.
+      the specified user. See REMOTE AUTOMATION OF FIREFOX VIA SSH and
+      NETWORK ARCHITECTURE. The user will default to the current user name.
+      Authentication should be via public keys loaded into the local
+      ssh-agent <https://man.openbsd.org/ssh-agent>.
 
       * via - specifies a proxy jump box
       <https://man.openbsd.org/ssh_config#ProxyJump> to be used to connect
@@ -2688,6 +2689,35 @@ SUBROUTINES/METHODS
     returns the value for the XAUTHORITY environment variable if one has
     been generated for the xvfb environment
 
+NETWORK ARCHITECTURE
+
+    This module allows for a complicated network architecture, including
+    SSH and HTTP proxies.
+
+      my $firefox = Firefox::Marionette->new(
+                      host  => 'Firefox.runs.here'
+                      via   => 'SSH.Jump.Box',
+                      trust => '/path/to/ca-for-squid-proxy-server.crt',
+                      proxy => 'https://Squid.Proxy.Server:3128'
+                         )->go('https://Target.Web.Site');
+
+    produces the following effect, with an ascii box representing a
+    separate network node.
+
+         ---------          ----------         -----------
+         | Perl  |  SSH     | SSH    |  SSH    | Firefox |
+         | runs  |--------->| Jump   |-------->| runs    |
+         | here  |          | Box    |         | here    |
+         ---------          ----------         -----------
+                                                    |
+         ----------          ----------             |
+         | Target |  HTTPS   | Squid  |    TLS      |
+         | Web    |<---------| Proxy  |<-------------
+         | Site   |          | Server |
+         ----------          ----------
+
+    See the REMOTE AUTOMATION OF FIREFOX VIA SSH section for more options.
+
 AUTOMATING THE FIREFOX PASSWORD MANAGER
 
     This module allows you to login to a website without ever directly
@@ -2820,6 +2850,9 @@ REMOTE AUTOMATION OF FIREFOX VIA SSH
     <https://github.com/Microsoft/vscode-remote-release/issues/96> and
     therefore this type of automation is still possible, but slower than
     other client platforms.
+
+    The NETWORK ARCHITECTURE section has an example of a more complicated
+    network design.
 
 WEBGL
 

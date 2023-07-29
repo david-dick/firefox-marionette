@@ -1369,26 +1369,26 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - devtools - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.
 - height - set the [height](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
 - har - begin the session with the [devtools](https://developer.mozilla.org/en-US/docs/Tools) window opened in a separate window.  The [HAR Export Trigger](https://addons.mozilla.org/en-US/firefox/addon/har-export-trigger/) addon will be loaded into the new session automatically, which means that [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) will not be activated for this session AND this functionality will only be available for Firefox 61+.
-- host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name (see the user parameter to change this).  Authentication should be via public keys loaded into the local [ssh-agent](https://man.openbsd.org/ssh-agent).
+- host - use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox on the specified host.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) and [NETWORK ARCHITECTURE](#network-architecture).  The user will default to the current user name (see the user parameter to change this).  Authentication should be via public keys loaded into the local [ssh-agent](https://man.openbsd.org/ssh-agent).
 - implicit - a shortcut to allow directly providing the [implicit](https://metacpan.org/pod/Firefox::Marionette::Timeout#implicit) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - index - a parameter to allow the user to specify a specific firefox instance to survive and reconnect to.  It does not do anything else at the moment.  See the survive parameter.
 - kiosk - start the browser in [kiosk](https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode) mode.
 - mime\_types - any MIME types that Firefox will encounter during this session.  MIME types that are not specified will result in a hung browser (the File Download popup will appear).
 - nightly - only allow a [nightly release](https://www.mozilla.org/en-US/firefox/channel/desktop/#nightly) to be launched.  This defaults to "0" (off).
-- port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox via the specified port.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).
+- port - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox via the specified port.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) and [NETWORK ARCHITECTURE](#network-architecture).
 - page\_load - a shortcut to allow directly providing the [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - profile - create a new profile based on the supplied [profile](https://metacpan.org/pod/Firefox::Marionette::Profile).  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the [set\_pref](https://metacpan.org/pod/Firefox::Marionette#set_pref) and [clear\_pref](https://metacpan.org/pod/Firefox::Marionette#clear_pref) methods to make changes while firefox is running.
 - profile\_name - pick a specific existing profile to automate, rather than creating a new profile.  [Firefox](https://firefox.com) refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the [Firefox::Marionette::Profile::names()](https://metacpan.org/pod/Firefox::Marionette::Profile#names) method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the [set\_pref](https://metacpan.org/pod/Firefox::Marionette#set_pref) and [clear\_pref](https://metacpan.org/pod/Firefox::Marionette#clear_pref) methods to make changes while firefox is running.
 - proxy - this is a shortcut method for setting a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy) using the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) parameter above.  It accepts a proxy URL.
 - reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
-- scp - force the scp protocol when transferring files to remote hosts via ssh. See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH) and the --scp-only option in the [ssh-auth-cmd-marionette](https://metacpan.org/pod/ssh-auth-cmd-marionette) script in this distribution.
+- scp - force the scp protocol when transferring files to remote hosts via ssh. See [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) and the --scp-only option in the [ssh-auth-cmd-marionette](https://metacpan.org/pod/ssh-auth-cmd-marionette) script in this distribution.
 - script - a shortcut to allow directly providing the [script](https://metacpan.org/pod/Firefox::Marionette::Timeout#script) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - seer - this option is switched off "0" by default.  When it is switched on "1", it will activate the various speculative and pre-fetch options for firefox.  NOTE: that this option only works when profile\_name/profile is not specified.
 - sleep\_time\_in\_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the [await](https://metacpan.org/pod/Firefox::Marionette#await) or [bye](https://metacpan.org/pod/Firefox::Marionette#bye) methods.  This defaults to "1" millisecond.
 - survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 - trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) encoded as a [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5) that will be trusted for this session.
 - timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
-- user - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](https://metacpan.org/pod/Firefox::Marionette#REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH).  The user will default to the current user name.  Authentication should be via public keys loaded into the local [ssh-agent](https://man.openbsd.org/ssh-agent).
+- user - if the "host" parameter is also set, use [ssh](https://man.openbsd.org/ssh.1) to create and automate firefox with the specified user.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) and [NETWORK ARCHITECTURE](#network-architecture).  The user will default to the current user name.  Authentication should be via public keys loaded into the local [ssh-agent](https://man.openbsd.org/ssh-agent).
 - via - specifies a [proxy jump box](https://man.openbsd.org/ssh_config#ProxyJump) to be used to connect to a remote host.  See the host parameter.
 - visible - should firefox be visible on the desktop.  This defaults to "0".  When moving from a X11 platform to another X11 platform, you can set visible to 'local' to enable [X11 forwarding](https://man.openbsd.org/ssh#X).  See [X11 FORWARDING WITH FIREFOX](https://metacpan.org/pod/Firefox::Marionette#X11-FORWARDING-WITH-FIREFOX).
 - waterfox - only allow a binary that looks like a [waterfox version](https://www.waterfox.net/) to be launched.
@@ -1967,6 +1967,33 @@ returns the value for the DISPLAY environment variable if one has been generated
 
 returns the value for the XAUTHORITY environment variable if one has been generated for the xvfb environment
 
+# NETWORK ARCHITECTURE
+
+This module allows for a complicated network architecture, including SSH and HTTP proxies.
+
+    my $firefox = Firefox::Marionette->new(
+                    host  => 'Firefox.runs.here'
+                    via   => 'SSH.Jump.Box',
+                    trust => '/path/to/ca-for-squid-proxy-server.crt',
+                    proxy => 'https://Squid.Proxy.Server:3128'
+                       )->go('https://Target.Web.Site');
+
+produces the following effect, with an ascii box representing a separate network node.
+
+     ---------          ----------         -----------
+     | Perl  |  SSH     | SSH    |  SSH    | Firefox |
+     | runs  |--------->| Jump   |-------->| runs    |
+     | here  |          | Box    |         | here    |
+     ---------          ----------         -----------
+                                                |
+     ----------          ----------             |
+     | Target |  HTTPS   | Squid  |    TLS      |
+     | Web    |<---------| Proxy  |<-------------
+     | Site   |          | Server |
+     ----------          ----------
+
+See the [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) section for more options.
+
 # AUTOMATING THE FIREFOX PASSWORD MANAGER
 
 This module allows you to login to a website without ever directly handling usernames and password details.  The Password Manager may be preloaded with appropriate passwords and locked, like so;
@@ -2064,6 +2091,8 @@ When using ssh, Firefox::Marionette will attempt to pass the [TMPDIR](https://en
     AcceptEnv TMPDIR
 
 This module uses [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaster) functionality when using [ssh](https://man.openbsd.org/ssh), for a useful speedup of executing remote commands.  Unfortunately, when using ssh to move from a [cygwin](https://gcc.gnu.org/wiki/SSH_connection_caching), [Windows 10 or Windows Server 2019](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse) node to a remote environment, we cannot use [ControlMaster](https://man.openbsd.org/ssh_config#ControlMaster), because at this time, Windows [does not support ControlMaster](https://github.com/Microsoft/vscode-remote-release/issues/96) and therefore this type of automation is still possible, but slower than other client platforms.
+
+The [NETWORK ARCHITECTURE](#network-architecture) section has an example of a more complicated network design.
 
 # WEBGL
 
