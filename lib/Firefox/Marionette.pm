@@ -9775,6 +9775,16 @@ sub quit {
         } or do {
             warn "Caught an exception while quitting:$EVAL_ERROR\n";
         };
+        eval {
+            if ( $self->_ssh() ) {
+                $self->_cleanup_remote_filesystem();
+                $self->_terminate_master_control_via_ssh();
+            }
+            $self->_cleanup_local_filesystem();
+            delete $self->{creation_pid};
+        } or do {
+            warn "Caught an exception while cleaning up:$EVAL_ERROR\n";
+        };
         $self->_terminate_process();
     }
     else {
@@ -11056,11 +11066,6 @@ sub DESTROY {
         }
         else {
             $self->quit();
-            if ( $self->_ssh() ) {
-                $self->_cleanup_remote_filesystem();
-                $self->_terminate_master_control_via_ssh();
-            }
-            $self->_cleanup_local_filesystem();
         }
     }
     return;
