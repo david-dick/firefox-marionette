@@ -4707,6 +4707,64 @@ SKIP: {
 }
 
 SKIP: {
+	diag("Starting new firefox for shortcut TLS proxy servers");
+	my $proxyPort = empty_port();
+	my $proxy_host = 'localhost:' . $proxyPort;
+	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, page_load_strategy => 'none', proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), proxy => "https://$proxy_host");
+	if (!$skip_message) {
+		$at_least_one_success = 1;
+	}
+	if ($skip_message) {
+		skip($skip_message, 5);
+	}
+	ok($firefox, "Firefox has started in Marionette mode with visible set to 0");
+	my $capabilities = $firefox->capabilities();
+	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
+	SKIP: {
+		if (!grep /^page_load_strategy$/, $capabilities->enumerate()) {
+			diag("\$capabilities->page_load_strategy is not supported for " . $capabilities->browser_version());
+			skip("\$capabilities->page_load_strategy is not supported for " . $capabilities->browser_version(), 1);
+		}
+		ok($capabilities->page_load_strategy() eq 'none', "\$capabilities->page_load_strategy() is 'none'");
+	}
+	SKIP: {
+		if (!$capabilities->proxy()) {
+			diag("\$capabilities->proxy is not supported for " . $capabilities->browser_version());
+			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
+		}
+		ok($capabilities->proxy()->type() eq 'pac', "\$capabilities->proxy()->type() is 'pac'");
+		ok($capabilities->proxy()->pac() =~ /^data:text\/plain,function(?:[ ]|%20)FindProxyForURL[(][)](?:[{]|%7B)return(?:[ ]|%20)(?:"|%22)HTTPS(?:[ ]|%20)$proxy_host(?:"|%22)(?:[}]|%7D)$/smx, qq[\$capabilities->proxy()->pac() is 'data:text/plain,function FindProxyForURL(){return "HTTPS $proxy_host"}':] . $capabilities->proxy()->pac());
+	}
+	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+}
+
+SKIP: {
+	diag("Starting new firefox for shortcut normal proxy servers");
+	my $proxyPort = empty_port();
+	my $proxy_host = 'localhost:' . $proxyPort;
+	($skip_message, $firefox) = start_firefox(0, proxy => URI::URL->new("http://$proxy_host"));
+	if (!$skip_message) {
+		$at_least_one_success = 1;
+	}
+	if ($skip_message) {
+		skip($skip_message, 5);
+	}
+	ok($firefox, "Firefox has started in Marionette mode with visible set to 0");
+	my $capabilities = $firefox->capabilities();
+	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
+	SKIP: {
+		if (!$capabilities->proxy()) {
+			diag("\$capabilities->proxy is not supported for " . $capabilities->browser_version());
+			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 4);
+		}
+		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
+		ok($capabilities->proxy()->http() eq $proxy_host, "\$capabilities->proxy()->http() is '$proxy_host':" . $capabilities->proxy()->http());
+		ok($capabilities->proxy()->https() eq $proxy_host, "\$capabilities->proxy()->https() is '$proxy_host'");
+	}
+	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+}
+
+SKIP: {
 	if (($^O eq 'cygwin') ||
 		($^O eq 'darwin') ||
 		($^O eq 'MSWin32'))

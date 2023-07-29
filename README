@@ -1816,6 +1816,9 @@ SUBROUTINES/METHODS
       instead, use the set_pref and clear_pref methods to make changes
       while firefox is running.
 
+      * proxy - this is a shortcut method for setting a proxy using the
+      capabilities parameter above. It accepts a proxy URL.
+
       * reconnect - an experimental parameter to allow a reconnection to
       firefox that a connection has been discontinued. See the survive
       parameter.

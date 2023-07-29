@@ -3292,6 +3292,22 @@ sub _read_certificates_from_disk {
     return @certificates;
 }
 
+sub _setup_shortcut_proxy {
+    my ( $self, $proxy_parameter, $capabilities ) = @_;
+    my $proxy_uri = URI::URL->new($proxy_parameter);
+    my $firefox_proxy;
+    if ( $proxy_uri->scheme() eq 'https' ) {
+        $firefox_proxy =
+          Firefox::Marionette::Proxy->new( tls => $proxy_uri->host_port() );
+    }
+    else {
+        $firefox_proxy =
+          Firefox::Marionette::Proxy->new( host => $proxy_uri->host_port() );
+    }
+    $capabilities->{proxy} = $firefox_proxy;
+    return $capabilities;
+}
+
 sub _launch_and_connect {
     my ( $self, %parameters ) = @_;
     my ( $session_id, $capabilities );
@@ -3306,6 +3322,13 @@ sub _launch_and_connect {
         $self->_import_profile_paths(%parameters);
         $self->_launch(@arguments);
         my $socket = $self->_setup_local_connection_to_firefox(@arguments);
+        if ( my $proxy_parameter = delete $parameters{proxy} ) {
+            $parameters{capabilities} ||=
+              Firefox::Marionette::Capabilities->new();
+            $parameters{capabilities} =
+              $self->_setup_shortcut_proxy( $proxy_parameter,
+                $parameters{capabilities} );
+        }
         ( $session_id, $capabilities ) =
           $self->_initial_socket_setup( $socket, $parameters{capabilities} );
         foreach my $certificate (@certificates) {
@@ -12552,6 +12575,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * profile - create a new profile based on the supplied L<profile|Firefox::Marionette::Profile>.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|Firefox::Marionette#set_pref> and L<clear_pref|Firefox::Marionette#clear_pref> methods to make changes while firefox is running.
 
 =item * profile_name - pick a specific existing profile to automate, rather than creating a new profile.  L<Firefox|https://firefox.com> refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the L<Firefox::Marionette::Profile::names()|Firefox::Marionette::Profile#names> method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|Firefox::Marionette#set_pref> and L<clear_pref|Firefox::Marionette#clear_pref> methods to make changes while firefox is running.
+
+=item * proxy - this is a shortcut method for setting a L<proxy|Firefox::Marionette::Proxy> using the L<capabilities|Firefox::Marionette::Capabilities> parameter above.  It accepts a proxy URL.
 
 =item * reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
 
