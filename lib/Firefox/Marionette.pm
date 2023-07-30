@@ -6958,7 +6958,8 @@ sub _ssh_client_version {
             )
           )
         {
-            if ( $line =~ /^OpenSSH(?:_for_Windows)?_(\d+[.]\d+(?:p\d+)),/smx )
+            if ( $line =~
+                /^OpenSSH(?:_for_Windows)?_(\d+[.]\d+(?:p\d+))[ ,]/smx )
             {
                 ( $self->{$key} ) = ($1);
             }
