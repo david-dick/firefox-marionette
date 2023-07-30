@@ -98,7 +98,7 @@ accepts a hash of HTTP headers to include in every future HTTP Request.
     $firefox->add_header( 'Track-my-automated-tests' => $uuid );
     $firefox->go('https://metacpan.org/');
 
-these headers are added to any existing headers.  To clear headers, see the [delete\_header](#delete_headers) method
+these headers are added to any existing headers.  To clear headers, see the [delete\_header](#delete_header) method
 
     use Firefox::Marionette();
 
