@@ -160,7 +160,7 @@ accepts a host name and a hash of HTTP headers to include in every future HTTP R
     $firefox->add_site_header( 'metacpan.org', 'Track-my-automated-tests' => $uuid );
     $firefox->go('https://metacpan.org/');
 
-these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the [delete\_site\_header](#delete_site_headers) method
+these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the [delete\_site\_header](#delete_site_header) method
 
 ## addons
 
