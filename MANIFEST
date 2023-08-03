@@ -72,6 +72,7 @@ t/03-read.t
 t/03-seek.t
 t/03-stat.t
 t/03-sysopen.t
+t/04-proxy.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
@@ -80,5 +81,6 @@ t/addons/discogs-search/manifest.json
 t/addons/discogs-search/README.md
 t/stub.pl
 t/syscall_tests.pm
+t/test_daemons.pm
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

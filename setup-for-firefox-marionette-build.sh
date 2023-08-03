@@ -15,6 +15,8 @@ case $OSNAME in
 						firefox \
 						make \
 						mesa-dri-drivers \
+						nginx \
+						openssl \
 						perl-Archive-Zip \
 						perl-Config-INI \
 						perl-Crypt-URandom \
@@ -34,6 +36,7 @@ case $OSNAME in
 						perl-TermReadKey \
 						perl-Test-Simple \
 						perl-XML-Parser \
+						squid \
 						xorg-x11-server-Xvfb
 		fi
 		if [ -e "/etc/debian_version" ]
@@ -81,6 +84,9 @@ case $OSNAME in
 						liburi-perl \
 						libxml-parser-perl \
 						make \
+                                                nginx \
+                                                openssh-server \
+                                                squid \
 						xvfb
 		fi
 		if [ -e "/etc/alpine-release" ]
@@ -89,6 +95,8 @@ case $OSNAME in
 				dbus-x11 \
 				firefox \
 				mesa-dri-nouveau \
+				nginx \
+				openssl \
 				perl \
 				perl-archive-zip \
 				perl-config-ini \
@@ -105,6 +113,7 @@ case $OSNAME in
 				perl-uri \
 				perl-xml-parser \
 				make \
+				squid \
 				xauth \
 				xvfb
 			if [ $? != 0 ]
@@ -129,6 +138,8 @@ _APK_REPO_
 		${SUDO}pkg install -y \
 					firefox \
 					mesa-dri-gallium \
+					nginx \
+					openssl \
 					perl5 \
 					p5-Archive-Zip \
 					p5-JSON \
@@ -144,6 +155,7 @@ _APK_REPO_
 					p5-Term-ReadKey \
 					p5-Test-Simple \
 					p5-XML-Parser \
+					squid \
 					xauth \
 					xorg-vfbserver
 		${SUDO}dbus-uuidgen --ensure=/etc/machine-id
@@ -151,6 +163,8 @@ _APK_REPO_
 	FreeBSD)
 		${SUDO}pkg install \
 					firefox \
+					nginx \
+					openssl \
 					perl5 \
 					p5-Archive-Zip \
 					p5-JSON \
@@ -166,6 +180,7 @@ _APK_REPO_
 					p5-Term-ReadKey \
 					p5-Test-Simple \
 					p5-XML-Parser \
+					squid \
 					xauth \
 					xorg-vfbserver
 		${SUDO}mount -t fdescfs fdesc /dev/fd
@@ -174,6 +189,7 @@ _APK_REPO_
 	OpenBSD)
 		${SUDO}pkg_add \
 					firefox \
+					nginx \
 					p5-Archive-Zip \
 					p5-JSON \
 					p5-Config-INI \
@@ -189,7 +205,8 @@ _APK_REPO_
 					p5-Sub-Uplevel \
 					p5-Sub-Install \
 					p5-Text-CSV_XS \
-					p5-XML-Parser
+					p5-XML-Parser \
+					squid
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Config::INI
 		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Crypt::URandom
 		;;
@@ -197,6 +214,8 @@ _APK_REPO_
 		PKG_PATH="http://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
 		${SUDO}pkg_add \
 					${PKG_PATH}firefox \
+					${PKG_PATH}nginx \
+					${PKG_PATH}openssl \
 					${PKG_PATH}p5-Archive-Zip \
 					${PKG_PATH}p5-JSON \
 					${PKG_PATH}p5-Config-INI \
@@ -212,7 +231,8 @@ _APK_REPO_
 					${PKG_PATH}p5-Sub-Uplevel \
 					${PKG_PATH}p5-Sub-Install \
 					${PKG_PATH}p5-Text-CSV_XS \
-					${PKG_PATH}p5-XML-Parser
+					${PKG_PATH}p5-XML-Parser \
+					${PKG_PATH}squid
 		if [ $? != 0 ]
 		then
 			cat <<_PKG_PATH_
