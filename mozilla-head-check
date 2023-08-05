@@ -10,7 +10,7 @@ use English qw( -no_match_vars );
 use Carp();
 use Sys::Syslog();
 
-our $VERSION = '1.42';
+our $VERSION = '1.43';
 
 MAIN: {
     my $facility = 'LOG_LOCAL0';

@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.43  Sat Aug 05 15:13 2023
+       Documentation fixes
+
 1.42  Sat Aug 05 08:34 2023
        Adding the proxy parameter to the new method
        Fixes to ssh handling
