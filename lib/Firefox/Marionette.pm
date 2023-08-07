@@ -4494,7 +4494,7 @@ sub _get_version {
     my $binary = $self->_binary();
     $self->{binary} = $binary;
     my $version_string;
-    my $version_regex = qr/(\d+)[.](\d+(?:\w\d+)?)(?:[.](\d+))*/smx;
+    my $version_regex = qr/(\d+)[.](\d+(?:\w\d+|\-\d+)?)(?:[.](\d+))*/smx;
     if ( $self->_adb() ) {
         my $package_name = $self->_initialise_adb();
         my $dumpsys =
@@ -4524,6 +4524,7 @@ sub _get_version {
         my $waterfox_regex = qr/Waterfox(?:Limited)?[ ]Waterfox[ ]/smx;
         my $browser_regex  = join q[|],
           qr/Mozilla[ ]Firefox[ ]/smx,
+          qr/LibreWolf[ ]Firefox[ ]/smx,
           $waterfox_regex,
           qr/Moonchild[ ]Productions[ ]Basilisk[ ]/smx,
           qr/Moonchild[ ]Productions[ ]Pale[ ]Moon[ ]/smx;
