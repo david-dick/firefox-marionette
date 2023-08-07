@@ -4048,8 +4048,9 @@ sub execute {
               IPC::Open3::open3( $writer, $reader, $error, $binary,
                 @arguments );
         } or do {
+            chomp $EVAL_ERROR;
             Firefox::Marionette::Exception->throw(
-                "Failed to execute '$binary':$EXTENDED_OS_ERROR");
+                "Failed to execute '$binary':$EVAL_ERROR");
         };
         my ( $result, $output );
         while ( $result = read $reader,
