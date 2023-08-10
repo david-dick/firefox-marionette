@@ -388,7 +388,13 @@ WriteMakefile(
         'HTTP::Status'    => 0,
         'IO::Socket::SSL' => 0,
         $] ge '5.010' ? ( 'PDF::API2' => 2.036 ) : (),
+        (
+            $OSNAME eq 'cygwin'
+            ? () : ( 'Test::CheckManifest' => 0.9 )
+        ),
         'Test::More' => 0,
+        'Test::Pod::Coverage' => 1.04,
+        'Test::Pod'           => 1.41,
     },
     PREREQ_PM => {
         'Archive::Zip'        => 0,
