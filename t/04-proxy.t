@@ -14,7 +14,7 @@ $SIG{TERM} = sub { die "Caught a TERM signal"; };
 
 SKIP: {
 	if (!$ENV{RELEASE_TESTING}) {
-		plan skip_all => 'RELEASE_TESTING only';
+                plan skip_all => "Author tests not required for installation";
 	}
 	if ($^O eq 'MSWin32') {
 		plan skip_all => "Cannot test in a $^O environment";
