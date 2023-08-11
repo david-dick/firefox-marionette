@@ -304,6 +304,23 @@ SUBROUTINES/METHODS
 
     just returns the string 'firefox'. Only of interest when sub-classing.
 
+ download
+
+    accepts a URI and an optional timeout in seconds (the default is 5
+    minutes) as parameters and downloads the URI in the background and
+    returns a handle to the downloaded file.
+
+        use Firefox::Marionette();
+        use v5.10;
+    
+        my $firefox = Firefox::Marionette->new();
+    
+        my $handle = $firefox->download('https://raw.githubusercontent.com/david-dick/firefox-marionette/master/t/data/keepassxs.csv');
+    
+        foreach my $line (<$handle>) {
+          print $line;
+        }
+
  bookmarks
 
     accepts either a scalar or a hash as a parameter. The scalar may by the
@@ -1112,7 +1129,8 @@ SUBROUTINES/METHODS
         $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
     When going directly to a URL that needs to be downloaded, please see
-    BUGS AND LIMITATIONS for a necessary workaround.
+    BUGS AND LIMITATIONS for a necessary workaround and the download method
+    for an alternative.
 
     This method returns itself to aid in chaining methods.
 
@@ -3206,6 +3224,8 @@ BUGS AND LIMITATIONS
             warn "$path has been downloaded";
         }
         $firefox->quit();
+
+    Also, check out the download method for an alternative.
 
  MISSING METHODS
 

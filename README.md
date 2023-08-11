@@ -228,6 +228,21 @@ accept a boolean and return the current value of the debug setting.  This allows
 
 just returns the string 'firefox'.  Only of interest when sub-classing.
 
+## download
+
+accepts a [URI](https://metacpan.org/pod/URI) and an optional timeout in seconds (the default is 5 minutes) as parameters and downloads the [URI](https://metacpan.org/pod/URI) in the background and returns a handle to the downloaded file.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $handle = $firefox->download('https://raw.githubusercontent.com/david-dick/firefox-marionette/master/t/data/keepassxs.csv');
+
+    foreach my $line (<$handle>) {
+      print $line;
+    }
+
 ## bookmarks
 
 accepts either a scalar or a hash as a parameter.  The scalar may by the title of a bookmark or the [URL](https://metacpan.org/pod/URI::URL) of the bookmark.  The hash may have the following keys;
@@ -900,7 +915,7 @@ To make the [go](#go) method return quicker, you need to set the [page load stra
     my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'eager' ));
     $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
-When going directly to a URL that needs to be downloaded, please see [BUGS AND LIMITATIONS](#downloading-using-go-method) for a necessary workaround.
+When going directly to a URL that needs to be downloaded, please see [BUGS AND LIMITATIONS](#downloading-using-go-method) for a necessary workaround and the [download](#download) method for an alternative.
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
@@ -2328,6 +2343,8 @@ When using the [go](#go) method to go directly to a URL containing a downloadabl
         warn "$path has been downloaded";
     }
     $firefox->quit();
+
+Also, check out the [download](#download) method for an alternative.
 
 ## MISSING METHODS
 

@@ -118,6 +118,7 @@ sub _ACTIVE_UPDATE_XML_FILE_NAME    { return 'active-update.xml' }
 sub _NUMBER_OF_CHARS_IN_TEMPLATE    { return 11 }
 sub _DEFAULT_ADB_PORT               { return 5555 }
 sub _SHORT_GUID_BYTES               { return 9 }
+sub _DEFAULT_DOWNLOAD_TIMEOUT       { return 300 }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -364,11 +365,54 @@ sub mime_types {
 }
 
 sub download {
-    my ( $self, $path ) = @_;
-    Carp::carp( '**** DEPRECATED - The download(' . q[$]
-          . 'path) method HAS BEEN REPLACED BY downloaded(' . q[$]
-          . 'path) ****' );
-    return $self->downloaded($path);
+    my ( $self, $url, $default_timeout ) = @_;
+    my $download_directory        = $self->_download_directory();
+    my $quoted_download_directory = quotemeta $download_directory;
+    if ( $url =~ /^$quoted_download_directory/smx ) {
+        my $path = $url;
+        Carp::carp( '**** DEPRECATED - The download(' . q[$]
+              . 'path) method HAS BEEN REPLACED BY downloaded(' . q[$]
+              . 'path) ****' );
+        return $self->downloaded($path);
+    }
+    else {
+        $default_timeout ||= _DEFAULT_DOWNLOAD_TIMEOUT();
+        $default_timeout *= _MILLISECONDS_IN_ONE_SECOND();
+        my $uri = URI->new($url);
+        my $download_name =
+          File::Temp::mktemp('firefox_marionette_download_XXXXXXXXXXX');
+        my $download_path =
+          File::Spec->catfile( $download_directory, $download_name );
+        my $timeouts = $self->timeouts();
+        $self->chrome()->timeouts(
+            Firefox::Marionette::Timeouts->new(
+                script    => $default_timeout,
+                implicit  => $timeouts->implicit(),
+                page_load => $timeouts->page_load()
+            )
+        );
+        my $original_script = $timeouts->script();
+        my $result =
+          $self->script(
+            <<'_SCRIPT_', args => [ $uri->as_string(), $download_path ] );
+let { Downloads } = ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
+return Downloads.fetch({ url: arguments[0] }, { path: arguments[1] });
+_SCRIPT_
+        $self->timeouts($timeouts);
+        $self->content();
+        my $handle;
+
+        while ( !$handle ) {
+            foreach
+              my $downloaded_path ( $self->downloads($download_directory) )
+            {
+                if ( $downloaded_path eq $download_path ) {
+                    $handle = $self->downloaded($downloaded_path);
+                }
+            }
+        }
+        return $handle;
+    }
 }
 
 sub downloaded {
@@ -463,8 +507,9 @@ sub downloading {
 }
 
 sub downloads {
-    my ($self) = @_;
-    return $self->_directory_listing( {}, $self->_download_directory() );
+    my ( $self, $download_directory ) = @_;
+    $download_directory ||= $self->_download_directory();
+    return $self->_directory_listing( {}, $download_directory );
 }
 
 sub _setup_adb {
@@ -11363,6 +11408,21 @@ accept a boolean and return the current value of the debug setting.  This allows
 
 just returns the string 'firefox'.  Only of interest when sub-classing.
 
+=head2 download
+
+accepts a L<URI|URI> and an optional timeout in seconds (the default is 5 minutes) as parameters and downloads the L<URI|URI> in the background and returns a handle to the downloaded file.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+
+    my $handle = $firefox->download('https://raw.githubusercontent.com/david-dick/firefox-marionette/master/t/data/keepassxs.csv');
+
+    foreach my $line (<$handle>) {
+      print $line;
+    }
+
 =head2 bookmarks
 
 accepts either a scalar or a hash as a parameter.  The scalar may by the title of a bookmark or the L<URL|URI::URL> of the bookmark.  The hash may have the following keys;
@@ -12040,7 +12100,7 @@ To make the L<go|/go> method return quicker, you need to set the L<page load str
     my $firefox = Firefox::Marionette->new( capabilities => Firefox::Marionette::Capabilities->new( page_load_strategy => 'eager' ));
     $firefox->go('https://metacpan.org/'); # will return once the main document has been loaded and parsed, but BEFORE sub-resources (images/stylesheets/frames) have been loaded.
 
-When going directly to a URL that needs to be downloaded, please see L<BUGS AND LIMITATIONS|/DOWNLOADING-USING-GO-METHOD> for a necessary workaround.
+When going directly to a URL that needs to be downloaded, please see L<BUGS AND LIMITATIONS|/DOWNLOADING-USING-GO-METHOD> for a necessary workaround and the L<download|/download> method for an alternative.
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
@@ -13628,6 +13688,8 @@ When using the L<go|/go> method to go directly to a URL containing a downloadabl
         warn "$path has been downloaded";
     }
     $firefox->quit();
+
+Also, check out the L<download|/download> method for an alternative.
 
 =head2 MISSING METHODS
 
