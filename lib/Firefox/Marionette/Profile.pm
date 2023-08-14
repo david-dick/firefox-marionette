@@ -228,6 +228,7 @@ sub new {
     $profile->set_value( 'network.proxy.socks_remote_dns',        'true',  0 );
     $profile->set_value( 'security.osclientcerts.autoload',       'true',  0 );
     $profile->set_value( 'signon.autofillForms',                  'false', 0 );
+    $profile->set_value( 'signon.autologin.proxy',                'true',  0 );
     $profile->set_value( 'signon.rememberSignons',                'false', 0 );
     $profile->set_value( 'startup.homepage_welcome_url', 'about:blank',    1 );
     $profile->set_value( 'startup.homepage_welcome_url.additional',
