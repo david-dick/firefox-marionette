@@ -263,7 +263,14 @@ _PKG_PATH_
 		do
 			PACKAGE_LIST="$PACKAGE_LIST,$PACKAGE"
 		done
-		SETUP_EXE=`find /cygdrive -name 'setup-x86_64.exe' -exec grep -ail 'Cygwin installation tool' {} \;`
+		GUESS_EXE=`cygpath -u $USERPROFILE`/Downloads/setup-x86_64.exe
+		grep -ail 'Cygwin installation tool' $GUESS_EXE
+		if [ $? == 0 ]
+		then
+			SETUP_EXE=$GUESS_EXE
+		else
+			SETUP_EXE=`find /cygdrive -name 'setup-x86_64.exe' -exec grep -ail 'Cygwin installation tool' {} \;`
+		fi
 		$SETUP_EXE -q -P $PACKAGE_LIST
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Config::INI
 		perl -MPDF::API2 -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan PDF::API2
