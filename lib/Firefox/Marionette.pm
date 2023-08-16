@@ -6934,6 +6934,7 @@ sub _get_local_handle_for_generic_command_output {
             chomp $EVAL_ERROR;
             warn "$EVAL_ERROR\n";
         };
+        exit 1;
     }
     else {
         Firefox::Marionette::Exception->throw(
