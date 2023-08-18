@@ -19,6 +19,7 @@ case $OSNAME in
 						openssl \
 						perl-Archive-Zip \
 						perl-Config-INI \
+						perl-Crypt-PasswdMD5 \
 						perl-Crypt-URandom \
 						perl-Digest-SHA \
 						perl-DirHandle \
@@ -73,6 +74,7 @@ case $OSNAME in
 						libarchive-zip-perl \
 						libconfig-ini-perl \
 						libcrypt-urandom-perl \
+						libcrypt-passwdmd5-perl \
 						libfile-homedir-perl \
 						libhttp-daemon-perl \
 						libhttp-message-perl \
@@ -100,6 +102,7 @@ case $OSNAME in
 				perl \
 				perl-archive-zip \
 				perl-config-ini \
+				perl-crypt-passwdmd5 \
 				perl-crypt-urandom \
 				perl-file-homedir \
 				perl-http-daemon \
@@ -144,6 +147,7 @@ _APK_REPO_
 					p5-Archive-Zip \
 					p5-JSON \
 					p5-Config-INI \
+					p5-Crypt-PasswdMD5 \
 					p5-Crypt-URandom \
 					p5-File-HomeDir \
 					p5-Digest-SHA \
@@ -169,6 +173,7 @@ _APK_REPO_
 					p5-Archive-Zip \
 					p5-JSON \
 					p5-Config-INI \
+					p5-Crypt-PasswdMD5 \
 					p5-Crypt-URandom \
 					p5-File-HomeDir \
 					p5-Digest-SHA \
@@ -193,6 +198,7 @@ _APK_REPO_
 					p5-Archive-Zip \
 					p5-JSON \
 					p5-Config-INI \
+					p5-Crypt-PasswdMD5 \
 					p5-Crypt-URandom \
 					p5-File-HomeDir \
 					p5-HTTP-Daemon \
@@ -219,6 +225,7 @@ _APK_REPO_
 					${PKG_PATH}p5-Archive-Zip \
 					${PKG_PATH}p5-JSON \
 					${PKG_PATH}p5-Config-INI \
+					${PKG_PATH}p5-Crypt-PasswdMD5 \
 					${PKG_PATH}p5-Crypt-URandom \
 					${PKG_PATH}p5-File-HomeDir \
 					${PKG_PATH}p5-HTTP-Daemon \
@@ -246,6 +253,7 @@ _PKG_PATH_
 		PACKAGE_LIST="perl-Archive-Zip"
 		for PACKAGE in perl-JSON \
 					perl-Config-INI \
+					perl-Crypt-PasswdMD5 \
 					perl-Crypt-URandom \
 					perl-File-HomeDir \
 					perl-Digest-SHA \
@@ -275,6 +283,7 @@ _PKG_PATH_
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Config::INI
 		perl -MPDF::API2 -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan PDF::API2
 		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Crypt::URandom
+		perl -MCrypt::PasswdMD5 -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Crypt::PasswdMD5
 		;;
 	*)
 		echo "Any help with patching '$OSNAME' support would be awesome???"

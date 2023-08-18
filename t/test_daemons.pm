@@ -6,6 +6,7 @@ use Carp();
 use English qw( -no_match_vars );
 use File::Spec();
 use File::Temp();
+use Crypt::PasswdMD5();
 
 sub tmp_handle {
     my ( $class, $name ) = @_;
@@ -430,13 +431,37 @@ sub available {
     return $class->SUPER::available( $nginx_binary, '-v' );
 }
 
+sub write_passwd {
+    my ( $class, $passwd_path, $username, $password ) = @_;
+    if ( $username || $password ) {
+        my $passwd_handle = FileHandle->new(
+            $passwd_path,
+            Fcntl::O_WRONLY() | Fcntl::O_EXCL() | Fcntl::O_CREAT(),
+            Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+        ) or Carp::croak("Failed to open $passwd_path:$EXTENDED_OS_ERROR");
+        my $encrypted_password = Crypt::PasswdMD5::unix_md5_crypt($password);
+        print {$passwd_handle} "$username:$encrypted_password\n"
+          or Carp::croak("Failed to write to $passwd_path:$EXTENDED_OS_ERROR");
+        close $passwd_handle
+          or Carp::croak("Failed to close $passwd_path:$EXTENDED_OS_ERROR");
+    }
+    return;
+}
+
 sub new {
     my ( $class, %parameters ) = @_;
     my $listen         = $parameters{listen};
     my $key_size       = $parameters{key_size};
     my $ca             = $parameters{ca};
+    my $username       = $parameters{username};
+    my $password       = $parameters{password};
+    my $realm          = $parameters{realm};
     my $port           = $class->new_port();
     my $base_directory = $class->tmp_directory('nginx');
+    my $passwd_path =
+      File::Spec->catfile( $base_directory->dirname(), 'htpasswd' );
+
+    $class->write_passwd( $passwd_path, $username, $password );
     my $key_path =
       File::Spec->catfile( $base_directory->dirname(), 'nginx.key' );
     my $key_handle = $ca->new_key( $key_size, $key_path );
@@ -524,6 +549,16 @@ http {
     server  {
         listen                     $listen:$port ssl;
         server_name                default;
+_NGINX_CONF_
+    if ( $username || $password ) {
+        print {$config_handle}
+          <<"_NGINX_CONF_" or Carp::croak("Failed to write to temporary file:$EXTENDED_OS_ERROR");
+        auth_basic                 "$realm";
+        auth_basic_user_file       $passwd_path;
+_NGINX_CONF_
+    }
+    print {$config_handle}
+      <<"_NGINX_CONF_" or Carp::croak("Failed to write to temporary file:$EXTENDED_OS_ERROR");
         ssl_certificate            $certificate_path;
         ssl_certificate_key        $key_path;
         ssl_protocols              TLSv1.2;
@@ -576,13 +611,50 @@ sub available {
     return $class->SUPER::available( $squid_binary, '--version' );
 }
 
+sub find_basic_ncsa_auth {
+    my $basic_ncsa_auth_path;
+    foreach my $possible_path (
+        '/usr/lib64/squid/basic_ncsa_auth',    # Redhat, Fedora
+        '/usr/lib/squid/basic_ncsa_auth',      # Alpine Linux, Debian
+        '/usr/local/libexec/squid/basic_ncsa_auth'
+        ,                                      # FreeBSD, DragonflyBSD, OpenBSD
+        '/usr/pkg/libexec/basic_ncsa_auth',    # NetBSD
+      )
+    {
+        if ( -e $possible_path ) {
+            $basic_ncsa_auth_path = $possible_path;
+            last;
+        }
+    }
+    return $basic_ncsa_auth_path;
+}
+
 sub new {
     my ( $class, %parameters ) = @_;
-    my $listen         = $parameters{listen};
-    my $key_size       = $parameters{key_size};
-    my $ca             = $parameters{ca};
-    my $port           = $class->new_port();
-    my $base_directory = $class->tmp_directory('squid');
+    my $listen               = $parameters{listen};
+    my $username             = $parameters{username};
+    my $password             = $parameters{password};
+    my $realm                = $parameters{realm};
+    my $key_size             = $parameters{key_size};
+    my $ca                   = $parameters{ca};
+    my $port                 = $class->new_port();
+    my $base_directory       = $class->tmp_directory('squid');
+    my $basic_ncsa_auth_path = $class->find_basic_ncsa_auth();
+    my $passwd_path =
+      File::Spec->catfile( $base_directory->dirname(), 'htpasswd' );
+
+    if ( $username || $password ) {
+        my $passwd_handle = FileHandle->new(
+            $passwd_path,
+            Fcntl::O_WRONLY() | Fcntl::O_EXCL() | Fcntl::O_CREAT(),
+            Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+        ) or Carp::croak("Failed to open $passwd_path:$EXTENDED_OS_ERROR");
+        my $encrypted_password = Crypt::PasswdMD5::unix_md5_crypt($password);
+        print {$passwd_handle} "$username:$encrypted_password\n"
+          or Carp::croak("Failed to write to $passwd_path:$EXTENDED_OS_ERROR");
+        close $passwd_handle
+          or Carp::croak("Failed to close $passwd_path:$EXTENDED_OS_ERROR");
+    }
     my $key_path =
       File::Spec->catfile( $base_directory->dirname(), 'squid.key' );
     my $key_handle = $ca->new_key( $key_size, $key_path );
@@ -597,11 +669,29 @@ sub new {
         Fcntl::O_WRONLY() | Fcntl::O_EXCL() | Fcntl::O_CREAT(),
         Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
     ) or Carp::croak("Failed to open $config_path:$EXTENDED_OS_ERROR");
+    if ( $username || $password ) {
+        print {$config_handle}
+          <<"_SQUID_CONF_" or Carp::croak("Failed to write to $config_path:$EXTENDED_OS_ERROR");
+auth_param basic program $basic_ncsa_auth_path $passwd_path
+auth_param basic realm $realm
+auth_param basic casesensitive on
+acl Auth proxy_auth REQUIRED
+_SQUID_CONF_
+    }
     print {$config_handle}
-      <<"_SQUID_CONF_" or Carp::croak("Failed to write to temporary file:$EXTENDED_OS_ERROR");
+      <<"_SQUID_CONF_" or Carp::croak("Failed to write to $config_path:$EXTENDED_OS_ERROR");
 acl SSL_ports port $parameters{allow_ssl_port}
 http_access deny !SSL_ports
 http_access deny CONNECT !SSL_ports
+_SQUID_CONF_
+    if ( $username || $password ) {
+        print {$config_handle}
+          <<"_SQUID_CONF_" or Carp::croak("Failed to write to $config_path:$EXTENDED_OS_ERROR");
+http_access deny !Auth
+_SQUID_CONF_
+    }
+    print {$config_handle}
+      <<"_SQUID_CONF_" or Carp::croak("Failed to write to $config_path:$EXTENDED_OS_ERROR");
 http_access allow localhost
 https_port $listen:$port tls-cert=$certificate_path tls-key=$key_path
 shutdown_lifetime 0 seconds
