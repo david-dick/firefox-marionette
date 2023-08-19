@@ -6404,7 +6404,7 @@ sub _ssh_address {
 
 sub _ssh_arguments {
     my ( $self, %parameters ) = @_;
-    my @arguments = qw(-2 -a);
+    my @arguments = qw(-2 -a -T);
     if ( ( $parameters{graphical} ) || ( $parameters{master} ) ) {
         if ( ( defined $self->_visible() ) && ( $self->_visible() eq 'local' ) )
         {
