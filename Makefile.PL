@@ -380,7 +380,7 @@ WriteMakefile(
     ],
     BUILD_REQUIRES => {
         'Compress::Zlib'  => 0,
-        'Crypt::PasswordMD5'  => 0,
+        'Crypt::PasswdMD5' => 0,
         'Cwd'             => 0,
         'Digest::SHA'     => 0,
         'File::HomeDir'   => 0,
