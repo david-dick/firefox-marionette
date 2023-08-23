@@ -35,11 +35,11 @@ MAIN: {
         'obj-x86_64-pc-linux-gnu', 'dist', 'bin', 'firefox' );
     local $ENV{FIREFOX_BINARY}  = $firefox_path;
     local $ENV{RELEASE_TESTING} = 1;
-    system {'perl'} 'perl', '-Ilib', 't/01-marionette.t'
-      and Carp::croak(q[Failed to 'perl -Ilib t/01-marionette.t']);
+    system {'cover'} 'cover', '-test'
+      and Carp::croak(q[Failed to 'cover -test']);
     Sys::Syslog::openlog( $ident, 'cons', $facility );
     Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
-        "Passed t/01-marionette.t at mozilla-central changeset $changeset" );
+        "Passed cover -test at mozilla-central changeset $changeset" );
     Sys::Syslog::closelog();
 }
 
