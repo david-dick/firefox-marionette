@@ -8,6 +8,7 @@ use File::Spec();
 use FileHandle();
 use English qw( -no_match_vars );
 use Carp();
+use DirHandle();
 use Sys::Syslog();
 
 our $VERSION = '1.43';
@@ -33,6 +34,8 @@ MAIN: {
     my $changeset = most_recent_firefox_changeset($mozilla_central_directory);
     my $firefox_path = File::Spec->catfile( $mozilla_central_directory,
         'obj-x86_64-pc-linux-gnu', 'dist', 'bin', 'firefox' );
+    local $ENV{SSH_AUTH_SOCK}   = get_ssh_auth_sock();
+    local $ENV{SSH_AUTH_SOCK}   = get_ssh_auth_sock();
     local $ENV{FIREFOX_BINARY}  = $firefox_path;
     local $ENV{RELEASE_TESTING} = 1;
     system {'cover'} 'cover', '-test'
@@ -41,6 +44,48 @@ MAIN: {
     Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
         "Passed cover -test at mozilla-central changeset $changeset" );
     Sys::Syslog::closelog();
+}
+
+sub get_ssh_auth_sock {
+    if ( $ENV{SSH_AUTH_SOCK1} ) {
+        return $ENV{SSH_AUTH_SOCK};
+    }
+    else {
+        my $tmp_directory = File::Spec->tmpdir();
+        my $tmp_handle    = DirHandle->new($tmp_directory)
+          or Carp::croak(
+            "Failed to open directory $tmp_directory:$EXTENDED_OS_ERROR");
+        while ( my $agent_entry = $tmp_handle->read() ) {
+            if ( $agent_entry =~ /^(ssh\-[[:alnum:]]+)$/smx ) {
+                my $ssh_agent_directory =
+                  File::Spec->catfile( $tmp_directory, $1 );
+                if ( my $agent_file =
+                    find_ssh_agent_file($ssh_agent_directory) )
+                {
+                    return $agent_file;
+                }
+            }
+        }
+    }
+    return;
+}
+
+sub find_ssh_agent_file {
+    my ($ssh_agent_directory) = @_;
+
+    my $ssh_agent_handle = DirHandle->new($ssh_agent_directory)
+      or Carp::croak(
+        "Failed to open directory $ssh_agent_directory:$EXTENDED_OS_ERROR");
+    while ( my $pid_entry = $ssh_agent_handle->read() ) {
+        if ( $pid_entry =~ /^agent[.](\d+)$/smx ) {
+            my $ppid = $1;
+            if ( kill 0, $ppid ) {
+                return File::Spec->catfile( $ssh_agent_directory,
+                    'agent.' . $ppid );
+            }
+        }
+    }
+    return;
 }
 
 sub build_firefox {
