@@ -13353,6 +13353,8 @@ to a list.
                   proxy => [ 'https://Squid1.Proxy.Server:3128', 'https://Squid2.Proxy.Server:3128' ]
                      )->go('https://Target.Web.Site');
 
+When firefox gets a list of proxies, it will use the first one that works.  In addition, it will perform a basic form of proxy failover, which may involve a failed network request before it fails over to the next proxy.  In the diagram below, Squid1.Proxy.Server is the first proxy in the list and will be used exclusively, unless it is unavailable, in which case Squid2.Proxy.Server will be used.
+
                                           ----------
                                      TLS  | Squid1 |
                                    ------>| Proxy  |-----
