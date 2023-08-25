@@ -146,6 +146,8 @@ or a [Firefox::Marionette::Login](https://metacpan.org/pod/Firefox::Marionette::
 
     $firefox->add_login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
 
+Note for HTTP Authentication, the [realm](https://datatracker.ietf.org/doc/html/rfc2617#section-2) must perfectly match the correct [realm](https://datatracker.ietf.org/doc/html/rfc2617#section-2) supplied by the server.
+
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
 ## add\_site\_header
@@ -1394,7 +1396,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - page\_load - a shortcut to allow directly providing the [page\_load](https://metacpan.org/pod/Firefox::Marionette::Timeouts#page_load) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - profile - create a new profile based on the supplied [profile](https://metacpan.org/pod/Firefox::Marionette::Profile).  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the [set\_pref](#set_pref) and [clear\_pref](#clear_pref) methods to make changes while firefox is running.
 - profile\_name - pick a specific existing profile to automate, rather than creating a new profile.  [Firefox](https://firefox.com) refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the [Firefox::Marionette::Profile::names()](https://metacpan.org/pod/Firefox::Marionette::Profile#names) method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the [set\_pref](#set_pref) and [clear\_pref](#clear_pref) methods to make changes while firefox is running.
-- proxy - this is a shortcut method for setting a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy) using the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) parameter above.  It accepts a proxy URL.
+- proxy - this is a shortcut method for setting a [proxy](https://metacpan.org/pod/Firefox::Marionette::Proxy) using the [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) parameter above.  It accepts a proxy URL, with the following allowable schemes, 'http' and 'https'.  It also allows a reference to a list of proxy URLs which will function as list of proxies that Firefox will try in [left to right order](https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#description) until a working proxy is found.  See [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh), [NETWORK ARCHITECTURE](#network-architecture) and [SETTING UP SOCKS SERVERS USING SSH](https://metacpan.org/pod/Firefox::Marionette::Proxy#SETTING-UP-SOCKS-SERVERS-USING-SSH).
 - reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
 - scp - force the scp protocol when transferring files to remote hosts via ssh. See [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) and the --scp-only option in the [ssh-auth-cmd-marionette](https://metacpan.org/pod/ssh-auth-cmd-marionette) script in this distribution.
 - script - a shortcut to allow directly providing the [script](https://metacpan.org/pod/Firefox::Marionette::Timeout#script) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
@@ -2007,7 +2009,32 @@ produces the following effect, with an ascii box representing a separate network
      | Site   |          | Server |
      ----------          ----------
 
+In addition, the proxy parameter can be used to specify multiple proxies using a reference
+to a list.
+
+    my $firefox = Firefox::Marionette->new(
+                    host  => 'Firefox.runs.here'
+                    trust => '/path/to/ca-for-squid-proxy-server.crt',
+                    proxy => [ 'https://Squid1.Proxy.Server:3128', 'https://Squid2.Proxy.Server:3128' ]
+                       )->go('https://Target.Web.Site');
+
+                                            ----------
+                                       TLS  | Squid1 |
+                                     ------>| Proxy  |-----
+                                     |      | Server |    |
+       ---------      -----------    |      ----------    |       -----------
+       | Perl  | SSH  | Firefox |    |                    | HTTPS | Target  |
+       | runs  |----->| runs    |----|                    ------->| Web     |
+       | here  |      | here    |    |                    |       | Site    |
+       ---------      -----------    |      ----------    |       -----------
+                                     | TLS  | Squid2 |    |
+                                     ------>| Proxy  |-----
+                                            | Server |
+                                            ----------
+
 See the [REMOTE AUTOMATION OF FIREFOX VIA SSH](#remote-automation-of-firefox-via-ssh) section for more options.
+
+See [SETTING UP SOCKS SERVERS USING SSH](https://metacpan.org/pod/Firefox::Marionette::Proxy#SETTING-UP-SOCKS-SERVERS-USING-SSH) for easy proxying via [ssh](https://man.openbsd.org/ssh)
 
 # AUTOMATING THE FIREFOX PASSWORD MANAGER
 

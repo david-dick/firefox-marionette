@@ -195,6 +195,10 @@ SUBROUTINES/METHODS
     
         $firefox->add_login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
 
+    Note for HTTP Authentication, the realm
+    <https://datatracker.ietf.org/doc/html/rfc2617#section-2> must
+    perfectly match the correct realm supplied by the server.
+
     This method returns itself to aid in chaining methods.
 
  add_site_header
@@ -1836,7 +1840,13 @@ SUBROUTINES/METHODS
       while firefox is running.
 
       * proxy - this is a shortcut method for setting a proxy using the
-      capabilities parameter above. It accepts a proxy URL.
+      capabilities parameter above. It accepts a proxy URL, with the
+      following allowable schemes, 'http' and 'https'. It also allows a
+      reference to a list of proxy URLs which will function as list of
+      proxies that Firefox will try in left to right order
+      <https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#description>
+      until a working proxy is found. See REMOTE AUTOMATION OF FIREFOX VIA
+      SSH, NETWORK ARCHITECTURE and SETTING UP SOCKS SERVERS USING SSH.
 
       * reconnect - an experimental parameter to allow a reconnection to
       firefox that a connection has been discontinued. See the survive
@@ -2734,7 +2744,33 @@ NETWORK ARCHITECTURE
          | Site   |          | Server |
          ----------          ----------
 
+    In addition, the proxy parameter can be used to specify multiple
+    proxies using a reference to a list.
+
+      my $firefox = Firefox::Marionette->new(
+                      host  => 'Firefox.runs.here'
+                      trust => '/path/to/ca-for-squid-proxy-server.crt',
+                      proxy => [ 'https://Squid1.Proxy.Server:3128', 'https://Squid2.Proxy.Server:3128' ]
+                         )->go('https://Target.Web.Site');
+    
+                                              ----------
+                                         TLS  | Squid1 |
+                                       ------>| Proxy  |-----
+                                       |      | Server |    |
+         ---------      -----------    |      ----------    |       -----------
+         | Perl  | SSH  | Firefox |    |                    | HTTPS | Target  |
+         | runs  |----->| runs    |----|                    ------->| Web     |
+         | here  |      | here    |    |                    |       | Site    |
+         ---------      -----------    |      ----------    |       -----------
+                                       | TLS  | Squid2 |    |
+                                       ------>| Proxy  |-----
+                                              | Server |
+                                              ----------
+
     See the REMOTE AUTOMATION OF FIREFOX VIA SSH section for more options.
+
+    See SETTING UP SOCKS SERVERS USING SSH for easy proxying via ssh
+    <https://man.openbsd.org/ssh>
 
 AUTOMATING THE FIREFOX PASSWORD MANAGER
 

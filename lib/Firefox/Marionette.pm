@@ -90,7 +90,6 @@ sub _MIN_VERSION_FOR_HOSTPORT_PROXY { return 57 }
 sub _MIN_VERSION_FOR_XVFB           { return 12 }
 sub _MIN_VERSION_FOR_WEBDRIVER_IDS  { return 63 }
 sub _MIN_VERSION_FOR_LINUX_SANDBOX  { return 90 }
-sub _DEFAULT_SOCKS_VERSION          { return 5 }
 sub _MILLISECONDS_IN_ONE_SECOND     { return 1_000 }
 sub _DEFAULT_PAGE_LOAD_TIMEOUT      { return 300_000 }
 sub _DEFAULT_SCRIPT_TIMEOUT         { return 30_000 }
@@ -3339,15 +3338,27 @@ sub _read_certificates_from_disk {
 
 sub _setup_shortcut_proxy {
     my ( $self, $proxy_parameter, $capabilities ) = @_;
-    my $proxy_uri = URI::URL->new($proxy_parameter);
     my $firefox_proxy;
-    if ( $proxy_uri->scheme() eq 'https' ) {
+    if ( ref $proxy_parameter eq 'ARRAY' ) {
         $firefox_proxy =
-          Firefox::Marionette::Proxy->new( tls => $proxy_uri->host_port() );
+          Firefox::Marionette::Proxy->new( pac =>
+              Firefox::Marionette::Proxy->get_inline_pac( @{$proxy_parameter} )
+          );
+    }
+    elsif ( $proxy_parameter->isa('Firefox::Marionette::Proxy') ) {
+        $firefox_proxy = $proxy_parameter;
     }
     else {
-        $firefox_proxy =
-          Firefox::Marionette::Proxy->new( host => $proxy_uri->host_port() );
+        my $proxy_uri = URI->new($proxy_parameter);
+        if ( $proxy_uri->scheme() eq 'https' ) {
+            $firefox_proxy =
+              Firefox::Marionette::Proxy->new( tls => $proxy_uri->host_port() );
+        }
+        else {
+            $firefox_proxy =
+              Firefox::Marionette::Proxy->new(
+                host => $proxy_uri->host_port() );
+        }
     }
     $capabilities->{proxy} = $firefox_proxy;
     return $capabilities;
@@ -3368,8 +3379,10 @@ sub _launch_and_connect {
         $self->_launch(@arguments);
         my $socket = $self->_setup_local_connection_to_firefox(@arguments);
         if ( my $proxy_parameter = delete $parameters{proxy} ) {
-            $parameters{capabilities} ||=
-              Firefox::Marionette::Capabilities->new();
+            if ( !$parameters{capabilities} ) {
+                $parameters{capabilities} =
+                  Firefox::Marionette::Capabilities->new();
+            }
             $parameters{capabilities} =
               $self->_setup_shortcut_proxy( $proxy_parameter,
                 $parameters{capabilities} );
@@ -7451,7 +7464,7 @@ sub _request_proxy {
     elsif ( $proxy->socks() ) {
         $build->{proxyType} ||= 'manual';
         $build->{socksProxyVersion} = $build->{socksVersion} =
-          _DEFAULT_SOCKS_VERSION();
+          Firefox::Marionette::Proxy::DEFAULT_SOCKS_VERSION();
     }
     return $self->_convert_proxy_before_request($build);
 }
@@ -7500,7 +7513,14 @@ sub _proxy_from_env {
             if ( $key eq 'https' ) {
                 $build_key = 'ssl';
             }
-            $build->{ $build_key . 'Proxy' } = $uri->host_port();
+            if ( ( $key eq 'all' ) && ( $uri->scheme() eq 'https' ) ) {
+                $build->{proxyType} = 'pac';
+                $build->{proxyAutoconfigUrl} =
+                  Firefox::Marionette::Proxy->get_inline_pac($uri);
+            }
+            else {
+                $build->{ $build_key . 'Proxy' } = $uri->host_port();
+            }
         }
     }
     return $self->_convert_proxy_before_request($build);
@@ -11327,6 +11347,8 @@ or a L<Firefox::Marionette::Login|Firefox::Marionette::Login> object as the firs
 
     $firefox->add_login(host => 'https://github.com', user => 'me2@example.org', password => 'uiop[]', user_field => 'login', password_field => 'password');
 
+Note for HTTP Authentication, the L<realm|https://datatracker.ietf.org/doc/html/rfc2617#section-2> must perfectly match the correct L<realm|https://datatracker.ietf.org/doc/html/rfc2617#section-2> supplied by the server.
+
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 add_site_header
@@ -12640,7 +12662,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * profile_name - pick a specific existing profile to automate, rather than creating a new profile.  L<Firefox|https://firefox.com> refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the L<Firefox::Marionette::Profile::names()|Firefox::Marionette::Profile#names> method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|/set_pref> and L<clear_pref|/clear_pref> methods to make changes while firefox is running.
 
-=item * proxy - this is a shortcut method for setting a L<proxy|Firefox::Marionette::Proxy> using the L<capabilities|Firefox::Marionette::Capabilities> parameter above.  It accepts a proxy URL.
+=item * proxy - this is a shortcut method for setting a L<proxy|Firefox::Marionette::Proxy> using the L<capabilities|Firefox::Marionette::Capabilities> parameter above.  It accepts a proxy URL, with the following allowable schemes, 'http' and 'https'.  It also allows a reference to a list of proxy URLs which will function as list of proxies that Firefox will try in L<left to right order|https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#description> until a working proxy is found.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>, L<NETWORK ARCHITECTURE|/NETWORK-ARCHITECTURE> and L<SETTING UP SOCKS SERVERS USING SSH|Firefox::Marionette::Proxy#SETTING-UP-SOCKS-SERVERS-USING-SSH>.
 
 =item * reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
 
@@ -13322,7 +13344,32 @@ produces the following effect, with an ascii box representing a separate network
      | Site   |          | Server |
      ----------          ----------
 
+In addition, the proxy parameter can be used to specify multiple proxies using a reference
+to a list.
+
+  my $firefox = Firefox::Marionette->new(
+                  host  => 'Firefox.runs.here'
+                  trust => '/path/to/ca-for-squid-proxy-server.crt',
+                  proxy => [ 'https://Squid1.Proxy.Server:3128', 'https://Squid2.Proxy.Server:3128' ]
+                     )->go('https://Target.Web.Site');
+
+                                          ----------
+                                     TLS  | Squid1 |
+                                   ------>| Proxy  |-----
+                                   |      | Server |    |
+     ---------      -----------    |      ----------    |       -----------
+     | Perl  | SSH  | Firefox |    |                    | HTTPS | Target  |
+     | runs  |----->| runs    |----|                    ------->| Web     |
+     | here  |      | here    |    |                    |       | Site    |
+     ---------      -----------    |      ----------    |       -----------
+                                   | TLS  | Squid2 |    |
+                                   ------>| Proxy  |-----
+                                          | Server |
+                                          ----------
+
 See the L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> section for more options.
+
+See L<SETTING UP SOCKS SERVERS USING SSH|Firefox::Marionette::Proxy#SETTING-UP-SOCKS-SERVERS-USING-SSH> for easy proxying via L<ssh|https://man.openbsd.org/ssh>
 
 =head1 AUTOMATING THE FIREFOX PASSWORD MANAGER
 

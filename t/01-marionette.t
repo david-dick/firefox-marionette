@@ -1351,13 +1351,13 @@ SKIP: {
 }
 
 SKIP: {
-	my $proxyPort = empty_port();
-	diag("Starting new firefox for testing proxies again using proxy port TCP/$proxyPort");
+	my $proxyPort = Firefox::Marionette::Proxy::DEFAULT_SQUID_PORT();
+	diag("Starting new firefox for testing proxies again using default proxy port TCP/$proxyPort");
 	my $visible = 1;
 	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_USER})) {
 		$visible = 'local';
 	}
-	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost:' . $proxyPort, none => 'localhost')));
+	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost', none => 'localhost')));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}

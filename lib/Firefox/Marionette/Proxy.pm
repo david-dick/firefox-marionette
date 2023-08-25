@@ -5,6 +5,9 @@ use warnings;
 
 our $VERSION = '1.43';
 
+sub DEFAULT_SOCKS_VERSION { return 5 }
+sub DEFAULT_SQUID_PORT    { return 3128 }
+
 sub new {
     my ( $class, %parameters ) = @_;
     if ( $parameters{pac} ) {
@@ -14,17 +17,35 @@ sub new {
         $parameters{type} = 'manual';
         my $host = "$parameters{host}";
         if ( $host !~ /:\d+$/smx ) {
-            $host .= q[:80];
+            $host .= q[:] . DEFAULT_SQUID_PORT();
         }
         $parameters{http}  = $host;
         $parameters{https} = $host;
     }
     elsif ( $parameters{tls} ) {
         $parameters{pac} =
-qq[data:text/plain,function FindProxyForURL(){return "HTTPS $parameters{tls}"}];
+          $class->get_inline_pac( 'https://' . $parameters{tls} );
+    }
+    else {
+        if ( $parameters{socks} ) {
+            $parameters{type} = 'manual';
+            if ( !defined $parameters{socks_version} ) {
+                $parameters{socks_version} = DEFAULT_SOCKS_VERSION();
+            }
+        }
     }
     my $element = bless {%parameters}, $class;
     return $element;
+}
+
+sub get_inline_pac {
+    my ( $class, @proxies ) = @_;
+    my $body = join q[;], map {
+        ( uc $_->scheme() eq 'HTTP' ? 'PROXY' : uc $_->scheme() ) . q[ ]
+          . $_->host_port()
+      }
+      map { URI->new($_) } @proxies;
+    return qq[data:text/plain,function FindProxyForURL(){return "$body"}];
 }
 
 sub type {
@@ -113,6 +134,16 @@ Version 1.43
 
 This module handles the implementation of a Proxy in Firefox Capabilities using the Marionette protocol
 
+=head1 CONSTANTS
+
+=head2 DEFAULT_SOCKS_VERSION
+
+returns the default SOCKS version which is 5.
+
+=head2 DEFAULT_SQUID_PORT
+
+returns the L<default port that Squid listens on (3128)|http://www.squid-cache.org/Doc/config/http_port/>
+
 =head1 SUBROUTINES/METHODS
 
 =head2 new
@@ -125,7 +156,7 @@ accepts a hash as a parameter.  Allowed keys are below;
 
 =item * pac - defines the L<URI|URI> for a proxy auto-config file if the L<type|Firefox::Marionette::Proxy#type> is equal to 'pac'.
 
-=item * host - defines the host for FTP, HTTP, and HTTPS traffic and sets the L<type|Firefox::Marionette::Proxy#type> to 'manual'.
+=item * host - defines the host for FTP, HTTP, and HTTPS traffic and sets the L<type|Firefox::Marionette::Proxy#type> to 'manual'.  If the port is not specified it defaults to L<DEFAULT_SQUID_PORT|/DEFAULT_SQUID_PORT>, which is 3128.
 
 =item * http - defines the proxy host for HTTP traffic when the L<type|Firefox::Marionette::Proxy#type> is 'manual'.
 
@@ -143,6 +174,10 @@ accepts a hash as a parameter.  Allowed keys are below;
 
 This method returns a new L<proxy|Firefox::Marionette::Proxy> object.
  
+=head2 get_inline_pac
+
+returns a L<proxy pac|https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file> file for the parameters supplied to this function.  This is only intended for internal use.
+
 =head2 type
 
 returns the type of proxy configuration.  Must be one of 'pac', 'direct', 'autodetect', 'system', or 'manual'.
@@ -165,11 +200,31 @@ returns a list of the addresses for which the proxy should be bypassed when the 
 
 =head2 socks
 
-returns the proxy host for a SOCKS proxy traffic when the L<type|Firefox::Marionette::Proxy#type> is 'manual'.
+returns the proxy host for a L<SOCKS|https://en.wikipedia.org/wiki/SOCKS> proxy traffic when the L<type|Firefox::Marionette::Proxy#type> is 'manual'.
 
 =head2 socks_version
 
 returns the SOCKS proxy version when the L<type|Firefox::Marionette::Proxy#type> is 'manual'.
+
+=head1 SETTING UP SOCKS SERVERS USING SSH
+
+You can setup a simple SOCKS proxy with L<ssh|https://man.openbsd.org/ssh>, using the L<-D option|https://man.openbsd.org/ssh#D>. If you setup such a server with the following command
+
+  ssh -ND localhost:8080 user@Remote.Proxy.Server
+
+and then connect to it like so;
+
+  my $firefox = Firefox::Marionette->new(
+                  proxy => Firefox::Marionette::Proxy->new(socks => 'localhost:8080')
+                     )->go('https://Target.Web.Site');
+
+the following network diagram describes what will happen
+
+     ------------          ----------         ----------
+     | Firefox  |  SSH     | Remote |  HTTPS  | Target |
+     | & Perl   |--------->| Proxy  |-------->| Web    |
+     | run here |          | Server |         | Site   |
+     ------------          ----------         ----------
 
 =head1 DIAGNOSTICS
 

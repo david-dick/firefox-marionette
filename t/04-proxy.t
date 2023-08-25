@@ -50,6 +50,7 @@ SKIP: {
 	my $ca = Test::CA->new($default_rsa_key_size);
 	my $squid_listen = $override_address || '127.0.0.4';
 	my $nginx_listen = $override_address || '127.0.0.5';
+	my $socks_listen = $override_address || '127.0.0.6';
 	my $nginx_username = MIME::Base64::encode_base64( Crypt::URandom::urandom( 50 ), q[] );
 	my $nginx_password = MIME::Base64::encode_base64( Crypt::URandom::urandom( 100 ), q[] );
 	my $nginx_realm = "Nginx Server for Firefox::Marionette $0";
@@ -103,8 +104,122 @@ SKIP: {
 		}
 		ok($firefox->quit() == 0, "Firefox closed successfully");
 	}
-	$nginx->quit();
-	$squid->quit();
+	ok($nginx->stop() == 0, "Stopped nginx on $nginx_listen:" . $nginx->port());
+	ok($squid->stop() == 0, "Stopped HTTPS proxy on $squid_listen:" . $squid->port());
+	$nginx = Test::Daemon::Nginx->new(listen => $nginx_listen);
+	ok($nginx, "Started nginx Server on $nginx_listen on port " . $nginx->port() . ", with pid " . $nginx->pid());
+	my $squid1 = Test::Daemon::Squid->new(listen => $squid_listen, allow_port => $nginx->port());
+	ok($squid1, "Started squid Server on $squid_listen on port " . $squid1->port() . ", with pid " . $squid1->pid());
+	my $squid2 = Test::Daemon::Squid->new(listen => $squid_listen, key_size => $default_rsa_key_size, ca => $ca, allow_port => $nginx->port());
+	ok($squid2, "Started squid Server on $squid_listen on port " . $squid2->port() . ", with pid " . $squid2->pid());
+	{
+		local $ENV{all_proxy} = 'https://' . $squid_listen . ':' . $squid2->port();
+		my $firefox = Firefox::Marionette->new(
+			debug => $debug,
+			visible => $visible,
+			profile => $profile,
+			trust => $ca->cert(),
+					);
+		ok($firefox, "Created a firefox object going through ssh and the all_proxy environment variable of (https://$squid_listen:" . $squid2->port() . ")");
+		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with all_proxy environment variable");
+		my $strip = $firefox->strip();
+		ok($strip eq $nginx->content(), "Successfully retrieved web page through all_proxy environment variable");
+		ok($squid2->stop() == 0, "Stopped HTTPS proxy on $squid_listen:" . $squid2->port());
+		ok($firefox->go("about:blank"), "Reset current webpage to about:blank");
+		eval {
+			$firefox->go("http://$nginx_listen:" . $nginx->port());
+		};
+		chomp $@;
+		ok($@, "Failed to load website when proxy specified by all_proxy environment variable is down:$@");
+		ok($firefox->go("about:blank"), "Reset current webpage to about:blank");
+		ok($squid2->start(), "Started HTTPS proxy on $squid_listen:" . $squid2->port());
+		eval {
+			$firefox->go("http://$nginx_listen:" . $nginx->port());
+		};
+		chomp $@;
+		if ($@) {
+			diag("Needed another page load to retry the restarted proxy");
+		}
+		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with all_proxy environment variable");
+		$strip = $firefox->strip();
+		ok($strip eq $nginx->content(), "Successfully retrieved web page through all_proxy environment variable");
+	}
+	my $firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		trust => $ca->cert(),
+		proxy => [ "http://$squid_listen:" . $squid1->port(), "https://$squid_listen:" . $squid2->port ],
+				);
+	ok($firefox, "Created a firefox object going through ssh and redundant ($squid_listen:" . $squid1->port() . " then $squid_listen:" . $squid2->port() . ") web proxies");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with redundant web proxies");
+	my $strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and redundant web proxies:$strip:");
+	ok($firefox->go('about:blank'), 'Reset webpage to about:blank');
+	ok($squid1->stop() == 0, "Stopped primary HTTP proxy on $squid_listen:" . $squid1->port());
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with backup HTTPS proxy");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and backup HTTPS proxies:$strip:");
+	ok($squid1->start(), "Started primary HTTP proxy on $squid_listen:" . $squid1->port());
+	ok($squid2->stop() == 0, "Stopped backup HTTPS proxy on $squid_listen:" . $squid2->port());
+	eval {
+		$firefox->go("http://$nginx_listen:" . $nginx->port());
+	};
+	chomp $@;
+	if ($@) {
+		ok($@ =~ /proxyConnectFailure/, "Firefox threw an exception b/c of proxy failure:$@");
+		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with primary HTTP proxy");
+		$strip = $firefox->strip();
+		ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and primary HTTP proxy:$strip:");
+	} else {
+		$strip = $firefox->strip();
+		diag("No exception thrown when proxy stopped");
+		ok($strip eq $nginx->content(), "Successfully retrieved web page without throwing an exception through ssh and primary HTTP proxy:$strip:");
+	}
+	ok($firefox->quit() == 0, "Firefox closed successfully");
+	$firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		proxy => "http://$squid_listen:" . $squid1->port(),
+				);
+	ok($firefox, "Created a firefox object going through ssh and http ($squid_listen:" . $squid1->port() . ") proxy");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with HTTP proxy");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and HTTP proxy:$strip:");
+	ok($squid1->stop() == 0, "Stopped HTTP proxy on $squid_listen:" . $squid->port());
+	my $socks = Test::Daemon::Socks->new(listen => $socks_listen, debug => 1);
+	ok($socks, "Started SOCKS Server on $socks_listen on port " . $socks->port() . ", with pid " . $socks->pid());
+	$firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		proxy => Firefox::Marionette::Proxy->new( socks => "$socks_listen:" . $socks->port() ),
+				);
+	ok($firefox, "Created a firefox object going through ssh and SOCKS ($socks_listen:" . $socks->port() . ") proxy");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy:$strip:");
+	$firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		proxy => Firefox::Marionette::Proxy->new( socks => "$socks_listen:" . $socks->port(), socks_version => 5 ),
+				);
+	ok($firefox, "Created a firefox object going through ssh and SOCKS ($socks_listen:" . $socks->port() . ") proxy with version specified");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy (v5)");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v5):$strip:");
+	ok($nginx->stop() == 0, "Stopped nginx on $nginx_listen:" . $nginx->port());
+	ok($socks->stop() == 0, "Stopped SOCKS proxy on $socks_listen:" . $socks->port());
 }
 
 done_testing();
