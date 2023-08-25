@@ -26,18 +26,12 @@ sub common_name {
 
 sub _cert_type {
     my ($self) = @_;
-    if ( defined $self->{certType} ) {
-        return $self->{certType};
-    }
-    return 0;
+    return $self->{certType};
 }
 
 sub is_any_cert {
     my ($self) = @_;
-    if ( defined $self->{ANY_CERT} ) {
-        return $self->{ANY_CERT} & $self->_cert_type();
-    }
-    return 0;
+    return $self->{ANY_CERT} & $self->_cert_type();
 }
 
 sub email_address {

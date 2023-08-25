@@ -4383,6 +4383,11 @@ _CERT_
 				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " is NOT an email cert");
 			}
 			ok($certificate->issuer_name(), Encode::encode('UTF-8', display_name($certificate)) . " has an issuer_name of " . Encode::encode('UTF-8', $certificate->issuer_name()));
+			if (defined $certificate->nickname()) {
+				ok($certificate->nickname(), Encode::encode('UTF-8', display_name($certificate)) . " has a nickname of " . $certificate->nickname());
+			} else {
+				ok(1, Encode::encode('UTF-8', display_name($certificate)) . " does not have a specified nickname");
+			}
 			ok(defined $certificate->common_name(), Encode::encode('UTF-8', display_name($certificate)) . " has a common_name of " . Encode::encode('UTF-8', $certificate->common_name()));
 			if (defined $certificate->email_address()) {
 				ok($certificate->email_address(), Encode::encode('UTF-8', display_name($certificate)) . " has an email_address of " . $certificate->email_address());
