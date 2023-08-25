@@ -2464,6 +2464,9 @@ SKIP: {
 		}
 	}
 	ok(scalar $firefox->logins() == 0, "\$firefox->logins() shows the correct number (0) of records");
+	my $test_login = Firefox::Marionette::Login->new(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'login', password_field => 'password', creation_in_ms => 0, last_used_in_ms => undef);
+	ok(!defined $test_login->last_used_time(), "Firefox::Marionette::Login->new()->last_used_time() correctly returns undef for an undefined parameter to new");
+	ok($test_login->creation_time() == 0, "Firefox::Marionette::Login->new()->creation_time() correctly returns 0 for a 0 parameter to new");
 	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 }
 
