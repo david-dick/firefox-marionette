@@ -38,6 +38,8 @@ MAIN: {
     local $ENV{SSH_AUTH_SOCK}   = get_ssh_auth_sock();
     local $ENV{FIREFOX_BINARY}  = $firefox_path;
     local $ENV{RELEASE_TESTING} = 1;
+    system {$EXECUTABLE_NAME} $EXECUTABLE_NAME, 'Makefile.PL'
+      and Carp::croak(q[Failed to 'perl Makefile.PL']);
     system {'cover'} 'cover', '-test'
       and Carp::croak(q[Failed to 'cover -test']);
     Sys::Syslog::openlog( $ident, 'cons', $facility );
