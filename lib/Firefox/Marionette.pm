@@ -391,10 +391,10 @@ sub download {
             )
         );
         my $original_script = $timeouts->script();
-        my $result =
-          $self->script(
-            <<'_SCRIPT_', args => [ $uri->as_string(), $download_path ] );
-let { Downloads } = ChromeUtils.importESModule("resource://gre/modules/Downloads.sys.mjs");
+        my $result          = $self->script(
+            $self->_compress_script(
+                <<'_SCRIPT_'), args => [ $uri->as_string(), $download_path ] );
+let Downloads = ChromeUtils.import("resource://gre/modules/Downloads.jsm").Downloads;
 return Downloads.fetch({ url: arguments[0] }, { path: arguments[1] });
 _SCRIPT_
         $self->timeouts($timeouts);

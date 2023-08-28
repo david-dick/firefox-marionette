@@ -3936,12 +3936,14 @@ SKIP: {
 				$firefox->go($daemon->url() . '?format=txt');
 				ok($firefox->strip() eq $txt_document, "Correctly retrieved TXT document");
 				diag($firefox->strip());
-				my $handle = $firefox->download($daemon->url() . '?format=txt');
-				my $output = <$handle>;
-				ok($output eq $txt_document, "Correctly downloaded TXT document");
-				$handle = $firefox->download($daemon->url() . '?format=txt', 50);
-				$output = <$handle>;
-				ok($output eq $txt_document, "Correctly downloaded TXT document");
+				if ($major_version >= 61) {
+					my $handle = $firefox->download($daemon->url() . '?format=txt');
+					my $output = <$handle>;
+					ok($output eq $txt_document, "Correctly downloaded TXT document without timeout");
+					$handle = $firefox->download($daemon->url() . '?format=txt', 50);
+					$output = <$handle>;
+					ok($output eq $txt_document, "Correctly downloaded TXT document with explicit timeout");
+				}
 				while(kill 0, $pid) {
 					kill $signals_by_name{TERM}, $pid;
 					sleep 1;
