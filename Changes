@@ -1,5 +1,11 @@
 Revision history for Firefox-Marionette
 
+1.44  Sun Sep 03 18:04 2023
+       Adding download method for directly downloading a URL
+       Allowing a list of proxies to be supplied to new method
+       Allow the all_proxy environment variable to specify an https url
+       Documentation and test suite fixes
+
 1.43  Sat Aug 05 15:13 2023
        Documentation fixes
 
