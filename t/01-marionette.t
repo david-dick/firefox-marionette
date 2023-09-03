@@ -2087,6 +2087,9 @@ SKIP: {
 		chomp $@;
 		ok($@, "Exception correctly thrown when trying to import a truncated bookmarks file of $bookmarks_path:$@");
 	}
+	my $bookmark = Firefox::Marionette::Bookmark->new();
+	ok(!defined $bookmark->type(), "There is no defined type if a bookmark is created with no parameters");
+	ok(!defined $bookmark->content_type(), "There is no defined content_type if a bookmark is created with no parameters");
 	Firefox::Marionette::Bookmark->import(qw(:all));
 	foreach my $name (qw(BOOKMARK FOLDER SEPARATOR)) {
 		my $result = eval "return Firefox::Marionette::Bookmark::$name();";
