@@ -7526,6 +7526,12 @@ sub _proxy_from_env {
     return $self->_convert_proxy_before_request($build);
 }
 
+sub _translate_to_json_boolean {
+    my ( $self, $boolean ) = @_;
+    $boolean = $boolean ? JSON::true() : JSON::false();
+    return $boolean;
+}
+
 sub _new_session_parameters {
     my ( $self, $capabilities ) = @_;
     my $parameters = {};
@@ -7558,7 +7564,7 @@ sub _new_session_parameters {
         foreach my $method ( sort { $a cmp $b } keys %booleans ) {
             if ( defined $capabilities->$method() ) {
                 $actual->{ $booleans{$method} } =
-                  $capabilities->$method() ? \1 : \0;
+                  $self->_translate_to_json_boolean( $capabilities->$method() );
             }
         }
         if ( defined $capabilities->page_load_strategy() ) {
@@ -7904,9 +7910,10 @@ sub add_cookie {
             $self->_command('WebDriver:AddCookie'),
             {
                 cookie => {
-                    httpOnly => $cookie->http_only() ? \1
-                    : \0,
-                    secure => $cookie->secure() ? \1 : \0,
+                    httpOnly =>
+                      $self->_translate_to_json_boolean( $cookie->http_only() ),
+                    secure =>
+                      $self->_translate_to_json_boolean( $cookie->secure() ),
                     domain => $domain,
                     path   => $cookie->path(),
                     value  => $cookie->value(),
@@ -8960,7 +8967,8 @@ sub _initialise_pdf_parameters {
     %parameters = $self->_map_deprecated_pdf_parameters(%parameters);
     foreach my $key (qw(landscape shrinkToFit printBackground)) {
         if ( defined $parameters{$key} ) {
-            $parameters{$key} = $parameters{$key} ? \1 : \0;
+            $parameters{$key} =
+              $self->_translate_to_json_boolean( $parameters{$key} );
         }
     }
     if ( defined $parameters{page} ) {
@@ -9046,7 +9054,7 @@ sub scroll {
         if ( ref $arguments ) {
         }
         else {
-            $arguments = $arguments ? JSON::true() : JSON::false();
+            $arguments = $self->_translate_to_json_boolean($arguments);
         }
         $self->script( 'arguments[0].scrollIntoView(arguments[1]);',
             args => [ $element, $arguments ] );
@@ -9085,7 +9093,8 @@ sub selfie {
     }
     foreach my $key (qw(hash full scroll)) {
         if ( $extra{$key} ) {
-            $parameters->{$key} = \1;
+            $parameters->{$key} =
+              $self->_translate_to_json_boolean( $extra{$key} );
         }
     }
     $self->_send_request(
@@ -9431,7 +9440,8 @@ sub new_window {
 
     foreach my $key (qw(focus private)) {
         if ( defined $parameters{$key} ) {
-            $parameters{$key} = $parameters{$key} ? \1 : \0;
+            $parameters{$key} =
+              $self->_translate_to_json_boolean( $parameters{$key} );
         }
     }
     my $message_id = $self->_new_message_id();
@@ -10320,7 +10330,7 @@ sub accept_connections {
         [
             _COMMAND(), $message_id,
             $self->_command('Marionette:AcceptConnections'),
-            { value => $new ? \1 : \0 }
+            { value => $self->_translate_to_json_boolean($new) }
         ]
     );
     my $response = $self->_get_response($message_id);
@@ -10386,7 +10396,8 @@ sub _script_parameters {
     }
     foreach my $key (qw(newSandbox)) {
         if ( defined $parameters{$key} ) {
-            $parameters{$key} = $parameters{$key} ? \1 : \0;
+            $parameters{$key} =
+              $self->_translate_to_json_boolean( $parameters{$key} );
         }
     }
     $parameters{script} = $script;
@@ -10911,7 +10922,7 @@ sub install {
             $self->_command('Addon:Install'),
             {
                 path      => $actual_path,
-                temporary => $temporary ? \1 : \0
+                temporary => $self->_translate_to_json_boolean($temporary),
             }
         ]
     );
