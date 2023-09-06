@@ -66,8 +66,8 @@ sub clear {
 }
 
 sub scroll {
-    my ($self) = @_;
-    return $self->browser()->scroll($self);
+    my ( $self, $arguments ) = @_;
+    return $self->browser()->scroll( $self, $arguments );
 }
 
 sub text {
