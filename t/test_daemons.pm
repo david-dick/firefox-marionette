@@ -856,9 +856,12 @@ sub new {
 sub connect_and_exit {
     my ( $class, $host ) = @_;
     my $binary = 'ssh';
+    if (!$class->SUPER::available( $binary, '-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes', $host, 'exit 0' )) {
+	return 0;
+    }
     my $port   = $class->new_port();
-    my $result = system {$binary} $binary,
-      '-o=StrictHostKeyChecking=accept-new', '-oExitOnForwardFailure=yes',
+    my $result = system {$binary} $binary, '-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes',
+      '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ExitOnForwardFailure=yes',
       '-L', "$port:127.0.0.1:22", $host, 'exit 0';
     return $result == 0 ? return 1 : return $result;
 }
@@ -895,7 +898,7 @@ sub new {
         binary        => $ssh_binary,
         listen        => $listen,
         port          => $port,
-        arguments     => [ qw(-ND), "$listen:$port", 'localhost' ]
+        arguments     => [ qw(-o ConnectTimeout=5 -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ExitOnForwardFailure=yes -ND), "$listen:$port", 'localhost' ]
     );
     return $ssh;
 }
