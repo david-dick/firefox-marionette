@@ -223,6 +223,8 @@ MAIN: {
 								_execute($server, undef, 'scp', '-r', '-P', $server->{port}, $server->{user} . q[@] . $server->{address} . q[:/] . $remote_tmp_directory . q[/firefox-marionette/] . $cover_db_name, Cwd::cwd() . '/');
 							}
 							_cleanup_server($server);
+							_virsh_shutdown($server);
+							_sleep_until_shutdown($server);
 						} elsif ($server->{os} eq 'android') {
 							my $count = 0;
 							_execute($server, { alarm_after => $ENV{FIREFOX_ALARM}, return_result => 1 }, $^X, ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', '-MFirefox::Marionette', '-e', "Firefox::Marionette->new(adb => '$server->{address}');");
