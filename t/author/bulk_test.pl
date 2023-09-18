@@ -527,6 +527,7 @@ MAIN: {
 	foreach my $syscall_entry (@syscall_entries) {
 		_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $syscall_entry ], {});
 	}
+	_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', '-wT', 't/04-proxy.t' ], {});
 	while (_check_for_background_processes($background_pids, @servers)) {
 		sleep 10;
 	}

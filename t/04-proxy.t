@@ -56,11 +56,13 @@ SKIP: {
 	my $nginx_realm = "Nginx Server for Firefox::Marionette $0";
 	my $nginx = Test::Daemon::Nginx->new(listen => $nginx_listen, key_size => $default_rsa_key_size, ca => $ca, $ENV{FIREFOX_NO_WEB_AUTH} ? () : ( username => $nginx_username, password => $nginx_password, realm => $nginx_realm));
 	ok($nginx, "Started nginx Server on $nginx_listen on port " . $nginx->port() . ", with pid " . $nginx->pid());
+	_wait_until_port_open($nginx_listen, $nginx->port());
 	my $squid_username = MIME::Base64::encode_base64( Crypt::URandom::urandom( 50 ), q[] );
 	my $squid_password = MIME::Base64::encode_base64( Crypt::URandom::urandom( 100 ), q[] );
 	my $squid_realm = "Squid Proxy for Firefox::Marionette $0";
 	my $squid = Test::Daemon::Squid->new(listen => $squid_listen, key_size => $default_rsa_key_size, ca => $ca, allow_ssl_port => $nginx->port(), $ENV{FIREFOX_NO_PROXY_AUTH} ? () : (username => $squid_username, password => $squid_password, realm => $squid_realm));
 	ok($squid, "Started squid Server on $squid_listen on port " . $squid->port() . ", with pid " . $squid->pid());
+	_wait_until_port_open($squid_listen, $squid->port());
 	my $profile = Firefox::Marionette::Profile->new();
 	$profile->set_value( 'network.proxy.allow_hijacking_localhost', 'true', 0 );
 	my $debug = $ENV{FIREFOX_DEBUG} || 0;
@@ -108,10 +110,13 @@ SKIP: {
 	ok($squid->stop() == 0, "Stopped HTTPS proxy on $squid_listen:" . $squid->port());
 	$nginx = Test::Daemon::Nginx->new(listen => $nginx_listen);
 	ok($nginx, "Started nginx Server on $nginx_listen on port " . $nginx->port() . ", with pid " . $nginx->pid());
+	_wait_until_port_open($nginx_listen, $nginx->port());
 	my $squid1 = Test::Daemon::Squid->new(listen => $squid_listen, allow_port => $nginx->port());
 	ok($squid1, "Started squid Server on $squid_listen on port " . $squid1->port() . ", with pid " . $squid1->pid());
+	_wait_until_port_open($squid_listen, $squid1->port());
 	my $squid2 = Test::Daemon::Squid->new(listen => $squid_listen, key_size => $default_rsa_key_size, ca => $ca, allow_port => $nginx->port());
 	ok($squid2, "Started squid Server on $squid_listen on port " . $squid2->port() . ", with pid " . $squid2->pid());
+	_wait_until_port_open($squid_listen, $squid2->port());
 	{
 		local $ENV{all_proxy} = 'https://' . $squid_listen . ':' . $squid2->port();
 		my $firefox = Firefox::Marionette->new(
@@ -133,6 +138,7 @@ SKIP: {
 		ok($@, "Failed to load website when proxy specified by all_proxy environment variable is down:$@");
 		ok($firefox->go("about:blank"), "Reset current webpage to about:blank");
 		ok($squid2->start(), "Started HTTPS proxy on $squid_listen:" . $squid2->port());
+		_wait_until_port_open($squid_listen, $squid2->port());
 		eval {
 			$firefox->go("http://$nginx_listen:" . $nginx->port());
 		};
@@ -163,6 +169,7 @@ SKIP: {
 	$strip = $firefox->strip();
 	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and backup HTTPS proxies:$strip:");
 	ok($squid1->start(), "Started primary HTTP proxy on $squid_listen:" . $squid1->port());
+	_wait_until_port_open($squid_listen, $squid1->port());
 	ok($squid2->stop() == 0, "Stopped backup HTTPS proxy on $squid_listen:" . $squid2->port());
 	eval {
 		$firefox->go("http://$nginx_listen:" . $nginx->port());
@@ -220,6 +227,21 @@ SKIP: {
 	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v5):$strip:");
 	ok($nginx->stop() == 0, "Stopped nginx on $nginx_listen:" . $nginx->port());
 	ok($socks->stop() == 0, "Stopped SOCKS proxy on $socks_listen:" . $socks->port());
+}
+
+sub _wait_until_port_open {
+	my ($address, $port) = @_;
+	my $found_port = 0;
+	while ( $found_port == 0 ) {
+		socket my $socket, Socket::PF_INET(), Socket::SOCK_STREAM(), 0 or die "Failed to create a socket:$!";
+		my $sock_addr = Socket::pack_sockaddr_in( $port, Socket::inet_aton($address) );
+		if ( connect $socket, $sock_addr ) {
+			$found_port = $port;
+		} else {
+			sleep 1;
+		}
+		close $socket or die "Failed to close test socket:$!";
+	}
 }
 
 done_testing();
