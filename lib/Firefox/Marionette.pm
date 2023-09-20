@@ -5371,6 +5371,7 @@ sub macos_binary_paths {
         '/Applications/Firefox Nightly.app/Contents/MacOS/firefox',
         '/Applications/Waterfox Current.app/Contents/MacOS/waterfox',
         '/Applications/Waterfox Classic.app/Contents/MacOS/waterfox',
+        '/Applications/LibreWolf.app/Contents/MacOS/librewolf',
     );
 }
 
