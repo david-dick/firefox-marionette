@@ -4600,13 +4600,13 @@ sub _get_version {
                 $self->{_initial_version}->{major} =
                   _PALEMOON_VERSION_EQUIV();
             }
-            elsif ( $browser_result =~ /^$waterfox_regex$/smx ) {
-                $self->{waterfox} = 1;
-            }
             else {
                 $self->{_initial_version}->{major} = $major;
                 $self->{_initial_version}->{minor} = $minor;
                 $self->{_initial_version}->{patch} = $patch;
+            }
+            if ( $browser_result =~ /^$waterfox_regex$/smx ) {
+                $self->{waterfox} = 1;
             }
         }
         elsif ( defined $self->{_initial_version} ) {
