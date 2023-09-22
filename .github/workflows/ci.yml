@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, macos-latest] #, windows-latest]
+        runner: [ubuntu-latest, macos-latest, windows-latest]
         perl: [ '5.32' ]
         firefox: [ 'latest-beta', 'latest' ] # 'latest-devedition', 'latest-esr',
 
@@ -18,10 +18,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Show available environment variables
-      run: |
-        set
 
     - name: Set up firefox
       uses: browser-actions/setup-firefox@latest
