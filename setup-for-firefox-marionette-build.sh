@@ -3,42 +3,66 @@
 SUDO="sudo ";
 SUDO_WITH_ENVIRONMENT="$SUDO -E ";
 OSNAME=`uname`;
+if [ $EUID -eq 0 ]
+then
+	SUDO="";
+	SUDO_WITH_ENVIRONMENT="";
+fi
 case $OSNAME in
 	Linux)
 		if [ -e "/etc/redhat-release" ]
 		then
 			DNF="dnf"
 			$DNF --help >/dev/null 2>/dev/null || DNF="yum"
-			${SUDO}$DNF info epel-release >/dev/null 2>/dev/null && ${SUDO}$DNF install -y epel-release || true
-			${SUDO}$DNF install -y \
-						dbus-x11 \
+			if [ ! -e "/etc/fedora-release" ]
+			then
+				rpm -q --quiet epel-release 2>/dev/null && ${SUDO}$DNF install -y epel-release || true
+			fi
+			PACKAGES="dbus-x11 \
 						firefox \
 						make \
 						mesa-dri-drivers \
 						nginx \
 						openssl \
 						perl-Archive-Zip \
-						perl-Config-INI \
 						perl-Crypt-PasswdMD5 \
 						perl-Crypt-URandom \
 						perl-Digest-SHA \
-						perl-DirHandle \
 						perl-ExtUtils-MakeMaker \
 						perl-File-HomeDir \
+						perl-Font-TTF \
 						perl-HTTP-Daemon \
 						perl-HTTP-Message \
 						perl-IO-Socket-SSL \
 						perl-JSON \
-						perl-PDF-API2 \
 						perl-PerlIO-utf8_strict \
 						perl-Sub-Exporter \
 						perl-Sub-Uplevel \
 						perl-Text-CSV_XS \
 						perl-TermReadKey \
+						perl-Test-Exception \
+						perl-Test-Memory-Cycle \
 						perl-Test-Simple \
 						perl-XML-Parser \
 						squid \
-						xorg-x11-server-Xvfb
+						xorg-x11-server-Xvfb"
+			rpm -q --quiet $PACKAGES || ${SUDO}$DNF install -y $PACKAGES
+			SOMETIMES_MISSING_PACKAGES="perl-Config-INI \
+						perl-DirHandle \
+						perl-PDF-API2"
+			for PACKAGE in $SOMETIMES_MISSING_PACKAGES
+			do
+				rpm -q --quiet $PACKAGE || ${SUDO}$DNF install -y $PACKAGE
+			done
+			for PACKAGE in Config::INI PDF::API2
+			do
+				perl -M$PACKAGE -e 'exit 0'
+				if [ $? != 0 ]
+				then
+					${SUDO}dnf install -y cpan
+					PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT}cpan $PACKAGE
+				fi
+			done
 		fi
 		if [ -e "/etc/debian_version" ]
 		then
@@ -93,8 +117,7 @@ case $OSNAME in
 		fi
 		if [ -e "/etc/alpine-release" ]
 		then
-			${SUDO}apk add \
-				dbus-x11 \
+			PACKAGES="dbus-x11 \
 				firefox \
 				mesa-dri-nouveau \
 				nginx \
@@ -118,10 +141,18 @@ case $OSNAME in
 				make \
 				squid \
 				xauth \
-				xvfb
-			if [ $? != 0 ]
+				xvfb"
+			INSTALL_PACKAGES=0
+			for PACKAGE_NAME in $PACKAGES
+			do
+				grep $PACKAGE_NAME /etc/apk/world >/dev/null || INSTALL_PACKAGES=1
+			done
+			if [ $INSTALL_PACKAGES -eq 1 ]
 			then
-				cat <<"_APK_REPO_";
+				${SUDO}apk add $PACKAGES
+				if [ $? != 0 ]
+				then
+					cat <<"_APK_REPO_";
 
 Check the /etc/apk/repositories file as it needs to have the community and main repos uncommented and
 probably the edge repositories as well, like so;
@@ -134,12 +165,12 @@ http://dl-cdn.alpinelinux.org/alpine/edge/community
 http://dl-cdn.alpinelinux.org/alpine/edge/testing
 
 _APK_REPO_
+				fi
 			fi
 		fi
 		;;
 	DragonFly)
-		${SUDO}pkg install -y \
-					firefox \
+		PACKAGES="firefox \
 					mesa-dri-gallium \
 					nginx \
 					openssl \
@@ -161,12 +192,15 @@ _APK_REPO_
 					p5-XML-Parser \
 					squid \
 					xauth \
-					xorg-vfbserver
-		${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+					xorg-vfbserver"
+		pkg info $PACKAGES >/dev/null || ${SUDO}pkg install -y $PACKAGES
+		if [ ! -e /etc/machine-id ]
+		then
+			${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+		fi
 		;;
 	FreeBSD)
-		${SUDO}pkg install \
-					firefox \
+		PACKAGES="firefox \
 					nginx \
 					openssl \
 					perl5 \
@@ -187,12 +221,16 @@ _APK_REPO_
 					p5-XML-Parser \
 					squid \
 					xauth \
-					xorg-vfbserver
-		${SUDO}mount -t fdescfs fdesc /dev/fd
-		${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+					xorg-vfbserver"
+		pkg info $PACKAGES >/dev/null || ${SUDO}pkg install -y $PACKAGES
+		mount | grep fdescfs >/dev/null || ${SUDO}mount -t fdescfs fdesc /dev/fd
+		if [ ! -e /etc/machine-id ]
+		then
+			${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+		fi
 		;;
 	OpenBSD)
-		${SUDO}pkg_add \
+		PACKAGES="firefox \
 					firefox \
 					nginx \
 					p5-Archive-Zip \
@@ -212,41 +250,51 @@ _APK_REPO_
 					p5-Sub-Install \
 					p5-Text-CSV_XS \
 					p5-XML-Parser \
-					squid
+					squid"
+		pkg_info $PACKAGES >/dev/null || ${SUDO}pkg_add -I $PACKAGES
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Config::INI
 		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Crypt::URandom
 		;;
 	NetBSD)
 		PKG_PATH="http://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
-		${SUDO}pkg_add \
-					${PKG_PATH}firefox \
-					${PKG_PATH}nginx \
-					${PKG_PATH}openssl \
-					${PKG_PATH}p5-Archive-Zip \
-					${PKG_PATH}p5-JSON \
-					${PKG_PATH}p5-Config-INI \
-					${PKG_PATH}p5-Crypt-PasswdMD5 \
-					${PKG_PATH}p5-Crypt-URandom \
-					${PKG_PATH}p5-File-HomeDir \
-					${PKG_PATH}p5-HTTP-Daemon \
-					${PKG_PATH}p5-HTTP-Message \
-					${PKG_PATH}p5-IO-Socket-SSL \
-					${PKG_PATH}p5-Params-Util \
-					${PKG_PATH}p5-PerlIO-utf8_strict \
-					${PKG_PATH}p5-PDF-API2 \
-					${PKG_PATH}p5-Sub-Exporter \
-					${PKG_PATH}p5-Sub-Uplevel \
-					${PKG_PATH}p5-Sub-Install \
-					${PKG_PATH}p5-Text-CSV_XS \
-					${PKG_PATH}p5-XML-Parser \
-					${PKG_PATH}squid
-		if [ $? != 0 ]
+		PACKAGES="firefox \
+					nginx \
+					openssl \
+					p5-Archive-Zip \
+					p5-JSON \
+					p5-Config-INI \
+					p5-Crypt-PasswdMD5 \
+					p5-Crypt-URandom \
+					p5-File-HomeDir \
+					p5-HTTP-Daemon \
+					p5-HTTP-Message \
+					p5-IO-Socket-SSL \
+					p5-Params-Util \
+					p5-PerlIO-utf8_strict \
+					p5-PDF-API2 \
+					p5-Sub-Exporter \
+					p5-Sub-Uplevel \
+					p5-Sub-Install \
+					p5-Text-CSV_XS \
+					p5-XML-Parser \
+					squid"
+		INSTALL_PACKAGES=""
+		for NAME in $PACKAGES
+		do
+			pkgin list | grep $NAME >/dev/null 2>/dev/null || INSTALL_PACKAGES="$INSTALL_PACKAGES $NAME"
+		done
+		if [ "$INSTALL_PACKAGES" != "" ]
 		then
-			cat <<_PKG_PATH_
+			${SUDO}pkg_add ${PKG_PATH}/pkgin
+			${SUDO}pkgin -y install $INSTALL_PACKAGES
+			if [ $? != 0 ]
+			then
+				cat <<_PKG_PATH_
 
 pkg_add failed. PKG_PATH was set to $PKG_PATH
 
 _PKG_PATH_
+			fi
 		fi
 		;;
 	CYGWIN_NT*)
