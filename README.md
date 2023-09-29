@@ -164,6 +164,82 @@ accepts a host name and a hash of HTTP headers to include in every future HTTP R
 
 these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the [delete\_site\_header](#delete_site_header) method
 
+## add\_webauthn\_authenticator
+
+accepts a hash of the following keys;
+
+- has\_resident\_key - boolean value to indicate if the authenticator will support [client side discoverable credentials](https://www.w3.org/TR/webauthn-2/#client-side-discoverable-credential)
+- has\_user\_verification - boolean value to determine if the [authenticator](https://www.w3.org/TR/webauthn-2/#virtual-authenticators) supports [user verification](https://www.w3.org/TR/webauthn-2/#user-verification).
+- is\_user\_consenting - boolean value to determine the result of all [user consent](https://www.w3.org/TR/webauthn-2/#user-consent) [authorization gestures](https://www.w3.org/TR/webauthn-2/#authorization-gesture), and by extension, any [test of user presence](https://www.w3.org/TR/webauthn-2/#test-of-user-presence) performed on the [Virtual Authenticator](https://www.w3.org/TR/webauthn-2/#virtual-authenticators). If set to true, a [user consent](https://www.w3.org/TR/webauthn-2/#user-consent) will always be granted. If set to false, it will not be granted.
+- is\_user\_verified - boolean value to determine the result of [User Verification](https://www.w3.org/TR/webauthn-2/#user-verification) performed on the [Virtual Authenticator](https://www.w3.org/TR/webauthn-2/#virtual-authenticators). If set to true, [User Verification](https://www.w3.org/TR/webauthn-2/#user-verification) will always succeed. If set to false, it will fail.
+- protocol - the [protocol](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#protocol) spoken by the authenticator.  This may be [CTAP1\_U2F](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#CTAP1_U2F), [CTAP2](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#CTAP2) or [CTAP2\_1](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#CTAP2_1).
+- transport - the [transport](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#transport) simulated by the authenticator.  This may be [BLE](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#BLE), [HYBRID](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#HYBRID), [INTERNAL](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#INTERNAL), [NFC](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#NFC), [SMART\_CARD](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#SMART_CARD) or [USB](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#USB).
+
+It returns the newly created [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator).
+
+    use Firefox::Marionette();
+    use Crypt::URandom();
+
+    my $user_name = MIME::Base64::encode_base64( Crypt::URandom::urandom( 10 ), q[] ) . q[@example.com];
+    my $firefox = Firefox::Marionette->new( webauthn => 0 );
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    $firefox->go('https://webauthn.io');
+    $firefox->find_id('input-email')->type($user_name);
+    $firefox->find_id('register-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('alert-success'); });
+    $firefox->find_id('login-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('hero confetti'); });
+
+## add\_webauthn\_credential
+
+accepts a hash of the following keys;
+
+- authenticator - contains the [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator) that the credential will be added to.  If this parameter is not supplied, the credential will be added to the default authenticator, if one exists.
+- host - contains the domain that this credential is to be used for.  In the language of [WebAuthn](https://www.w3.org/TR/webauthn-2), this field is referred to as the [relying party identifier](https://www.w3.org/TR/webauthn-2/#relying-party-identifier) or [RP ID](https://www.w3.org/TR/webauthn-2/#rp-id).
+- id - contains the unique id for this credential, also known as the [Credential ID](https://www.w3.org/TR/webauthn-2/#credential-id).  If this is not supplied, one will be generated.
+- is\_resident - contains a boolean that if set to true, a [client-side discoverable credential](https://w3c.github.io/webauthn/#client-side-discoverable-credential) is created. If set to false, a [server-side credential](https://w3c.github.io/webauthn/#server-side-credential) is created instead.
+- private\_key - either a [RFC5958](https://www.rfc-editor.org/rfc/rfc5958) encoded private key encoded using [encode\_base64url](https://metacpan.org/pod/MIME::Base64::encode_base64url) or a hash containing the following keys;
+    - name - contains the name of the private key algorithm, such as "RSA-PSS" (the default), "RSASSA-PKCS1-v1\_5", "ECDSA" or "ECDH".
+    - size - contains the modulus length of the private key.  This is only valid for "RSA-PSS" or "RSASSA-PKCS1-v1\_5" private keys.
+    - hash - contains the name of the hash algorithm, such as "SHA-512" (the default).  This is only valid for "RSA-PSS" or "RSASSA-PKCS1-v1\_5" private keys.
+    - curve - contains the name of the curve for the private key, such as "P-384" (the default).  This is only valid for "ECDSA" or "ECDH" private keys.
+- sign\_count - contains the initial value for a [signature counter](https://w3c.github.io/webauthn/#signature-counter) associated to the [public key credential source](https://w3c.github.io/webauthn/#public-key-credential-source).  It will default to 0 (zero).
+- user - contains the [userHandle](https://w3c.github.io/webauthn/#public-key-credential-source-userhandle) associated to the credential encoded using [encode\_base64url](https://metacpan.org/pod/MIME::Base64::encode_base64url).  This property is optional.
+
+It returns the newly created [credential](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Credential).  If of course, the credential is just created, it probably won't be much good by itself.  However, you can use it to recreate a credential, so long as you know all the parameters.
+
+    use Firefox::Marionette();
+    use Crypt::URandom();
+
+    my $user_name = MIME::Base64::encode_base64( Crypt::URandom::urandom( 10 ), q[] ) . q[@example.com];
+    my $firefox = Firefox::Marionette->new();
+    $firefox->go('https://webauthn.io');
+    $firefox->find_id('input-email')->type($user_name);
+    $firefox->find_id('register-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('alert-success'); });
+    $firefox->find_id('login-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('hero confetti'); });
+    foreach my $credential ($firefox->webauthn_credentials()) {
+        $firefox->delete_webauthn_credential($credential);
+
+\# ... time passes ...
+
+        $firefox->add_webauthn_credential(
+                  id            => $credential->id(),
+                  host          => $credential->host(),
+                  user          => $credential->user(),
+                  private_key   => $credential->private_key(),
+                  is_resident   => $credential->is_resident(),
+                  sign_count    => $credential->sign_count(),
+                              );
+    }
+    $firefox->go('about:blank');
+    $firefox->clear_cache(Firefox::Marionette::Cache::CLEAR_COOKIES());
+    $firefox->go('https://webauthn.io');
+    $firefox->find_id('input-email')->type($user_name);
+    $firefox->find_id('login-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('hero confetti'); });
+
 ## addons
 
 returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) cannot be automated.
@@ -607,6 +683,48 @@ accepts a host name and a list of HTTP headers names to delete from future HTTP 
     $firefox->delete_header( 'metacpan.org', 'User-Agent', 'Accept', 'Accept-Encoding' );
 
 will remove the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), [Accept](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) and [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) headers from all future requests to metacpan.org.
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
+## delete\_webauthn\_all\_credentials
+
+This method accepts an optional [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator), in which case it will delete all [credentials](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Credential) from this authenticator.  If no parameter is supplied, the default authenticator will have all credentials deleted.
+
+    my $firefox = Firefox::Marionette->new();
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    $firefox->delete_webauthn_all_credentials($authenticator);
+    $firefox->delete_webauthn_all_credentials();
+
+## delete\_webauthn\_authenticator
+
+This method accepts an optional [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator), in which case it will delete this authenticator from the current Firefox instance.  If no parameter is supplied, the default authenticator will be deleted.
+
+    my $firefox = Firefox::Marionette->new();
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    $firefox->delete_webauthn_authenticator($authenticator);
+    $firefox->delete_webauthn_authenticator();
+
+## delete\_webauthn\_credential
+
+This method accepts either a [credential](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Credential) and an [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator), in which case it will remove the credential from the supplied authenticator or
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    foreach my $credential ($firefox->webauthn_credentials($authenticator)) {
+        $firefox->delete_webauthn_credential($credential, $authenticator);
+    }
+
+just a [credential](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Credential), in which case it will remove the credential from the default authenticator.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    ...
+    foreach my $credential ($firefox->webauthn_credentials()) {
+        $firefox->delete_webauthn_credential($credential);
+    }
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
@@ -1409,6 +1527,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - via - specifies a [proxy jump box](https://man.openbsd.org/ssh_config#ProxyJump) to be used to connect to a remote host.  See the host parameter.
 - visible - should firefox be visible on the desktop.  This defaults to "0".  When moving from a X11 platform to another X11 platform, you can set visible to 'local' to enable [X11 forwarding](https://man.openbsd.org/ssh#X).  See [X11 FORWARDING WITH FIREFOX](#x11-forwarding-with-firefox).
 - waterfox - only allow a binary that looks like a [waterfox version](https://www.waterfox.net/) to be launched.
+- webauthn - a boolean parameter to determine whether or not to [add a webauthn authenticator](#add_webauthn_authenticator) after the connection is established.  The default is to add a webauthn authenticator for Firefox after version 118.
 - width - set the [width](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) of the initial firefox window
 
 This method returns a new `Firefox::Marionette` object, connected to an instance of [firefox](https://firefox.com).  In a non MacOS/Win32/Cygwin environment, if necessary (no DISPLAY variable can be found and the visible parameter to the new method has been set to true) and possible (Xvfb can be executed successfully), this method will also automatically start an [Xvfb](https://en.wikipedia.org/wiki/Xvfb) instance.
@@ -1922,6 +2041,38 @@ accepts the GUID for the addon to uninstall.  The GUID is returned when from the
 ## uri
 
 returns the current [URI](https://metacpan.org/pod/URI) of current top level browsing context for Desktop.  It is equivalent to the javascript `document.location.href`
+
+## webauthn\_authenticator
+
+returns the default [WebAuthn authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator) created when the [new](#new) method was called.
+
+## webauthn\_credentials
+
+This method accepts an optional [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator), in which case it will return all the [credentials](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Credential) attached to this authenticator.  If no parameter is supplied, [credentials](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Credential) from the default authenticator will be returned.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $credential ($firefox->webauthn_credentials()) {
+       say "Credential host is " . $credential->host();
+    }
+
+    # OR
+
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    foreach my $credential ($firefox->webauthn_credentials($authenticator)) {
+       say "Credential host is " . $credential->host();
+    }
+
+## webauthn\_set\_user\_verified
+
+This method accepts a boolean for the [is\_user\_verified](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#is_user_verified) field and an optional [authenticator](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator) (the default authenticator will be used otherwise).  It sets the [is\_user\_verified](https://metacpan.org/pod/Firefox::Marionette::WebAuthn::Authenticator#is_user_verified) field to the supplied boolean value.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->webauthn_set_user_verified(1);
 
 ## wheel
 

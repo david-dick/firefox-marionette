@@ -27,6 +27,8 @@ lib/Firefox/Marionette/Exception/NoSuchAlert.pm
 lib/Firefox/Marionette/Response.pm
 lib/Firefox/Marionette/Timeouts.pm
 lib/Firefox/Marionette/UpdateStatus.pm
+lib/Firefox/Marionette/WebAuthn/Authenticator.pm
+lib/Firefox/Marionette/WebAuthn/Credential.pm
 lib/Waterfox/Marionette.pm
 lib/Waterfox/Marionette/Profile.pm
 Makefile.PL
@@ -73,6 +75,7 @@ t/03-seek.t
 t/03-stat.t
 t/03-sysopen.t
 t/04-proxy.t
+t/04-webauthn.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

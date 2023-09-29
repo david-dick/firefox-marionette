@@ -414,7 +414,7 @@ WriteMakefile(
         'File::Temp'          => 0,
         'IPC::Open3'          => 1.03,
         'JSON'                => 0,
-        'MIME::Base64'        => 0,
+        'MIME::Base64'        => 3.11, # encode_base64url
         'overload'            => 0,
         'Pod::Simple::Text'   => 0,
         'POSIX'               => 0,

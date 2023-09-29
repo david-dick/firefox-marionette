@@ -528,6 +528,7 @@ MAIN: {
 		_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', $syscall_entry ], {});
 	}
 	_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', '-wT', 't/04-proxy.t' ], {});
+	_multiple_attempts_execute($^X, [ ($devel_cover_inc ? $devel_cover_inc : ()), '-Ilib', 't/04-webauthn.t' ], {});
 	while (_check_for_background_processes($background_pids, @servers)) {
 		sleep 10;
 	}

@@ -22,6 +22,8 @@ use Firefox::Marionette::Exception();
 use Firefox::Marionette::Exception::Response();
 use Firefox::Marionette::UpdateStatus();
 use Firefox::Marionette::ShadowRoot();
+use Firefox::Marionette::WebAuthn::Authenticator();
+use Firefox::Marionette::WebAuthn::Credential();
 use Waterfox::Marionette::Profile();
 use Compress::Zlib();
 use Config::INI::Reader();
@@ -113,11 +115,13 @@ sub _MIN_VERSION_FOR_SCRIPT_SCRIPT  { return 31 }
 sub _MIN_VERSION_FOR_SCRIPT_WO_ARGS { return 60 }
 sub _MIN_VERSION_FOR_MODERN_GO      { return 31 }
 sub _MIN_VERSION_FOR_MODERN_SWITCH  { return 90 }
+sub _MIN_VERSION_FOR_WEBAUTHN       { return 118 }
 sub _ACTIVE_UPDATE_XML_FILE_NAME    { return 'active-update.xml' }
 sub _NUMBER_OF_CHARS_IN_TEMPLATE    { return 11 }
 sub _DEFAULT_ADB_PORT               { return 5555 }
 sub _SHORT_GUID_BYTES               { return 9 }
 sub _DEFAULT_DOWNLOAD_TIMEOUT       { return 300 }
+sub _CREDENTIAL_ID_LENGTH           { return 32 }
 
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
@@ -133,6 +137,8 @@ my $proxy_name_regex = qr/perl_ff_m_\w+/smx;
 my $tmp_name_regex   = qr/firefox_marionette_(?:remote|local)_\w+/smx;
 my @sig_nums         = split q[ ], $Config{sig_num};
 my @sig_names        = split q[ ], $Config{sig_name};
+
+my $webauthn_default_authenticator_key_name = '_webauthn_authenticator';
 
 sub BY_XPATH {
     Carp::carp(
@@ -814,6 +820,7 @@ sub _init {
     $self->{sleep_time_in_ms}   = $parameters{sleep_time_in_ms};
     $self->{force_scp_protocol} = $parameters{scp};
     $self->{visible}            = $parameters{visible};
+    $self->{force_webauthn}     = $parameters{webauthn};
 
     foreach my $type (qw(nightly developer waterfox)) {
         if ( defined $parameters{$type} ) {
@@ -1796,6 +1803,286 @@ sub _import_profile_paths {
         }
     }
     return;
+}
+
+sub webauthn_authenticator {
+    my ($self) = @_;
+    return $self->{$webauthn_default_authenticator_key_name};
+}
+
+sub add_webauthn_authenticator {
+    my ( $self, %parameters ) = @_;
+    if ( !defined $parameters{protocol} ) {
+        $parameters{protocol} = 'ctap2';
+    }
+    if ( !defined $parameters{transport} ) {
+        $parameters{transport} = 'internal';
+    }
+    foreach my $key (
+        qw(
+        has_resident_key
+        is_user_consenting
+        is_user_verified
+        has_user_verification
+        )
+      )
+    {
+        $parameters{$key} = $self->_translate_to_json_boolean(
+            $self->_default_to_true( $parameters{$key} ) );
+    }
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(),
+            $message_id,
+            $self->_command('WebAuthn:AddVirtualAuthenticator'),
+            {
+                protocol            => $parameters{protocol},
+                transport           => $parameters{transport},
+                hasResidentKey      => $parameters{has_resident_key},
+                hasUserVerification => $parameters{has_user_verification},
+                isUserConsenting    => $parameters{is_user_consenting},
+                isUserVerified      => $parameters{is_user_verified},
+            }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return Firefox::Marionette::WebAuthn::Authenticator->new(
+        id => $self->_response_result_value($response),
+        %parameters
+    );
+}
+
+sub _default_to_true {
+    my ( $self, $boolean ) = @_;
+    if ( !defined $boolean ) {
+        $boolean = 1;
+    }
+    return $boolean;
+}
+
+sub webauthn_set_user_verified {
+    my ( $self, $boolean, $parameter_authenticator ) = @_;
+    my $authenticator = $self->_get_webauthn_authenticator(
+        authenticator => $parameter_authenticator );
+    $boolean =
+      $self->_translate_to_json_boolean( $self->_default_to_true($boolean) );
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(),
+            $message_id,
+            $self->_command('WebAuthn:SetUserVerified'),
+            {
+                authenticatorId => $authenticator->id(),
+                isUserVerified  => $boolean,
+            }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return $self;
+}
+
+sub delete_webauthn_authenticator {
+    my ( $self, $parameter_authenticator ) = @_;
+    my $authenticator = $self->_get_webauthn_authenticator(
+        authenticator => $parameter_authenticator );
+
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(),
+            $message_id,
+            $self->_command('WebAuthn:RemoveVirtualAuthenticator'),
+            {
+                authenticatorId => $authenticator->id(),
+            }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    if (   ( $self->webauthn_authenticator() )
+        && ( $self->webauthn_authenticator()->id() == $authenticator->id() ) )
+    {
+        delete $self->{$webauthn_default_authenticator_key_name};
+    }
+    return $self;
+}
+
+sub add_webauthn_credential {
+    my ( $self, %parameters ) = @_;
+    foreach my $key (
+        qw(
+        is_resident
+        )
+      )
+    {
+        $parameters{$key} = $self->_translate_to_json_boolean(
+            $self->_default_to_true( $parameters{$key} ) );
+    }
+    if ( !defined $parameters{id} ) {
+        my $credential_id = MIME::Base64::encode_base64url(
+            Crypt::URandom::urandom( _CREDENTIAL_ID_LENGTH() ) );
+        $parameters{id} = $credential_id;
+    }
+    if ( defined $parameters{user} ) {
+        $parameters{user} =
+          MIME::Base64::encode_base64url( $parameters{user} );
+    }
+    if ( !defined $parameters{private_key} ) {
+        $parameters{private_key} = {};
+    }
+    if ( ref $parameters{private_key} eq 'HASH' ) {
+        my $script = <<'_JS_';
+let privateKeyArguments = {};
+if (arguments[0]["name"]) {
+  privateKeyArguments["name"] = arguments[0]["name"];
+} else {
+  privateKeyArguments["name"] = "RSA-PSS";
+}
+if ((privateKeyArguments["name"] == "RSA-PSS") || (privateKeyArguments["name"] == "RSASSA-PKCS1-v1_5")) {
+  privateKeyArguments["modulusLength"] = arguments[0]["size"] || 8192;
+  privateKeyArguments["publicExponent"] = new Uint8Array([1, 0, 1]);
+  privateKeyArguments["hash"] = arguments[0]["hash"] || "SHA-512";
+} else if ((privateKeyArguments["name"] == "ECDSA") || (privateKeyArguments["name"] == "ECDH")) {
+  privateKeyArguments["namedCurve"] = arguments[0]["curve"] || "P-384";
+}
+let privateKey = (async function() {
+  let keyPair = await window.crypto.subtle.generateKey(
+    privateKeyArguments,
+    true,
+    ["sign"]
+  );
+  let exportedKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+  let CHUNK_SZ = 0x8000;
+  let c = [];
+  let array = new Uint8Array(exportedKey);
+  for (let i = 0; i < array.length; i += CHUNK_SZ) {
+    c.push(String.fromCharCode.apply(null, array.subarray(i, i + CHUNK_SZ)));
+  }
+  let b64Key = window.btoa(c.join(""));
+  let urlSafeKey = b64Key.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return urlSafeKey;
+})();
+return privateKey;
+_JS_
+        my $old = $self->_context('chrome');
+        $parameters{private_key} = $self->script(
+            $self->_compress_script($script),
+            args => [ $parameters{private_key} ]
+        );
+        $self->_context($old);
+    }
+    if ( !defined $parameters{sign_count} ) {
+        $parameters{sign_count} = 0;
+    }
+    my $authenticator         = $self->_get_webauthn_authenticator(%parameters);
+    my %credential_parameters = (
+        authenticatorId      => $authenticator->id(),
+        credentialId         => $parameters{id},
+        isResidentCredential => $parameters{is_resident},
+        rpId                 => $parameters{host},
+        privateKey           => $parameters{private_key},
+        signCount            => $parameters{sign_count},
+        userHandle           => $parameters{user},
+    );
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(), $message_id, $self->_command('WebAuthn:AddCredential'),
+            \%credential_parameters,
+        ]
+    );
+    if ( defined $credential_parameters{userHandle} ) {
+        $credential_parameters{userHandle} =
+          MIME::Base64::decode_base64url( $credential_parameters{userHandle} );
+    }
+    my $response = $self->_get_response($message_id);
+    return Firefox::Marionette::WebAuthn::Credential->new(
+        %credential_parameters);
+}
+
+sub _get_webauthn_authenticator {
+    my ( $self, %parameters ) = @_;
+    my $authenticator;
+    if ( $parameters{authenticator} ) {
+        $authenticator = $parameters{authenticator};
+    }
+    else {
+        $authenticator = $self->webauthn_authenticator();
+    }
+    return $authenticator;
+}
+
+sub webauthn_credentials {
+    my ( $self, $parameter_authenticator ) = @_;
+    my $authenticator = $self->_get_webauthn_authenticator(
+        authenticator => $parameter_authenticator );
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(),
+            $message_id,
+            $self->_command('WebAuthn:GetCredentials'),
+            {
+                authenticatorId => $authenticator->id(),
+            }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return map { Firefox::Marionette::WebAuthn::Credential->new( %{$_} ) }
+      map      { $self->_decode_credential_user_handle($_) }
+      @{ $self->_response_result_value($response) };
+}
+
+sub _decode_credential_user_handle {
+    my ( $self, $credential ) = @_;
+    if ( $credential->{userHandle} eq q[] ) {
+        $credential->{userHandle} = undef;
+    }
+    else {
+        $credential->{userHandle} =
+          MIME::Base64::decode_base64url( $credential->{userHandle} );
+    }
+    return $credential;
+}
+
+sub delete_webauthn_all_credentials {
+    my ( $self, $parameter_authenticator ) = @_;
+    my $authenticator = $self->_get_webauthn_authenticator(
+        authenticator => $parameter_authenticator );
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(),
+            $message_id,
+            $self->_command('WebAuthn:RemoveAllCredentials'),
+            {
+                authenticatorId => $authenticator->id(),
+            }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return $self;
+}
+
+sub delete_webauthn_credential {
+    my ( $self, $credential, $parameter_authenticator ) = @_;
+    my $authenticator = $self->_get_webauthn_authenticator(
+        authenticator => $parameter_authenticator );
+    my $message_id = $self->_new_message_id();
+    $self->_send_request(
+        [
+            _COMMAND(),
+            $message_id,
+            $self->_command('WebAuthn:RemoveCredential'),
+            {
+                authenticatorId => $authenticator->id(),
+                credentialId    => $credential->id(),
+            }
+        ]
+    );
+    my $response = $self->_get_response($message_id);
+    return $self;
 }
 
 sub _login_interface_preamble {
@@ -3453,6 +3740,16 @@ sub _post_launch_checks_and_setup {
             "Failed to close '$path':$EXTENDED_OS_ERROR");
         $self->install( $path, 0 );
     }
+    if ( $self->{force_webauthn} ) {
+        $self->{$webauthn_default_authenticator_key_name} =
+          $self->add_webauthn_authenticator();
+    }
+    elsif ( defined $self->{force_webauthn} ) {
+    }
+    elsif ( $self->_is_webauthn_okay() ) {
+        $self->{$webauthn_default_authenticator_key_name} =
+          $self->add_webauthn_authenticator();
+    }
     return;
 }
 
@@ -3904,6 +4201,21 @@ sub _is_firefox_major_version_at_least {
     }
     else {
         return 1;    # assume modern non-firefox branded browser
+    }
+}
+
+sub _is_webauthn_okay {
+    my ($self) = @_;
+    if (
+        $self->_is_firefox_major_version_at_least(
+            _MIN_VERSION_FOR_WEBAUTHN()
+        )
+      )
+    {
+        return 1;
+    }
+    else {
+        return 0;
     }
 }
 
@@ -11377,6 +11689,109 @@ accepts a host name and a hash of HTTP headers to include in every future HTTP R
 
 these headers are added to any existing headers going to the metacpan.org site, but no other site.  To clear site headers, see the L<delete_site_header|/delete_site_header> method
 
+=head2 add_webauthn_authenticator
+
+accepts a hash of the following keys;
+
+=over 4
+
+=item * has_resident_key - boolean value to indicate if the authenticator will support L<client side discoverable credentials|https://www.w3.org/TR/webauthn-2/#client-side-discoverable-credential>
+
+=item * has_user_verification - boolean value to determine if the L<authenticator|https://www.w3.org/TR/webauthn-2/#virtual-authenticators> supports L<user verification|https://www.w3.org/TR/webauthn-2/#user-verification>.
+
+=item * is_user_consenting - boolean value to determine the result of all L<user consent|https://www.w3.org/TR/webauthn-2/#user-consent> L<authorization gestures|https://www.w3.org/TR/webauthn-2/#authorization-gesture>, and by extension, any L<test of user presence|https://www.w3.org/TR/webauthn-2/#test-of-user-presence> performed on the L<Virtual Authenticator|https://www.w3.org/TR/webauthn-2/#virtual-authenticators>. If set to true, a L<user consent|https://www.w3.org/TR/webauthn-2/#user-consent> will always be granted. If set to false, it will not be granted.
+
+=item * is_user_verified - boolean value to determine the result of L<User Verification|https://www.w3.org/TR/webauthn-2/#user-verification> performed on the L<Virtual Authenticator|https://www.w3.org/TR/webauthn-2/#virtual-authenticators>. If set to true, L<User Verification|https://www.w3.org/TR/webauthn-2/#user-verification> will always succeed. If set to false, it will fail.
+
+=item * protocol - the L<protocol|Firefox::Marionette::WebAuthn::Authenticator#protocol> spoken by the authenticator.  This may be L<CTAP1_U2F|Firefox::Marionette::WebAuthn::Authenticator#CTAP1_U2F>, L<CTAP2|Firefox::Marionette::WebAuthn::Authenticator#CTAP2> or L<CTAP2_1|Firefox::Marionette::WebAuthn::Authenticator#CTAP2_1>.
+
+=item * transport - the L<transport|Firefox::Marionette::WebAuthn::Authenticator#transport> simulated by the authenticator.  This may be L<BLE|Firefox::Marionette::WebAuthn::Authenticator#BLE>, L<HYBRID|Firefox::Marionette::WebAuthn::Authenticator#HYBRID>, L<INTERNAL|Firefox::Marionette::WebAuthn::Authenticator#INTERNAL>, L<NFC|Firefox::Marionette::WebAuthn::Authenticator#NFC>, L<SMART_CARD|Firefox::Marionette::WebAuthn::Authenticator#SMART_CARD> or L<USB|Firefox::Marionette::WebAuthn::Authenticator#USB>.
+
+=back
+
+It returns the newly created L<authenticator|Firefox::Marionette::WebAuthn::Authenticator>.
+
+    use Firefox::Marionette();
+    use Crypt::URandom();
+
+    my $user_name = MIME::Base64::encode_base64( Crypt::URandom::urandom( 10 ), q[] ) . q[@example.com];
+    my $firefox = Firefox::Marionette->new( webauthn => 0 );
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    $firefox->go('https://webauthn.io');
+    $firefox->find_id('input-email')->type($user_name);
+    $firefox->find_id('register-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('alert-success'); });
+    $firefox->find_id('login-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('hero confetti'); });
+
+=head2 add_webauthn_credential
+
+accepts a hash of the following keys;
+
+=over 4
+
+=item * authenticator - contains the L<authenticator|Firefox::Marionette::WebAuthn::Authenticator> that the credential will be added to.  If this parameter is not supplied, the credential will be added to the default authenticator, if one exists.
+
+=item * host - contains the domain that this credential is to be used for.  In the language of L<WebAuthn|https://www.w3.org/TR/webauthn-2>, this field is referred to as the L<relying party identifier|https://www.w3.org/TR/webauthn-2/#relying-party-identifier> or L<RP ID|https://www.w3.org/TR/webauthn-2/#rp-id>.
+
+=item * id - contains the unique id for this credential, also known as the L<Credential ID|https://www.w3.org/TR/webauthn-2/#credential-id>.  If this is not supplied, one will be generated.
+
+=item * is_resident - contains a boolean that if set to true, a L<client-side discoverable credential|https://w3c.github.io/webauthn/#client-side-discoverable-credential> is created. If set to false, a L<server-side credential|https://w3c.github.io/webauthn/#server-side-credential> is created instead.
+
+=item * private_key - either a L<RFC5958|https://www.rfc-editor.org/rfc/rfc5958> encoded private key encoded using L<encode_base64url|MIME::Base64::encode_base64url> or a hash containing the following keys;
+
+=over 8
+
+=item * name - contains the name of the private key algorithm, such as "RSA-PSS" (the default), "RSASSA-PKCS1-v1_5", "ECDSA" or "ECDH".
+
+=item * size - contains the modulus length of the private key.  This is only valid for "RSA-PSS" or "RSASSA-PKCS1-v1_5" private keys.
+
+=item * hash - contains the name of the hash algorithm, such as "SHA-512" (the default).  This is only valid for "RSA-PSS" or "RSASSA-PKCS1-v1_5" private keys.
+
+=item * curve - contains the name of the curve for the private key, such as "P-384" (the default).  This is only valid for "ECDSA" or "ECDH" private keys.
+
+=back
+
+=item * sign_count - contains the initial value for a L<signature counter|https://w3c.github.io/webauthn/#signature-counter> associated to the L<public key credential source|https://w3c.github.io/webauthn/#public-key-credential-source>.  It will default to 0 (zero).
+
+=item * user - contains the L<userHandle|https://w3c.github.io/webauthn/#public-key-credential-source-userhandle> associated to the credential encoded using L<encode_base64url|MIME::Base64::encode_base64url>.  This property is optional.
+
+=back
+
+It returns the newly created L<credential|Firefox::Marionette::WebAuthn::Credential>.  If of course, the credential is just created, it probably won't be much good by itself.  However, you can use it to recreate a credential, so long as you know all the parameters.
+
+    use Firefox::Marionette();
+    use Crypt::URandom();
+
+    my $user_name = MIME::Base64::encode_base64( Crypt::URandom::urandom( 10 ), q[] ) . q[@example.com];
+    my $firefox = Firefox::Marionette->new();
+    $firefox->go('https://webauthn.io');
+    $firefox->find_id('input-email')->type($user_name);
+    $firefox->find_id('register-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('alert-success'); });
+    $firefox->find_id('login-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('hero confetti'); });
+    foreach my $credential ($firefox->webauthn_credentials()) {
+        $firefox->delete_webauthn_credential($credential);
+
+# ... time passes ...
+
+        $firefox->add_webauthn_credential(
+                  id            => $credential->id(),
+                  host          => $credential->host(),
+                  user          => $credential->user(),
+                  private_key   => $credential->private_key(),
+                  is_resident   => $credential->is_resident(),
+                  sign_count    => $credential->sign_count(),
+                              );
+    }
+    $firefox->go('about:blank');
+    $firefox->clear_cache(Firefox::Marionette::Cache::CLEAR_COOKIES());
+    $firefox->go('https://webauthn.io');
+    $firefox->find_id('input-email')->type($user_name);
+    $firefox->find_id('login-button')->click();
+    $firefox->await(sub { sleep 1; $firefox->find_class('hero confetti'); });
+
 =head2 addons
 
 returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> cannot be automated.
@@ -11825,6 +12240,48 @@ accepts a host name and a list of HTTP headers names to delete from future HTTP 
     $firefox->delete_header( 'metacpan.org', 'User-Agent', 'Accept', 'Accept-Encoding' );
 
 will remove the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent>, L<Accept|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept> and L<Accept-Encoding|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding> headers from all future requests to metacpan.org.
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
+=head2 delete_webauthn_all_credentials
+
+This method accepts an optional L<authenticator|Firefox::Marionette::WebAuthn::Authenticator>, in which case it will delete all L<credentials|Firefox::Marionette::WebAuthn::Credential> from this authenticator.  If no parameter is supplied, the default authenticator will have all credentials deleted.
+
+    my $firefox = Firefox::Marionette->new();
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    $firefox->delete_webauthn_all_credentials($authenticator);
+    $firefox->delete_webauthn_all_credentials();
+
+=head2 delete_webauthn_authenticator
+
+This method accepts an optional L<authenticator|Firefox::Marionette::WebAuthn::Authenticator>, in which case it will delete this authenticator from the current Firefox instance.  If no parameter is supplied, the default authenticator will be deleted.
+
+    my $firefox = Firefox::Marionette->new();
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    $firefox->delete_webauthn_authenticator($authenticator);
+    $firefox->delete_webauthn_authenticator();
+
+=head2 delete_webauthn_credential
+
+This method accepts either a L<credential|Firefox::Marionette::WebAuthn::Credential> and an L<authenticator|Firefox::Marionette::WebAuthn::Authenticator>, in which case it will remove the credential from the supplied authenticator or
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    foreach my $credential ($firefox->webauthn_credentials($authenticator)) {
+        $firefox->delete_webauthn_credential($credential, $authenticator);
+    }
+
+just a L<credential|Firefox::Marionette::WebAuthn::Credential>, in which case it will remove the credential from the default authenticator.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    ...
+    foreach my $credential ($firefox->webauthn_credentials()) {
+        $firefox->delete_webauthn_credential($credential);
+    }
 
 This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
@@ -12700,6 +13157,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * waterfox - only allow a binary that looks like a L<waterfox version|https://www.waterfox.net/> to be launched.
 
+=item * webauthn - a boolean parameter to determine whether or not to L<add a webauthn authenticator|/add_webauthn_authenticator> after the connection is established.  The default is to add a webauthn authenticator for Firefox after version 118.
+
 =item * width - set the L<width|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> of the initial firefox window
 
 =back
@@ -13262,6 +13721,38 @@ accepts the GUID for the addon to uninstall.  The GUID is returned when from the
 =head2 uri
 
 returns the current L<URI|URI> of current top level browsing context for Desktop.  It is equivalent to the javascript C<document.location.href>
+
+=head2 webauthn_authenticator
+
+returns the default L<WebAuthn authenticator|Firefox::Marionette::WebAuthn::Authenticator> created when the L<new|/new> method was called.
+
+=head2 webauthn_credentials
+
+This method accepts an optional L<authenticator|Firefox::Marionette::WebAuthn::Authenticator>, in which case it will return all the L<credentials|Firefox::Marionette::WebAuthn::Credential> attached to this authenticator.  If no parameter is supplied, L<credentials|Firefox::Marionette::WebAuthn::Credential> from the default authenticator will be returned.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $firefox = Firefox::Marionette->new();
+    foreach my $credential ($firefox->webauthn_credentials()) {
+       say "Credential host is " . $credential->host();
+    }
+
+    # OR
+
+    my $authenticator = $firefox->add_webauthn_authenticator( transport => Firefox::Marionette::WebAuthn::Authenticator::INTERNAL(), protocol => Firefox::Marionette::WebAuthn::Authenticator::CTAP2() );
+    foreach my $credential ($firefox->webauthn_credentials($authenticator)) {
+       say "Credential host is " . $credential->host();
+    }
+
+=head2 webauthn_set_user_verified
+
+This method accepts a boolean for the L<is_user_verified|Firefox::Marionette::WebAuthn::Authenticator#is_user_verified> field and an optional L<authenticator|Firefox::Marionette::WebAuthn::Authenticator> (the default authenticator will be used otherwise).  It sets the L<is_user_verified|Firefox::Marionette::WebAuthn::Authenticator#is_user_verified> field to the supplied boolean value.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->webauthn_set_user_verified(1);
 
 =head2 wheel
 
