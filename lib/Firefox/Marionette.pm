@@ -4422,6 +4422,14 @@ sub execute {
             Firefox::Marionette::Exception->throw(
                 "Failed to execute '$binary':$EVAL_ERROR");
         };
+        waitpid $pid, 0;
+        if ( $CHILD_ERROR == 0 ) {
+        }
+        else {
+            Firefox::Marionette::Exception->throw( q[Failed to execute ']
+                  . ( join q[ ], $binary, @arguments ) . q[':]
+                  . $self->_error_message( $binary, $CHILD_ERROR ) );
+        }
         my ( $result, $output );
         while ( $result = read $reader,
             my $buffer, _READ_LENGTH_OF_OPEN3_OUTPUT() )
@@ -4436,18 +4444,10 @@ sub execute {
         if ( defined $output ) {
             chomp $output;
             $output =~ s/\r$//smx;
-        }
-        waitpid $pid, 0;
-        if ( $CHILD_ERROR == 0 ) {
             return $output;
         }
-        else {
-            Firefox::Marionette::Exception->throw( q[Failed to execute ']
-                  . ( join q[ ], $binary, @arguments ) . q[':]
-                  . $self->_error_message( $binary, $CHILD_ERROR ) );
-        }
-        return;
     }
+    return;
 }
 
 sub _adb_serial {
