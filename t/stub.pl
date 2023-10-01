@@ -14,6 +14,7 @@ MAIN: {
 	Getopt::Long::GetOptions(\%options, 'version', 'marionette', 'headless', 'profile:s', 'no-remote', 'new-instance', 'devtools', 'safe-mode');
 	my $browser_version = "112.0.2";
 	if ($options{version}) {
+                $| = 1;
 		print "Mozilla Firefox $browser_version\n";
 		exit 0;
 	}
@@ -36,6 +37,7 @@ MAIN: {
 	close $old_prefs_handle or die "Failed to close $prefs_path:$!";
 	rename $new_prefs_path, $prefs_path or die "Failed to rename $new_prefs_path to $prefs_path:$!";
 	my $paddr = accept(my $client, $server);
+	my $old = select $client; $| = 1; select $old;
 	syswrite $client, qq[50:{"applicationType":"gecko","marionetteProtocol":3}] or die "Failed to write to socket:$!";
 	my $request = _get_request($client);
 	my $platform = $^O;
