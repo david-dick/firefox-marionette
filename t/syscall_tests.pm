@@ -33,6 +33,9 @@ sub import {
 	unless ($ENV{RELEASE_TESTING}) {
 		plan( skip_all => "Author tests not required for installation" );
 	}
+	if ($^O eq 'MSWin32') {
+		plan( skip_all => "Syscall tests not reliable for $^O");
+	}
 
 	$base_directory = File::Spec->catdir(File::Spec->tmpdir(), 'firefox_marionette_test_suite_syscall_' . 'X' x 11);
 	my $end = ( $] >= 5.006 ? "\\z" : "\\Z" );
