@@ -10187,6 +10187,8 @@ sub quit {
                 $self->_quit_over_marionette($flags);
                 delete $self->{session_id};
             }
+            $self->_terminate_xvfb();
+            1;
         } or do {
             warn "Caught an exception while quitting:$EVAL_ERROR\n";
         };
