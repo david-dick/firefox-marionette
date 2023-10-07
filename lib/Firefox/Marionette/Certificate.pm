@@ -29,9 +29,17 @@ sub _cert_type {
     return $self->{certType};
 }
 
+sub _bitwise_and_with_cert_type {
+    my ($self, $argument) = @_;
+    if (defined $self->_cert_type()) {
+      return $argument & $self->_cert_type();
+    }
+    return;
+}
+
 sub is_any_cert {
     my ($self) = @_;
-    return $self->{ANY_CERT} & $self->_cert_type();
+    return $self->_bitwise_and_with_cert_type($self->{ANY_CERT});
 }
 
 sub email_address {
@@ -58,7 +66,7 @@ sub db_key {
 
 sub is_unknown_cert {
     my ($self) = @_;
-    return $self->{UNKNOWN_CERT} & $self->_cert_type();
+    return $self->_bitwise_and_with_cert_type($self->{UNKNOWN_CERT});
 }
 
 sub is_built_in_root {
@@ -78,12 +86,12 @@ sub sha256_fingerprint {
 
 sub is_server_cert {
     my ($self) = @_;
-    return $self->{SERVER_CERT} & $self->_cert_type();
+    return $self->_bitwise_and_with_cert_type($self->{SERVER_CERT});
 }
 
 sub is_user_cert {
     my ($self) = @_;
-    return $self->{USER_CERT} & $self->_cert_type();
+    return $self->_bitwise_and_with_cert_type($self->{USER_CERT});
 }
 
 sub subject_name {
@@ -98,7 +106,7 @@ sub key_usages {
 
 sub is_ca_cert {
     my ($self) = @_;
-    return $self->{CA_CERT} & $self->_cert_type();
+    return $self->_bitwise_and_with_cert_type($self->{CA_CERT});
 }
 
 sub issuer_organization_unit {
@@ -129,7 +137,7 @@ sub serial_number {
 
 sub is_email_cert {
     my ($self) = @_;
-    return $self->{EMAIL_CERT} & $self->_cert_type();
+    return $self->_bitwise_and_with_cert_type($self->{EMAIL_CERT});
 }
 
 sub issuer_common_name {
