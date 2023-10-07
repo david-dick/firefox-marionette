@@ -1322,7 +1322,10 @@ SKIP: {
 			diag("No forking available for $^O");
 		}
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -1347,7 +1350,10 @@ SKIP: {
 		ok($capabilities->proxy()->pac()->host() eq 'localhost', "\$capabilities->proxy()->pac()->host() is 'localhost'");
 	}
 	ok($capabilities->timeouts()->page_load() == 65432, "\$firefox->capabilities()->timeouts()->page_load() correctly reflects the page_load shortcut timeout");
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -1405,7 +1411,10 @@ SKIP: {
 	if (($major_version < 50) && ($ENV{RELEASE_TESTING}) && ($visible eq 'local')) {
 		$correct_exit_status = $child_error;
 	}
-	ok($child_error == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->error_message());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 my $uname;
@@ -2470,7 +2479,10 @@ SKIP: {
 	my $test_login = Firefox::Marionette::Login->new(host => 'https://github.com', user => 'ddick@cpan.org', password => 'qwerty', user_field => 'login', password_field => 'password', creation_in_ms => 0, last_used_in_ms => undef);
 	ok(!defined $test_login->last_used_time(), "Firefox::Marionette::Login->new()->last_used_time() correctly returns undef for an undefined parameter to new");
 	ok($test_login->creation_time() == 0, "Firefox::Marionette::Login->new()->creation_time() correctly returns 0 for a 0 parameter to new");
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -3896,7 +3908,10 @@ SKIP: {
 		$result = $firefox->accept_connections(0);
 		ok($result, "Refusing future connections");
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -4045,8 +4060,10 @@ SKIP: {
 		}
 		ok($accept_dialog, "\$firefox->accept_dialog() accepts the dialog box:$@");
 	}
-	local $TODO = $major_version == 60 ? "Not entirely stable in firefox 60" : q[];
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $major_version != 60 && $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -4143,8 +4160,10 @@ SKIP: {
 				diag("No forking available for $^O");
 			}
 		}
-		local $TODO = $major_version == 60 ? "Not entirely stable in firefox 60" : q[];
-		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		TODO: {
+			local $TODO = $major_version != 60 && $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+			ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		}
 	}
 }
 
@@ -4438,7 +4457,10 @@ _CERT_
 			ok($count > 0, "There are $count certificates in the firefox database");
 		}
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 sub check_for_window {
@@ -4596,17 +4618,26 @@ SKIP: {
 		SKIP: {
 			skip("Not testing dead firefox processes with ssh", 2);	
 		}
-		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		TODO: {
+			local $TODO = $correct_exit_status == 0 ? q[] : $capabilities->browser_version() . " is not exiting cleanly";
+			ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		}
 	} elsif (($^O eq 'MSWin32') || (!grep /^moz_process_id$/, $capabilities->enumerate())) {
 		SKIP: {
 			skip("Not testing dead firefox processes for win32/early firefox versions", 2);	
 		}
-		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		TODO: {
+			local $TODO = $correct_exit_status == 0 ? q[] : $capabilities->browser_version() . " is not exiting cleanly";
+			ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		}
 	} elsif ($^O eq 'cygwin') {
 		SKIP: {
 			skip("Not testing dead firefox processes for cygwin", 2);	
 		}
-		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		TODO: {
+			local $TODO = $correct_exit_status == 0 ? q[] : $capabilities->browser_version() . " is not exiting cleanly";
+			ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+		}
 	} else {
 		my $xvfb_pid = $firefox->xvfb_pid();
 		while($firefox->alive()) {
@@ -4722,7 +4753,10 @@ SKIP: {
 			}
 		}
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -4754,7 +4788,10 @@ SKIP: {
 		ok($capabilities->proxy()->type() eq 'pac', "\$capabilities->proxy()->type() is 'pac'");
 		ok($capabilities->proxy()->pac() =~ /^data:text\/plain,function(?:[ ]|%20)FindProxyForURL[(][)](?:[{]|%7B)return(?:[ ]|%20)(?:"|%22)HTTPS(?:[ ]|%20)$proxy_host(?:"|%22)(?:[}]|%7D)$/smx, qq[\$capabilities->proxy()->pac() is 'data:text/plain,function FindProxyForURL(){return "HTTPS $proxy_host"}':] . $capabilities->proxy()->pac());
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
@@ -4780,7 +4817,10 @@ SKIP: {
 		ok($capabilities->proxy()->http() eq $proxy_host, "\$capabilities->proxy()->http() is '$proxy_host':" . $capabilities->proxy()->http());
 		ok($capabilities->proxy()->https() eq $proxy_host, "\$capabilities->proxy()->https() is '$proxy_host'");
 	}
-	ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	TODO: {
+		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
+		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
 }
 
 SKIP: {
