@@ -90,7 +90,7 @@ This module handles the implementation of a L<Virtual Authenticator|https://www.
 
 =head2 BLE
 
-return 'ble', the L<transport|/transport> code for a L<Bluetooth Low Energy|https://en.wikipedia.org/wiki/Bluetooth_Low_Energy>.
+return 'ble', the L<transport|/transport> code for a L<Bluetooth Low Energy|https://en.wikipedia.org/wiki/Bluetooth_Low_Energy> transport.
 
 =head2 CTAP1_U2F
 

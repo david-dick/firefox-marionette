@@ -122,7 +122,7 @@ accepts a hash as a parameter.  Allowed keys are below;
 
 =item * is_resident - contains a boolean that if set to true, a L<client-side discoverable credential|https://w3c.github.io/webauthn/#client-side-discoverable-credential> is to be created. If set to false, a L<server-side credential|https://w3c.github.io/webauthn/#server-side-credential> is to be created instead.
 
-=item * private_key - either a L<RFC5958|https://www.rfc-editor.org/rfc/rfc5958> encoded private key encoded using L<encode_base64url|MIME::Base64::encode_base64url> or a hash containing the following keys;
+=item * private_key - either a L<RFC5958|https://www.rfc-editor.org/rfc/rfc5958> encoded private key encoded using L<encode_base64url|MIME::Base64#encode_base64url(-$bytes-)> or a hash containing the following keys;
 
 =over 8
 
@@ -138,7 +138,7 @@ accepts a hash as a parameter.  Allowed keys are below;
 
 =item * sign_count - contains the initial value for a L<signature counter|https://w3c.github.io/webauthn/#signature-counter> associated to the L<public key credential source|https://w3c.github.io/webauthn/#public-key-credential-source>.
 
-=item * user - contains the L<userHandle|https://w3c.github.io/webauthn/#public-key-credential-source-userhandle> associated to the credential encoded using L<encode_base64url|MIME::Base64::encode_base64url>.  This property is optional.
+=item * user - contains the L<userHandle|https://w3c.github.io/webauthn/#public-key-credential-source-userhandle> associated to the credential encoded using L<encode_base64url|MIME::Base64#encode_base64url(-$bytes-)>.  This property is optional.
 
 =back
 
@@ -154,7 +154,7 @@ returns a boolean that if true, a L<client-side discoverable credential|https://
 
 =head2 private_key
 
-returns a L<RFC5958|https://www.rfc-editor.org/rfc/rfc5958> encoded private key encoded using L<encode_base64url|MIME::Base64::encode_base64url>.
+returns a L<RFC5958|https://www.rfc-editor.org/rfc/rfc5958> encoded private key encoded using L<encode_base64url|MIME::Base64#encode_base64url(-$bytes-)>.
 
 =head2 sign_count
 
@@ -162,7 +162,7 @@ returns the L<signature counter|https://w3c.github.io/webauthn/#signature-counte
 
 =head2 user
 
-returns the L<userHandle|https://w3c.github.io/webauthn/#public-key-credential-source-userhandle> associated to the credential encoded using L<encode_base64url|MIME::Base64::encode_base64url>.
+returns the L<userHandle|https://w3c.github.io/webauthn/#public-key-credential-source-userhandle> associated to the credential encoded using L<encode_base64url|MIME::Base64#encode_base64url(-$bytes-)>.
 
 =head1 DIAGNOSTICS
 
