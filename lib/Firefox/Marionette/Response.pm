@@ -46,15 +46,10 @@ sub new {
             if ( !defined $error->{error} ) {
                 $error->{error} = q[];
             }
-            if ( defined $error->{message} ) {
-                if (   ( ref $error->{message} )
-                    && ( ref $error->{message} eq 'HASH' )
-                    && ( scalar keys %{ $error->{message} } == 0 ) )
-                {
-                    $error->{message} = q[];
-                }
-            }
-            else {
+            if (   ( ref $error->{message} )
+                && ( ref $error->{message} eq 'HASH' )
+                && ( scalar keys %{ $error->{message} } == 0 ) )
+            {
                 $error->{message} = q[];
             }
             $response = bless {
