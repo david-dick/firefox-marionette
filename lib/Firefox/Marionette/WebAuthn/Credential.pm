@@ -3,7 +3,7 @@ package Firefox::Marionette::WebAuthn::Credential;
 use strict;
 use warnings;
 
-our $VERSION = '1.43';
+our $VERSION = '1.45';
 
 my %key_mapping = (
     isResidentCredential => 'is_resident',
@@ -68,7 +68,7 @@ Firefox::Marionette::WebAuthn::Credential - Represents a Firefox WebAuthn Creden
 
 =head1 VERSION
 
-Version 1.43
+Version 1.45
 
 =head1 SYNOPSIS
 
