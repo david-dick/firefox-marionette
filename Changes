@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.46  Sat Oct 14 18:56 2023
+       Documentation and test suite fixes
+
 1.45  Fri Oct 05 21:43 2023
        Adding WebAuthn methods
        Documentation and test suite fixes
