@@ -2718,7 +2718,7 @@ SKIP: {
 			if ($major_version < 90) {
 				ok($handle =~ /^\d+$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
 			} else {
-				ok($handle =~ /^$guid_regex$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
+				ok($handle =~ /^$guid_regex$/, "\$firefox->window_handles() returns a list of GUIDs:" . $handle);
 			}
 		}
 		ok(not($firefox->script('window.open("https://duckduckgo.com", "_blank");')), "Opening new window to duckduckgo.com via 'window.open' script");
@@ -2734,7 +2734,7 @@ SKIP: {
 				if ($major_version < 90) {
 					ok($handle =~ /^\d+$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
 				} else {
-					ok($handle =~ /^$guid_regex$/, "\$firefox->chrome_window_handles() returns a list of integers:" . $handle);
+					ok($handle =~ /^$guid_regex$/, "\$firefox->chrome_window_handles() returns a list of GUIDs:" . $handle);
 				}
 				if ($handle ne $original_chrome_window_handle) {
 					$new_chrome_window_handle = $handle;
@@ -2747,7 +2747,7 @@ SKIP: {
 			if ($major_version < 90) {
 				ok($handle =~ /^\d+$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
 			} else {
-				ok($handle =~ /^$guid_regex$/, "\$firefox->window_handles() returns a list of integers:" . $handle);
+				ok($handle =~ /^$guid_regex$/, "\$firefox->window_handles() returns a list of GUIDs:" . $handle);
 			}
 			if ($handle ne $original_window_handle) {
 				$new_window_handle = $handle;
