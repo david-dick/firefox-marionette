@@ -243,6 +243,10 @@ returns the HTTP Realm for which the login was requested. When an HTTP server se
 
 returns the number of times the login was submitted in a form or used to begin an HTTP auth session.
 
+=head2 TO_JSON
+
+required to allow L<JSON serialisation|https://metacpan.org/pod/JSON#OBJECT-SERIALISATION> to work correctly.  This method should not need to be called directly.
+
 =head2 user
 
 returns the user name for the login.

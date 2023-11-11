@@ -365,6 +365,10 @@ returns the L<tags|https://support.mozilla.org/en-US/kb/categorizing-bookmarks-m
 
 returns the title of the bookmark.  This can be for a folder or a bookmark.
 
+=head2 TO_JSON
+
+required to allow L<JSON serialisation|https://metacpan.org/pod/JSON#OBJECT-SERIALISATION> to work correctly.  This method should not need to be called directly.
+
 =head2 type
 
 returns an integer describing the type of the bookmark.  This can be L<BOOKMARK|/BOOKMARK>, L<FOLDER|/FOLDER> or L<SEPARATOR|/SEPARATOR>.
