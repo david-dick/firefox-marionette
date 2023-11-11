@@ -399,7 +399,6 @@ WriteMakefile(
     },
     PREREQ_PM => {
         'Archive::Zip'        => 0,
-        'base'                => 0,
         'Config'              => 0,
         'Config::INI::Reader' => 0,
         'Crypt::URandom'      => 0,
@@ -416,6 +415,7 @@ WriteMakefile(
         'JSON'                => 0,
         'MIME::Base64'        => 3.11, # encode_base64url
         'overload'            => 0,
+        'parent'              => 0,
         'Pod::Simple::Text'   => 0,
         'POSIX'               => 0,
         'Scalar::Util'        => 0,

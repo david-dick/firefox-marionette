@@ -2,6 +2,7 @@ package Firefox::Marionette::ShadowRoot;
 
 use strict;
 use warnings;
+use parent qw(Firefox::Marionette::RemoteObject);
 
 our $VERSION = '1.46';
 

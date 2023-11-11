@@ -54,7 +54,7 @@ use XML::Parser();
 use Text::CSV_XS();
 use Carp();
 use Config;
-use base qw(Exporter);
+use parent qw(Exporter);
 
 BEGIN {
     if ( $OSNAME eq 'MSWin32' ) {

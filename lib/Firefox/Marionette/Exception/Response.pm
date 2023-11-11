@@ -2,7 +2,7 @@ package Firefox::Marionette::Exception::Response;
 
 use strict;
 use warnings;
-use base qw(Firefox::Marionette::Exception);
+use parent qw(Firefox::Marionette::Exception);
 
 our $VERSION = '1.46';
 

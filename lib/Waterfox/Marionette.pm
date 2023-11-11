@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use English qw( -no_match_vars );
 use Waterfox::Marionette::Profile();
-use base qw(Firefox::Marionette);
+use parent qw(Firefox::Marionette);
 Firefox::Marionette->import(qw(:all));
 
 our @EXPORT_OK =

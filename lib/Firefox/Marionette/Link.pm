@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use URI::URL();
 
-use base qw(Firefox::Marionette::Element);
+use parent qw(Firefox::Marionette::Element);
 
 our $VERSION = '1.46';
 
