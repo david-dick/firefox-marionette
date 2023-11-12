@@ -2,7 +2,7 @@ package Firefox::Marionette::Element;
 
 use strict;
 use warnings;
-use parent qw(Firefox::Marionette::RemoteObject);
+use parent qw(Firefox::Marionette::LocalObject);
 
 our $VERSION = '1.46';
 
@@ -17,23 +17,7 @@ sub new {
     else {
         delete $parameters{ELEMENT};
     }
-    my $element = bless {
-        browser => $browser,
-        %parameters
-    }, $class;
-    return $element;
-}
-
-sub TO_JSON {
-    my ($self) = @_;
-    my $json = {};
-    if ( $self->{_old_protocols_key} ) {
-        $json->{ $self->{_old_protocols_key} } = $self->uuid();
-    }
-    else {
-        $json->{ IDENTIFIER() } = $self->uuid();
-    }
-    return $json;
+    return $class->SUPER::new( $browser, %parameters );
 }
 
 sub aria_label {
@@ -44,16 +28,6 @@ sub aria_label {
 sub aria_role {
     my ($self) = @_;
     return $self->browser()->aria_role($self);
-}
-
-sub uuid {
-    my ($self) = @_;
-    return $self->{ IDENTIFIER() };
-}
-
-sub browser {
-    my ($self) = @_;
-    return $self->{browser};
 }
 
 sub click {
@@ -397,10 +371,6 @@ returns the L<ARIA role|https://developer.mozilla.org/en-US/docs/Web/Accessibili
 =head2 attribute 
 
 accepts a scalar name a parameter.  It returns the initial value of the attribute with the supplied name. Compare with the current value returned by L<property|Firefox::Marionette::Element#property> method.
-
-=head2 browser
-
-returns the L<browser|Firefox::Marionette> connected with the L<element|Firefox::Marionette::Element>.
 
 =head2 clear
 

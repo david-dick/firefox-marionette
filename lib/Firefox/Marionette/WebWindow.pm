@@ -1,4 +1,4 @@
-package Firefox::Marionette::ShadowRoot;
+package Firefox::Marionette::WebWindow;
 
 use strict;
 use warnings;
@@ -6,14 +6,14 @@ use parent qw(Firefox::Marionette::LocalObject);
 
 our $VERSION = '1.46';
 
-sub IDENTIFIER { return 'shadow-6066-11e4-a52e-4f735466cecf' }
+sub IDENTIFIER { return 'window-fcc6-11e5-b4f8-330a88ab9d7f' }
 
 1;    # Magic true value required at end of module
 __END__
 
 =head1 NAME
 
-Firefox::Marionette::ShadowRoot - Represents a Firefox shadow root retrieved using the Marionette protocol
+Firefox::Marionette::WebWindow - Represents a Firefox window retrieved using the Marionette protocol
 
 =head1 VERSION
 
@@ -22,35 +22,33 @@ Version 1.46
 =head1 SYNOPSIS
 
     use Firefox::Marionette();
-    use Cwd();
 
-    my $firefox = Firefox::Marionette->new()->go('file://' . Cwd::cwd() . '/t/data/elements.html');
-    $firefox->find_class('add')->click();
-    my $shadow_root = $firefox->find_tag('custom-square')->shadow_root();
-
-    foreach my $element (@{$firefox->script('return arguments[0].children', args => [ $shadow_root ])}) {
-        warn $element->tag_name();
+    my $firefox = Firefox::Marionette->new();
+    my $original_window = $firefox->window_handle();
+    my $javascript_window = $firefox->script('return window'); # only works for Firefox 121 and later
+    if ($javascript_window ne $original_window) {
+        die "That was unexpected!!! What happened?";
     }
 
 =head1 DESCRIPTION
 
-This module handles the implementation of a Firefox Shadow Root using the Marionette protocol
+This module handles the implementation of a Firefox Window using the Marionette protocol
 
 =head1 CONSTANTS
 
 =head2 IDENTIFIER
 
-returns the L<shadow root identifier|https://www.w3.org/TR/webdriver/#shadow-root>
+returns the L<window identifier|https://www.w3.org/TR/webdriver/#dfn-window-handles>
 
 =head1 SUBROUTINES/METHODS
 
 =head2 new
 
-returns a new L<shadow root|Firefox::Marionette::ShadowRoot>.
+returns a new L<window|Firefox::Marionette::WebWindow>.
 
 =head2 uuid
 
-returns the browser generated UUID connected with this L<shadow root|Firefox::Marionette::ShadowRoot>.
+returns the browser generated UUID connected with this L<window|Firefox::Marionette::WebWindow>.
 
 =head1 DIAGNOSTICS
 
@@ -58,7 +56,7 @@ None.
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
-Firefox::Marionette::ShadowRoot requires no configuration files or environment variables.
+Firefox::Marionette::WebWindow requires no configuration files or environment variables.
 
 =head1 DEPENDENCIES
 

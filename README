@@ -626,12 +626,11 @@ SUBROUTINES/METHODS
 
  chrome_window_handle
 
-    returns an server-assigned integer identifiers for the current chrome
-    window that uniquely identifies it within this Marionette instance.
-    This can be used to switch to this window at a later point. This
-    corresponds to a window that may itself contain tabs. This method is
-    replaced by window_handle and appropriate context calls for Firefox 94
-    and after
+    returns a server-assigned identifier for the current chrome window that
+    uniquely identifies it within this Marionette instance. This can be
+    used to switch to this window at a later point. This corresponds to a
+    window that may itself contain tabs. This method is replaced by
+    window_handle and appropriate context calls for Firefox 94 and after
     <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
  chrome_window_handles
@@ -2736,10 +2735,10 @@ SUBROUTINES/METHODS
     
         my $firefox = Firefox::Marionette->new();
         $firefox->version
-        my $original_window_uuid = $firefox->window_handle();
+        my $original_window = $firefox->window_handle();
         $firefox->new_window( type => 'tab' );
         $firefox->new_window( type => 'window' );
-        $firefox->switch_to_window($original_window_uuid);
+        $firefox->switch_to_window($original_window);
         $firefox->go('https://metacpan.org');
 
  tag_name
@@ -2901,13 +2900,19 @@ SUBROUTINES/METHODS
     corresponds to the currently selected tab. returns an opaque
     server-assigned identifier to this window that uniquely identifies it
     within this Marionette instance. This can be used to switch to this
-    window at a later point.
+    window at a later point. This is the same as the window
+    <https://developer.mozilla.org/en-US/docs/Web/API/Window> object in
+    Javascript.
 
         use Firefox::Marionette();
         use 5.010;
     
         my $firefox = Firefox::Marionette->new();
-        my $original_window_uuid = $firefox->window_handle();
+        my $original_window = $firefox->window_handle();
+        my $javascript_window = $firefox->script('return window'); # only works for Firefox 121 and later
+        if ($javascript_window ne $original_window) {
+          die "That was unexpected!!! What happened?";
+        }
 
  window_handles
 
@@ -2921,7 +2926,7 @@ SUBROUTINES/METHODS
         use 5.010;
     
         my $firefox = Firefox::Marionette->new();
-        my $original_window_uuid = $firefox->window_handle();
+        my $original_window = $firefox->window_handle();
         $firefox->new_window( type => 'tab' );
         $firefox->new_window( type => 'window' );
         say "There are " . $firefox->window_handles() . " tabs open in total";

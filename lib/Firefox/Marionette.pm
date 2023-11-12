@@ -24,6 +24,8 @@ use Firefox::Marionette::UpdateStatus();
 use Firefox::Marionette::ShadowRoot();
 use Firefox::Marionette::WebAuthn::Authenticator();
 use Firefox::Marionette::WebAuthn::Credential();
+use Firefox::Marionette::WebFrame();
+use Firefox::Marionette::WebWindow();
 use Waterfox::Marionette::Profile();
 use Compress::Zlib();
 use Config::INI::Reader();
@@ -9476,7 +9478,9 @@ sub current_chrome_window_handle {
         {
             $response = $self->_get_response($message_id);
         }
-        return $self->_response_result_value($response);
+        return Firefox::Marionette::WebWindow->new( $self,
+            Firefox::Marionette::WebWindow::IDENTIFIER() =>
+              $self->_response_result_value($response) );
     }
 }
 
@@ -9505,7 +9509,9 @@ sub chrome_window_handle {
             ]
         );
         my $response = $self->_get_response($message_id);
-        return $self->_response_result_value($response);
+        return Firefox::Marionette::WebWindow->new( $self,
+            Firefox::Marionette::WebWindow::IDENTIFIER() =>
+              $self->_response_result_value($response) );
     }
 }
 
@@ -9709,10 +9715,16 @@ sub chrome_window_handles {
         my $response = $self->_get_response($message_id);
         if ( $self->marionette_protocol() == _MARIONETTE_PROTOCOL_VERSION_3() )
         {
-            return @{ $response->result() };
+            return map {
+                Firefox::Marionette::WebWindow->new( $self,
+                    Firefox::Marionette::WebWindow::IDENTIFIER(), $_ )
+            } @{ $response->result() };
         }
         else {
-            return @{ $response->result()->{value} };
+            return map {
+                Firefox::Marionette::WebWindow->new( $self,
+                    Firefox::Marionette::WebWindow::IDENTIFIER(), $_ )
+            } @{ $response->result()->{value} };
         }
     }
 }
@@ -9727,7 +9739,9 @@ sub window_handle {
         ]
     );
     my $response = $self->_get_response($message_id);
-    return $self->_response_result_value($response);
+    return Firefox::Marionette::WebWindow->new( $self,
+        Firefox::Marionette::WebWindow::IDENTIFIER() =>
+          $self->_response_result_value($response) );
 }
 
 sub window_handles {
@@ -9741,10 +9755,16 @@ sub window_handles {
     );
     my $response = $self->_get_response($message_id);
     if ( $self->marionette_protocol() == _MARIONETTE_PROTOCOL_VERSION_3() ) {
-        return @{ $response->result() };
+        return map {
+            Firefox::Marionette::WebWindow->new( $self,
+                Firefox::Marionette::WebWindow::IDENTIFIER(), $_ )
+        } @{ $response->result() };
     }
     else {
-        return @{ $response->result()->{value} };
+        return map {
+            Firefox::Marionette::WebWindow->new( $self,
+                Firefox::Marionette::WebWindow::IDENTIFIER(), $_ )
+        } @{ $response->result()->{value} };
     }
 }
 
@@ -9765,7 +9785,9 @@ sub new_window {
         ]
     );
     my $response = $self->_get_response($message_id);
-    return $response->result()->{handle};
+    return Firefox::Marionette::WebWindow->new( $self,
+        Firefox::Marionette::WebWindow::IDENTIFIER() =>
+          $response->result()->{handle} );
 }
 
 sub close_current_chrome_window_handle {
@@ -9779,10 +9801,19 @@ sub close_current_chrome_window_handle {
     );
     my $response = $self->_get_response($message_id);
     if ( ref $response->result() eq 'HASH' ) {
-        return ( $self->_response_result_value($response) );
+        return (
+            Firefox::Marionette::WebWindow->new(
+                $self,
+                Firefox::Marionette::WebWindow::IDENTIFIER() =>
+                  $self->_response_result_value($response)
+            )
+        );
     }
     else {
-        return @{ $response->result() };
+        return map {
+            Firefox::Marionette::WebWindow->new( $self,
+                Firefox::Marionette::WebWindow::IDENTIFIER() => $_ )
+        } @{ $response->result() };
     }
 }
 
@@ -9793,10 +9824,19 @@ sub close_current_window_handle {
         [ _COMMAND(), $message_id, $self->_command('WebDriver:CloseWindow') ] );
     my $response = $self->_get_response($message_id);
     if ( ref $response->result() eq 'HASH' ) {
-        return ( $response->result() );
+        return (
+            Firefox::Marionette::WebWindow->new(
+                $self,
+                Firefox::Marionette::WebWindow::IDENTIFIER() =>
+                  $response->result()
+            )
+        );
     }
     else {
-        return @{ $response->result() };
+        return map {
+            Firefox::Marionette::WebWindow->new( $self,
+                Firefox::Marionette::WebWindow::IDENTIFIER() => $_ )
+        } @{ $response->result() };
     }
 }
 
@@ -10749,6 +10789,8 @@ sub _get_any_class_from_variable {
             qw(
             Firefox::Marionette::Element
             Firefox::Marionette::ShadowRoot
+            Firefox::Marionette::WebFrame
+            Firefox::Marionette::WebWindow
             )
           )
         {
@@ -12018,11 +12060,11 @@ See the L<context|/context> method for an alternative methods for changing the c
 
 =head2 chrome_window_handle
 
-returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by L<window_handle|/window_handle> and appropriate L<context|/context> calls for L<Firefox 94 and after|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
+returns a L<server-assigned identifier for the current chrome window that uniquely identifies it|Firefox::Marionette::WebWindow> within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by L<window_handle|/window_handle> and appropriate L<context|/context> calls for L<Firefox 94 and after|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
 =head2 chrome_window_handles
 
-returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by L<window_handles|/window_handles> and appropriate L<context|/context> calls for L<Firefox 94 and after|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
+returns L<identifiers|Firefox::Marionette::WebWindow> for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by L<window_handles|/window_handles> and appropriate L<context|/context> calls for L<Firefox 94 and after|https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette>.
 
 =head2 clear
 
@@ -12066,11 +12108,11 @@ accepts a L<element|Firefox::Marionette::Element> as the first parameter and sen
 
 =head2 close_current_chrome_window_handle
 
-closes the current chrome window (that is the entire window, not just the tabs).  It returns a list of still available chrome window handles. You will need to L<switch_to_window|/switch_to_window> to use another window.
+closes the current chrome window (that is the entire window, not just the tabs).  It returns a list of still available L<chrome window handles|Firefox::Marionette::WebWindow>. You will need to L<switch_to_window|/switch_to_window> to use another window.
 
 =head2 close_current_window_handle
 
-closes the current window/tab.  It returns a list of still available window/tab handles.
+closes the current window/tab.  It returns a list of still available L<windowE<sol>tab handles|Firefox::Marionette::WebWindow>.
 
 =head2 content
 
@@ -13196,7 +13238,7 @@ accepts an optional hash as the parameter.  Allowed keys are below;
 
 =back
 
-Returns the window handle for the new window.
+Returns the L<window handle|Firefox::Marionette::WebWindow> for the new window.
 
     use Firefox::Marionette();
 
@@ -13649,16 +13691,16 @@ set the current browsing context for future commands to the parent of the curren
 
 =head2 switch_to_window
 
-accepts a window handle (either the result of L<window_handles|/window_handles> or a window name as a parameter and switches focus to this window.
+accepts a L<window handle|Firefox::Marionette::WebWindow> (either the result of L<window_handles|/window_handles> or a window name as a parameter and switches focus to this window.
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new();
     $firefox->version
-    my $original_window_uuid = $firefox->window_handle();
+    my $original_window = $firefox->window_handle();
     $firefox->new_window( type => 'tab' );
     $firefox->new_window( type => 'window' );
-    $firefox->switch_to_window($original_window_uuid);
+    $firefox->switch_to_window($original_window);
     $firefox->go('https://metacpan.org');
 
 =head2 tag_name
@@ -13782,23 +13824,26 @@ returns a hash of known Windows product names (such as 'Mozilla Firefox') with p
 
 =head2 window_handle
 
-returns the current window's handle. On desktop this typically corresponds to the currently selected tab.  returns an opaque server-assigned identifier to this window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point.
+returns the L<current window's handle|Firefox::Marionette::WebWindow>. On desktop this typically corresponds to the currently selected tab.  returns an opaque server-assigned identifier to this window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point.  This is the same as the L<window|https://developer.mozilla.org/en-US/docs/Web/API/Window> object in Javascript.
 
     use Firefox::Marionette();
-    use 5.010;
 
     my $firefox = Firefox::Marionette->new();
-    my $original_window_uuid = $firefox->window_handle();
+    my $original_window = $firefox->window_handle();
+    my $javascript_window = $firefox->script('return window'); # only works for Firefox 121 and later
+    if ($javascript_window ne $original_window) {
+        die "That was unexpected!!! What happened?";
+    }
 
 =head2 window_handles
 
-returns a list of top-level browsing contexts. On desktop this typically corresponds to the set of open tabs for browser windows, or the window itself for non-browser chrome windows.  Each window handle is assigned by the server and is guaranteed unique, however the return array does not have a specified ordering.
+returns a list of top-level L<browsing contexts|Firefox::Marionette::WebWindow>. On desktop this typically corresponds to the set of open tabs for browser windows, or the window itself for non-browser chrome windows.  Each window handle is assigned by the server and is guaranteed unique, however the return array does not have a specified ordering.
 
     use Firefox::Marionette();
     use 5.010;
 
     my $firefox = Firefox::Marionette->new();
-    my $original_window_uuid = $firefox->window_handle();
+    my $original_window = $firefox->window_handle();
     $firefox->new_window( type => 'tab' );
     $firefox->new_window( type => 'window' );
     say "There are " . $firefox->window_handles() . " tabs open in total";

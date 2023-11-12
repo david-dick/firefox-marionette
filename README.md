@@ -459,11 +459,11 @@ See the [context](#context) method for an alternative methods for changing the c
 
 ## chrome\_window\_handle
 
-returns an server-assigned integer identifiers for the current chrome window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by [window\_handle](#window_handle) and appropriate [context](#context) calls for [Firefox 94 and after](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette).
+returns a [server-assigned identifier for the current chrome window that uniquely identifies it](https://metacpan.org/pod/Firefox::Marionette::WebWindow) within this Marionette instance.  This can be used to switch to this window at a later point. This corresponds to a window that may itself contain tabs.  This method is replaced by [window\_handle](#window_handle) and appropriate [context](#context) calls for [Firefox 94 and after](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette).
 
 ## chrome\_window\_handles
 
-returns identifiers for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by [window\_handles](#window_handles) and appropriate [context](#context) calls for [Firefox 94 and after](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette).
+returns [identifiers](https://metacpan.org/pod/Firefox::Marionette::WebWindow) for each open chrome window for tests interested in managing a set of chrome windows and tabs separately.  This method is replaced by [window\_handles](#window_handles) and appropriate [context](#context) calls for [Firefox 94 and after](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/94#webdriver_conformance_marionette).
 
 ## clear
 
@@ -507,11 +507,11 @@ accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as th
 
 ## close\_current\_chrome\_window\_handle
 
-closes the current chrome window (that is the entire window, not just the tabs).  It returns a list of still available chrome window handles. You will need to [switch\_to\_window](#switch_to_window) to use another window.
+closes the current chrome window (that is the entire window, not just the tabs).  It returns a list of still available [chrome window handles](https://metacpan.org/pod/Firefox::Marionette::WebWindow). You will need to [switch\_to\_window](#switch_to_window) to use another window.
 
 ## close\_current\_window\_handle
 
-closes the current window/tab.  It returns a list of still available window/tab handles.
+closes the current window/tab.  It returns a list of still available [window/tab handles](https://metacpan.org/pod/Firefox::Marionette::WebWindow).
 
 ## content
 
@@ -1555,7 +1555,7 @@ accepts an optional hash as the parameter.  Allowed keys are below;
 - private - a boolean field representing if the new window should be a private window. Defaults to false.
 - type - the type of the new window. Can be one of 'tab' or 'window'. Defaults to 'tab'.
 
-Returns the window handle for the new window.
+Returns the [window handle](https://metacpan.org/pod/Firefox::Marionette::WebWindow) for the new window.
 
     use Firefox::Marionette();
 
@@ -1967,16 +1967,16 @@ set the current browsing context for future commands to the parent of the curren
 
 ## switch\_to\_window
 
-accepts a window handle (either the result of [window\_handles](#window_handles) or a window name as a parameter and switches focus to this window.
+accepts a [window handle](https://metacpan.org/pod/Firefox::Marionette::WebWindow) (either the result of [window\_handles](#window_handles) or a window name as a parameter and switches focus to this window.
 
     use Firefox::Marionette();
 
     my $firefox = Firefox::Marionette->new();
     $firefox->version
-    my $original_window_uuid = $firefox->window_handle();
+    my $original_window = $firefox->window_handle();
     $firefox->new_window( type => 'tab' );
     $firefox->new_window( type => 'window' );
-    $firefox->switch_to_window($original_window_uuid);
+    $firefox->switch_to_window($original_window);
     $firefox->go('https://metacpan.org');
 
 ## tag\_name
@@ -2093,23 +2093,27 @@ returns a hash of known Windows product names (such as 'Mozilla Firefox') with p
 
 ## window\_handle
 
-returns the current window's handle. On desktop this typically corresponds to the currently selected tab.  returns an opaque server-assigned identifier to this window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point.
+returns the [current window's handle](https://metacpan.org/pod/Firefox::Marionette::WebWindow). On desktop this typically corresponds to the currently selected tab.  returns an opaque server-assigned identifier to this window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point.  This is the same as the [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object in Javascript.
 
     use Firefox::Marionette();
     use 5.010;
 
     my $firefox = Firefox::Marionette->new();
-    my $original_window_uuid = $firefox->window_handle();
+    my $original_window = $firefox->window_handle();
+    my $javascript_window = $firefox->script('return window'); # only works for Firefox 121 and later
+    if ($javascript_window ne $original_window) {
+      die "That was unexpected!!! What happened?";
+    }
 
 ## window\_handles
 
-returns a list of top-level browsing contexts. On desktop this typically corresponds to the set of open tabs for browser windows, or the window itself for non-browser chrome windows.  Each window handle is assigned by the server and is guaranteed unique, however the return array does not have a specified ordering.
+returns a list of top-level [browsing contexts](https://metacpan.org/pod/Firefox::Marionette::WebWindow). On desktop this typically corresponds to the set of open tabs for browser windows, or the window itself for non-browser chrome windows.  Each window handle is assigned by the server and is guaranteed unique, however the return array does not have a specified ordering.
 
     use Firefox::Marionette();
     use 5.010;
 
     my $firefox = Firefox::Marionette->new();
-    my $original_window_uuid = $firefox->window_handle();
+    my $original_window = $firefox->window_handle();
     $firefox->new_window( type => 'tab' );
     $firefox->new_window( type => 'window' );
     say "There are " . $firefox->window_handles() . " tabs open in total";

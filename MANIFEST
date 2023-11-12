@@ -10,6 +10,7 @@ lib/Firefox/Marionette/Extension/HarExportTrigger.pm
 lib/Firefox/Marionette/Image.pm
 lib/Firefox/Marionette/Keys.pm
 lib/Firefox/Marionette/Link.pm
+lib/Firefox/Marionette/LocalObject.pm
 lib/Firefox/Marionette/Login.pm
 lib/Firefox/Marionette/Profile.pm
 lib/Firefox/Marionette/Proxy.pm
@@ -29,6 +30,8 @@ lib/Firefox/Marionette/Timeouts.pm
 lib/Firefox/Marionette/UpdateStatus.pm
 lib/Firefox/Marionette/WebAuthn/Authenticator.pm
 lib/Firefox/Marionette/WebAuthn/Credential.pm
+lib/Firefox/Marionette/WebFrame.pm
+lib/Firefox/Marionette/WebWindow.pm
 lib/Waterfox/Marionette.pm
 lib/Waterfox/Marionette/Profile.pm
 Makefile.PL
