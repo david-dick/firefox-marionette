@@ -20,7 +20,7 @@ our @EXPORT_OK = qw(
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK, );
 
-our $VERSION = '1.46';
+our $VERSION = '1.47';
 
 # guids from toolkit/components/places/Bookmarks.sys.mjs
 
@@ -204,7 +204,7 @@ Firefox::Marionette::Bookmark - Represents a Firefox bookmark retrieved using th
 
 =head1 VERSION
 
-Version 1.46
+Version 1.47
 
 =head1 SYNOPSIS
 

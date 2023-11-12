@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.47  Sun Nov 12 22:25 2023
+       Adding WebFrame and WebWindow support
+       Now using parent instead of base for inheritance
+
 1.46  Sat Oct 14 18:56 2023
        Documentation and test suite fixes
 
