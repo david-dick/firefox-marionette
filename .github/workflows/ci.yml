@@ -48,7 +48,17 @@ jobs:
         cpanm --installdeps .
         cpanm Test::CheckManifest
 
-    - name: Run tests
+    - name: Run tests under gmake (on windows)
+      if: ${{ startsWith(matrix.runner, 'windows-') }}
+      env:
+        RELEASE_TESTING: 1
+      run: |
+        perl Makefile.PL
+        gmake
+        gmake test
+
+    - name: Run tests under make (not windows)
+      if: ${{ ! startsWith(matrix.runner, 'windows-') }}
       env:
         RELEASE_TESTING: 1
       run: |
