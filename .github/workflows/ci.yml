@@ -43,6 +43,8 @@ jobs:
         perl -v
 
     - name: Install Modules
+      env:
+        AUTOMATED_TESTING: 1
       run: |
         cpanm -v
         cpanm --installdeps .
