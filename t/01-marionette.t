@@ -1623,8 +1623,13 @@ SKIP: {
 		foreach my $name ($firefox->cache_keys()) {
 			no strict;
 			TODO: {
-				local $TODO = ($major_version < 113 && $name !~ /(^CLEAR_COOKIES|CLEAR_NETWORK_CACHE|CLEAR_IMAGE_CACHE)$/smx) ? "Older firefox can have different values for Firefox::Marionette::Cache constants" : q[];
-				ok($firefox->check_cache_key($name) eq &$name(), "\$firefox->check_cache_key($name) eq Firefox::Marionette::Cache::${name} which is " . &$name());
+				local $TODO = ($major_version < 113 && $name !~ /^(CLEAR_COOKIES|CLEAR_NETWORK_CACHE|CLEAR_IMAGE_CACHE)$/smx) ? "Older firefox (less than 113) can have different values for Firefox::Marionette::Cache constants" : q[];
+				my $result = $firefox->check_cache_key($name);
+				if (($name eq 'CLEAR_FORGET_ABOUT_SITE') && ($major_version < 121)) {
+					ok($result <= &$name(), "\$firefox->check_cache_key($name) eq Firefox::Marionette::Cache::${name} which should less than or equal to $result and is " . &$name());
+				} else {
+					ok($result == &$name(), "\$firefox->check_cache_key($name) eq Firefox::Marionette::Cache::${name} which should be $result and is " . &$name());
+				}
 			}
 			use strict;
 		}
