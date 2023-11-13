@@ -70,7 +70,7 @@ our @EXPORT_OK =
   qw(BY_XPATH BY_ID BY_NAME BY_TAG BY_CLASS BY_SELECTOR BY_LINK BY_PARTIAL);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
-our $VERSION = '1.47';
+our $VERSION = '1.48';
 
 sub _ANYPROCESS                     { return -1 }
 sub _COMMAND                        { return 0 }
@@ -2922,7 +2922,7 @@ SXGA	Super XGA	1280	1024	5:4	5:4	1:1	1,310,720
 1.39M2	Apple PowerBook G4	1440	960	3:2	3:2	1:1	1,382,400
 HD+	900p	1600	900	16:9	16:9	1:1	1,440,000
 SXGA+	Super XGA Plus, Lenovo Thinkpad X61 Tablet	1400	1050	4:3	4:3	1:1	1,470,000
-1.47M5	Similar to A4 paper format (~123 dpi for A4 size)	1440	1024	1440:1024	7:5	0.996	1,474,560
+1.48M5	Similar to A4 paper format (~123 dpi for A4 size)	1440	1024	1440:1024	7:5	0.996	1,474,560
 1.56M3	HDV 1080i	1440	1080	4:3	4:3	1:1	1,555,200
 1.64M10	SGI 1600SW	1600	1024	25:16	25:16	1:1	1,638,400
 WSXGA+	Wide SXGA+	1680	1050	8:5	8:5	1:1	1,764,000
@@ -11557,7 +11557,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 =head1 VERSION
 
-Version 1.47
+Version 1.48
 
 =head1 SYNOPSIS
 

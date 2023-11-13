@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.48  Mon Nov 13 20:51 2023
+       Adding extra Cache constants
+       Fixing github actions for OS X
+
 1.47  Sun Nov 12 22:25 2023
        Adding WebFrame and WebWindow support
        Now using parent instead of base for inheritance
