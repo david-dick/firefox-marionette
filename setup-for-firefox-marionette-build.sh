@@ -3,6 +3,10 @@
 SUDO="sudo ";
 SUDO_WITH_ENVIRONMENT="$SUDO -E ";
 OSNAME=`uname`;
+if [ ! $EUID ]
+then
+	EUID=`id -u`;
+fi
 if [ $EUID -eq 0 ]
 then
 	SUDO="";
