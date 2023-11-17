@@ -411,6 +411,7 @@ WriteMakefile(
         'File::Find'          => 0,
         'File::Spec'          => 0,
         'File::Temp'          => 0,
+        'IO::Handle'          => 0,
         'IPC::Open3'          => 1.03,
         'JSON'                => 0,
         'MIME::Base64'        => 3.11, # encode_base64url

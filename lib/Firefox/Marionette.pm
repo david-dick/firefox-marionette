@@ -33,6 +33,7 @@ use Crypt::URandom();
 use Archive::Zip();
 use Symbol();
 use JSON();
+use IO::Handle();
 use IPC::Open3();
 use Socket();
 use English qw( -no_match_vars );
@@ -4414,6 +4415,7 @@ sub execute {
             warn q[** ] . ( join q[ ], $binary, @arguments ) . "\n";
         }
         my ( $writer, $reader, $error );
+        $error = Symbol::gensym();
         my $pid;
         eval {
             $pid =
@@ -4424,7 +4426,35 @@ sub execute {
             Firefox::Marionette::Exception->throw(
                 "Failed to execute '$binary':$EVAL_ERROR");
         };
+        $writer->autoflush(1);
+        $reader->autoflush(1);
+        $error->autoflush(1);
+        my ( $result, $output );
+        while ( $result = sysread $reader,
+            my $buffer, _READ_LENGTH_OF_OPEN3_OUTPUT() )
+        {
+            $output .= $buffer;
+        }
+        while ( $result = sysread $error,
+            my $buffer, _READ_LENGTH_OF_OPEN3_OUTPUT() )
+        {
+        }
+        defined $result
+          or
+          Firefox::Marionette::Exception->throw( q[Failed to read STDERR from ']
+              . ( join q[ ], $binary, @arguments )
+              . "':$EXTENDED_OS_ERROR" );
+        close $writer
+          or Firefox::Marionette::Exception->throw(
+            "Failed to close STDIN for $binary:$EXTENDED_OS_ERROR");
+        close $reader
+          or Firefox::Marionette::Exception->throw(
+            "Failed to close STDOUT for $binary:$EXTENDED_OS_ERROR");
+        close $error
+          or Firefox::Marionette::Exception->throw(
+            "Failed to close STDERR for $binary:$EXTENDED_OS_ERROR");
         waitpid $pid, 0;
+
         if ( $CHILD_ERROR == 0 ) {
         }
         else {
@@ -4432,17 +4462,6 @@ sub execute {
                   . ( join q[ ], $binary, @arguments ) . q[':]
                   . $self->_error_message( $binary, $CHILD_ERROR ) );
         }
-        my ( $result, $output );
-        while ( $result = read $reader,
-            my $buffer, _READ_LENGTH_OF_OPEN3_OUTPUT() )
-        {
-            $output .= $buffer;
-        }
-        defined $result
-          or
-          Firefox::Marionette::Exception->throw( q[Failed to read STDOUT from ']
-              . ( join q[ ], $binary, @arguments )
-              . "':$EXTENDED_OS_ERROR" );
         if ( defined $output ) {
             chomp $output;
             $output =~ s/\r$//smx;
