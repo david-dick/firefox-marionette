@@ -3,7 +3,7 @@ package Firefox::Marionette::WebAuthn::Authenticator;
 use strict;
 use warnings;
 
-our $VERSION = '1.48';
+our $VERSION = '1.49';
 
 sub BLE        { return 'ble' }
 sub CTAP1_U2F  { return 'ctap1/u2f' }
@@ -65,7 +65,7 @@ Firefox::Marionette::WebAuthn::Authenticator - Represents a Firefox WebAuthn Aut
 
 =head1 VERSION
 
-Version 1.48
+Version 1.49
 
 =head1 SYNOPSIS
 
