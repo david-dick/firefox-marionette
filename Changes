@@ -1,7 +1,7 @@
 Revision history for Firefox-Marionette
 
 1.49  Sat Nov 18 12:10 2023
-       Fixing a hang for Windows 7 in G#26.  Thanks to twata1.
+       Fixing a hang for Windows 7 in GH#26.  Thanks to twata1.
 
 1.48  Mon Nov 13 20:51 2023
        Adding extra Cache constants
