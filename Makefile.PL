@@ -78,14 +78,26 @@ my $dev_null  = File::Spec->devnull();
 sub last_desperate_search {
     if ( ( $OSNAME eq 'MSWin32' ) ) {
         foreach my $possible (@possibles) {
-            warn "Checking for $possible in Path:"
-              . `"$possible.exe" -version 2>$dev_null` . "\n";
+            my $output = `"$possible.exe" -version`;
+            if ($output) {
+                warn
+                  "Version of $possible in Path environment variable:$output";
+            }
+            else {
+                warn "No $possible in Path environment variable";
+            }
         }
     }
     elsif ( ( $OSNAME eq 'darwin' ) or ( $OSNAME eq 'cygwin' ) ) {
         foreach my $possible (@possibles) {
-            warn "Checking for $possible in PATH:"
-              . `$possible -version $dev_null` . "\n";
+            my $output = `$possible -version`;
+            if ($output) {
+                warn
+                  "Version of $possible in PATH environment variable:$output";
+            }
+            else {
+                warn "No $possible in PATH environment variable";
+            }
         }
     }
     my $glob_path = '/usr/share/applications/firefox*.desktop';
