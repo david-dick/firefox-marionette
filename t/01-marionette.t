@@ -1685,7 +1685,7 @@ SKIP: {
 	my ($llx, $lly, $urx, $ury) = $page->mediabox();
 	ok($urx == 612 && $ury == 792, "Correct page height ($ury) and width ($urx)");
 	if ($ENV{RELEASE_TESTING}) {
-		$raw_pdf = $firefox->pdf(raw => 1, printBackground => 1, landscape => 0, page => { width => 7, height => 12 });
+		$raw_pdf = $firefox->pdf(raw => 1, printBackground => 1, landscape => 0, page => { width => 7, height => 12 }, scale => 1);
 		$pdf = PDF::API2->open_scalar($raw_pdf);
 		$page = $pdf->openpage(0);
 		($llx, $lly, $urx, $ury) = $page->mediabox();
