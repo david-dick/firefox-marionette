@@ -9290,6 +9290,7 @@ sub _map_deprecated_pdf_parameters {
         next if ( $key eq 'pageRanges' );
         next if ( $key eq 'size' );
         next if ( $key eq 'raw' );
+        next if ( $key eq 'scale' );
         Firefox::Marionette::Exception->throw(
             "Unknown key $key for the pdf method");
     }
@@ -13301,7 +13302,7 @@ accepts a optional hash as the first parameter with the following allowed keys;
 
 =item * raw - rather than a file handle containing the PDF, the binary PDF will be returned.
 
-=item * scale - Scale of the webpage rendering.  Defaults to 1.
+=item * scale - Scale of the webpage rendering.  Defaults to 1.  C<shrink_to_fit> should be disabled to make C<scale> work.
 
 =item * size - The desired size (width and height) of the pdf, specified by name.  See the page key for an alternative and the L<paper_sizes|/paper_sizes> method for a list of accepted page size names. 
 
