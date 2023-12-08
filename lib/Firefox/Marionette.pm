@@ -7987,7 +7987,7 @@ sub _create_capabilities {
     }
     my $headless = $self->_visible() ? 0 : 1;
     if ( defined $parameters->{'moz:headless'} ) {
-        my $firefox_headless = $parameters->{'moz:headless'} ? 1 : 0;
+        my $firefox_headless = ${$parameters->{'moz:headless'}} ? 1 : 0;
         if ( $firefox_headless != $headless ) {
             Firefox::Marionette::Exception->throw(
                 'moz:headless has not been determined correctly');
@@ -8043,7 +8043,7 @@ sub _create_capabilities {
         platform_name => defined $parameters->{platformName}
         ? $parameters->{platformName}
         : $parameters->{platform},
-        rotatable        => $parameters->{rotatable} ? 1 : 0,
+        rotatable        => ( defined $parameters->{rotatable} and ${$parameters->{rotatable}} ) ? 1 : 0,
         platform_version =>
           $self->_platform_version_from_capabilities($parameters),
         moz_profile => $parameters->{'moz:profile'}
@@ -8077,11 +8077,11 @@ sub _get_optional_capabilities {
     }
     if ( defined $parameters->{'moz:accessibilityChecks'} ) {
         $optional{moz_accessibility_checks} =
-          $parameters->{'moz:accessibilityChecks'} ? 1 : 0;
+          ${$parameters->{'moz:accessibilityChecks'}} ? 1 : 0;
     }
     if ( defined $parameters->{strictFileInteractability} ) {
         $optional{strict_file_interactability} =
-          $parameters->{strictFileInteractability} ? 1 : 0;
+          ${$parameters->{strictFileInteractability}} ? 1 : 0;
     }
     if ( defined $parameters->{'moz:shutdownTimeout'} ) {
         $optional{moz_shutdown_timeout} = $parameters->{'moz:shutdownTimeout'};
@@ -8091,22 +8091,22 @@ sub _get_optional_capabilities {
           $parameters->{unhandledPromptBehavior};
     }
     if ( defined $parameters->{setWindowRect} ) {
-        $optional{set_window_rect} = $parameters->{setWindowRect} ? 1 : 0;
+        $optional{set_window_rect} = ${$parameters->{setWindowRect}} ? 1 : 0;
     }
     if ( defined $parameters->{'moz:webdriverClick'} ) {
         $optional{moz_webdriver_click} =
-          $parameters->{'moz:webdriverClick'} ? 1 : 0;
+          ${$parameters->{'moz:webdriverClick'}} ? 1 : 0;
     }
     if ( defined $parameters->{acceptInsecureCerts} ) {
         $optional{accept_insecure_certs} =
-          $parameters->{acceptInsecureCerts} ? 1 : 0;
+          ${$parameters->{acceptInsecureCerts}} ? 1 : 0;
     }
     if ( defined $parameters->{pageLoadStrategy} ) {
         $optional{page_load_strategy} = $parameters->{pageLoadStrategy};
     }
     if ( defined $parameters->{'moz:useNonSpecCompliantPointerOrigin'} ) {
         $optional{moz_use_non_spec_compliant_pointer_origin} =
-          $parameters->{'moz:useNonSpecCompliantPointerOrigin'} ? 1 : 0;
+          ${$parameters->{'moz:useNonSpecCompliantPointerOrigin'}} ? 1 : 0;
     }
     return %optional;
 }
