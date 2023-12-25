@@ -66,9 +66,14 @@ elsif ( $EFFECTIVE_USER_ID == 0 ) {    # see RT#131304
         warn
 "Running as root.  Resetting HOME environment variable from $current to $ENV{HOME}\n";
     }
-    if ( exists $ENV{XAUTHORITY} ) {    # see GH#1
-        delete $ENV{XAUTHORITY};
-        warn "Running as root.  Deleting the XAUTHORITY environment variable\n";
+    foreach my $env_name (
+				'XAUTHORITY',           # see GH#1
+				'XDG_RUNTIME_DIR',      # see GH#33
+                         ) {
+        if ( exists $ENV{$env_name} ) {
+            delete $ENV{$env_name};
+            warn "Running as root.  Deleting the $env_name environment variable\n";
+        }
     }
 }
 

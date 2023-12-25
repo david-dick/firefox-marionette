@@ -75,9 +75,14 @@ if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
                diag("Running as root.  Resetting HOME environment variable from $current to $ENV{HOME}");
                diag("Could be running in an environment where sudo does not reset the HOME environment variable, such as ubuntu");
        }
-       if ( exists $ENV{XAUTHORITY} ) {    # see GH#1
-               delete $ENV{XAUTHORITY};
-               warn "Running as root.  Deleting the XAUTHORITY environment variable\n";
+       foreach my $env_name (
+				'XAUTHORITY',           # see GH#1
+				'XDG_RUNTIME_DIR',      # see GH#33
+                         ) {
+            if ( exists $ENV{$env_name} ) {
+                delete $ENV{$env_name};
+                warn "Running as root.  Deleting the $env_name environment variable\n";
+            }
        }
 }
 
