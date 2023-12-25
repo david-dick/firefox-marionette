@@ -109,6 +109,9 @@ case $OSNAME in
 						libio-socket-ssl-perl \
 						libjson-perl \
 						libpdf-api2-perl \
+						libpod-parser-perl \
+						libtest-checkmanifest-perl \
+						libtest-pod-coverage-perl \
 						libtext-csv-xs-perl \
 						libterm-readkey-perl \
 						liburi-perl \
