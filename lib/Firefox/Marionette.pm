@@ -4387,16 +4387,22 @@ sub _is_auto_listen_okay {
     }
 }
 
+sub _setup_parameters_for_execute_via_ssh {
+    my ( $self, $ssh ) = @_;
+    my $parameters = {};
+    if ( !defined $ssh->{ssh_connections_to_host} ) {
+        $parameters->{accept_new} = 1;
+    }
+    if ( !$ssh->{control_established} ) {
+        $parameters->{master} = 1;
+    }
+    return $parameters;
+}
+
 sub execute {
     my ( $self, $binary, @arguments ) = @_;
     if ( my $ssh = $self->_ssh() ) {
-        my $parameters = {};
-        if ( !defined $ssh->{ssh_connections_to_host} ) {
-            $parameters->{accept_new} = 1;
-        }
-        if ( !$ssh->{control_established} ) {
-            $parameters->{master} = 1;
-        }
+        my $parameters = $self->_setup_parameters_for_execute_via_ssh($ssh);
         if ( !defined $ssh->{first_ssh_connection_to_host} ) {
             $ssh->{ssh_connections_to_host} = 1;
         }
@@ -4435,6 +4441,11 @@ sub execute {
         {
             $output .= $buffer;
         }
+        defined $result
+          or
+          Firefox::Marionette::Exception->throw( q[Failed to read STDOUT from ']
+              . ( join q[ ], $binary, @arguments )
+              . "':$EXTENDED_OS_ERROR" );
         while ( $result = sysread $error,
             my $buffer, _READ_LENGTH_OF_OPEN3_OUTPUT() )
         {
