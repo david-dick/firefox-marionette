@@ -1591,7 +1591,7 @@ accepts a optional hash as the first parameter with the following allowed keys;
 - page\_ranges - A list of the pages to print. Available for [Firefox 96](https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Releases/96#webdriver_conformance_marionette) and after.
 - print\_background - Print background graphics.  Boolean value.  Defaults to false. 
 - raw - rather than a file handle containing the PDF, the binary PDF will be returned.
-- scale - Scale of the webpage rendering.  Defaults to 1.
+- scale - Scale of the webpage rendering.  Defaults to 1.  `shrink_to_fit` should be disabled to make `scale` work.
 - size - The desired size (width and height) of the pdf, specified by name.  See the page key for an alternative and the [paper\_sizes](#paper_sizes) method for a list of accepted page size names. 
 - shrink\_to\_fit - Whether or not to override page size as defined by CSS.  Boolean value.  Defaults to true. 
 
@@ -2096,13 +2096,12 @@ returns a hash of known Windows product names (such as 'Mozilla Firefox') with p
 returns the [current window's handle](https://metacpan.org/pod/Firefox::Marionette::WebWindow). On desktop this typically corresponds to the currently selected tab.  returns an opaque server-assigned identifier to this window that uniquely identifies it within this Marionette instance.  This can be used to switch to this window at a later point.  This is the same as the [window](https://developer.mozilla.org/en-US/docs/Web/API/Window) object in Javascript.
 
     use Firefox::Marionette();
-    use 5.010;
 
     my $firefox = Firefox::Marionette->new();
     my $original_window = $firefox->window_handle();
     my $javascript_window = $firefox->script('return window'); # only works for Firefox 121 and later
     if ($javascript_window ne $original_window) {
-      die "That was unexpected!!! What happened?";
+        die "That was unexpected!!! What happened?";
     }
 
 ## window\_handles

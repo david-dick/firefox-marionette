@@ -2203,6 +2203,7 @@ SUBROUTINES/METHODS
       will be returned.
 
       * scale - Scale of the webpage rendering. Defaults to 1.
+      shrink_to_fit should be disabled to make scale work.
 
       * size - The desired size (width and height) of the pdf, specified by
       name. See the page key for an alternative and the paper_sizes method
@@ -2905,13 +2906,12 @@ SUBROUTINES/METHODS
     Javascript.
 
         use Firefox::Marionette();
-        use 5.010;
     
         my $firefox = Firefox::Marionette->new();
         my $original_window = $firefox->window_handle();
         my $javascript_window = $firefox->script('return window'); # only works for Firefox 121 and later
         if ($javascript_window ne $original_window) {
-          die "That was unexpected!!! What happened?";
+            die "That was unexpected!!! What happened?";
         }
 
  window_handles
