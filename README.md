@@ -1310,6 +1310,13 @@ returns a [JSON](https://metacpan.org/pod/JSON) object that has been parsed from
 
     say Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->json()->{version};
 
+In addition, this method can accept a [URI](https://metacpan.org/pod/URI) as a parameter and retrieve that URI via the firefox [fetch call](https://developer.mozilla.org/en-US/docs/Web/API/fetch) and transforming the body to [JSON via firefox](https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static)
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    say Firefox::Marionette->new()->json('https://freeipapi.com/api/json/')->{ipAddress};
+
 ## key\_down
 
 accepts a parameter describing a key and returns an action for use in the [perform](#perform) method that corresponding with that key being depressed.

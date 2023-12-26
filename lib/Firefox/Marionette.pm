@@ -10893,10 +10893,29 @@ sub _check_for_and_translate_into_objects {
 }
 
 sub json {
-    my ($self)  = @_;
-    my $content = $self->strip();
-    my $json    = JSON->new()->decode($content);
-    return $json;
+    my ( $self, $uri ) = @_;
+    if ( defined $uri ) {
+        my $old  = $self->_context('chrome');
+        my $json = $self->script(
+            $self->_compress_script( <<'_SCRIPT_'), args => [$uri] );
+return (async function(url) {
+  let response = await fetch(url, { method: "GET", mode: "cors", headers: { "Content-Type": "application/json" }, redirect: "follow", referrerPolicy: "no-referrer"});
+  if (response.ok) {
+	  return await response.json();
+  } else {
+	  throw new Error(url + " returned a " + response.status);
+  }
+})(arguments[0]);
+_SCRIPT_
+        $self->_context($old);
+        return $json;
+    }
+    else {
+
+        my $content = $self->strip();
+        my $json    = JSON->new()->decode($content);
+        return $json;
+    }
 }
 
 sub strip {
@@ -12961,6 +12980,13 @@ returns a L<JSON|JSON> object that has been parsed from the page source of the c
     use v5.10;
 
     say Firefox::Marionette->new()->go('https://fastapi.metacpan.org/v1/download_url/Firefox::Marionette")->json()->{version};
+
+In addition, this method can accept a L<URI|URI> as a parameter and retrieve that URI via the firefox L<fetch call|https://developer.mozilla.org/en-US/docs/Web/API/fetch> and transforming the body to L<JSON via firefox|https://developer.mozilla.org/en-US/docs/Web/API/Response/json_static>
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    say Firefox::Marionette->new()->json('https://freeipapi.com/api/json/')->{ipAddress};
 
 =head2 key_down
 
