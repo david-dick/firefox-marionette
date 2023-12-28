@@ -3737,6 +3737,8 @@ SKIP: {
 			$firefox->perform({ type => 'unknown' });
 		};
 		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->perform() throws an exception when passed an unknown action:$@");
+		chomp $@;
+		ok($@ =~ /[ ]at[ ]t.01\-marionette[.]t[ ]line[ ]\d+$/smx, "Exception shows source and line numbers");
 		ok($firefox->release(), "\$firefox->release()");
 		if ($major_version >= 106) {
 			my $origin = $firefox->find_id($search_box_id);

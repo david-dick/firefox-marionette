@@ -27,7 +27,11 @@ sub _throw {
 
 sub string {
     my ($self) = @_;
-    return $self->{string} . qq[\n];
+    return
+        $self->{string} . q[ at ]
+      . $self->{origin}
+      . q[ line ]
+      . $self->{line} . qq[\n];
 }
 
 1;    # Magic true value required at end of module
