@@ -938,7 +938,7 @@ SKIP: {
 	}
 	diag("Starting new firefox for testing reconnecting");
 	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_edge.html));
-	($skip_message, $firefox) = start_firefox(0, debug => 1, survive => 1, bookmarks => $bookmarks_path);
+	($skip_message, $firefox) = start_firefox(0, debug => 'timestamp,cookie:2', survive => 1, bookmarks => $bookmarks_path);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1336,7 +1336,7 @@ SKIP: {
 SKIP: {
 	my $proxyPort = empty_port();
 	diag("Starting new firefox for testing proxies with proxy port TCP/$proxyPort");
-	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, debug => 'timestamp,cookie:2', page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('http://localhost:' . $proxyPort)), moz_headless => 1));
+	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('http://localhost:' . $proxyPort)), moz_headless => 1));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1368,7 +1368,7 @@ SKIP: {
 	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_USER})) {
 		$visible = 'local';
 	}
-	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, debug => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost', none => 'localhost')));
+	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost', none => 'localhost')));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -3944,7 +3944,7 @@ SKIP: {
 
 SKIP: {
 	diag("Starting new firefox for testing JSON from localhost and alerts");
-	($skip_message, $firefox) = start_firefox(0, visible => 0, debug => 1, implicit => 987654);
+	($skip_message, $firefox) = start_firefox(0, visible => 0, implicit => 987654);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -4097,7 +4097,7 @@ SKIP: {
 SKIP: {
 	if ($ENV{RELEASE_TESTING}) {
 		diag("Starting new firefox for testing images and links");
-		($skip_message, $firefox) = start_firefox(0, visible => 0, debug => 1);
+		($skip_message, $firefox) = start_firefox(0, visible => 0);
 		if (!$skip_message) {
 			$at_least_one_success = 1;
 		}
