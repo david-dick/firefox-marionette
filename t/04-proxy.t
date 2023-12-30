@@ -225,6 +225,42 @@ SKIP: {
 	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy (v5)");
 	$strip = $firefox->strip();
 	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v5):$strip:");
+	$firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		proxy => "socks://$socks_listen:" . $socks->port(),
+				);
+	ok($firefox, "Created a firefox object going through ssh and SOCKS URI (socks://$socks_listen:" . $socks->port() . ") proxy ");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy (v5)");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v5):$strip:");
+	$firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		proxy => "socks4://$socks_listen:" . $socks->port(),
+				);
+	ok($firefox, "Created a firefox object going through ssh and SOCKS URI (socks4://$socks_listen:" . $socks->port() . ") proxy ");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy (v4)");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v4):$strip:");
+	$firefox = Firefox::Marionette->new(
+		debug => $debug,
+		visible => $visible,
+		profile => $profile,
+		host  => "$sshd_listen:22",
+		via   => "$jumpd_listen:22",
+		proxy => "socks5://$socks_listen:" . $socks->port(),
+				);
+	ok($firefox, "Created a firefox object going through ssh and SOCKS URI (socks5://$socks_listen:" . $socks->port() . ") proxy ");
+	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy (v5)");
+	$strip = $firefox->strip();
+	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v5):$strip:");
 	ok($nginx->stop() == 0, "Stopped nginx on $nginx_listen:" . $nginx->port());
 	ok($socks->stop() == 0, "Stopped SOCKS proxy on $socks_listen:" . $socks->port());
 }

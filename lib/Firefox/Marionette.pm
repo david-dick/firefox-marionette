@@ -3644,6 +3644,13 @@ sub _setup_shortcut_proxy {
             $firefox_proxy =
               Firefox::Marionette::Proxy->new( tls => $proxy_uri->host_port() );
         }
+        elsif ( $proxy_uri =~ /^socks([45])?:\/\/([^\/]+)/smx ) {
+            my ( $protocol_version, $host_port ) = ( $1, $2 );
+            $firefox_proxy = Firefox::Marionette::Proxy->new(
+                socks_protocol => $protocol_version,
+                socks          => $host_port
+            );
+        }
         else {
             $firefox_proxy =
               Firefox::Marionette::Proxy->new(
