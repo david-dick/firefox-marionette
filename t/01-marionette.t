@@ -1478,6 +1478,19 @@ SKIP: {
 		ok($firefox->aria_role($element) =~ /^(?:toggle[ ])?button$/smx, "Retrieved the ARIA role correctly:" . $firefox->aria_role($element));
 		ok($firefox->find_id('save')->aria_role() =~ /^(?:toggle[ ])?button$/smx, "Retrieved the ARIA label correctly:" . $firefox->find_id('save')->aria_role());
 	}
+	my $browser_language = $firefox->script('return navigator.language');
+	my $quoted_browser_language = quotemeta $browser_language;
+	my $original_language = $firefox->language();
+	ok($original_language =~ /^$quoted_browser_language/smx, "\$firefox->language() contains navigator.language as it's first entry:$original_language vs $browser_language");
+	my $new_language = 'en-AU,en-GB, en';
+	ok($firefox->language($new_language) eq $original_language, "\$firefox->language(\"$new_language\") returns correctly");
+	$browser_language = $firefox->script('return navigator.language');
+	$quoted_browser_language = quotemeta $browser_language;
+	ok($new_language =~ /^$quoted_browser_language/smx, "\$firefox->language() contains navigator.language as it's first entry:$new_language vs $browser_language");
+	my $lone_language = 'en-GB';
+	ok($firefox->language($lone_language) eq $new_language, "\$firefox->language(\"$lone_language\") returns correctly");
+	$browser_language = $firefox->script('return navigator.language');
+	ok($lone_language eq $browser_language, "\$firefox->language() matches navigator.language b/c there is only one entry:$lone_language vs $browser_language");
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");

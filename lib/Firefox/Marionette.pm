@@ -199,6 +199,23 @@ sub BY_PARTIAL {
     return 'partial link text';
 }
 
+sub language {
+    my ( $self, $new_language ) = @_;
+    my $pref_name = 'intl.accept_languages';
+    my $script =
+'return branch.getComplexValue(arguments[0], Components.interfaces.nsIPrefLocalizedString).data';
+    my $old          = $self->_context('chrome');
+    my $old_language = $self->script(
+        $self->_compress_script( $self->_prefs_interface_preamble() . $script ),
+        args => [$pref_name]
+    );
+    $self->_context($old);
+    if ( defined $new_language ) {
+        $self->set_pref( $pref_name, $new_language );
+    }
+    return $old_language;
+}
+
 sub _prefs_interface_preamble {
     my ($self) = @_;
     return <<'_JS_';    # modules/libpref/nsIPrefService.idl
@@ -13025,6 +13042,10 @@ accepts a parameter describing a key and returns an action for use in the L<perf
                                  $firefox->key_up('l'),
                                  $firefox->key_up(CONTROL())
                                )->content();
+
+=head2 language
+
+accepts an optional value for the L<Accept-Language|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language> header and sets this using the profile preferences.  It returns the current value, such as 'en-US, en'.
 
 =head2 loaded
 
