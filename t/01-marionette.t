@@ -64,6 +64,7 @@ my $form_control = 'form-control';
 my $css_form_control = 'input.form-control';
 my $footer_links = 'footer-links';
 my $xpath_for_read_text_and_size = '//a[@class="keyboard-shortcuts"]';
+my $freeipapi_uri = 'data:application/json,{"ipVersion":6,"ipAddress":"2001:8001:4ab3:d800:7215:c1fe:fc85:1329","latitude":-37.5,"longitude":144.5,"countryName":"Australia","countryCode":"AU","timeZone":"+11:00","zipCode":"3000","cityName":"Melbourne","regionName":"Victoria","isProxy":false,"continent":"Oceania","continentCode":"OC"}'; # sourced from https://freeipapi.com/api/json/
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 } elsif ($> == 0) { # see RT#131304
@@ -1597,11 +1598,17 @@ SKIP: {
 		}
 	}
 	if (($tls_tests_ok) && ($ENV{RELEASE_TESTING})) {
-		my $json = $firefox->json('data:application/json,{"ipVersion":6,"ipAddress":"2001:8001:4ab3:d800:7215:c1fe:fc85:1329","latitude":-37.5,"longitude":144.5,"countryName":"Australia","countryCode":"AU","timeZone":"+11:00","zipCode":"3000","cityName":"Melbourne","regionName":"Victoria","isProxy":false,"continent":"Oceania","continentCode":"OC"}'); # sourced from https://freeipapi.com/api/json/
-		ok($json->{ipVersion} == 6, "\$firefox->json(\$url)->{ipVersion} returned 6:$json->{ipVersion}");
-		ok($json->{ipAddress} eq '2001:8001:4ab3:d800:7215:c1fe:fc85:1329', "\$firefox->json(\$url)->{ipAddress} returned '2001:8001:4ab3:d800:7215:c1fe:fc85:1329':$json->{ipAddress}");
-		ok($json->{latitude} == -37.5, "\$firefox->json(\$url)->{latitude} returned -31.5:$json->{latitude}");
-		ok($json->{longitude} == 144.5, "\$firefox->json(\$url)->{longitude} returned 144.5:$json->{longitude}");
+		my $json;
+		if ($major_version < 50) {
+			diag("\$firefox->json(\$url) calls aren't going to work for versions < 50");
+		} else {
+			$json = $firefox->json($freeipapi_uri);
+			ok($json->{ipVersion} == 6, "\$firefox->json(\$url)->{ipVersion} returned 6:$json->{ipVersion}");
+			ok($json->{ipAddress} eq '2001:8001:4ab3:d800:7215:c1fe:fc85:1329', "\$firefox->json(\$url)->{ipAddress} returned '2001:8001:4ab3:d800:7215:c1fe:fc85:1329':$json->{ipAddress}");
+			ok($json->{latitude} == -37.5, "\$firefox->json(\$url)->{latitude} returned -31.5:$json->{latitude}");
+			ok($json->{longitude} == 144.5, "\$firefox->json(\$url)->{longitude} returned 144.5:$json->{longitude}");
+			ok($json->{timeZone} eq "+11:00", "\$firefox->json(\$url)->{timeZone} returned +11:00:$json->{timeZone}");
+		}
 		if ($major_version < 63) {
 			diag("Not attempting to do cache operations for Firefox $major_version");
 		} else {
