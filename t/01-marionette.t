@@ -3979,6 +3979,47 @@ SKIP: {
 		ok($capabilities->moz_headless() || $ENV{FIREFOX_VISIBLE} || 0, "\$capabilities->moz_headless() is set to " . ($ENV{FIREFOX_VISIBLE} ? 'false' : 'true'));
 	}
         ok($capabilities->timeouts()->implicit() == 987654, "\$firefox->capabilities()->timeouts()->implicit() correctly reflects the implicit shortcut timeout");
+	my $go_path = File::Spec->catfile(Cwd::cwd(), qw(t data iframe.html));
+	if ($^O eq 'cygwin') {
+		$go_path = $firefox->execute( 'cygpath', '-s', '-m', $go_path );
+	}
+	my $path = 't/addons/borderify/manifest.json';
+	if (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} else {
+		my $install_id;
+		my $install_path = Cwd::abs_path($path);
+		diag("Original install path is $install_path");
+		if ($^O eq 'MSWin32') {
+			$install_path =~ s/\//\\/smxg;
+		}
+		diag("Installing extension from $install_path");
+		my $temporary = 1;
+		eval {
+			$install_id = $firefox->install($install_path, $temporary);
+		};
+		SKIP: {
+			my $exception = "$@";
+			chomp $exception;
+			if ((!$install_id) && ($major_version < 52)) {
+				skip("addon:install may not be supported in firefox versions less than 52:$exception", 2);
+			}
+			ok($install_id, "Successfully installed an extension:$install_id");
+			$firefox->go("file://$go_path");
+			my $actual_border;
+			CHECK_BORDER: for my $count ( 1 .. 10 ) {
+				$actual_border = $firefox->script(q{return document.body.style.border});
+				if ($actual_border =~ /red/smx) {
+					last CHECK_BORDER;
+				} else {
+					sleep 1;
+				}
+			}
+			my $expected_border =  "5px solid red";
+			ok($actual_border eq $expected_border, "Extension is proved to be running correctly: '$actual_border' vs '$expected_border'");
+			ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
+		}
+	}
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
 	SKIP: {
 		if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} ne 'localhost')) {

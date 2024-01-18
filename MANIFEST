@@ -83,6 +83,8 @@ t/manifest.t
 t/pod-coverage.t
 t/pod.t
 t/addons/test.xpi
+t/addons/borderify/borderify.js
+t/addons/borderify/manifest.json
 t/addons/discogs-search/manifest.json
 t/addons/discogs-search/README.md
 t/stub.pl

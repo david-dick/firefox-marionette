@@ -3831,34 +3831,6 @@ sub _build_local_extension_directory {
     return;
 }
 
-sub _clean_local_extension_directory {
-    my ($self) = @_;
-    if ( $self->{_local_extension_directory} ) {
-
-        # manual clearing of the directory to aid with win32 idiocy
-        my $handle = DirHandle->new( $self->{_local_extension_directory} )
-          or Firefox::Marionette::Exception->throw(
-"Failed to open directory '$self->{_local_extension_directory}':$EXTENDED_OS_ERROR"
-          );
-        my $cleaned = 1;
-        while ( my $entry = $handle->read() ) {
-            next if ( $entry eq File::Spec->updir() );
-            next if ( $entry eq File::Spec->curdir() );
-            my $path = File::Spec->catfile( $self->{_local_extension_directory},
-                $entry );
-            unlink $path or $cleaned = 0;
-        }
-        closedir $handle
-          or Firefox::Marionette::Exception->throw(
-"Failed to close directory '$self->{_local_extension_directory}':$EXTENDED_OS_ERROR"
-          );
-        if ($cleaned) {
-            delete $self->{_local_extension_directory};
-        }
-    }
-    return;
-}
-
 sub har {
     my ($self)  = @_;
     my $context = $self->_context('content');
@@ -11367,7 +11339,6 @@ sub install {
         ]
     );
     my $response = $self->_get_response($message_id);
-    $self->_clean_local_extension_directory();
     return $self->_response_result_value($response);
 }
 
