@@ -941,8 +941,7 @@ SKIP: {
 		skip("No survive testing except for RELEASE_TESTING", 8);
 	}
 	diag("Starting new firefox for testing reconnecting");
-	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_edge.html));
-	($skip_message, $firefox) = start_firefox(0, debug => 'timestamp,cookie:2', survive => 1, bookmarks => $bookmarks_path);
+	($skip_message, $firefox) = start_firefox(0, debug => 'timestamp,cookie:2', survive => 1);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -954,26 +953,6 @@ SKIP: {
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	my $firefox_pid = $capabilities->moz_process_id();
 	ok($firefox_pid, "Firefox process has a process id of $firefox_pid");
-	if ($major_version >= 60) {
-		my ($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
-		ok($bookmark, "Retrieved bookmark from edge import");
-		ok(ref $bookmark->url() eq 'URI::URL', "\$bookmark->url() returns a URI::URL object");
-		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
-		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
-		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
-		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
-		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() " . $bookmark->parent_guid());
-		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
-		($bookmark) = $firefox->bookmarks({ url => URI::URL->new('https://perlmonks.org/') });
-		ok($bookmark->url() eq 'https://perlmonks.org/', "\$bookmark->url() is 'https://perlmonks.org/':" . $bookmark->url());
-		ok($bookmark->date_added() == 1686364081, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
-		ok($bookmark->title() eq 'PerlMonks - The Monastery Gates', "\$bookmark->title() is 'PerlMonks - The Monastery Gates':" . $bookmark->title());
-		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
-		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
-		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
-		ok(!defined $bookmark->icon_url(), "\$bookmark->icon_url() is not defined");
-		ok(!defined $bookmark->icon(), "\$bookmark->icon() is not defined");
-	}
 	if (!$ENV{FIREFOX_HOST}) {
 		ok(process_alive($firefox_pid), "Can contact firefox process ($firefox_pid)");
 	}
@@ -1135,7 +1114,8 @@ SKIP: {
 		$proxy_parameters{ftp} = 'localhost:' . $ftpPort;
 	}
 	my $proxy = Firefox::Marionette::Proxy->new(%proxy_parameters);
-	($skip_message, $firefox) = start_firefox(0, kiosk => 1, sleep_time_in_ms => 5, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy, moz_headless => 1, strict_file_interactability => 1, accept_insecure_certs => 1, page_load_strategy => 'eager', unhandled_prompt_behavior => 'accept and notify', moz_webdriver_click => 1, moz_accessibility_checks => 1, moz_use_non_spec_compliant_pointer_origin => 1, timeouts => Firefox::Marionette::Timeouts->new(page_load => 54_321, script => 4567, implicit => 6543)));
+	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_edge.html));
+	($skip_message, $firefox) = start_firefox(0, kiosk => 1, sleep_time_in_ms => 5, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy, moz_headless => 1, strict_file_interactability => 1, accept_insecure_certs => 1, page_load_strategy => 'eager', unhandled_prompt_behavior => 'accept and notify', moz_webdriver_click => 1, moz_accessibility_checks => 1, moz_use_non_spec_compliant_pointer_origin => 1, timeouts => Firefox::Marionette::Timeouts->new(page_load => 54_321, script => 4567, implicit => 6543)), bookmarks => $bookmarks_path);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1143,6 +1123,26 @@ SKIP: {
 		skip($skip_message, 26);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	if ($major_version >= 60) {
+		my ($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
+		ok($bookmark, "Retrieved bookmark from edge import");
+		ok(ref $bookmark->url() eq 'URI::URL', "\$bookmark->url() returns a URI::URL object");
+		ok($bookmark->url() eq $metacpan_uri . 'pod/Firefox::Marionette', "\$bookmark->url() is '${metacpan_uri}pod/Firefox::Marionette':" . $bookmark->url());
+		ok($bookmark->date_added() == 1685610972, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->title() eq 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org', "\$bookmark->title() is 'Firefox::Marionette - Automate the Firefox browser with the Marionette protocol - metacpan.org':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		($bookmark) = $firefox->bookmarks({ url => URI::URL->new('https://perlmonks.org/') });
+		ok($bookmark->url() eq 'https://perlmonks.org/', "\$bookmark->url() is 'https://perlmonks.org/':" . $bookmark->url());
+		ok($bookmark->date_added() == 1686364081, "\$bookmark->date_added() is " . localtime $bookmark->date_added());
+		ok($bookmark->title() eq 'PerlMonks - The Monastery Gates', "\$bookmark->title() is 'PerlMonks - The Monastery Gates':" . $bookmark->title());
+		ok($bookmark->type() == Firefox::Marionette::Bookmark::BOOKMARK(), "\$bookmark->type() is Firefox::Marionette::Bookmark::BOOKMARK():" . $bookmark->type());
+		ok($bookmark->parent_guid(), "\$bookmark->parent_guid() is " . $bookmark->parent_guid());
+		ok($bookmark->guid(), "\$bookmark->guid() is " . $bookmark->guid());
+		ok(!defined $bookmark->icon_url(), "\$bookmark->icon_url() is not defined");
+		ok(!defined $bookmark->icon(), "\$bookmark->icon() is not defined");
+	}
 	ok($firefox->sleep_time_in_ms() == 5, "\$firefox->sleep_time_in_ms() is 5 milliseconds");
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
