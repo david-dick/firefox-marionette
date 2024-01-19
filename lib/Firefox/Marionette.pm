@@ -373,6 +373,22 @@ _JS_
     return $self;
 }
 
+sub agent {
+    my ( $self, @new ) = @_;
+    my $pref_name = 'general.useragent.override';
+    my $old_agent =
+      $self->script( $self->_compress_script('return navigator.userAgent') );
+    if ( ( scalar @new ) > 0 ) {
+        if ( defined $new[0] ) {
+            $self->set_pref( $pref_name, $new[0] );
+        }
+        else {
+            $self->clear_pref($pref_name);
+        }
+    }
+    return $old_agent;
+}
+
 sub _download_directory {
     my ($self) = @_;
     my $directory = $self->get_pref('browser.download.downloadDir');
@@ -11893,6 +11909,24 @@ It returns the newly created L<credential|Firefox::Marionette::WebAuthn::Credent
 =head2 addons
 
 returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> cannot be automated.
+
+=head2 agent
+
+accepts an optional value for the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent> header and sets this using the profile preferences.  This value will be used on the next page load.  It returns the current value, such as 'Mozilla/5.0 (<system-information>) <platform> (<platform-details>) <extensions>'.  This value is retrieved with L<navigator.userAgent|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent>.
+
+This method can be used to set a user agent string like so;
+
+    use Firefox::Marionette();
+    use strict;
+
+    # useragents.me should only be queried once a month or less.
+    # these UA strings should be cached locally.
+
+    my %user_agent_strings = map { $_->{ua} => $_->{pct} } @{$firefox->json("https://www.useragents.me/api")->{data}};
+    my ($user_agent) = reverse sort { $user_agent_strings{$a} <=> $user_agent_strings{$b} } keys %user_agent_strings;
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->agent($user_agent); # agent is now the most popular agent from useragents.me
 
 =head2 alert_text
 

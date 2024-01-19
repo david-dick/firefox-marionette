@@ -244,6 +244,24 @@ It returns the newly created [credential](https://metacpan.org/pod/Firefox::Mari
 
 returns if pre-existing addons (extensions/themes) are allowed to run.  This will be true for Firefox versions less than 55, as [-safe-mode](http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29) cannot be automated.
 
+## agent
+
+accepts an optional value for the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) header and sets this using the profile preferences.  This value will be used on the next page load.  It returns the current value, such as 'Mozilla/5.0 (&lt;system-information>) &lt;platform> (&lt;platform-details>) &lt;extensions>'.  This value is retrieved with [navigator.userAgent](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent).
+
+This method can be used to set a user agent string like so;
+
+    use Firefox::Marionette();
+    use strict;
+
+    # useragents.me should only be queried once a month or less.
+    # these UA strings should be cached locally.
+
+    my %user_agent_strings = map { $_->{ua} => $_->{pct} } @{$firefox->json("https://www.useragents.me/api")->{data}};
+    my ($user_agent) = reverse sort { $user_agent_strings{$a} <=> $user_agent_strings{$b} } keys %user_agent_strings;
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->agent($user_agent); # agent is now the most popular agent from useragents.me
+
 ## alert\_text
 
 Returns the message shown in a currently displayed modal message box

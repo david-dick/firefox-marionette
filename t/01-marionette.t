@@ -65,6 +65,8 @@ my $css_form_control = 'input.form-control';
 my $footer_links = 'footer-links';
 my $xpath_for_read_text_and_size = '//a[@class="keyboard-shortcuts"]';
 my $freeipapi_uri = 'data:application/json,{"ipVersion":6,"ipAddress":"2001:8001:4ab3:d800:7215:c1fe:fc85:1329","latitude":-37.5,"longitude":144.5,"countryName":"Australia","countryCode":"AU","timeZone":"+11:00","zipCode":"3000","cityName":"Melbourne","regionName":"Victoria","isProxy":false,"continent":"Oceania","continentCode":"OC"}'; # sourced from https://freeipapi.com/api/json/
+my $most_common_useragent = q[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36];
+my $useragents_me_uri = qq[data:application/json,{"about": "Use this API to get a list of current popular useragents. Please post a link back to the site if you find it useful!", "terms": "As the data here don't change sooner than once per week, you shouldn't need to make lots of requests all at once. Currently, we impose a rate-limit of 15 requests per IP address per hour (even this is probably too many)", "data": [{"ua": "$most_common_useragent", "pct": 37.8271882916}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 14.2696312975}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", "pct": 10.8077680833}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 6.5859836758}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.57", "pct": 4.9535603715}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 4.5032367014}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Safari/605.1.15", "pct": 4.5032367014}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 1.9138755981}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0", "pct": 1.2383900929}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.41", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.56", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36 Edg/90.0.818.46", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Whale/3.19.166.16 Safari/537.36", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.76", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.46", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36 Core/1.94.192.400 QQBrowser/11.5.5250.400", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.78", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.67", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/18.17763", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.70", "pct": 0.2251618351}], "updated": 1678066547, "thanks": "https://www.useragents.me/"}];
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 } elsif ($> == 0) { # see RT#131304
@@ -761,6 +763,7 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
+	diag("User Agent is " . $firefox->agent());
 	if ($major_version > 50) {
 		ok($capabilities->platform_version(), "Firefox Platform version is " . $capabilities->platform_version());
 	}
@@ -1492,16 +1495,24 @@ SKIP: {
 	ok($firefox->language($lone_language) eq $new_language, "\$firefox->language(\"$lone_language\") returns correctly");
 	$browser_language = $firefox->script('return navigator.language');
 	ok($lone_language eq $browser_language, "\$firefox->language() matches navigator.language b/c there is only one entry:$lone_language vs $browser_language");
+	my $test_agent_string = "Firefox::Marionette v$Firefox::Marionette::VERSION test suite";
+	my $original_agent = $firefox->agent($test_agent_string);
+	ok($original_agent, "\$firefox->agent() returns a user agent string:$original_agent");
+	my $shadow_root;
+	my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+	if ($^O eq 'cygwin') {
+		$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+	}
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
 	} else {
-		my $shadow_root;
-		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
-		if ($^O eq 'cygwin') {
-			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
-		}
-		$firefox->go("file://$path");
+		ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully");
+		my $new_agent = $firefox->agent(undef);
+		ok($new_agent eq $test_agent_string, "\$firefox->agent(undef) returns '$test_agent_string':$new_agent");
+		ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully again");
+		my $final_agent = $firefox->agent();
+		ok($final_agent eq $original_agent, "\$firefox->agent() returns the original user agent string '$original_agent':$final_agent");
 		$firefox->find_class('add')->click();
 		my $span = $firefox->has_tag('span');
 		{
@@ -1608,6 +1619,12 @@ SKIP: {
 			ok($json->{latitude} == -37.5, "\$firefox->json(\$url)->{latitude} returned -31.5:$json->{latitude}");
 			ok($json->{longitude} == 144.5, "\$firefox->json(\$url)->{longitude} returned 144.5:$json->{longitude}");
 			ok($json->{timeZone} eq "+11:00", "\$firefox->json(\$url)->{timeZone} returned +11:00:$json->{timeZone}");
+			my %user_agent_strings = map { $_->{ua} => $_->{pct} } @{$firefox->json($useragents_me_uri)->{data}};
+			my ($user_agent) = reverse sort { $user_agent_strings{$a} <=> $user_agent_strings{$b} } keys %user_agent_strings;
+			ok($firefox->agent($user_agent), "\$firefox->agent(\"\$most_common_useragent\") worked");
+			ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully for user agent test");
+			my $agent = $firefox->agent();
+			ok($agent eq $most_common_useragent, "\$firefox->agent() now produces the most common user agent");
 		}
 		if ($major_version < 63) {
 			diag("Not attempting to do cache operations for Firefox $major_version");
