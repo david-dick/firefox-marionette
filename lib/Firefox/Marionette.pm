@@ -199,21 +199,26 @@ sub BY_PARTIAL {
     return 'partial link text';
 }
 
-sub language {
-    my ( $self, $new_language ) = @_;
+sub languages {
+    my ( $self, @new_languages ) = @_;
     my $pref_name = 'intl.accept_languages';
     my $script =
-'return branch.getComplexValue(arguments[0], Components.interfaces.nsIPrefLocalizedString).data';
-    my $old          = $self->_context('chrome');
-    my $old_language = $self->script(
-        $self->_compress_script( $self->_prefs_interface_preamble() . $script ),
-        args => [$pref_name]
-    );
+      'return navigator.languages'
+      ; # branch.getComplexValue(arguments[0], Components.interfaces.nsIPrefLocalizedString).data';
+    my $old           = $self->_context('chrome');
+    my @old_languages = @{
+        $self->script(
+            $self->_compress_script(
+                $self->_prefs_interface_preamble() . $script
+            ),
+            args => [$pref_name]
+        )
+    };
     $self->_context($old);
-    if ( defined $new_language ) {
-        $self->set_pref( $pref_name, $new_language );
+    if ( scalar @new_languages ) {
+        $self->set_pref( $pref_name, join q[, ], @new_languages );
     }
-    return $old_language;
+    return @old_languages;
 }
 
 sub _prefs_interface_preamble {
@@ -13048,9 +13053,9 @@ accepts a parameter describing a key and returns an action for use in the L<perf
                                  $firefox->key_up(CONTROL())
                                )->content();
 
-=head2 language
+=head2 languages
 
-accepts an optional value for the L<Accept-Language|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language> header and sets this using the profile preferences.  It returns the current value, such as 'en-US, en'.
+accepts an optional list of values for the L<Accept-Language|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language> header and sets this using the profile preferences.  It returns the current values as a list, such as ('en-US', 'en').
 
 =head2 loaded
 

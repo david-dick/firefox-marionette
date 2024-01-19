@@ -1366,9 +1366,9 @@ accepts a parameter describing a key and returns an action for use in the [perfo
                                  $firefox->key_up(CONTROL())
                                )->content();
 
-## language
+## languages
 
-accepts an optional value for the [Accept-Language](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) header and sets this using the profile preferences.  It returns the current value, such as 'en-US, en'.
+accepts an optional list of values for the [Accept-Language](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) header and sets this using the profile preferences.  It returns the current values as a list, such as ('en-US', 'en').
 
 ## loaded
 

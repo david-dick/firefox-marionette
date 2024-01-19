@@ -1764,12 +1764,12 @@ SUBROUTINES/METHODS
                                      $firefox->key_up(CONTROL())
                                    )->content();
 
- language
+ languages
 
-    accepts an optional value for the Accept-Language
+    accepts an optional list of values for the Accept-Language
     <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language>
     header and sets this using the profile preferences. It returns the
-    current value, such as 'en-US, en'.
+    current values as a list, such as ('en-US', 'en').
 
  loaded
 
