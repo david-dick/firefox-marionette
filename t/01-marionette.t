@@ -1123,6 +1123,14 @@ SKIP: {
 		skip($skip_message, 26);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	if ($major_version < 61) {
+		skip("HAR support not available in Firefox before version 61", 1);
+	} else {
+		my $har_lives = 0;
+		eval { $firefox->har(); $har_lives = 1 };
+		chomp $@;
+		ok($har_lives == 0 && $@ =~ /^(?:webdriver|javascript|unknown)[ ]error:[ ]TypeError:[ ](?:can't[ ]access[ ]property[ ]"triggerExport",[ ])?window[.]HAR[ ]is[ ]undefined[ ]at[ ]t[\/\\]01\-marionette.t[ ]line[ ]\d+/smx, "\$firefox->har() throws an exception when har has not been setup:$@");
+	}
 	if ($major_version >= 60) {
 		my ($bookmark) = $firefox->bookmarks({ url => URI::URL->new($metacpan_uri . 'pod/Firefox::Marionette') });
 		ok($bookmark, "Retrieved bookmark from edge import");

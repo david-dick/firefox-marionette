@@ -3853,10 +3853,19 @@ sub _build_local_extension_directory {
 }
 
 sub har {
-    my ($self)  = @_;
+    my ($self) = @_;
     my $context = $self->_context('content');
-    my $log     = $self->script(<<'_JS_');
-return (async function() { return await HAR.triggerExport() })();
+    if ( $self->{_har} ) {
+        while (
+            !$self->script(
+                'if (window.HAR && window.HAR.triggerExport) { return 1 }')
+          )
+        {
+            sleep 1;
+        }
+    }
+    my $log = $self->script(<<'_JS_');
+return (async function() { return await window.HAR.triggerExport() })();
 _JS_
     $self->_context($context);
     return { log => $log };
