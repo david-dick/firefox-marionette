@@ -65,8 +65,16 @@ my $css_form_control = 'input.form-control';
 my $footer_links = 'footer-links';
 my $xpath_for_read_text_and_size = '//a[@class="keyboard-shortcuts"]';
 my $freeipapi_uri = 'data:application/json,{"ipVersion":6,"ipAddress":"2001:8001:4ab3:d800:7215:c1fe:fc85:1329","latitude":-37.5,"longitude":144.5,"countryName":"Australia","countryCode":"AU","timeZone":"+11:00","zipCode":"3000","cityName":"Melbourne","regionName":"Victoria","isProxy":false,"continent":"Oceania","continentCode":"OC"}'; # sourced from https://freeipapi.com/api/json/
+my $geocode_maps_uri = 'data:application/json,[{"place_id":18637666,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright","osm_type":"node","osm_id":6173167285,"boundingbox":["-37.6","-37.4","144.4","144.5"],"lat":"-37.5","lon":"144.5","display_name":"Boston Consulting Group, 101, Collins Street, East End Theatre District, Melbourne, City of Melbourne, Victoria, 3000, Australia","class":"office","type":"company","importance":1.1674899222535406}]'; # sourced from https://geocode.maps.co/search?street=101+Collins+St&city=Melbourne&state=VIC&postalcode=3000&country=AU&format=json
+my $positionstack_uri = 'data:application/json,{"data":[{"latitude":-37.5,"longitude":144.5,"type":"address","name":"101 Collins Street","number":"101","postal_code":"3000","street":"Collins Street","confidence":1,"region":"Victoria","region_code":"VIC","county":"Melbourne","locality":"Melbourne","administrative_area":"Melbourne","neighbourhood":null,"country":"Australia","country_code":"AUS","continent":"Oceania","label":"101 Collins Street, Melbourne, VIC, Australia"}]}'; # source from http://api.positionstack.com/v1/forward?access_key=$API_KEY_HERE&query=101+Collins+St,Melbourne,VIC+3000
+my $ipgeolocation_uri = 'data:application/json,{"ip":"2001:8001:4ab3:d800:7215:c1fe:fc85:1329","continent_code":"OC","continent_name":"Oceania","country_code2":"AU","country_code3":"AUS","country_name":"Australia","country_name_official":"Commonwealth of Australia","country_capital":"Canberra","state_prov":"Victoria","state_code":"AU-VIC","district":"","city":"Melbourne","zipcode":"3000","latitude":"-37.5","longitude":"144.5","is_eu":false,"calling_code":"+61","country_tld":".au","languages":"en-AU","country_flag":"https://ipgeolocation.io/static/flags/au_64.png","geoname_id":"2166436","isp":"Telstra Corporation Limited","connection_type":"","organization":"Telstra Corporation Limited","currency":{"code":"AUD","name":"Australian Dollar","symbol":"A$"},"time_zone":{"name":"Australia/Melbourne","offset":10,"offset_with_dst":11,"current_time":"2024-01-09 17:54:54.413+1100","current_time_unix":1704783294.413,"is_dst":true,"dst_savings":1}}'; # sourced from https://api.ipgeolocation.io/ipgeo?apiKey=$API_KEY_HERE
+my $ipstack_uri = 'data:application/json,{"ip": "2001:8003:4a03:d800:7285:c2ff:fe85:1528", "type": "ipv6", "continent_code": "OC", "continent_name": "Oceania", "country_code": "AU", "country_name": "Australia", "region_code": "VIC", "region_name": "Victoria", "city": "Melbourne", "zip": "3000", "latitude": -37.5, "longitude": 144.5, "location": {"geoname_id": 2158177, "capital": "Canberra", "languages": [{"code": "en", "name": "English", "native": "English"}], "country_flag": "https://assets.ipstack.com/flags/au.svg", "country_flag_emoji": "\ud83c\udde6\ud83c\uddfa", "country_flag_emoji_unicode": "U+1F1E6 U+1F1FA", "calling_code": "61", "is_eu": false}}';
+my $dummy1_uri = 'data:application/json,{"latitude":40.7,"longitude":-73.9,"time_zone":{"current_time":"2024-01-09 04:36:29.524-0500"}}'; # dummy data for testing (roughly new york)
+my $dummy2_uri = 'data:application/json,{"latitude":40.7,"longitude":-73.9,"time_zone":{"current_time":"1234abc"}}'; # dummy data for testing bad data
 my $most_common_useragent = q[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36];
 my $useragents_me_uri = qq[data:application/json,{"about": "Use this API to get a list of current popular useragents. Please post a link back to the site if you find it useful!", "terms": "As the data here don't change sooner than once per week, you shouldn't need to make lots of requests all at once. Currently, we impose a rate-limit of 15 requests per IP address per hour (even this is probably too many)", "data": [{"ua": "$most_common_useragent", "pct": 37.8271882916}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 14.2696312975}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", "pct": 10.8077680833}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 6.5859836758}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.57", "pct": 4.9535603715}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 4.5032367014}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Safari/605.1.15", "pct": 4.5032367014}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 1.9138755981}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0", "pct": 1.2383900929}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.41", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.56", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36 Edg/90.0.818.46", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Whale/3.19.166.16 Safari/537.36", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.76", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.46", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36 Core/1.94.192.400 QQBrowser/11.5.5250.400", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.78", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.67", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/18.17763", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.70", "pct": 0.2251618351}], "updated": 1678066547, "thanks": "https://www.useragents.me/"}];
+
+my $min_geo_version = 60;
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 } elsif ($> == 0) { # see RT#131304
@@ -1347,8 +1355,11 @@ SKIP: {
 
 SKIP: {
 	my $proxyPort = empty_port();
+	my $latitude = 40;
+	my $longitude = 24;
+	my $geo1 = Firefox::Marionette::GeoLocation->new(lat => $latitude, lng => $longitude);
 	diag("Starting new firefox for testing proxies with proxy port TCP/$proxyPort");
-	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('http://localhost:' . $proxyPort)), moz_headless => 1));
+	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('http://localhost:' . $proxyPort)), moz_headless => 1), geo => $geo1);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1367,6 +1378,21 @@ SKIP: {
 		ok($capabilities->proxy()->pac()->host() eq 'localhost', "\$capabilities->proxy()->pac()->host() is 'localhost'");
 	}
 	ok($capabilities->timeouts()->page_load() == 65432, "\$firefox->capabilities()->timeouts()->page_load() correctly reflects the page_load shortcut timeout");
+	if ($ENV{FIREFOX_HOST}) {
+	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} elsif ($major_version >= $min_geo_version) {
+		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+		if ($^O eq 'cygwin') {
+			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+		}
+		$firefox->go("file://$path");
+		my $geo2 = $firefox->geo();
+		my $returned_latitude = $geo2->latitude();
+		my $returned_longitude = $geo2->longitude();
+		ok($returned_latitude == $latitude, "\$geo2->latitude() is correctly reported as $latitude:$returned_latitude");
+		ok($returned_longitude == $longitude, "\$geo2->longitude() is correctly reported as $longitude:$returned_longitude");
+	}
 	TODO: {
 		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
 		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
@@ -1388,6 +1414,13 @@ SKIP: {
 		skip($skip_message, 7);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
+	if ($major_version >= $min_geo_version) {
+		eval {
+			$firefox->geo();
+		};
+		chomp $@;
+		ok($@ =~ /^javascript[ ]error:[ ]User[ ]denied[ ]geolocation[ ]prompt[ ]at[ ]t.01\-marionette[.]t[ ]line[ ]\d+$/smx, "Geolocation throws an exception with source and line numbers:$@");
+	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	SKIP: {
@@ -1438,7 +1471,7 @@ my $uname;
 SKIP: {
 	diag("Starting new firefox for testing PDFs and script elements");
 	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_chrome.html));
-	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, moz_headless => 1), bookmarks => $bookmarks_path);
+	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, moz_headless => 1), bookmarks => $bookmarks_path, geo => 1);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -1632,9 +1665,109 @@ SKIP: {
 			my $agent = $firefox->agent();
 			ok($agent eq $most_common_useragent, "\$firefox->agent() now produces the most common user agent");
 		}
+		if ($ENV{FIREFOX_HOST}) {
+		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		} elsif ($major_version >= $min_geo_version) {
+			my %hosts = ($freeipapi_uri => 'freeipapi', $geocode_maps_uri => 'geocode_maps', $positionstack_uri => 'positionstack', $ipgeolocation_uri => 'ipgeolocation', $ipstack_uri => 'ipstack', $dummy1_uri => 'dummy1', $dummy2_uri => 'dummy2');
+			foreach my $geo_uri ($freeipapi_uri, $geocode_maps_uri, $positionstack_uri, $ipgeolocation_uri, $ipstack_uri, $dummy1_uri, $dummy2_uri) {
+				my $json = $firefox->json($geo_uri);
+				if ($geo_uri eq $geocode_maps_uri) {
+					$json = $json->[0];
+				} elsif ($geo_uri eq $positionstack_uri) {
+					$json = $json->{data}->[0];
+				}
+				my $sample = Firefox::Marionette::GeoLocation->new($json);
+				my $latitude = $sample->latitude();
+				my $longitude = $sample->longitude();
+				if (($geo_uri eq $dummy1_uri) || ($geo_uri eq $dummy2_uri)) {
+					ok($latitude == 40.7, "Firefox::Marionette::GeoLocation latitude from $hosts{$geo_uri} is 40.7:" . $latitude);
+					ok($longitude == -73.9, "Firefox::Marionette::GeoLocation longitude from $hosts{$geo_uri} is -73.9:" . $longitude);
+				} else {
+					ok($latitude == -37.5, "Firefox::Marionette::GeoLocation latitude from $hosts{$geo_uri} is -37.5:" . $latitude);
+					ok($longitude == 144.5, "Firefox::Marionette::GeoLocation longitude from $hosts{$geo_uri} is 144.5:" . $longitude);
+				}
+				my $timezone_offset = $sample->timezone_offset();
+				if (($geo_uri eq $geocode_maps_uri) || ($geo_uri eq $positionstack_uri) || ($geo_uri eq $ipstack_uri) || ($geo_uri eq $dummy2_uri)) {
+					ok(!defined $timezone_offset, "Firefox::Marionette::GeoLocation timezone offset from $hosts{$geo_uri} is not defined");
+				} elsif ($geo_uri eq $dummy1_uri) {
+					ok($timezone_offset == 300, "Firefox::Marionette::GeoLocation timezone offset from $hosts{$geo_uri} is 300:$timezone_offset");
+				} else {
+					ok(defined $timezone_offset, "Firefox::Marionette::GeoLocation timezone offset from $hosts{$geo_uri} is defined:$timezone_offset");
+				}
+				my $country_code = $sample->country_code();
+				if (($geo_uri eq $geocode_maps_uri) || ($geo_uri eq $positionstack_uri) || ($geo_uri eq $dummy1_uri) || ($geo_uri eq $dummy2_uri)) {
+					ok(!defined $country_code, "Firefox::Marionette::GeoLocation country_code from $hosts{$geo_uri} is not defined");
+				} else {
+					ok($country_code eq 'AU', "Firefox::Marionette::GeoLocation country_code from $hosts{$geo_uri} is 'AU':$country_code");
+				}
+			}
+		}
+		my $new_york = Firefox::Marionette::GeoLocation->new({ lat => 40.753, long => -73.983 });
+		my $encoded_new_york = Encode::encode('UTF-8', "$new_york", 1);
+		ok($encoded_new_york eq "40°45'11\"N,73°58'59\"W", "Correctly stringifies New York:$encoded_new_york");
+		ok($new_york->uri()->isa('URI') && $new_york->uri() eq 'geo:40.753,-73.983', "\$geo->uri() correctly produces a URI:" . $new_york->uri());
+		my $fountain_island = Firefox::Marionette::GeoLocation->new(latitude => -37.82896, longitude => 144.9811, accuracy => 40075017, altitude => 55, altitude_accuracy => 20, speed => 20);
+		my $encoded_fountain_island = Encode::encode('UTF-8', "$fountain_island", 1);
+		ok($encoded_fountain_island eq "37°49'44\"S,144°58'52\"E", "Correctly stringifies Fountain Island:$encoded_fountain_island");
+		ok($fountain_island->uri()->isa('URI') && $fountain_island->uri() eq 'geo:-37.82896,144.9811,55;u=40075017', "\$geo->uri() correctly produces a URI:" . $fountain_island->uri());
+		my ($latitude, $longitude);
+		if ($ENV{FIREFOX_HOST}) {
+		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		} elsif ($major_version >= $min_geo_version) {
+			$firefox->geo($json);
+			my $geo3 = $firefox->geo();
+			$latitude = $geo3->latitude();
+			ok($latitude >= -90 && $latitude <= 90, "\$geo3->latitude() looks like a latitude >= -90 and <= 90:$latitude");
+			$longitude = $geo3->longitude();
+			ok($longitude >= -180 && $longitude <= 180, "\$geo3->longitude() looks like a longitude >= -180 and <= 180:$longitude");
+			my $timezone_offset = $geo3->timezone_offset();
+			ok(defined $timezone_offset, "\$geo3->timezone_offset() is the javascript timezone offset:$timezone_offset");
+			my $accuracy = $geo3->accuracy();
+			TODO: {
+				local $TODO = ($major_version < 63) ? "\$geo3->accuracy() not available for older versions of firefox" : q[];
+				ok(defined $accuracy && $accuracy >= 0, "\$geo333->accuracy() is a positive float (accuracy in metres):$accuracy");
+			}
+			my $altitude = $geo3->altitude();
+			if (defined $altitude) {
+				ok($altitude >= 0, "\$geo3->altitude() is a positive float (altitude in metres):$altitude");
+			} else {
+				ok(1, "\$geo3->altitude() is not defined");
+			}
+			my $altitude_accuracy = $geo3->altitude_accuracy();
+			if (defined $altitude_accuracy) {
+				ok($altitude_accuracy >= 0, "\$geo3->altitude_accuracy() is a positive float (altitude accuracy in metres):$altitude_accuracy");
+			} else {
+				ok(1, "\$geo3->altitude_accuracy() is not defined");
+			}
+			my $heading = $geo3->heading();
+			if (defined $heading) {
+				ok($heading >= 0 && $heading <= 360, "\$geo3->heading() looks like a heading >= 0 and <= 360:$latitude");
+			} else {
+				ok(1, "\$geo3->heading() is not defined");
+			}
+			my $speed = $geo3->speed();
+			if (defined $speed) {
+				ok($speed >= 0, "\$geo3->speed() is a positive float (speed in metres per second):$speed");
+			} else {
+				ok(1, "\$geo3->speed() is not defined");
+			}
+		}
 		if ($major_version < 63) {
 			diag("Not attempting to do cache operations for Firefox $major_version");
 		} else {
+			if ($ENV{FIREFOX_HOST}) {
+			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+			} elsif ($major_version >= $min_geo_version) {
+				my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+				if ($^O eq 'cygwin') {
+					$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+				}
+				$firefox->go("file://$path");
+				my $geo4 = $firefox->geo();
+				ok($geo4->latitude() == $latitude, "\$geo4->latitude() has remained after a page load");
+				ok($geo4->longitude() == $longitude, "\$geo4->longitude() has remained after a page load");
+			}
 			ok($firefox->go('https://github.com'), "\$firefox->go('https://github.com') succeeded");
 			my $old_session_cookie = github_session_cookie($firefox);
 			ok($old_session_cookie, "Found github session cookie");
@@ -2545,7 +2678,7 @@ SKIP: {
 
 SKIP: {
 	diag("Starting new firefox for testing custom headers");
-	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1));
+	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1), geo => URI->new($freeipapi_uri));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -2630,6 +2763,11 @@ SKIP: {
 		if ($major_version < 61) {
 			skip("HAR support not available in Firefox before version 61", 1);
 		}
+		if ($major_version >= $min_geo_version) {
+			my $geo4 = $firefox->geo();
+			ok($geo4->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo4->latitude());
+			ok($geo4->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo4->longitude());
+		}
 		my $correct = 0;
 		my $number_of_entries = 0;
 		my $count = 0;
@@ -2696,7 +2834,7 @@ SKIP: {
 my $bad_network_behaviour;
 SKIP: {
 	diag("Starting new firefox for testing metacpan and iframe, with find, downloads, extensions and actions");
-	($skip_message, $firefox) = start_firefox(0, debug => 0, page_load => 600000, script => 5432, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, page_load_strategy => 'eager'));
+	($skip_message, $firefox) = start_firefox(0, debug => 0, page_load => 600000, script => 5432, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, page_load_strategy => 'eager'), geo => $freeipapi_uri);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -2724,6 +2862,11 @@ SKIP: {
 		ok($firefox->go($frame_url), "$frame_url has been loaded");
 		if (out_of_time()) {
 			skip("Running out of time.  Trying to shutdown tests as fast as possible", 246);
+		}
+		if ($major_version >= $min_geo_version) {
+			my $geo = $firefox->geo();
+			ok($geo->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo->latitude());
+			ok($geo->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo->longitude());
 		}
 		if ($major_version >= 121) {
 			my @frames = sort @{$firefox->script("return [ window.frames[0], window.frames[1] ];")};
@@ -3986,8 +4129,8 @@ SKIP: {
 }
 
 SKIP: {
-	diag("Starting new firefox for testing JSON from localhost and alerts");
-	($skip_message, $firefox) = start_firefox(0, visible => 0, implicit => 987654);
+	diag("Starting new firefox for testing JSON from localhost and alerts and extensions");
+	($skip_message, $firefox) = start_firefox(0, visible => 0, implicit => 987654, geo => 1);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
@@ -4042,6 +4185,24 @@ SKIP: {
 			ok($actual_border eq $expected_border, "Extension is proved to be running correctly: '$actual_border' vs '$expected_border'");
 			ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
 		}
+	}
+	if ($ENV{FIREFOX_HOST}) {
+	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} elsif ($major_version >= $min_geo_version) {
+		my $new_latitude = -37.123;
+		my $new_longitude = 144.456;
+		$firefox->geo(latitude => $new_latitude, longitude => $new_longitude);
+		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data iframe.html));
+		if ($^O eq 'cygwin') {
+			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+		}
+		$firefox->go("file://$path");
+		my $geo5 = $firefox->geo();
+		my $current_latitude = $geo5->latitude();
+		my $current_longitude = $geo5->longitude();
+		ok($current_latitude == $new_latitude, "\$geo5->latitude() has changed after a call to \$firefox->geo(latitude => $new_latitude, longitude => $new_longitude):$current_latitude");
+		ok($current_longitude == $new_longitude, "\$geo5->longitude() has changed after a call to \$firefox->geo(latitude => $new_latitude, longitude => $new_longitude):$current_longitude");
 	}
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
 	SKIP: {
@@ -4181,7 +4342,7 @@ SKIP: {
 SKIP: {
 	if ($ENV{RELEASE_TESTING}) {
 		diag("Starting new firefox for testing images and links");
-		($skip_message, $firefox) = start_firefox(0, visible => 0);
+		($skip_message, $firefox) = start_firefox(0, visible => 0, geo => { latitude => 141, longitude => 85, altitude => 40, altitude_accuracy => 20 });
 		if (!$skip_message) {
 			$at_least_one_success = 1;
 		}
@@ -4849,8 +5010,7 @@ SKIP: {
 		if ($ENV{FIREFOX_HOST}) {
 		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 			diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
-		} else {
-			# Coping with OpenBSD unveil - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271
+		} elsif ($major_version >= $min_geo_version) {
 			my $path = File::Spec->catfile(Cwd::cwd(), qw(t data visible.html));
 			if ($^O eq 'cygwin') {
 				$path = $firefox->execute( 'cygpath', '-s', '-m', $path );

@@ -10,6 +10,7 @@ use Firefox::Marionette::Cookie();
 use Firefox::Marionette::Display();
 use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
+use Firefox::Marionette::GeoLocation();
 use Firefox::Marionette::Timeouts();
 use Firefox::Marionette::Image();
 use Firefox::Marionette::Link();
@@ -219,6 +220,85 @@ sub languages {
         $self->set_pref( $pref_name, join q[, ], @new_languages );
     }
     return @old_languages;
+}
+
+sub _setup_geo {
+    my ( $self, $geo ) = @_;
+    $self->set_pref( 'geo.enabled',                   1 );
+    $self->set_pref( 'geo.provider.use_geoclue',      0 );
+    $self->set_pref( 'geo.provider.use_corelocation', 0 );
+    $self->set_pref( 'geo.provider.testing',          1 );
+    $self->set_pref( 'geo.prompt.testing',            1 );
+    $self->set_pref( 'geo.prompt.testing.allow',      1 );
+    $self->set_pref( 'geo.security.allowinsecure',    1 );
+    $self->set_pref( 'geo.wifi.scan',                 1 );
+    $self->set_pref( 'permissions.default.geo',       1 );
+
+    if ( ref $geo ) {
+        if ( ( Scalar::Util::blessed($geo) ) && ( $geo->isa('URI') ) ) {
+            $self->geo( $self->json($geo) );
+        }
+        else {
+            $self->geo($geo);
+        }
+    }
+    elsif ( $geo =~ /^(?:data|http)/smx ) {
+        $self->geo( $self->json($geo) );
+    }
+    return $self;
+}
+
+sub geo {
+    my ( $self, @parameters ) = @_;
+
+    my $location;
+    if ( scalar @parameters ) {
+        $location = Firefox::Marionette::GeoLocation->new(@parameters);
+    }
+    if ( defined $location ) {
+        $self->set_pref( 'geo.provider.network.url',
+            q[data:application/json,]
+              . JSON->new()->convert_blessed()->encode($location) );
+        $self->set_pref( 'geo.wifi.uri',
+            q[data:application/json,]
+              . JSON->new()->convert_blessed()->encode($location) );
+        return $self;
+    }
+    my $new_location =
+      Firefox::Marionette::GeoLocation->new( $self->_get_geolocation() );
+    return $new_location;
+}
+
+sub _get_geolocation {
+    my ($self) = @_;
+
+    my $result = $self->script( $self->_compress_script( <<'_JS_') );
+return (async function() {
+  function getGeo() {
+    return new Promise((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { maximumAge: 0, enableHighAccuracy: true });
+      } else {
+        reject("navigator.geolocation is unavailable");
+      }
+    })
+  };
+  return await getGeo().then((response) => { let d = new Date(); return {
+									"timezone_offset": d.getTimezoneOffset(),
+									"latitude": response["coords"]["latitude"],
+									"longitude": response["coords"]["longitude"],
+									"altitude": response["coords"]["altitude"],
+									"accuracy": response["coords"]["accuracy"],
+									"altitudeAccuracy": response["coords"]["altitudeAccuracy"],
+									"heading": response["coords"]["heading"],
+									"speed": response["coords"]["speed"],
+									}; }).catch((err) => { throw err.message });
+})();
+_JS_
+    if ( ( defined $result ) && ( !ref $result ) ) {
+        Firefox::Marionette::Exception->throw("javascript error: $result");
+    }
+    return $result;
 }
 
 sub _prefs_interface_preamble {
@@ -847,6 +927,7 @@ sub _store_restart_parameters {
         next if ( $key eq 'profile' );
         next if ( $key eq 'capabilities' );
         next if ( $key eq 'timeout' );
+        next if ( $key eq 'geo' );
         $self->{_restart_parameters}->{$key} = $parameters{$key};
     }
     return;
@@ -862,6 +943,7 @@ sub _init {
     $self->{force_scp_protocol} = $parameters{scp};
     $self->{visible}            = $parameters{visible};
     $self->{force_webauthn}     = $parameters{webauthn};
+    $self->{geo}                = $parameters{geo};
 
     foreach my $type (qw(nightly developer waterfox)) {
         if ( defined $parameters{$type} ) {
@@ -3797,6 +3879,9 @@ sub _post_launch_checks_and_setup {
     elsif ( $self->_is_webauthn_okay() ) {
         $self->{$webauthn_default_authenticator_key_name} =
           $self->add_webauthn_authenticator();
+    }
+    if ( my $geo = delete $self->{geo} ) {
+        $self->_setup_geo($geo);
     }
     return;
 }
@@ -12722,6 +12807,34 @@ causes the browser to traverse one step forward in the joint history of the curr
 
 full screens the firefox window. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
+=head2 geo
+
+accepts an optional L<geo location|Firefox::Marionette::GeoLocation> object or the parameters for a L<geo location|Firefox::Marionette::GeoLocation> object, turns on the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API> and returns the current L<value|Firefox::Marionette::GeoLocation> returned by calling the javascript L<getCurrentPosition|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition> method.  This method is further discussed in the L<GEO LOCATION|/GEO-LOCATION> section.
+
+NOTE: firefox will only allow L<Geolocation|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation> calls to be made from L<secure contexts|https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts> and bizarrely, this does not include about:blank or similar.  Therefore, you will need to load a page before calling the L<geo|/geo> method.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new( proxy => 'https://this.is.another.location:3128', geo => 1 );
+
+    # Get geolocation for this.is.another.location (via proxy)
+
+    $firefox->geo($firefox->json('https://freeipapi.com/api/json/'));
+
+    # now google maps will show us in this.is.another.location
+
+    $firefox->go('https://maps.google.com/');
+
+    my $geo = $firefox->geo();
+
+    warn "Apparently, we're now at " . join q[, ], $geo->latitude(), $geo->longitude();
+
+    # OR the quicker setup (run this with perl -C)
+
+    warn "Apparently, we're now at " . Firefox::Marionette->new( proxy => 'https://this.is.another.location:3128', geo => 'https://freeipapi.com/api/json/' )->go('https://maps.google.com/')->geo();
+
+NOTE: currently this call sets the location to be exactly what is specified.  It doesn't change anything else relevant (yet, but it may in future), such as L<languages|/languages> or the L<timezone|https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset>.  This function should be considered experimental.  Feedback welcome.
+
 =head2 go
 
 Navigates the current browsing context to the given L<URI|URI> and waits for the document to load or the session's L<page_load|Firefox::Marionette::Timeouts#page_load> duration to elapse before returning, which, by default is 5 minutes.
@@ -13263,6 +13376,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * developer - only allow a L<developer edition|https://www.mozilla.org/en-US/firefox/developer/> to be launched. This defaults to "0" (off).
 
 =item * devtools - begin the session with the L<devtools|https://developer.mozilla.org/en-US/docs/Tools> window opened in a separate window.
+
+=item * geo - setup the browser L<preferences|http://kb.mozillazine.org/About:config> to allow the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API> to work.  If the value for this key is a L<URI|URI> object or a string beginning with '^(?:data|http)', this object will be retrieved using the L<json|/json> method and the response will used to build a L<GeoLocation|Firefox::Mozilla::GeoLocation> object, which will be sent to the L<geo|/geo> method.  If the value for this key is a hash, the hash will be used to build a L<GeoLocation|Firefox::Mozilla::GeoLocation> object, which will be sent to the L<geo|/geo> method.
 
 =item * height - set the L<height|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29> of the initial firefox window
 
@@ -14036,6 +14151,8 @@ See the L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA
 
 See L<SETTING UP SOCKS SERVERS USING SSH|Firefox::Marionette::Proxy#SETTING-UP-SOCKS-SERVERS-USING-SSH> for easy proxying via L<ssh|https://man.openbsd.org/ssh>
 
+See L<GEO LOCATION|/GEO-LOCATION> section for how to combine this with providing appropriate browser settings for the end point.
+
 =head1 AUTOMATING THE FIREFOX PASSWORD MANAGER
 
 This module allows you to login to a website without ever directly handling usernames and password details.  The Password Manager may be preloaded with appropriate passwords and locked, like so;
@@ -14074,6 +14191,44 @@ And used to fill in login prompts without explicitly knowing the account details
     $firefox->go('https://pause.perl.org/pause/authenquery')->accept_alert(); # this goes to the page and submits the http auth popup
 
     $firefox->go('https://github.com/login')->fill_login(); # fill the login and password fields without needing to see them
+
+=head1 GEO LOCATION
+
+The firefox L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API> can be used by supplying the C<geo> parameter to the L<new|/new> method and then calling the L<geo|/geo> method (from a L<secure context|https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts>.
+
+The L<geo|/geo> method can accept various specific latitude and longitude parameters as a list, such as;
+
+    $firefox->geo(latitude => -37.82896, longitude => 144.9811);
+
+    OR
+
+    $firefox->geo(lat => -37.82896, long => 144.9811);
+
+    OR
+
+    $firefox->geo(lat => -37.82896, lng => 144.9811);
+
+    OR
+
+    $firefox->geo(lat => -37.82896, lon => 144.9811);
+
+or it can be passed in as a reference, such as;
+
+    $firefox->geo({ latitude => -37.82896, longitude => 144.9811 });
+
+the combination of a variety of parameter names and the ability to pass parameters in as a reference means it can be deal with various geo location websites, such as;
+
+    $firefox->geo($firefox->json('https://freeipapi.com/api/json/')); # get geo location from IP address
+
+    $firefox->geo($firefox->json('https://geocode.maps.co/search?street=101+Collins+St&city=Melbourne&state=VIC&postalcode=3000&country=AU&format=json')->[0]); # get geo location of street address
+
+    $firefox->geo($firefox->json('http://api.positionstack.com/v1/forward?access_key=' . $access_key . '&query=101+Collins+St,Melbourne,VIC+3000')->{data}->[0]); # get geo location of street address using api key
+
+    $firefox->geo($firefox->json('https://api.ipgeolocation.io/ipgeo?apiKey=' . $api_key)); # get geo location from IP address
+
+These sites were active at the time this documentation was written, but mainly function as an illustration of the flexibility of L<geo|/geo> and L<json|/json> methods in providing the desired location to the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API>.
+
+The L<country_code|Firefox::Marionette::GeoLocation#country_code> and L<timezone_offset|Firefox::Marionette::GeoLocation#timezone_offset> methods can be used to help set the L<languages|/languages> method and possibly in the future change the timezone of the browser.
 
 =head1 CONSOLE LOGGING
 

@@ -25,6 +25,7 @@ lib/Firefox/Marionette/Exception/InsecureCertificate.pm
 lib/Firefox/Marionette/Exception/NotFound.pm
 lib/Firefox/Marionette/Exception/StaleElement.pm
 lib/Firefox/Marionette/Exception/NoSuchAlert.pm
+lib/Firefox/Marionette/GeoLocation.pm
 lib/Firefox/Marionette/Response.pm
 lib/Firefox/Marionette/Timeouts.pm
 lib/Firefox/Marionette/UpdateStatus.pm
