@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Encode();
 use overload q[""] => '_lat_long';
+use charnames qw(:full);
 
 our $VERSION = '1.50';
 
