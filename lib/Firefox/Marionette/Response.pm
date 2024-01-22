@@ -8,7 +8,7 @@ use Firefox::Marionette::Exception::StaleElement();
 use Firefox::Marionette::Exception::InsecureCertificate();
 use Firefox::Marionette::Exception::Response();
 
-our $VERSION = '1.50';
+our $VERSION = '1.51';
 
 sub _TYPE_INDEX            { return 0 }
 sub _MESSAGE_ID_INDEX      { return 1 }
@@ -147,7 +147,7 @@ Firefox::Marionette::Response - Represents a Marionette protocol response
 
 =head1 VERSION
 
-Version 1.50
+Version 1.51
 
 =head1 SYNOPSIS
 

@@ -11,7 +11,7 @@ BEGIN {
         require Win32;
     }
 }
-our $VERSION = '1.50';
+our $VERSION = '1.51';
 
 sub profile_ini_directory {
     my ($class) = @_;
@@ -101,7 +101,7 @@ Waterfox::Marionette::Profile - Represents a prefs.js Waterfox Profile
 
 =head1 VERSION
 
-Version 1.50
+Version 1.51
 
 =head1 SYNOPSIS
 

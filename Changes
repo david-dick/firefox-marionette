@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.51  Mon Jan 22 21:30 2024
+       Adding fixes for older perls.
+
 1.50  Sun Jan 21 18:06 2024
        Adding agent, languages and geo methods
        Allowing json method to accept a URL as a parameter
