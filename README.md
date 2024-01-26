@@ -2293,7 +2293,7 @@ And used to fill in login prompts without explicitly knowing the account details
 
 # GEO LOCATION
 
-The firefox [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API) can be used by supplying the `geo` parameter to the [new](#new) method and then calling the [geo](#geo) method (from a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
+The firefox [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API) can be used by supplying the `geo` parameter to the [new](#new) method and then calling the [geo](#geo) method (from a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts)).
 
 The [geo](#geo) method can accept various specific latitude and longitude parameters as a list, such as;
 
@@ -2317,13 +2317,15 @@ or it can be passed in as a reference, such as;
 
 the combination of a variety of parameter names and the ability to pass parameters in as a reference means it can be deal with various geo location websites, such as;
 
-    $firefox->geo($firefox->json('https://freeipapi.com/api/json/')); # get geo location from IP address
+    $firefox->geo($firefox->json('https://freeipapi.com/api/json/')); # get geo location from current IP address
 
     $firefox->geo($firefox->json('https://geocode.maps.co/search?street=101+Collins+St&city=Melbourne&state=VIC&postalcode=3000&country=AU&format=json')->[0]); # get geo location of street address
 
     $firefox->geo($firefox->json('http://api.positionstack.com/v1/forward?access_key=' . $access_key . '&query=101+Collins+St,Melbourne,VIC+3000')->{data}->[0]); # get geo location of street address using api key
 
-    $firefox->geo($firefox->json('https://api.ipgeolocation.io/ipgeo?apiKey=' . $api_key)); # get geo location from IP address
+    $firefox->geo($firefox->json('https://api.ipgeolocation.io/ipgeo?apiKey=' . $api_key)); # get geo location from current IP address
+
+    $firefox->geo($firefox->json('http://api.ipstack.com/142.250.70.206?access_key=' . $api_key)); # get geo location from specific IP address (http access only for free)
 
 These sites were active at the time this documentation was written, but mainly function as an illustration of the flexibility of [geo](#geo) and [json](#json) methods in providing the desired location to the [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API).
 

@@ -232,7 +232,7 @@ returns the accuracy of the altitude expressed in meters.  This value may not be
 
 =head2 country_code
 
-returns the country_code (ISO 3166-1 alpha-2) of the location.  This value may not be defined.
+returns the country_code (L<ISO 3166-1 alpha-2|https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2>) of the location.  This value may not be defined.
 
 =head2 heading
 
