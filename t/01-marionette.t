@@ -1661,9 +1661,14 @@ SKIP: {
 			my %user_agent_strings = map { $_->{ua} => $_->{pct} } @{$firefox->json($useragents_me_uri)->{data}};
 			my ($user_agent) = reverse sort { $user_agent_strings{$a} <=> $user_agent_strings{$b} } keys %user_agent_strings;
 			ok($firefox->agent($user_agent), "\$firefox->agent(\"\$most_common_useragent\") worked");
-			ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully for user agent test");
-			my $agent = $firefox->agent();
-			ok($agent eq $most_common_useragent, "\$firefox->agent() now produces the most common user agent");
+			if ($ENV{FIREFOX_HOST}) {
+			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+			} else {
+				ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully for user agent test");
+				my $agent = $firefox->agent();
+				ok($agent eq $most_common_useragent, "\$firefox->agent() now produces the most common user agent");
+			}
 		}
 		if ($ENV{FIREFOX_HOST}) {
 		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
@@ -4171,18 +4176,23 @@ SKIP: {
 				skip("addon:install may not be supported in firefox versions less than 52:$exception", 2);
 			}
 			ok($install_id, "Successfully installed an extension:$install_id");
-			$firefox->go("file://$go_path");
-			my $actual_border;
-			CHECK_BORDER: for my $count ( 1 .. 10 ) {
-				$actual_border = $firefox->script(q{return document.body.style.border});
-				if ($actual_border =~ /red/smx) {
-					last CHECK_BORDER;
-				} else {
-					sleep 1;
+			if ($ENV{FIREFOX_HOST}) {
+			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+			} else {
+				$firefox->go("file://$go_path");
+				my $actual_border;
+				CHECK_BORDER: for my $count ( 1 .. 10 ) {
+					$actual_border = $firefox->script(q{return document.body.style.border});
+					if ($actual_border =~ /red/smx) {
+						last CHECK_BORDER;
+					} else {
+						sleep 1;
+					}
 				}
+				my $expected_border =  "5px solid red";
+				ok($actual_border eq $expected_border, "Extension is proved to be running correctly: '$actual_border' vs '$expected_border'");
 			}
-			my $expected_border =  "5px solid red";
-			ok($actual_border eq $expected_border, "Extension is proved to be running correctly: '$actual_border' vs '$expected_border'");
 			ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
 		}
 	}
