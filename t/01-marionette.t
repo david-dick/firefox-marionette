@@ -1557,14 +1557,15 @@ SKIP: {
 	my $original_agent = $firefox->agent($test_agent_string);
 	ok($original_agent, "\$firefox->agent() returns a user agent string:$original_agent");
 	my $shadow_root;
-	my $path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
-	if ($^O eq 'cygwin') {
-		$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
-	}
+	my $path;
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
 	} else {
+		$path = File::Spec->catfile(Cwd::cwd(), qw(t data elements.html));
+		if ($^O eq 'cygwin') {
+			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
+		}
 		ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully");
 		my $new_agent = $firefox->agent(undef);
 		ok($new_agent eq $test_agent_string, "\$firefox->agent(undef) returns '$test_agent_string':$new_agent");
