@@ -1658,9 +1658,11 @@ SKIP: {
 			ok($json->{latitude} == -37.5, "\$firefox->json(\$url)->{latitude} returned -31.5:$json->{latitude}");
 			ok($json->{longitude} == 144.5, "\$firefox->json(\$url)->{longitude} returned 144.5:$json->{longitude}");
 			ok($json->{timeZone} eq "+11:00", "\$firefox->json(\$url)->{timeZone} returned +11:00:$json->{timeZone}");
+			$useragents_me_uri =~ s/[ ]/%20/smxg; # firefoxen older that 108 strips spaces from data uris: https://bugzilla.mozilla.org/show_bug.cgi?id=1104311
 			my %user_agent_strings = map { $_->{ua} => $_->{pct} } @{$firefox->json($useragents_me_uri)->{data}};
 			my ($user_agent) = reverse sort { $user_agent_strings{$a} <=> $user_agent_strings{$b} } keys %user_agent_strings;
-			ok($firefox->agent($user_agent), "\$firefox->agent(\"\$most_common_useragent\") worked");
+			ok($user_agent eq $most_common_useragent, "Correctly sorted the most common user agent:'$user_agent' vs '$most_common_useragent'");
+			ok($firefox->agent($most_common_useragent), "\$firefox->agent(\"\$most_common_useragent\") worked");
 			if ($ENV{FIREFOX_HOST}) {
 			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
