@@ -404,6 +404,7 @@ WriteMakefile(
         'HTTP::Daemon'    => 0,
         'HTTP::Response'  => 0,
         'HTTP::Status'    => 0,
+        'IO::Socket::IP'  => 0,
         'IO::Socket::SSL' => 0,
         $] ge '5.010' ? ( 'PDF::API2' => 2.036 ) : (),
         (

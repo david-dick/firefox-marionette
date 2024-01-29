@@ -10,6 +10,7 @@ use Encode();
 use Firefox::Marionette();
 use Waterfox::Marionette();
 use Compress::Zlib();
+use IO::Socket::IP();
 use Config;
 use HTTP::Daemon();
 use HTTP::Status();
@@ -108,6 +109,23 @@ foreach my $sig_name (@sig_names) {
 
 $SIG{INT} = sub { $terminated = 1; die "Caught an INT signal"; };
 $SIG{TERM} = sub { $terminated = 1; die "Caught a TERM signal"; };
+
+sub wait_for_server_on {
+	my ($daemon, $pid) = @_;
+	my $host = URI->new($daemon->url())->host();
+	my $port = URI->new($daemon->url())->port();
+	CONNECT: while (!IO::Socket::IP->new(Type => Socket::SOCK_STREAM(), PeerPort => $port, PeerHost => $host)) {
+		diag("Waiting for server ($pid) to listen on $host:$port:$!");
+		waitpid $pid, POSIX::WNOHANG();
+		if (kill 0, $pid) {
+			sleep 1;
+		} else {
+			diag("Server ($pid) has exited");
+			last CONNECT;
+		}
+	}
+	return 
+}
 
 sub empty_port {
 	socket my $socket, Socket::PF_INET(), Socket::SOCK_STREAM(), 0 or die "Failed to create a socket:$!";
@@ -1109,12 +1127,12 @@ _CONFIG_
 SKIP: {
 	diag("Starting new firefox for testing capabilities and accessing proxies");
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
-	my $localPort = URI->new($daemon->url())->port();
-	my $proxyPort = empty_port();
+	my $proxyPort = URI->new($daemon->url())->port();
+	my $securePort = empty_port();
 	diag("Using proxy port TCP/$proxyPort");
 	my $socksPort = empty_port();
 	diag("Using SOCKS port TCP/$socksPort");
-	my %proxy_parameters = (http => 'localhost:' . $localPort, https => 'localhost:' . $proxyPort, none => [ 'local.example.org' ], socks => 'localhost:' . $socksPort);
+	my %proxy_parameters = (http => 'localhost:' . $proxyPort, https => 'localhost:' . $securePort, none => [ 'local.example.org' ], socks => 'localhost:' . $socksPort);
 	my $ftpPort = empty_port();
 	if ($binary =~ /waterfox/i) {
 	} elsif ((defined $major_version) && ($major_version < 90)) {
@@ -1241,8 +1259,8 @@ SKIP: {
 			skip("\$capabilities->proxy is not supported for " . $capabilities->browser_version(), 10);
 		}
 		ok($capabilities->proxy()->type() eq 'manual', "\$capabilities->proxy()->type() is 'manual'");
-		ok($capabilities->proxy()->http() eq 'localhost:' . $localPort, "\$capabilities->proxy()->http() is 'localhost:" . $localPort . "':" . $capabilities->proxy()->http());
-		ok($capabilities->proxy()->https() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->https() is 'localhost:" . $proxyPort . "'");
+		ok($capabilities->proxy()->http() eq 'localhost:' . $proxyPort, "\$capabilities->proxy()->http() is 'localhost:" . $proxyPort . "':" . $capabilities->proxy()->http());
+		ok($capabilities->proxy()->https() eq 'localhost:' . $securePort, "\$capabilities->proxy()->https() is 'localhost:" . $securePort . "'");
 		if ($major_version < 90) {
 			ok($capabilities->proxy()->ftp() eq 'localhost:' . $ftpPort, "\$capabilities->proxy()->ftp() is 'localhost:$ftpPort'");
 		}
@@ -1281,6 +1299,7 @@ SKIP: {
 				if (my $pid = fork) {
 					my $url = 'http://wtf.example.org';
 					my $favicon_url = 'http://wtf.example.org/favicon.ico';
+					wait_for_server_on($daemon, $pid);
 					$firefox->go($url);
 					ok($firefox->html() =~ /success/smx, "Correctly accessed the Proxy");
 					diag($firefox->html());
@@ -4231,6 +4250,7 @@ SKIP: {
 			my $json_document = Encode::decode('UTF-8', '{ "id": "5", "value": "sömething"}');
 			my $txt_document = 'This is ordinary text';
 			if (my $pid = fork) {
+				wait_for_server_on($daemon, $pid);
 				$firefox->go($daemon->url() . '?format=JSON');
 				ok($firefox->strip() eq $json_document, "Correctly retrieved JSON document");
 				diag(Encode::encode('UTF-8', $firefox->strip(), 1));
@@ -4375,6 +4395,7 @@ SKIP: {
 				skip("\$capabilities->proxy is not supported for " . $^O, 3);
 			} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 				if (my $pid = fork) {
+					wait_for_server_on($daemon, $pid);
 					$firefox->go($daemon->url() . '?links_and_images');
 					foreach my $image ($firefox->images()) {
 						ok($image->tag(), "Image tag is defined as " . $image->tag());
