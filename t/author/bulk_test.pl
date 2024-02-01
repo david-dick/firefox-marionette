@@ -35,7 +35,7 @@ my $reset_time = 600; # 10 minutes
 my $max_attempts = 3;
 my $reboot_sleep_time = 60;
 $ENV{RELEASE_TESTING} = 1;
-$ENV{FIREFOX_ALARM} = 600;
+$ENV{FIREFOX_ALARM} = 900;
 $ENV{DEVEL_COVER_DB_FORMAT} = $devel_cover_db_format;
 system { 'cover' } 'cover', '-delete' and die "Failed to 'cover' for " . ($ENV{FIREFOX_BINARY} || 'firefox');
 MAIN: {
@@ -86,10 +86,10 @@ MAIN: {
 			$background_pids->{$pid} = $server;
 		} elsif (defined $pid) {
 			eval {
-				my $win32_local_alarm = 900;
+				my $win32_local_alarm = 1200;
 				my $cygwin_local_alarm = 2700;
 				my $cygwin_remote_alarm = 7200;
-				my $physical_local_alarm = 900;
+				my $physical_local_alarm = 1200;
 				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
 				$ENV{FIREFOX_NO_RECONNECT} = 1;
 				if ((lc $server->{type}) eq 'virsh') {
