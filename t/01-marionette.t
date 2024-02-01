@@ -1562,17 +1562,24 @@ SKIP: {
 		ok($firefox->aria_role($element) =~ /^(?:toggle[ ])?button$/smx, "Retrieved the ARIA role correctly:" . $firefox->aria_role($element));
 		ok($firefox->find_id('save')->aria_role() =~ /^(?:toggle[ ])?button$/smx, "Retrieved the ARIA label correctly:" . $firefox->find_id('save')->aria_role());
 	}
-	my $browser_language = join q[, ], @{$firefox->script('return navigator.languages')};
-	my $original_language = join q[, ], $firefox->languages();
-	ok($original_language eq $browser_language, "\$firefox->languages() equals navigator.languages:'$original_language' vs '$browser_language'");
-	my $new_language = 'en-AU, en-GB, en';
-	ok((join q[, ], $firefox->languages(split q[, ], $new_language)) eq $original_language, "\$firefox->languages(split q[, ], \"$new_language\") returns correctly");
-	$browser_language = join q[, ], @{$firefox->script('return navigator.languages')};
-	ok($new_language eq $browser_language, "\$firefox->languages() equals navigator.languages:'$new_language' vs '$browser_language'");
-	my $lone_language = 'en-GB';
-	ok((join q[, ], $firefox->languages($lone_language)) eq $new_language, "\$firefox->languages(\"$lone_language\") returns correctly");
-	$browser_language = join q[, ], @{$firefox->script('return navigator.languages')};
-	ok($lone_language eq $browser_language, "\$firefox->languages() matches navigator.language b/c there is only one entry:'$lone_language' vs '$browser_language'");
+	if ($major_version > 32) { # https://bugzilla.mozilla.org/show_bug.cgi?id=889335
+		my $browser_language = join q[, ], @{$firefox->script('return navigator.languages')};
+		my $original_language = join q[, ], $firefox->languages();
+		ok($original_language eq $browser_language, "\$firefox->languages() equals navigator.languages:'$original_language' vs '$browser_language'");
+		my $new_language = 'en-AU, en-GB, en';
+		ok((join q[, ], $firefox->languages(split q[, ], $new_language)) eq $original_language, "\$firefox->languages(split q[, ], \"$new_language\") returns correctly");
+		$browser_language = join q[, ], @{$firefox->script('return navigator.languages')};
+		ok($new_language eq $browser_language, "\$firefox->languages() equals navigator.languages:'$new_language' vs '$browser_language'");
+		my $lone_language = 'en-GB';
+		ok((join q[, ], $firefox->languages($lone_language)) eq $new_language, "\$firefox->languages(\"$lone_language\") returns correctly");
+		$browser_language = join q[, ], @{$firefox->script('return navigator.languages')};
+		ok($lone_language eq $browser_language, "\$firefox->languages() matches navigator.language b/c there is only one entry:'$lone_language' vs '$browser_language'");
+	} else {
+		my $browser_language = $firefox->chrome()->script('return Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("").getComplexValue("intl.accept_languages", Components.interfaces.nsIPrefLocalizedString).data;');
+		$firefox->content();
+		my $original_language = join q[, ], $firefox->languages();
+		ok($original_language eq $browser_language, "\$firefox->languages() equals navigator.languages:'$original_language' vs '$browser_language'");
+	}
 	my $test_agent_string = "Firefox::Marionette v$Firefox::Marionette::VERSION test suite";
 	my $original_agent = $firefox->agent($test_agent_string);
 	ok($original_agent, "\$firefox->agent() returns a user agent string:$original_agent");

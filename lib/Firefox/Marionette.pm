@@ -204,8 +204,7 @@ sub languages {
     my ( $self, @new_languages ) = @_;
     my $pref_name = 'intl.accept_languages';
     my $script =
-      'return navigator.languages'
-      ; # branch.getComplexValue(arguments[0], Components.interfaces.nsIPrefLocalizedString).data';
+'return navigator.languages || branch.getComplexValue(arguments[0], Components.interfaces.nsIPrefLocalizedString).data.split(/,\s*/)';
     my $old           = $self->_context('chrome');
     my @old_languages = @{
         $self->script(
