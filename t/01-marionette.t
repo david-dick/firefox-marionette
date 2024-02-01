@@ -28,6 +28,7 @@ my $at_least_one_success;
 my $terminated;
 my $class;
 my $quoted_home_directory = quotemeta File::HomeDir->my_home();
+my $is_covering = !!(eval 'Devel::Cover::get_coverage()');
 
 my $oldfh = select STDOUT; $| = 1; select $oldfh;
 $oldfh = select STDERR; $| = 1; select $oldfh;
@@ -114,6 +115,7 @@ sub wait_for_server_on {
 	my ($daemon, $pid) = @_;
 	my $host = URI->new($daemon->url())->host();
 	my $port = URI->new($daemon->url())->port();
+	undef $daemon;
 	CONNECT: while (!IO::Socket::IP->new(Type => Socket::SOCK_STREAM(), PeerPort => $port, PeerHost => $host)) {
 		diag("Waiting for server ($pid) to listen on $host:$port:$!");
 		waitpid $pid, POSIX::WNOHANG();
@@ -1300,13 +1302,23 @@ SKIP: {
 					my $url = 'http://wtf.example.org';
 					my $favicon_url = 'http://wtf.example.org/favicon.ico';
 					wait_for_server_on($daemon, $pid);
-					$firefox->go($url);
+					$daemon = undef;
+					my $try_count = 0;
+					GO: {
+						eval {
+							$firefox->go($url);
+						} or do {
+							if ($try_count < 2) {
+								diag("Failed to get $url via proxy on attempt $try_count for $version_string");
+								$try_count += 1;
+								redo GO;
+							} else {
+								diag("Failed to get $url via proxy too many times $version_string");
+							}
+						};
+					}
 					ok($firefox->html() =~ /success/smx, "Correctly accessed the Proxy");
 					diag($firefox->html());
-					while(kill $signals_by_name{TERM}, $pid) {
-						waitpid $pid, POSIX::WNOHANG();
-						sleep 1;
-					}
 					$handle->seek(0,0) or die "Failed to seek to start of temporary file for proxy check:$!";
 					my $quoted_url = quotemeta $url;
 					my $quoted_favicon_url = quotemeta $favicon_url;
@@ -1317,18 +1329,26 @@ SKIP: {
 							die "Firefox is requesting this $line without any reason";
 						}
 					}
+					while(kill 0, $pid) {
+						kill $signals_by_name{TERM}, $pid;
+						sleep 1;
+						waitpid $pid, POSIX::WNOHANG();
+					}
+					ok($! == POSIX::ESRCH(), "Process $pid no longer exists:$!");
 				} elsif (defined $pid) {
+					eval 'Devel::Cover::set_coverage("none")' if $is_covering;
 					eval {
 						local $SIG{ALRM} = sub { die "alarm during proxy server\n" };
-						alarm 5;
+						alarm 40;
 						$0 = "[Test HTTP Proxy for " . getppid . "]";
+						diag("Accepting connections for $0");
 						while (my $connection = $daemon->accept()) {
 							diag("Accepted connection");
 							if (my $child = fork) {
 							} elsif (defined $child) {
 								eval {
 									local $SIG{ALRM} = sub { die "alarm during proxy server accept\n" };
-									alarm 5;
+									alarm 40;
 									while (my $request = $connection->get_request()) {
 										diag("Got request for " . $request->uri());
 										$handle->print($request->uri() . "\n");
@@ -3833,7 +3853,7 @@ SKIP: {
 			if ($path =~ /Test\-Simple/) { # dodging possible Devel::Cover messages
 				$download_path = $path;
 				$count += 1;
-			} elsif ($INC{'Devel/Cover.pm'}) {
+			} elsif ($is_covering) {
 			} else {
 				$count += 1;
 			}
@@ -4172,10 +4192,6 @@ SKIP: {
 		ok($capabilities->moz_headless() || $ENV{FIREFOX_VISIBLE} || 0, "\$capabilities->moz_headless() is set to " . ($ENV{FIREFOX_VISIBLE} ? 'false' : 'true'));
 	}
         ok($capabilities->timeouts()->implicit() == 987654, "\$firefox->capabilities()->timeouts()->implicit() correctly reflects the implicit shortcut timeout");
-	my $go_path = File::Spec->catfile(Cwd::cwd(), qw(t data iframe.html));
-	if ($^O eq 'cygwin') {
-		$go_path = $firefox->execute( 'cygpath', '-s', '-m', $go_path );
-	}
 	my $path = 't/addons/borderify/manifest.json';
 	if (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
@@ -4202,6 +4218,10 @@ SKIP: {
 			} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
 			} else {
+				my $go_path = File::Spec->catfile(Cwd::cwd(), qw(t data iframe.html));
+				if ($^O eq 'cygwin') {
+					$go_path = $firefox->execute( 'cygpath', '-s', '-m', $go_path );
+				}
 				$firefox->go("file://$go_path");
 				my $actual_border;
 				CHECK_BORDER: for my $count ( 1 .. 10 ) {
@@ -4252,19 +4272,21 @@ SKIP: {
 			my $txt_document = 'This is ordinary text';
 			if (my $pid = fork) {
 				wait_for_server_on($daemon, $pid);
-				$firefox->go($daemon->url() . '?format=JSON');
+				my $base_url = $daemon->url();
+				undef $daemon;
+				$firefox->go($base_url . '?format=JSON');
 				ok($firefox->strip() eq $json_document, "Correctly retrieved JSON document");
 				diag(Encode::encode('UTF-8', $firefox->strip(), 1));
 				ok($firefox->json()->{id} == 5, "Correctly parsed JSON document");
 				ok(Encode::encode('UTF-8', $firefox->json()->{value}, 1) eq "sömething", "Correctly parsed UTF-8 JSON field");
-				$firefox->go($daemon->url() . '?format=txt');
+				$firefox->go($base_url . '?format=txt');
 				ok($firefox->strip() eq $txt_document, "Correctly retrieved TXT document");
 				diag($firefox->strip());
 				if ($major_version >= 61) {
-					my $handle = $firefox->download($daemon->url() . '?format=txt');
+					my $handle = $firefox->download($base_url . '?format=txt');
 					my $output = <$handle>;
 					ok($output eq $txt_document, "Correctly downloaded TXT document without timeout");
-					$handle = $firefox->download($daemon->url() . '?format=txt', 50);
+					$handle = $firefox->download($base_url . '?format=txt', 50);
 					$output = <$handle>;
 					ok($output eq $txt_document, "Correctly downloaded TXT document with explicit timeout");
 				}
@@ -4273,11 +4295,14 @@ SKIP: {
 					sleep 1;
 					waitpid $pid, POSIX::WNOHANG();
 				}
+				ok($! == POSIX::ESRCH(), "Process $pid no longer exists:$!");
 			} elsif (defined $pid) {
+				eval 'Devel::Cover::set_coverage("none")' if $is_covering;
 				eval {
 					local $SIG{ALRM} = sub { die "alarm during content server\n" };
 					alarm 40;
 					$0 = "[Test HTTP Content Server for " . getppid . "]";
+					diag("Accepting connections for $0");
 					while (my $connection = $daemon->accept()) {
 						diag("Accepted connection");
 						if (my $child = fork) {
@@ -4397,7 +4422,9 @@ SKIP: {
 			} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 				if (my $pid = fork) {
 					wait_for_server_on($daemon, $pid);
-					$firefox->go($daemon->url() . '?links_and_images');
+					my $base_url = $daemon->url();
+					undef $daemon;
+					$firefox->go($base_url . '?links_and_images');
 					foreach my $image ($firefox->images()) {
 						ok($image->tag(), "Image tag is defined as " . $image->tag());
 					}
@@ -4413,11 +4440,14 @@ SKIP: {
 						sleep 1;
 						waitpid $pid, POSIX::WNOHANG();
 					}
+					ok($! == POSIX::ESRCH(), "Process $pid no longer exists:$!");
 				} elsif (defined $pid) {
+					eval 'Devel::Cover::set_coverage("none")' if $is_covering;
 					eval {
 						local $SIG{ALRM} = sub { die "alarm during links and images server\n" };
 						alarm 40;
 						$0 = "[Test HTTP Links and Images Server for " . getppid . "]";
+						diag("Accepting connections for $0");
 						while (my $connection = $daemon->accept()) {
 							diag("Accepted connection");
 							if (my $child = fork) {
