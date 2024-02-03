@@ -7,6 +7,7 @@ lib/Firefox/Marionette/Capabilities.pm
 lib/Firefox/Marionette/Certificate.pm
 lib/Firefox/Marionette/Cookie.pm
 lib/Firefox/Marionette/Extension/HarExportTrigger.pm
+lib/Firefox/Marionette/Extension/Stealth.pm
 lib/Firefox/Marionette/Image.pm
 lib/Firefox/Marionette/Keys.pm
 lib/Firefox/Marionette/Link.pm
@@ -88,6 +89,9 @@ t/addons/borderify/borderify.js
 t/addons/borderify/manifest.json
 t/addons/discogs-search/manifest.json
 t/addons/discogs-search/README.md
+t/addons/stealth/content.js
+t/addons/stealth/manifest.json
+t/addons/stealth/inject.js
 t/stub.pl
 t/syscall_tests.pm
 t/test_daemons.pm

@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    Version 1.51
+    Version 1.52
 
 SYNOPSIS
 
@@ -2157,6 +2157,11 @@ SUBROUTINES/METHODS
       provided to the await or bye methods. This defaults to "1"
       millisecond.
 
+      * stealth - stops navigator.webdriver
+      <https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver>
+      from being accessible by the current web page. This is highly
+      experimental. See WEBSITES THAT BLOCK AUTOMATION for a discussion.
+
       * survive - if this is set to a true value, firefox will not
       automatically exit when the object goes out of scope. See the
       reconnect parameter for an experimental technique for reconnecting.
@@ -3380,9 +3385,12 @@ WEBSITES THAT BLOCK AUTOMATION
     allows web sites to detect that the browser is being automated. Firefox
     no longer (since version 88)
     <https://bugzilla.mozilla.org/show_bug.cgi?id=1632821> allows you to
-    disable this functionality while you are automating the browser. If the
-    web site you are trying to automate mysteriously fails when you are
-    automating a workflow, but it works when you perform the workflow
+    disable this functionality while you are automating the browser. This
+    can be overridden with the stealth parameter for the new method. This
+    is very experimental and feedback is welcome.
+
+    If the web site you are trying to automate mysteriously fails when you
+    are automating a workflow, but it works when you perform the workflow
     manually, you may be dealing with a web site that is hostile to
     automation.
 

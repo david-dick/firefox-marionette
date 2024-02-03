@@ -1023,6 +1023,10 @@ sub _init {
         $self->{_har} = $parameters{har};
         require Firefox::Marionette::Extension::HarExportTrigger;
     }
+    if ( $parameters{stealth} ) {
+        $self->{stealth} = 1;
+        require Firefox::Marionette::Extension::Stealth;
+    }
     $self->{mime_types} = [
         qw(
           application/x-gzip
@@ -3871,35 +3875,43 @@ sub _check_protocol_version_and_pid {
     return;
 }
 
+sub _install_extension {
+    my ( $self, $module, $name ) = @_;
+    $self->_build_local_extension_directory();
+    my $path =
+      File::Spec->catfile( $self->{_local_extension_directory}, $name );
+    my $handle = FileHandle->new(
+        $path,
+        Fcntl::O_WRONLY() | Fcntl::O_CREAT() | Fcntl::O_EXCL(),
+        Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+      )
+      or Firefox::Marionette::Exception->throw(
+        "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
+    binmode $handle;
+    print {$handle} MIME::Base64::decode_base64( $module->as_string() )
+      or Firefox::Marionette::Exception->throw(
+        "Failed to write to '$path':$EXTENDED_OS_ERROR");
+    close $handle
+      or Firefox::Marionette::Exception->throw(
+        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    $self->install( $path, 1 );
+    return;
+}
+
 sub _post_launch_checks_and_setup {
     my ( $self, $timeouts ) = @_;
     $self->_write_local_proxy( $self->_ssh() );
     if ( defined $timeouts ) {
         $self->timeouts($timeouts);
     }
+    if ( $self->{stealth} ) {
+        $self->_install_extension( 'Firefox::Marionette::Extension::Stealth',
+            'stealth-0.0.1.xpi' );
+    }
     if ( $self->{_har} ) {
-        $self->_build_local_extension_directory();
-        my $path = File::Spec->catfile(
-            $self->{_local_extension_directory},
-            'har_export_trigger-0.6.1-an+fx.xpi'
-        );
-        my $handle = FileHandle->new(
-            $path,
-            Fcntl::O_WRONLY() | Fcntl::O_CREAT() | Fcntl::O_EXCL(),
-            Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
-          )
-          or Firefox::Marionette::Exception->throw(
-            "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
-        binmode $handle;
-        print {$handle}
-          MIME::Base64::decode_base64(
-            Firefox::Marionette::Extension::HarExportTrigger->as_string() )
-          or Firefox::Marionette::Exception->throw(
-            "Failed to write to '$path':$EXTENDED_OS_ERROR");
-        close $handle
-          or Firefox::Marionette::Exception->throw(
-            "Failed to close '$path':$EXTENDED_OS_ERROR");
-        $self->install( $path, 0 );
+        $self->_install_extension(
+            'Firefox::Marionette::Extension::HarExportTrigger',
+            'har_export_trigger-0.6.1-an+fx.xpi' );
     }
     if ( $self->{force_webauthn} ) {
         $self->{$webauthn_default_authenticator_key_name} =
@@ -4022,7 +4034,7 @@ sub _check_addons {
     my ( $self, %parameters ) = @_;
     $self->{addons} = 1;
     my @arguments = ();
-    if ( $self->{_har} ) {
+    if ( ( $self->{_har} ) || ( $self->{stealth} ) ) {
     }
     elsif ( $parameters{nightly} )
     {    # safe-mode will disable loading extensions in nightly
@@ -13446,6 +13458,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * sleep_time_in_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the L<await|/await> or L<bye|/bye> methods.  This defaults to "1" millisecond.
 
+=item * stealth - stops L<navigator.webdriver|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> from being accessible by the current web page. This is highly experimental.  See L<WEBSITES THAT BLOCK AUTOMATION|/WEBSITES-THAT-BLOCK-AUTOMATION> for a discussion.
+
 =item * survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 
 =item * trust - give a path to a L<root certificate|https://en.wikipedia.org/wiki/Root_certificate> encoded as a L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5> that will be trusted for this session.
@@ -14368,7 +14382,9 @@ So, this module is designed to allow you to navigate the shadow DOM using normal
 
 =head1 WEBSITES THAT BLOCK AUTOMATION
 
-Marionette L<by design|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> allows web sites to detect that the browser is being automated.  Firefox L<no longer (since version 88)|https://bugzilla.mozilla.org/show_bug.cgi?id=1632821> allows you to disable this functionality while you are automating the browser.  If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
+Marionette L<by design|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> allows web sites to detect that the browser is being automated.  Firefox L<no longer (since version 88)|https://bugzilla.mozilla.org/show_bug.cgi?id=1632821> allows you to disable this functionality while you are automating the browser.  This can be overridden with the C<stealth> parameter for the L<new|/new> method.  This is very experimental and feedback is welcome.
+
+If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
 
 At the very least, under these circumstances, it would be a good idea to be aware that there's an L<ongoing arms race|https://en.wikipedia.org/wiki/Web_scraping#Methods_to_prevent_web_scraping>, and potential L<legal issues|https://en.wikipedia.org/wiki/Web_scraping#Legal_issues> in this area.
 
