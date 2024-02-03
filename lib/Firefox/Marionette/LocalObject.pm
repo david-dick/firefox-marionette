@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use overload q[""] => 'uuid', 'cmp' => '_cmp', q[==] => '_numeric_eq';
 
-our $VERSION = '1.51';
+our $VERSION = '1.52';
 
 sub new {
     my ( $class, $browser, %parameters ) = @_;
@@ -56,7 +56,7 @@ Firefox::Marionette::LocalObject - Parent class that represents a Firefox local 
 
 =head1 VERSION
 
-Version 1.51
+Version 1.52
 
 =head1 SYNOPSIS
 

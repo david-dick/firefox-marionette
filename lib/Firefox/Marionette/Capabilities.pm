@@ -3,7 +3,7 @@ package Firefox::Marionette::Capabilities;
 use strict;
 use warnings;
 
-our $VERSION = '1.51';
+our $VERSION = '1.52';
 
 sub new {
     my ( $class, %parameters ) = @_;
@@ -126,7 +126,7 @@ Firefox::Marionette::Capabilities - Represents Firefox Capabilities retrieved us
 
 =head1 VERSION
 
-Version 1.51
+Version 1.52
 
 =head1 SYNOPSIS
 

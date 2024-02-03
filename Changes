@@ -1,5 +1,11 @@
 Revision history for Firefox-Marionette
 
+1.52  Mon Feb 03 21:30 2024
+       Adding stealth attribute
+       Adding CLEAR_FINGERPRINTING_PROTECTION_STATE
+       Supporting appVersion and platform in agent method
+       Documentation and test suite fixes for older perls
+
 1.51  Mon Jan 22 21:30 2024
        Adding fixes for older perls.
 
