@@ -200,6 +200,11 @@ sub start_firefox {
 			$parameters{trust} = $ca_cert_handle->filename();
 		}
 	}
+	if ($major_version >= $min_geo_version) {
+	} elsif ($parameters{geo}) {
+		diag("geo support is not available for Firefox versions less than $min_geo_version");
+		delete $parameters{geo};
+	}
 	if ((defined $major_version) && ($major_version >= 61)) {
 	} elsif ($parameters{har}) {
 		diag("HAR support is not available for Firefox versions less than 61");
