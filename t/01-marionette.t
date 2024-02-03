@@ -1694,6 +1694,61 @@ SKIP: {
 			ok($hash->{value} == 2, "Value returned from script is the numeric 2 in a hash");
 		}
 	}
+	my %user_agents_to_js = (
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36' =>
+						{
+							platform => 'Win32',
+							appVersion => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+							vendor => 'Google Inc.',
+							vendorSub => '',
+						},
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0' =>
+						{
+							platform => 'Win32',
+							appVersion => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
+							vendor => 'Google Inc.',
+							vendorSub => '',
+						},
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0' =>
+						{
+							platform => 'Win32',
+							appVersion => '5.0 (Windows)',
+							vendor => '',
+							vendorSub => '',
+						},
+		'Mozilla/5.0 (X11; DragonFly x86_64; rv:108.0) Gecko/20100101 Firefox/108.0' =>
+						{
+							platform => 'DragonFly x86_64',
+							appVersion => '5.0 (X11)',
+							vendor => '',
+							vendorSub => '',
+						},
+		'Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0' =>
+						{
+							platform => 'FreeBSD amd64',
+							appVersion => '5.0 (X11)',
+							vendor => '',
+							vendorSub => '',
+						},
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0' =>
+						{
+							platform => 'Win32',
+							appVersion => '5.0 (Windows)',
+							vendor => '',
+							vendorSub => '',
+						},
+			);
+	foreach my $user_agent (sort { $a cmp $b } keys %user_agents_to_js) {
+		ok($firefox->go("about:blank"), "\$firefox->go(\"about:blank\") loaded successfully for user agent test of values");
+		$firefox->agent($user_agent);
+		foreach my $key (qw(
+					platform
+					appVersion
+				)) {
+			my $value = $firefox->script('return navigator.' . $key);
+			ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
+		}
+	}
 	if (($tls_tests_ok) && ($ENV{RELEASE_TESTING})) {
 		my $json;
 		if ($major_version < 50) {

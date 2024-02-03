@@ -465,11 +465,43 @@ sub agent {
     if ( ( scalar @new ) > 0 ) {
         if ( defined $new[0] ) {
             $self->set_pref( $pref_name, $new[0] );
+            my ( $webkit_app, $app_version, $platform ) =
+              ( q[], '5.0 (Windows)', 'Win32' );
+            my ( $vendor, $vendor_sub ) = ( q[], q[] );
+            my $webkit;
+            if ( $new[0] =~ /AppleWebKit/smx ) {
+                $webkit = 1;
+            }
+
+    # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent#value
+            if (
+                $new[0] =~ m{^
+                                        [^\/]+\/ # appCodeName
+                                        (([^ ]+[ ][(][^ ]+)[^;]*;[ ] # appVersion
+                                        ([^;]+); # platform
+					.*)
+				$}smx
+              )
+            {
+                ( $webkit_app, $app_version, $platform ) = ( $1, $2, $3 );
+                $app_version .= q[)];
+                if ($webkit) {
+                    $app_version = $webkit_app;
+                    $vendor      = 'Google Inc.';
+                    $vendor_sub  = q[];
+                }
+            }
+            if ( $new[0] =~ /Win(?:32|64)/smx ) {
+                $platform = 'Win32';
+            }
+            $self->set_pref( 'general.platform.override',   $platform );
+            $self->set_pref( 'general.appversion.override', $app_version );
         }
         else {
             $self->clear_pref($pref_name);
         }
     }
+
     return $old_agent;
 }
 
