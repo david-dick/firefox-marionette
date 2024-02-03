@@ -6,7 +6,7 @@ Revision history for Firefox-Marionette
 1.50  Sun Jan 21 18:06 2024
        Adding agent, languages and geo methods
        Allowing json method to accept a URL as a parameter
-       Various bug fixes, including GH#27, GH#29, GH#32, GH#33
+       Various bug fixes, including GH#27, GH#29, GH#32, GH#33. Thanks to sergio and Pelasgus123.
 
 1.49  Sat Nov 18 12:10 2023
        Fixing a hang for Windows 7 in GH#26.  Thanks to twata1.
