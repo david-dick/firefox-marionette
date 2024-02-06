@@ -934,8 +934,11 @@ SKIP: {
 	ok($timeouts->script() == $script_timeout, "\$timeouts->script() is $script_timeout");
 	ok($timeouts->implicit() == $implicit_timeout, "\$timeouts->implicit() is $implicit_timeout");
 	if ($major_version >= $min_stealth_version) {
-		my $webdriver = $firefox->script('return navigator.webdriver');
-		ok($webdriver, "navigator.webdriver returns true:$webdriver");
+		TODO: {
+			local $TODO = "Some installations of firefox can default to webdriver being off"; # such as http://www.cpantesters.org/cpan/report/a0532bce-c32c-11ee-ae2f-883f6e8775ea (FreeBSD 14.0-STABLE) (BuildID 20240123011445)
+			my $webdriver = $firefox->script('return navigator.webdriver');
+			ok($webdriver, "navigator.webdriver returns true:$webdriver");
+		}
 	}
 	ok(!defined $firefox->child_error(), "Firefox does not have a value for child_error");
 	ok($firefox->alive(), "Firefox is still alive");
