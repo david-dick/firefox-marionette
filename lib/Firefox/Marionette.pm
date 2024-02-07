@@ -923,7 +923,7 @@ sub _adb {
 sub images {
     my ( $self, $from ) = @_;
     return grep { $_->url() }
-      map       { Firefox::Marionette::Image->new($_) }
+      map { Firefox::Marionette::Image->new($_) }
       $self->has( '//*[self::img or self::input]', undef, $from );
 }
 
@@ -2188,7 +2188,7 @@ sub webauthn_credentials {
     );
     my $response = $self->_get_response($message_id);
     return map { Firefox::Marionette::WebAuthn::Credential->new( %{$_} ) }
-      map      { $self->_decode_credential_user_handle($_) }
+      map { $self->_decode_credential_user_handle($_) }
       @{ $self->_response_result_value($response) };
 }
 
