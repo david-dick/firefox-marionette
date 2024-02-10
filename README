@@ -1417,7 +1417,6 @@ SUBROUTINES/METHODS
     timeout) if the original devtools
     <https://developer.mozilla.org/en-US/docs/Tools> window is closed. The
     hashref has been designed to be accepted by the Archive::Har module.
-    This function should be considered experimental. Feedback welcome.
 
         use Firefox::Marionette();
         use Archive::Har();
