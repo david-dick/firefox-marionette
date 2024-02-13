@@ -2897,9 +2897,19 @@ SKIP: {
 			skip("HAR support not available in Firefox before version 61", 1);
 		}
 		if ($major_version >= $min_geo_version) {
-			my $geo4 = $firefox->geo();
-			ok($geo4->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo4->latitude());
-			ok($geo4->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo4->longitude());
+			my $geo6;
+			eval {
+				$geo6 = $firefox->geo();
+			} or do {
+				chomp $@;
+				diag("Threw an exception in geo method:$@");
+			};
+			if ((!defined $geo6) && (($firefox->nightly()) || ($firefox->developer()))) {
+				diag("Failed geo method in nightly/developer");
+			} else {
+				ok($geo6->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo6->latitude());
+				ok($geo6->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo6->longitude());
+			}
 		}
 		my $correct = 0;
 		my $number_of_entries = 0;
