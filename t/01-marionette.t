@@ -77,7 +77,8 @@ my $most_common_useragent = q[Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb
 my $useragents_me_uri = qq[data:application/json,{"about": "Use this API to get a list of current popular useragents. Please post a link back to the site if you find it useful!", "terms": "As the data here don't change sooner than once per week, you shouldn't need to make lots of requests all at once. Currently, we impose a rate-limit of 15 requests per IP address per hour (even this is probably too many)", "data": [{"ua": "$most_common_useragent", "pct": 37.8271882916}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 14.2696312975}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", "pct": 10.8077680833}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 6.5859836758}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.57", "pct": 4.9535603715}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 4.5032367014}, {"ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Safari/605.1.15", "pct": 4.5032367014}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 1.9138755981}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0", "pct": 1.2383900929}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.41", "pct": 0.7880664227}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.56", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0", "pct": 0.6754855052}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36 Edg/90.0.818.46", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.50", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Whale/3.19.166.16 Safari/537.36", "pct": 0.5629045877}, {"ua": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.76", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36", "pct": 0.4503236701}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.46", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36 Core/1.94.192.400 QQBrowser/11.5.5250.400", "pct": 0.3377427526}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.78", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.67", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/18.17763", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (X11; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.63", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.61", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/110.0", "pct": 0.2251618351}, {"ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.70", "pct": 0.2251618351}], "updated": 1678066547, "thanks": "https://www.useragents.me/"}];
 
 my $min_geo_version = 60;
-my $min_stealth_version = 60;
+my $min_stealth_version = 59;
+my $min_execute_script_with_null_args_version = 45;
 
 if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 } elsif ($> == 0) { # see RT#131304
@@ -1712,65 +1713,142 @@ SKIP: {
 			ok($hash->{value} == 2, "Value returned from script is the numeric 2 in a hash");
 		}
 	}
+	# checking against
+	# https://browserleaks.com/javascript
+	# https://www.amiunique.org/fingerprint
+	# https://bot.sannysoft.com/
 	my $webdriver = $firefox->script('return navigator.webdriver');
-	ok(!defined $webdriver, "navigator.webdriver returns undef when stealth is on");
-	$webdriver = $firefox->script(q[if ('webdriver' in Object.getPrototypeOf(window.navigator)) { return true } else { return false }]);
-	ok(!$webdriver, "navigator.webdriver in prototype does not exist when stealth is on");
-	$webdriver = $firefox->script(q[if ('webdriver' in navigator) { return true } else { return false }]);
-	ok(!$webdriver, "navigator.webdriver does not exist when stealth is on");
+	ok(!$webdriver, "navigator.webdriver returns false when stealth is on");
 	my %user_agents_to_js = (
 		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36' =>
 						{
 							platform => 'Win32',
 							appVersion => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+							productSub => '20030107',
 							vendor => 'Google Inc.',
 							vendorSub => '',
+							oscpu => undef,
 						},
 		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0' =>
 						{
 							platform => 'Win32',
 							appVersion => '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
+							productSub => '20030107',
 							vendor => 'Google Inc.',
 							vendorSub => '',
+							oscpu => undef,
+						},
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15' =>
+						{
+							platform => 'MacIntel',
+							appVersion => '5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15',
+							productSub => '20030107',
+							vendor => 'Apple Computer, Inc.',
+							vendorSub => '',
+							oscpu => undef,
+						},
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:109.0) Gecko/20100101 Firefox/115.0' =>
+						{
+							platform => 'MacIntel',
+							appVersion => '5.0 (Macintosh)',
+							productSub => '20100101',
+							vendor => '',
+							vendorSub => '',
+							oscpu => 'Intel Mac OS X 10.13',
 						},
 		'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0' =>
 						{
 							platform => 'Win32',
 							appVersion => '5.0 (Windows)',
+							productSub => '20100101',
 							vendor => '',
 							vendorSub => '',
+							oscpu => 'Win32',
 						},
 		'Mozilla/5.0 (X11; DragonFly x86_64; rv:108.0) Gecko/20100101 Firefox/108.0' =>
 						{
 							platform => 'DragonFly x86_64',
 							appVersion => '5.0 (X11)',
+							productSub => '20100101',
 							vendor => '',
 							vendorSub => '',
+							oscpu => 'DragonFly x86_64',
 						},
 		'Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0' =>
 						{
 							platform => 'FreeBSD amd64',
 							appVersion => '5.0 (X11)',
+							productSub => '20100101',
 							vendor => '',
 							vendorSub => '',
+							oscpu => 'FreeBSD amd64',
 						},
 		'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0' =>
 						{
 							platform => 'Win32',
 							appVersion => '5.0 (Windows)',
+							productSub => '20100101',
 							vendor => '',
 							vendorSub => '',
+							oscpu => 'Win32',
 						},
+		'Mozilla/5.0 (iPhone; CPU iPhone OS 16_7_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+						{
+							platform => 'iPhone',
+							appVersion => '5.0 (iPhone; CPU iPhone OS 16_7_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+							productSub => '20030107',
+							vendor => 'Apple Computer, Inc.',
+							vendorSub => '',
+							oscpu => undef,
+						},
+		'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+						{
+							platform => 'Linux armv81',
+							appVersion => '5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36',
+							productSub => '20030107',
+							vendor => 'Google Inc.',
+							vendorSub => '',
+							oscpu => undef,
+						},
+		'libwww-perl/6.72' => { },
 			);
 	foreach my $user_agent (sort { $a cmp $b } keys %user_agents_to_js) {
+		if (($major_version < $min_execute_script_with_null_args_version) && (exists $user_agents_to_js{$user_agent}{oscpu}) && (!defined $user_agents_to_js{$user_agent}{oscpu})) {
+			diag("Skipping '$user_agent' as oscpu will be null and executeScript cannot handle null arguments for older firefoxen");
+			next;
+		}
+		ok($user_agent, "Testing '$user_agent'");
+		ok($firefox->agent($user_agent), "\$firefox->agent(\"$user_agent\") succeeded");
 		ok($firefox->go("about:blank"), "\$firefox->go(\"about:blank\") loaded successfully for user agent test of values");
-		$firefox->agent($user_agent);
 		foreach my $key (qw(
 					platform
 					appVersion
 				)) {
 			my $value = $firefox->script('return navigator.' . $key);
-			ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
+			if ($user_agent =~ /^libwww[-]perl/smx) {
+				ok(defined $value, "navigator.$key is unchanged as '$value'");
+			} elsif (defined $user_agents_to_js{$user_agent}{$key}) {
+				ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
+			} else {
+				ok(!defined $value, "navigator.$key is undefined");
+			}
+		}
+		if ($major_version > $min_stealth_version) {
+			foreach my $key (qw(
+						productSub
+						vendor
+						vendorSub
+						oscpu
+					)) {
+				my $value = $firefox->script('return navigator.' . $key);
+				if ($user_agent =~ /^libwww[-]perl/smx) {
+					ok(defined $value, "navigator.$key is unchanged as '$value'");
+				} elsif (defined $user_agents_to_js{$user_agent}{$key}) {
+					ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
+				} else {
+					ok(!defined $value, "navigator.$key is undefined");
+				}
+			}
 		}
 	}
 	if (($tls_tests_ok) && ($ENV{RELEASE_TESTING})) {
@@ -4172,100 +4250,100 @@ SKIP: {
 		ok(defined $capabilities->platform_version() && $capabilities->platform_version() =~ /\d+/, "\$capabilities->platform_version() contains a number:" . ($capabilities->platform_version() || ''));
 	}
 	TODO: {
-		local $TODO = ($ENV{FIREFOX_HOST} || $^O eq 'cygwin' || $^O eq 'MSWin32') ? "\$capabilities->moz_profiles() can contain shorted profile directory names" : undef;
-		ok($capabilities->moz_profile() =~ /firefox_marionette/, "\$capabilities->moz_profile() contains 'firefox_marionette':" . $capabilities->moz_profile());
-	}
-	SKIP: {
-		if (!grep /^moz_webdriver_click$/, $capabilities->enumerate()) {
-			diag("\$capabilities->moz_webdriver_click is not supported for " . $capabilities->browser_version());
-			skip("\$capabilities->moz_webdriver_click is not supported for " . $capabilities->browser_version(), 1);
+			local $TODO = ($ENV{FIREFOX_HOST} || $^O eq 'cygwin' || $^O eq 'MSWin32') ? "\$capabilities->moz_profiles() can contain shorted profile directory names" : undef;
+			ok($capabilities->moz_profile() =~ /firefox_marionette/, "\$capabilities->moz_profile() contains 'firefox_marionette':" . $capabilities->moz_profile());
 		}
-		ok($capabilities->moz_webdriver_click() =~ /^(1|0)$/, "\$capabilities->moz_webdriver_click() is a boolean:" . $capabilities->moz_webdriver_click());
-	}
-	ok($capabilities->platform_name() =~ /\w+/, "\$capabilities->platform_version() contains alpha characters:" . $capabilities->platform_name());
-	eval {
-		$firefox->dismiss_alert();
-	};
-	my $exception = "$@";
-	chomp $exception;
-	ok($@, "Dismiss non-existant alert caused an exception to be thrown:$exception");
-	$count = 0;
-	$result = undef;
-	foreach my $path (qw(t/addons/test.xpi t/addons/discogs-search t/addons/discogs-search/manifest.json t/addons/discogs-search/)) {
-		$count += 1;
-		if ($major_version < 56) {
-			if ($path =~ /discogs/) {
-				next;
+		SKIP: {
+			if (!grep /^moz_webdriver_click$/, $capabilities->enumerate()) {
+				diag("\$capabilities->moz_webdriver_click is not supported for " . $capabilities->browser_version());
+				skip("\$capabilities->moz_webdriver_click is not supported for " . $capabilities->browser_version(), 1);
 			}
+			ok($capabilities->moz_webdriver_click() =~ /^(1|0)$/, "\$capabilities->moz_webdriver_click() is a boolean:" . $capabilities->moz_webdriver_click());
 		}
-		if (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
-			diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
-			next;
-		}
-		my $install_id;
-		my $install_path = Cwd::abs_path($path);
-		diag("Original install path is $install_path");
-		if ($^O eq 'MSWin32') {
-			$install_path =~ s/\//\\/smxg;
-		}
-		diag("Installing extension from $install_path");
-		my $temporary = 1;
-		if ($firefox->nightly()) {
-			$temporary = $count % 2 ? 1 : 0;
-		}
+		ok($capabilities->platform_name() =~ /\w+/, "\$capabilities->platform_version() contains alpha characters:" . $capabilities->platform_name());
 		eval {
-			$install_id = $firefox->install($install_path, $temporary);
+			$firefox->dismiss_alert();
 		};
-		SKIP: {	
-			my $exception = "$@";
-			chomp $exception;
-			if ((!$install_id) && ($major_version < 52)) {
-				skip("addon:install may not be supported in firefox versions less than 52:$exception", 2);
-			}
-			ok($install_id, "Successfully installed an extension:$install_id");
-			ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
-		}
-		$result = undef;
-		$install_id = undef;
-		$install_path = $path;
-		diag("Original install path is $install_path");
-		if ($^O eq 'MSWin32') {
-			$install_path =~ s/\//\\/smxg;
-		}
-		diag("Installing extension from $install_path");
-		eval {
-			$install_id = $firefox->install($install_path, $temporary);
-		};
-		SKIP: {	
-			my $exception = "$@";
-			chomp $exception;
-			if ((!$install_id) && ($major_version < 52)) {
-				skip("addon:install may not be supported in firefox versions less than 52:$exception", 2);
-			}
-			ok($install_id, "Successfully installed an extension:$install_id");
-			ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
-		}
-		$result = undef;
-	}
-	eval {
-		$firefox->install(q[t/addons/not_exists_] . int(rand(50000)));
-	};
-	chomp $@;
-	ok($@ =~ /Failed[ ]to[ ]find[ ]extension/smx, "\$firefox->install() throws an exception when asked to install a non-existant extension:$@");
-	eval {
-		$result = $firefox->accept_connections(1);
-	};
-	SKIP: {
 		my $exception = "$@";
 		chomp $exception;
-		if ((!$result) && ($major_version < 52)) {
-			skip("Refusing future connections may not be supported in firefox versions less than 52:$exception", 1);
+		ok($@, "Dismiss non-existant alert caused an exception to be thrown:$exception");
+		$count = 0;
+		$result = undef;
+		foreach my $path (qw(t/addons/test.xpi t/addons/discogs-search t/addons/discogs-search/manifest.json t/addons/discogs-search/)) {
+			$count += 1;
+			if ($major_version < 56) {
+				if ($path =~ /discogs/) {
+					next;
+				}
+			}
+			if (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+				diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+				next;
+			}
+			my $install_id;
+			my $install_path = Cwd::abs_path($path);
+			diag("Original install path is $install_path");
+			if ($^O eq 'MSWin32') {
+				$install_path =~ s/\//\\/smxg;
+			}
+			diag("Installing extension from $install_path");
+			my $temporary = 1;
+			if ($firefox->nightly()) {
+				$temporary = $count % 2 ? 1 : 0;
+			}
+			eval {
+				$install_id = $firefox->install($install_path, $temporary);
+			};
+			SKIP: {	
+				my $exception = "$@";
+				chomp $exception;
+				if ((!$install_id) && ($major_version < 52)) {
+					skip("addon:install may not be supported in firefox versions less than 52:$exception", 2);
+				}
+				ok($install_id, "Successfully installed an extension:$install_id");
+				ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
+			}
+			$result = undef;
+			$install_id = undef;
+			$install_path = $path;
+			diag("Original install path is $install_path");
+			if ($^O eq 'MSWin32') {
+				$install_path =~ s/\//\\/smxg;
+			}
+			diag("Installing extension from $install_path");
+			eval {
+				$install_id = $firefox->install($install_path, $temporary);
+			};
+			SKIP: {	
+				my $exception = "$@";
+				chomp $exception;
+				if ((!$install_id) && ($major_version < 52)) {
+					skip("addon:install may not be supported in firefox versions less than 52:$exception", 2);
+				}
+				ok($install_id, "Successfully installed an extension:$install_id");
+				ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
+			}
+			$result = undef;
 		}
-		ok($result, "Accepting future connections");
-		$result = $firefox->accept_connections(0);
-		ok($result, "Refusing future connections");
-	}
-	TODO: {
+		eval {
+			$firefox->install(q[t/addons/not_exists_] . int(rand(50000)));
+		};
+		chomp $@;
+		ok($@ =~ /Failed[ ]to[ ]find[ ]extension/smx, "\$firefox->install() throws an exception when asked to install a non-existant extension:$@");
+		eval {
+			$result = $firefox->accept_connections(1);
+		};
+		SKIP: {
+			my $exception = "$@";
+			chomp $exception;
+			if ((!$result) && ($major_version < 52)) {
+				skip("Refusing future connections may not be supported in firefox versions less than 52:$exception", 1);
+			}
+			ok($result, "Accepting future connections");
+			$result = $firefox->accept_connections(0);
+			ok($result, "Refusing future connections");
+		}
+		TODO: {
 		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
 		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
 	}

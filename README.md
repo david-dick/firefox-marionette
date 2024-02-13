@@ -262,6 +262,24 @@ This method can be used to set a user agent string like so;
     my $firefox = Firefox::Marionette->new();
     $firefox->agent($user_agent); # agent is now the most popular agent from useragents.me
 
+If the user agent string that is passed as a parameter looks like a [Chrome](https://www.google.com/chrome/), [Edge](https://microsoft.com/edge) or [Safari](https://www.apple.com/safari/) user agent string, then this method will also try and change other profile preferences to match the new agent string.  These parameters are;
+
+- general.appversion.override
+- general.oscpu.override
+- general.platform.override
+- network.http.accept
+- network.http.accept-encoding
+- network.http.accept-encoding.secure
+- privacy.donottrackheader.enabled
+
+If the `stealth` parameter is supplied, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
+
+- [https://browserleaks.com/javascript](https://browserleaks.com/javascript)
+- [https://www.amiunique.org/fingerprint](https://www.amiunique.org/fingerprint)
+- [https://bot.sannysoft.com/](https://bot.sannysoft.com/)
+
+See [IMITATING OTHER BROWSERS](#imitating-other-browsers) a discussion of these types of techniques.  These changes are not foolproof, but it is interesting to see what can be done with modern browsers.  All this behaviour should be regarded as extremely experimental and subject to change.  Feedback welcome.
+
 ## alert\_text
 
 Returns the message shown in a currently displayed modal message box
@@ -1578,7 +1596,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 - script - a shortcut to allow directly providing the [script](https://metacpan.org/pod/Firefox::Marionette::Timeout#script) timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 - seer - this option is switched off "0" by default.  When it is switched on "1", it will activate the various speculative and pre-fetch options for firefox.  NOTE: that this option only works when profile\_name/profile is not specified.
 - sleep\_time\_in\_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the [await](#await) or [bye](#bye) methods.  This defaults to "1" millisecond.
-- stealth - stops [navigator.webdriver](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver) from being accessible by the current web page. This is highly experimental.  See [WEBSITES THAT BLOCK AUTOMATION](#websites-that-block-automation) for a discussion.
+- stealth - stops [navigator.webdriver](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver) from being accessible by the current web page. This is extremely experimental.  See [IMITATING OTHER BROWSERS](#imitating-other-browsers) for a discussion.
 - survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 - trust - give a path to a [root certificate](https://en.wikipedia.org/wiki/Root_certificate) encoded as a [PEM encoded X.509 certificate](https://datatracker.ietf.org/doc/html/rfc7468#section-5) that will be trusted for this session.
 - timeouts - a shortcut to allow directly providing a [timeout](https://metacpan.org/pod/Firefox::Marionette::Timeout) object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
@@ -2429,9 +2447,20 @@ One aspect of [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/
 
 So, this module is designed to allow you to navigate the shadow DOM using normal find methods, but you must get the shadow element's shadow root and use that as the root for the search into the shadow DOM.  An important caveat is that [xpath](https://bugzilla.mozilla.org/show_bug.cgi?id=1822311) and [tag name](https://bugzilla.mozilla.org/show_bug.cgi?id=1822321) strategies do not officially work yet (and also the class name and name strategies).  This module works around the tag name, class name and name deficiencies by using the matching [css selector](#find_selector) search if the original search throws a recognisable exception.  Therefore these cases may be considered to be extremely experimental and subject to change when Firefox gets the "correct" functionality.
 
+# IMITATING OTHER BROWSERS
+
+There are a collection of methods and techniques that may be useful if you would like to change your geographic location or how the browser appears to your web site.
+
+- the `stealth` parameter of the [new](#new) method.  This method will stop the browser reporting itself as a robot and will also (when combined with the [agent](#agent) method, change other javascript characteristics to match the [User Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) string.
+- the [agent](#agent) method, which if supplied a recognisable [User Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), will attempt to change other attributes to match the desired browser.  This is extremely experimental and feedback is welcome.
+- the [geo](#geo) method, which allows the modification of the [Geolocation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation) reported by the browser, but not the location produced by mapping the external IP address used by the browser (see the [NETWORK ARCHITECTURE](#network-architecture) section for a discussion of different types of proxies that can be used to change your external IP address).
+- the [languages](#languages) method, which can change the [requested languages](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) for your browser session.
+
+This list of methods may grow.
+
 # WEBSITES THAT BLOCK AUTOMATION
 
-Marionette [by design](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver) allows web sites to detect that the browser is being automated.  Firefox [no longer (since version 88)](https://bugzilla.mozilla.org/show_bug.cgi?id=1632821) allows you to disable this functionality while you are automating the browser.  This can be overridden with the `stealth` parameter for the [new](#new) method.  This is very experimental and feedback is welcome.
+Marionette [by design](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver) allows web sites to detect that the browser is being automated.  Firefox [no longer (since version 88)](https://bugzilla.mozilla.org/show_bug.cgi?id=1632821) allows you to disable this functionality while you are automating the browser, but this can be overridden with the `stealth` parameter for the [new](#new) method.  This is extremely experimental and feedback is welcome.
 
 If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
 

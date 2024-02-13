@@ -89,9 +89,6 @@ t/addons/borderify/borderify.js
 t/addons/borderify/manifest.json
 t/addons/discogs-search/manifest.json
 t/addons/discogs-search/README.md
-t/addons/stealth/content.js
-t/addons/stealth/manifest.json
-t/addons/stealth/inject.js
 t/stub.pl
 t/syscall_tests.pm
 t/test_daemons.pm

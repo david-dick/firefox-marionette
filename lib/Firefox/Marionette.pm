@@ -465,44 +465,114 @@ sub agent {
     if ( ( scalar @new ) > 0 ) {
         if ( defined $new[0] ) {
             $self->set_pref( $pref_name, $new[0] );
-            my ( $webkit_app, $app_version, $platform ) =
-              ( q[], '5.0 (Windows)', 'Win32' );
-            my ( $vendor, $vendor_sub ) = ( q[], q[] );
-            my $webkit;
-            if ( $new[0] =~ /AppleWebKit/smx ) {
-                $webkit = 1;
+            my ( $chrome, $iphone, $safari );
+            if ( $new[0] =~ /Chrome/smx ) {
+                $chrome = 1;
+            }
+            elsif ( $new[0] =~ /Safari/smx ) {
+                $safari = 1;
+                if ( $new[0] =~ /iPhone/smx ) {
+                    $iphone = 1;
+                }
             }
 
     # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent#value
             if (
                 $new[0] =~ m{^
                                         [^\/]+\/ # appCodeName
-                                        (([^ ]+[ ][(][^ ]+)[^;]*;[ ] # appVersion
-                                        ([^;]+); # platform
+                                        ((5[.]0[ ][(][^; ]+)[^;]*;[ ] # appVersion
+                                        ([^;)]+)[;)] # platform
 					.*)
 				$}smx
               )
             {
-                ( $webkit_app, $app_version, $platform ) = ( $1, $2, $3 );
+
+                my ( $webkit_app, $app_version, $platform ) = ( $1, $2, $3 );
                 $app_version .= q[)];
-                if ($webkit) {
+                my ( $vendor, $vendor_sub, $oscpu ) = ( q[], q[], $platform );
+                if ($chrome) {
                     $app_version = $webkit_app;
                     $vendor      = 'Google Inc.';
                     $vendor_sub  = q[];
                 }
+                elsif ($safari) {
+                    $app_version = $webkit_app;
+                    if ($iphone) {
+                        $platform = 'iPhone';
+                        $oscpu    = undef;
+                    }
+                    else {
+                        $platform = 'MacIntel';
+                        $oscpu    = $platform;
+                    }
+                    $vendor     = 'Apple Computer, Inc.';
+                    $vendor_sub = q[];
+                }
+                if ( $new[0] =~ /Win(?:32|64)/smx ) {
+                    $platform = 'Win32';
+                    $oscpu    = $platform;
+                }
+                elsif ( $new[0] =~ /Intel[ ]Mac/smx ) {
+                    $platform = 'MacIntel';
+                }
+                elsif ( $new[0] =~ /Android/smx ) {
+                    $platform = 'Linux armv81';
+                }
+                $self->set_pref( 'general.platform.override',   $platform );
+                $self->set_pref( 'general.appversion.override', $app_version );
+                $self->set_pref( 'general.oscpu.override',      $oscpu );
+                if ($chrome) {
+                    $self->set_pref( 'network.http.accept',
+'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
+                    );
+                    $self->set_pref( 'network.http.accept-encoding',
+                        'gzip, deflate, br' );
+                    $self->set_pref( 'network.http.accept-encoding.secure',
+                        'gzip, deflate, br' );
+                }
+                elsif ($safari) {
+                    $self->set_pref( 'network.http.accept',
+'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                    );
+                    $self->set_pref( 'network.http.accept-encoding',
+                        'gzip, deflate, br' );
+                    $self->set_pref( 'network.http.accept-encoding.secure',
+                        'gzip, deflate, br' );
+                }
+                else {
+                    $self->clear_pref('network.http.accept');
+                    $self->clear_pref('network.http.accept-encoding');
+                    $self->clear_pref('network.http.accept-encoding.secure');
+                }
+                my $false = $self->_translate_to_json_boolean(0);
+                $self->set_pref( 'privacy.donottrackheader.enabled', $false )
+                  ;    # trying to blend in with the most common options
             }
-            if ( $new[0] =~ /Win(?:32|64)/smx ) {
-                $platform = 'Win32';
+            else {
+                $self->_clear_extra_user_agent_prefs();
             }
-            $self->set_pref( 'general.platform.override',   $platform );
-            $self->set_pref( 'general.appversion.override', $app_version );
         }
         else {
             $self->clear_pref($pref_name);
+            $self->_clear_extra_user_agent_prefs();
         }
     }
 
     return $old_agent;
+}
+
+sub _clear_extra_user_agent_prefs {
+    my ($self) = @_;
+    $self->clear_pref('general.platform.override');
+    $self->clear_pref('general.appversion.override');
+    $self->clear_pref('general.oscpu.override');
+    $self->clear_pref('network.http.accept');
+    $self->clear_pref('network.http.accept-encoding');
+    $self->clear_pref('network.http.accept-encoding.secure');
+    my $true = $self->_translate_to_json_boolean(1);
+    $self->set_pref( 'privacy.donottrackheader.enabled', $true )
+      ;    # trying to blend in with the most common options
+    return;
 }
 
 sub _download_directory {
@@ -3898,6 +3968,19 @@ sub _install_extension {
     return;
 }
 
+sub _install_extension_by_handle {
+    my ( $self, $module, $name ) = @_;
+    $self->_build_local_extension_directory();
+    my $zip = $module->new();
+    my $path =
+      File::Spec->catfile( $self->{_local_extension_directory}, $name );
+    $zip->writeToFileNamed($path) == Archive::Zip::AZ_OK()
+      or Firefox::Marionette::Exception->throw(
+        "Failed to write to '$path':$EXTENDED_OS_ERROR");
+    $self->install( $path, 1 );
+    return;
+}
+
 sub _post_launch_checks_and_setup {
     my ( $self, $timeouts ) = @_;
     $self->_write_local_proxy( $self->_ssh() );
@@ -3905,7 +3988,8 @@ sub _post_launch_checks_and_setup {
         $self->timeouts($timeouts);
     }
     if ( $self->{stealth} ) {
-        $self->_install_extension( 'Firefox::Marionette::Extension::Stealth',
+        $self->_install_extension_by_handle(
+            'Firefox::Marionette::Extension::Stealth',
             'stealth-0.0.1.xpi' );
     }
     if ( $self->{_har} ) {
@@ -12070,6 +12154,40 @@ This method can be used to set a user agent string like so;
     my $firefox = Firefox::Marionette->new();
     $firefox->agent($user_agent); # agent is now the most popular agent from useragents.me
 
+If the user agent string that is passed as a parameter looks like a L<Chrome|https://www.google.com/chrome/>, L<Edge|https://microsoft.com/edge> or L<Safari|https://www.apple.com/safari/> user agent string, then this method will also try and change other profile preferences to match the new agent string.  These parameters are;
+
+=over 4
+
+=item * general.appversion.override
+
+=item * general.oscpu.override
+
+=item * general.platform.override
+
+=item * network.http.accept
+
+=item * network.http.accept-encoding
+
+=item * network.http.accept-encoding.secure
+
+=item * privacy.donottrackheader.enabled
+
+=back
+
+If the C<stealth> parameter is supplied, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
+
+=over 4
+
+=item * L<https://browserleaks.com/javascript>
+
+=item * L<https://www.amiunique.org/fingerprint>
+
+=item * L<https://bot.sannysoft.com/>
+
+=back
+
+See L<IMITATING OTHER BROWSERS|/IMITATING-OTHER-BROWSERS> a discussion of these types of techniques.  These changes are not foolproof, but it is interesting to see what can be done with modern browsers.  All this behaviour should be regarded as extremely experimental and subject to change.  Feedback welcome.
+
 =head2 alert_text
 
 Returns the message shown in a currently displayed modal message box
@@ -13458,7 +13576,7 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * sleep_time_in_ms - the amount of time (in milliseconds) that this module should sleep when unsuccessfully calling the subroutine provided to the L<await|/await> or L<bye|/bye> methods.  This defaults to "1" millisecond.
 
-=item * stealth - stops L<navigator.webdriver|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> from being accessible by the current web page. This is highly experimental.  See L<WEBSITES THAT BLOCK AUTOMATION|/WEBSITES-THAT-BLOCK-AUTOMATION> for a discussion.
+=item * stealth - stops L<navigator.webdriver|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> from being accessible by the current web page.  This is achieved by loading an L<extension|https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions>, which will automatically switch on the C<addons> parameter for the L<new|/new> method.  This is extremely experimental.  See L<IMITATING OTHER BROWSERS|/IMITATING-OTHER-BROWSERS> for a discussion.
 
 =item * survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
 
@@ -14344,7 +14462,7 @@ There are a number of steps to getting L<WebGL|https://en.wikipedia.org/wiki/Web
 
 =over
 
-=item 1. The addons parameter to the L<new|/new> method must be set.  This will disable L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
+=item 1. The C<addons> parameter to the L<new|/new> method must be set.  This will disable L<-safe-mode|http://kb.mozillazine.org/Command_line_arguments#List_of_command_line_arguments_.28incomplete.29>
 
 =item 2. The visible parameter to the L<new|/new> method must be set.  This is due to L<an existing bug in Firefox|https://bugzilla.mozilla.org/show_bug.cgi?id=1375585>.
 
@@ -14380,9 +14498,27 @@ One aspect of L<Web Components|https://developer.mozilla.org/en-US/docs/Web/API/
 
 So, this module is designed to allow you to navigate the shadow DOM using normal find methods, but you must get the shadow element's shadow root and use that as the root for the search into the shadow DOM.  An important caveat is that L<xpath|https://bugzilla.mozilla.org/show_bug.cgi?id=1822311> and L<tag name|https://bugzilla.mozilla.org/show_bug.cgi?id=1822321> strategies do not officially work yet (and also the class name and name strategies).  This module works around the tag name, class name and name deficiencies by using the matching L<css selector|/find_selector> search if the original search throws a recognisable exception.  Therefore these cases may be considered to be extremely experimental and subject to change when Firefox gets the "correct" functionality.
 
+=head1 IMITATING OTHER BROWSERS
+
+There are a collection of methods and techniques that may be useful if you would like to change your geographic location or how the browser appears to your web site.
+
+=over
+
+=item * the C<stealth> parameter of the L<new|/new> method.  This method will stop the browser reporting itself as a robot and will also (when combined with the L<agent|/agent> method, change other javascript characteristics to match the L<User Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent> string.
+
+=item * the L<agent|/agent> method, which if supplied a recognisable L<User Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent>, will attempt to change other attributes to match the desired browser.  This is extremely experimental and feedback is welcome.
+
+=item * the L<geo|/geo> method, which allows the modification of the L<Geolocation|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation> reported by the browser, but not the location produced by mapping the external IP address used by the browser (see the L<NETWORK ARCHITECTURE|/NETWORK-ARCHITECTURE> section for a discussion of different types of proxies that can be used to change your external IP address).
+
+=item * the L<languages|/languages> method, which can change the L<requested languages|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language> for your browser session.
+
+=back
+
+This list of methods may grow.
+
 =head1 WEBSITES THAT BLOCK AUTOMATION
 
-Marionette L<by design|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> allows web sites to detect that the browser is being automated.  Firefox L<no longer (since version 88)|https://bugzilla.mozilla.org/show_bug.cgi?id=1632821> allows you to disable this functionality while you are automating the browser.  This can be overridden with the C<stealth> parameter for the L<new|/new> method.  This is very experimental and feedback is welcome.
+Marionette L<by design|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> allows web sites to detect that the browser is being automated.  Firefox L<no longer (since version 88)|https://bugzilla.mozilla.org/show_bug.cgi?id=1632821> allows you to disable this functionality while you are automating the browser, but this can be overridden with the C<stealth> parameter for the L<new|/new> method.  This is extremely experimental and feedback is welcome.
 
 If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
 
