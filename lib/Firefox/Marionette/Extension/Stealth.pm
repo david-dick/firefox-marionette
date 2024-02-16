@@ -6,10 +6,25 @@ use warnings;
 
 our $VERSION = '1.52';
 
+my $inject_name  = 'inject.js';
+my $content_name = 'content.js';
+
 sub new {
-    my ($class)  = @_;
-    my $zip      = Archive::Zip->new();
-    my $manifest = $zip->addString( <<'_JS_', 'manifest.json' );
+    my ($class) = @_;
+    my $zip = Archive::Zip->new();
+    my $manifest =
+      $zip->addString( $class->_manifest_contents(), 'manifest.json' );
+    $manifest->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
+    my $content = $zip->addString( $class->_content_contents(), $content_name );
+    $content->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
+    my $inject = $zip->addString( $class->_inject_contents(), $inject_name );
+    $inject->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
+    return $zip;
+}
+
+sub _manifest_contents {
+    my ($class) = @_;
+    return <<"_JS_";
 {
   "description": "Firefox::Marionette Stealth extension",
   "manifest_version": 2,
@@ -21,7 +36,7 @@ sub new {
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["$content_name"],
       "match_about_blank": true,
       "run_at": "document_start",
       "all_frames": true
@@ -29,17 +44,23 @@ sub new {
   ]
 }
 _JS_
-    $manifest->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
-    my $content = $zip->addString( <<'_JS_', 'content.js' );
+}
+
+sub _content_contents {
+    my ($class) = @_;
+    return <<"_JS_";
 {
   let script = document.createElement('script');
-  script.src = chrome.runtime.getURL('inject.js');
+  script.src = chrome.runtime.getURL('$inject_name');
   script.onload = function() { this.remove(); };
   (document.head || document.documentElement).appendChild(script);
 }
 _JS_
-    $content->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
-    my $inject = $zip->addString( <<'_JS_', 'inject.js' );
+}
+
+sub _inject_contents {
+    my ($class) = @_;
+    return <<'_JS_';
 {
   let navProto = Object.getPrototypeOf(window.navigator);
   let winProto = Object.getPrototypeOf(window);
@@ -135,8 +156,6 @@ _JS_
   }
 }
 _JS_
-    $inject->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
-    return $zip;
 }
 
 1;    # Magic true value required at end of module
