@@ -354,6 +354,11 @@ sub arguments {
     return @{ $self->{arguments} };
 }
 
+sub directory {
+    my ($self) = @_;
+    return $self->{directory};
+}
+
 sub start {
     my ($self) = @_;
     my $dev_null = File::Spec->devnull();
@@ -364,6 +369,16 @@ sub start {
         eval {
             local $SIG{INT}  = 'DEFAULT';
             local $SIG{TERM} = 'DEFAULT';
+            if ( $self->{resetpg} ) {
+                setpgrp $PID, 0
+                  or Carp::croak(
+                    "Failed to reset process group:$EXTENDED_OS_ERROR");
+            }
+            if ( my $directory = $self->directory() ) {
+                chdir $directory
+                  or
+                  Carp::croak("Failed to chdir $directory:$EXTENDED_OS_ERROR");
+            }
             open STDOUT, q[>], $dev_null
               or Carp::croak(
                 "Failed to redirect STDOUT to $dev_null:$EXTENDED_OS_ERROR");
@@ -856,12 +871,20 @@ sub new {
 sub connect_and_exit {
     my ( $class, $host ) = @_;
     my $binary = 'ssh';
-    if (!$class->SUPER::available( $binary, '-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes', $host, 'exit 0' )) {
-	return 0;
+    if (
+        !$class->SUPER::available(
+            $binary,         '-o',  'ConnectTimeout=5', '-o',
+            'BatchMode=yes', $host, 'exit 0'
+        )
+      )
+    {
+        return 0;
     }
     my $port   = $class->new_port();
-    my $result = system {$binary} $binary, '-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes',
-      '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ExitOnForwardFailure=yes',
+    my $result = system {$binary} $binary, '-o', 'ConnectTimeout=5', '-o',
+      'BatchMode=yes',
+      '-o', 'StrictHostKeyChecking=accept-new', '-o',
+      'ExitOnForwardFailure=yes',
       '-L', "$port:127.0.0.1:22", $host, 'exit 0';
     return $result == 0 ? return 1 : return $result;
 }
@@ -882,8 +905,8 @@ sub available {
     my $listen        = $parameters{listen};
     my $port          = $class->new_port();
     my $config_handle = $class->_sshd_config(
-        listen     => $listen,
-        port       => $port
+        listen => $listen,
+        port   => $port
     );
     my $config_path = $config_handle->filename();
     return $class->SUPER::available( $ssh_binary, '-V' );
@@ -891,14 +914,18 @@ sub available {
 
 sub new {
     my ( $class, %parameters ) = @_;
-    my $listen        = $parameters{listen};
-    my $port          = $class->new_port();
-    my $ssh         = $class->SUPER::new(
-        debug         => $parameters{debug},
-        binary        => $ssh_binary,
-        listen        => $listen,
-        port          => $port,
-        arguments     => [ qw(-o ConnectTimeout=5 -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ExitOnForwardFailure=yes -ND), "$listen:$port", 'localhost' ]
+    my $listen = $parameters{listen};
+    my $port   = $class->new_port();
+    my $ssh    = $class->SUPER::new(
+        debug     => $parameters{debug},
+        binary    => $ssh_binary,
+        listen    => $listen,
+        port      => $port,
+        arguments => [
+            qw(-o ConnectTimeout=5 -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ExitOnForwardFailure=yes -ND),
+            "$listen:$port",
+            'localhost'
+        ]
     );
     return $ssh;
 }
