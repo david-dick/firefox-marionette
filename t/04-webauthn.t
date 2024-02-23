@@ -2,6 +2,8 @@
 
 use strict;
 use Firefox::Marionette();
+use Crypt::URandom();
+use MIME::Base64();
 use Test::More;
 
 $SIG{INT} = sub { die "Caught an INT signal"; };

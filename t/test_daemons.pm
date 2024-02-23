@@ -312,6 +312,7 @@ use strict;
 use warnings;
 use Carp();
 use Config;
+use Socket();
 use English qw( -no_match_vars );
 
 @Test::Daemon::ISA = qw(Test::File::Temp);
@@ -473,6 +474,7 @@ package Test::Daemon::Nginx;
 use strict;
 use warnings;
 use Carp();
+use Crypt::URandom();
 use English qw( -no_match_vars );
 
 @Test::Daemon::Nginx::ISA = qw(Test::Daemon Test::Binary::Available);

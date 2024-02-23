@@ -4,9 +4,6 @@ use strict;
 use Firefox::Marionette();
 use Test::More;
 use File::Spec();
-use Socket();
-use Config;
-use Crypt::URandom();
 use lib qw(t/);
 
 $SIG{INT} = sub { die "Caught an INT signal"; };
