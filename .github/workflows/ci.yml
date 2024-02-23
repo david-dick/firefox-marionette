@@ -50,6 +50,15 @@ jobs:
         cpanm --installdeps .
         cpanm Test::CheckManifest
 
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Show Yarn
+      run: |
+        yarn --version
+
     - name: Run tests under gmake (on windows)
       if: ${{ startsWith(matrix.runner, 'windows-') }}
       env:

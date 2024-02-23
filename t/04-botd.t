@@ -1,4 +1,4 @@
-#! /usr/bin/perl -wT
+#! /usr/bin/perl -w
 
 use strict;
 use Firefox::Marionette();
@@ -15,21 +15,13 @@ SKIP: {
 	}
 	if ($^O eq 'MSWin32') {
 		plan skip_all => "Cannot test in a $^O environment";
-	} else {
-		delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
-		if (defined $ENV{PATH}) {
-			$ENV{PATH} = '/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin:/bin';
-			if ($^O eq 'netbsd') {
-				$ENV{PATH} .= ":/usr/pkg/sbin:/usr/pkg/bin";
-			}
-		}
 	}
 	require test_daemons;
 	if (!Test::Daemon::Botd->botd_available()) {
 		plan skip_all => "BotD does not appear to be available";
 	}
 	if (!Test::Daemon::Botd->available()) {
-		plan skip_all => "yarn does not appear to be available";
+		plan skip_all => "yarn does not appear to be available in $ENV{PATH}";
 	}
 	my $override_address = $^O eq 'linux' ? undef : '127.0.0.1';
 	my $botd_listen = $override_address || '127.0.0.2';
