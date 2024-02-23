@@ -1,0 +1,3 @@
+[submodule "BotD"]
+	path = BotD
+	url = https://github.com/fingerprintjs/BotD.git

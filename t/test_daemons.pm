@@ -354,6 +354,28 @@ sub arguments {
     return @{ $self->{arguments} };
 }
 
+sub address {
+    my ($self) = @_;
+    return $self->{listen};
+}
+
+sub wait_until_port_open {
+	my ($self) = @_;
+	my $address = $self->address();
+	my $port = $self->port();
+	my $found_port = 0;
+	while ( $found_port == 0 ) {
+		socket my $socket, Socket::PF_INET(), Socket::SOCK_STREAM(), 0 or die "Failed to create a socket:$!";
+		my $sock_addr = Socket::pack_sockaddr_in( $port, Socket::inet_aton($address) );
+		if ( connect $socket, $sock_addr ) {
+			$found_port = $port;
+		} else {
+			sleep 1;
+		}
+		close $socket or die "Failed to close test socket:$!";
+	}
+}
+
 sub directory {
     my ($self) = @_;
     return $self->{directory};
@@ -928,6 +950,126 @@ sub new {
         ]
     );
     return $ssh;
+}
+
+package Test::Daemon::Botd;
+
+use strict;
+use warnings;
+use Cwd();
+use Carp();
+use English qw( -no_match_vars );
+
+@Test::Daemon::Botd::ISA = qw(Test::Daemon Test::Binary::Available);
+
+sub _CONVERT_TO_PROCESS_GROUP { return -1 }
+
+my $yarn_binary = __PACKAGE__->find_binary('yarn');
+
+sub botd_available {
+    my $cwd;
+    if (   ( Cwd::cwd() =~ /^(.*)$/smx )
+        && ( -d File::Spec->catdir( $1, 'BotD' ) ) )
+    {
+        return 1;
+    }
+    return;
+}
+
+sub available {
+    my ($class) = @_;
+    return $class->SUPER::available( $yarn_binary, '--version' );
+}
+
+sub new {
+    my ( $class, %parameters ) = @_;
+    my $listen = $parameters{listen};
+    my $port   = $class->new_port();
+    my $cwd;
+    if ( Cwd::cwd() =~ /^(.*)$/smx ) {
+        $cwd = $1;
+    }
+    else {
+        Carp::croak(q[Unable to untaint current working directory]);
+    }
+    my $git_repo_dir = File::Spec->catdir( $cwd, '.git' );
+    if ( -d $git_repo_dir ) {
+        system {'git'} 'git', 'submodule', 'init'
+          and Carp::croak("Failed to 'git submodule init':$EXTENDED_OS_ERROR");
+        system {'git'} 'git', 'submodule', 'update'
+          and
+          Carp::croak("Failed to 'git submodule update':$EXTENDED_OS_ERROR");
+    }
+
+    my $botd_directory = File::Spec->catdir( $cwd, 'BotD' );
+    my $dev_null       = File::Spec->devnull();
+    local $ENV{BOTD_PORT} = $port;
+    local $ENV{BOTD_HOST} = $listen;
+    if ( my $pid = fork ) {
+        waitpid $pid, 0;
+    }
+    elsif ( defined $pid ) {
+        eval {
+            local $SIG{INT}  = 'DEFAULT';
+            local $SIG{TERM} = 'DEFAULT';
+            chdir $botd_directory
+              or
+              Carp::croak("Failed to chdir $botd_directory:$EXTENDED_OS_ERROR");
+            open STDOUT, q[>], $dev_null
+              or Carp::croak(
+                "Failed to redirect STDOUT to $dev_null:$EXTENDED_OS_ERROR");
+            if ( !$parameters{debug} ) {
+                open STDERR, q[>], $dev_null
+                  or Carp::croak(
+                    "Failed to redirect STDERR to $dev_null:$EXTENDED_OS_ERROR"
+                  );
+            }
+            open STDIN, q[<], $dev_null
+              or Carp::croak(
+                "Failed to redirect STDIN to $dev_null:$EXTENDED_OS_ERROR");
+            exec {$yarn_binary} $yarn_binary, 'install'
+              or
+              Carp::croak("Failed to exec '$yarn_binary':$EXTENDED_OS_ERROR");
+        } or do {
+            Carp::carp($EVAL_ERROR);
+        };
+        exit 1;
+    }
+    else {
+        Carp::croak("Failed to fork:$EXTENDED_OS_ERROR");
+    }
+    my $botd = $class->SUPER::new(
+        debug     => $parameters{debug},
+        binary    => $yarn_binary,
+        directory => $botd_directory,
+        listen    => $listen,
+        resetpg   => 1,
+        port      => $port,
+        arguments => [q[dev:playground]]
+    );
+    return $botd;
+}
+
+sub stop {
+    my ($self) = @_;
+    if ( my $pid = $self->{pid} ) {
+        my $pgrp = getpgrp $self->{pid}
+          or Carp::croak(
+            "Failed to get process group from $self->{pid}:$EXTENDED_OS_ERROR");
+        $pgrp *= _CONVERT_TO_PROCESS_GROUP();
+        kill $signals_by_name{INT}, $pgrp;
+        my $kid = waitpid $pgrp, 0;
+        while ( $kid > 0 ) {
+            sleep 1;
+            $kid = waitpid $pgrp, POSIX::WNOHANG();
+            if ( $kid > 0 ) {
+                Carp::carp("Also gathered $kid");
+            }
+        }
+        delete $self->{pid};
+        return 0;
+    }
+    return;
 }
 
 1;

@@ -79,6 +79,7 @@ t/03-read.t
 t/03-seek.t
 t/03-stat.t
 t/03-sysopen.t
+t/04-botd.t
 t/04-proxy.t
 t/04-webauthn.t
 t/manifest.t
