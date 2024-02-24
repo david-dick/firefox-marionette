@@ -1034,7 +1034,7 @@ sub new {
     if ( -d $git_repo_dir ) {
         system {'git'} 'git', 'submodule', 'init'
           and Carp::croak("Failed to 'git submodule init':$EXTENDED_OS_ERROR");
-        system {'git'} 'git', 'submodule', 'update'
+        system {'git'} 'git', 'submodule', 'update', '--remote'
           and
           Carp::croak("Failed to 'git submodule update':$EXTENDED_OS_ERROR");
     }
@@ -1132,7 +1132,7 @@ sub new {
     if ( -d $git_repo_dir ) {
         system {'git'} 'git', 'submodule', 'init'
           and Carp::croak("Failed to 'git submodule init':$EXTENDED_OS_ERROR");
-        system {'git'} 'git', 'submodule', 'update'
+        system {'git'} 'git', 'submodule', 'update', '--remote'
           and
           Carp::croak("Failed to 'git submodule update':$EXTENDED_OS_ERROR");
     }
