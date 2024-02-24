@@ -966,7 +966,8 @@ use English qw( -no_match_vars );
 
 sub _CONVERT_TO_PROCESS_GROUP { return -1 }
 
-my $yarn_binary = __PACKAGE__->find_binary('yarn');
+my $yarn_binary =
+  __PACKAGE__->find_binary('yarnpkg') || __PACKAGE__->find_binary('yarn');
 
 sub botd_available {
     my $cwd;
