@@ -221,6 +221,14 @@ sub languages {
     return @old_languages;
 }
 
+sub _setup_trackable {
+    my ( $self, $trackable ) = @_;
+    my $value = $trackable ? 0 : 1;
+    $self->set_pref( 'privacy.fingerprintingProtection',        $value );
+    $self->set_pref( 'privacy.fingerprintingProtection.pbmode', $value );
+    return $self;
+}
+
 sub _setup_geo {
     my ( $self, $geo ) = @_;
     $self->set_pref( 'geo.enabled',                   1 );
@@ -1089,6 +1097,16 @@ sub _init {
     if ( defined $parameters{height} ) {
         $self->{window_height} = $parameters{height};
     }
+    if ( defined $parameters{trackable} ) {
+        $self->{trackable} = $parameters{trackable};
+    }
+    $self->_load_specified_extensions(%parameters);
+    $self->_determine_mime_types(%parameters);
+    return $self;
+}
+
+sub _load_specified_extensions {
+    my ( $self, %parameters ) = @_;
     if ( defined $parameters{har} ) {
         $self->{_har} = $parameters{har};
         require Firefox::Marionette::Extension::HarExportTrigger;
@@ -1097,6 +1115,11 @@ sub _init {
         $self->{stealth} = 1;
         require Firefox::Marionette::Extension::Stealth;
     }
+    return;
+}
+
+sub _determine_mime_types {
+    my ( $self, %parameters ) = @_;
     $self->{mime_types} = [
         qw(
           application/x-gzip
@@ -1137,7 +1160,7 @@ sub _init {
             $known_mime_types{$mime_type} = 1;
         }
     }
-    return $self;
+    return;
 }
 
 sub _check_for_existing_local_firefox_process {
@@ -4009,6 +4032,9 @@ sub _post_launch_checks_and_setup {
     }
     if ( my $geo = delete $self->{geo} ) {
         $self->_setup_geo($geo);
+    }
+    if ( defined $self->{trackable} ) {
+        $self->_setup_trackable( delete $self->{trackable} );
     }
     return;
 }
@@ -13583,6 +13609,8 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 =item * trust - give a path to a L<root certificate|https://en.wikipedia.org/wiki/Root_certificate> encoded as a L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5> that will be trusted for this session.
 
 =item * timeouts - a shortcut to allow directly providing a L<timeout|Firefox::Marionette::Timeout> object, instead of needing to use timeouts from the capabilities parameter.  Overrides the timeouts provided (if any) in the capabilities parameter.
+
+=item * trackable - if this is set, profile preferences will be L<set|/set_pref> to make it harder to be tracked by the L<browsers fingerprint|https://en.wikipedia.org/wiki/Device_fingerprint#Browser_fingerprint> across browser restarts.  This is on by default, but may be switched off by setting it to 0;
 
 =item * user - if the "host" parameter is also set, use L<ssh|https://man.openbsd.org/ssh.1> to create and automate firefox with the specified user.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> and L<NETWORK ARCHITECTURE|/NETWORK-ARCHITECTURE>.  The user will default to the current user name.  Authentication should be via public keys loaded into the local L<ssh-agent|https://man.openbsd.org/ssh-agent>.
 

@@ -360,7 +360,10 @@ sub new {
         $profile->set_value( 'privacy.clearOnShutdown.sessions',    'true', 0 );
         $profile->set_value( 'privacy.clearOnShutdown.siteSettings', 'true',
             0 );
-        $profile->set_value( 'privacy.donottrackheader.enabled',   'true', 0 );
+        $profile->set_value( 'privacy.donottrackheader.enabled', 'true', 0 );
+        $profile->set_value( 'privacy.fingerprintingProtection', 'true', 0 );
+        $profile->set_value( 'privacy.fingerprintingProtection.pbmode',
+            'true', 0 );
         $profile->set_value( 'privacy.trackingprotection.enabled', 'true', 0 );
         $profile->set_value(
             'privacy.trackingprotection.fingerprinting.enabled',

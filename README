@@ -2194,8 +2194,12 @@ SUBROUTINES/METHODS
 
       * stealth - stops navigator.webdriver
       <https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver>
-      from being accessible by the current web page. This is extremely
-      experimental. See IMITATING OTHER BROWSERS for a discussion.
+      from being accessible by the current web page. This is achieved by
+      loading an extension
+      <https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions>,
+      which will automatically switch on the addons parameter for the new
+      method. This is extremely experimental. See IMITATING OTHER BROWSERS
+      for a discussion.
 
       * survive - if this is set to a true value, firefox will not
       automatically exit when the object goes out of scope. See the
@@ -2211,6 +2215,12 @@ SUBROUTINES/METHODS
       instead of needing to use timeouts from the capabilities parameter.
       Overrides the timeouts provided (if any) in the capabilities
       parameter.
+
+      * trackable - if this is set, profile preferences will be set to make
+      it harder to be tracked by the browsers fingerprint
+      <https://en.wikipedia.org/wiki/Device_fingerprint#Browser_fingerprint>
+      across browser restarts. This is on by default, but may be switched
+      off by setting it to 0;
 
       * user - if the "host" parameter is also set, use ssh
       <https://man.openbsd.org/ssh.1> to create and automate firefox with

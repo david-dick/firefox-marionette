@@ -16,6 +16,7 @@ ok_manifest({filter => [qr/(?:
 				[.]git|
 				local|
 				cover_db|
+				fingerprintjs|
 				servers[.]csv|
 				BotD|
 				package\-lock[.]json|
