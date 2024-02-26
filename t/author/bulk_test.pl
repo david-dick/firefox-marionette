@@ -78,8 +78,8 @@ MAIN: {
 		die "Failed to open $servers_path for reading: $EXTENDED_OS_ERROR";
 	}
 
-	my $win32_remote_alarm = 7200;
-	my $win32_via_alarm = 7200;
+	my $win32_remote_alarm = 7800;
+	my $win32_via_alarm = 7800;
 	my $background_pids = {};
 	foreach my $server (@servers) {
 		if (my $pid = fork) {
@@ -88,7 +88,7 @@ MAIN: {
 			eval {
 				my $win32_local_alarm = 1200;
 				my $cygwin_local_alarm = 2700;
-				my $cygwin_remote_alarm = 7200;
+				my $cygwin_remote_alarm = 7800;
 				my $physical_local_alarm = 1200;
 				$ENV{FIREFOX_ALARM} = $win32_remote_alarm;
 				$ENV{FIREFOX_NO_RECONNECT} = 1;
