@@ -1765,6 +1765,24 @@ SKIP: {
 							vendorSub => '',
 							oscpu => 'Win32',
 						},
+		'Mozilla/5.0 (X11; OpenBSD amd64; rv:109.0) Gecko/20100101 Firefox/109.0' =>
+						{
+							platform => 'OpenBSD amd64',
+							appVersion => '5.0 (X11)',
+							productSub => '20100101',
+							vendor => '',
+							vendorSub => '',
+							oscpu => 'OpenBSD amd64',
+						},
+		'Mozilla/5.0 (X11; NetBSD amd64; rv:120.0) Gecko/20100101 Firefox/120.0' =>
+						{
+							platform => 'NetBSD amd64',
+							appVersion => '5.0 (X11)',
+							productSub => '20100101',
+							vendor => '',
+							vendorSub => '',
+							oscpu => 'NetBSD amd64',
+						},
 		'Mozilla/5.0 (X11; DragonFly x86_64; rv:108.0) Gecko/20100101 Firefox/108.0' =>
 						{
 							platform => 'DragonFly x86_64',
