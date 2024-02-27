@@ -34,7 +34,11 @@ SKIP: {
 		visible => $visible,
 			);
 	ok($firefox, "Created a firefox object in normal mode");
-	ok(!_am_i_trackable_by_fingerprintjs($firefox, $fingerprintjs), "FingerprintJS cannot track this browser");
+	my ($major_version, $minor_version, $patch_version) = split /[.]/, $firefox->capabilities()->browser_version();
+	TODO: {
+		local $TODO = $major_version <= 122 ? 'Older firefoxen may be trackable' : q[];
+		ok(!_am_i_trackable_by_fingerprintjs($firefox, $fingerprintjs), "FingerprintJS cannot track this browser");
+	}
 	ok($firefox->quit() == 0, "Firefox closed successfully");
 	$firefox = Firefox::Marionette->new(
 		debug => $debug,
@@ -50,7 +54,10 @@ SKIP: {
 		trackable => 0,
 			);
 	ok($firefox, "Created a firefox object in reset trackable mode");
-	ok(!_am_i_trackable_by_fingerprintjs($firefox, $fingerprintjs), "FingerprintJS cannot track this browser");
+	TODO: {
+		local $TODO = $major_version <= 122 ? 'Older firefoxen may be trackable' : q[];
+		ok(!_am_i_trackable_by_fingerprintjs($firefox, $fingerprintjs), "FingerprintJS cannot track this browser");
+	}
 	ok($firefox->quit() == 0, "Firefox closed successfully");
 }
 
