@@ -95,14 +95,14 @@ SKIP: {
 		} or do {
 			chomp $@;
 			diag("Did not load webpage:$@");
-			redo AUTH_LOOP;
+			next AUTH_LOOP;
 		};
 		my $strip = $firefox->strip();
 		TODO: {
 			local $TODO = $ENV{FIREFOX_NO_WEB_AUTH} ? q[] : "Firefox can have race conditions for basic web auth";
 			ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and web proxies:$strip:");
 			if ($strip ne $nginx->content()) {
-				redo AUTH_LOOP;
+				next AUTH_LOOP;
 			}
 		}
 		ok($firefox->quit() == 0, "Firefox closed successfully");
