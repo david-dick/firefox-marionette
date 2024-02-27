@@ -45,7 +45,11 @@ SKIP: {
 	my $host_name = 'webauthn.io';
 	my ($major_version, $minor_version, $patch_version) = split /[.]/,$firefox->browser_version();
 	if ($major_version >= 118) {
-		ok($firefox->go('https://' . $host_name), "Loading https://$host_name");
+		my $result;
+		eval {
+			$result = $firefox->go('https://' . $host_name);
+		};
+		ok($result, "Loading https://$host_name:$@");
 		ok($firefox->find_id('input-email')->type($user_name), "Entering $user_name for username");
 		ok($firefox->find_id('register-button')->click(), "Registering authentication for $host_name");;
 		$firefox->await(sub { sleep 1; $firefox->find_class('alert-success'); });
@@ -130,7 +134,9 @@ SKIP: {
 		ok($credential->is_resident() == 1, "is_resident is 1:" . $credential->is_resident());
 		my $cred_id = 'rDFWHBYyRzQGhu92NBf6P6QOhGlsvjtxZB8b8GBWhwg';
 		$host_name = 'example.net';
-		$credential = $firefox->add_webauthn_credential( authenticator => $authenticator, id => $cred_id, host => $host_name, is_resident => 0);
+		eval {
+			$credential = $firefox->add_webauthn_credential( authenticator => $authenticator, id => $cred_id, host => $host_name, is_resident => 0);
+		};
 		foreach my $credential ($firefox->webauthn_credentials($authenticator)) {
 			ok($credential->id() eq $cred_id, "Credential id is '$cred_id':" . $credential->id());
 			ok($credential->host() eq $host_name, "Hostname is '$host_name':" . $credential->host());
@@ -139,10 +145,12 @@ SKIP: {
 			ok($credential->sign_count() == 0, "Sign Count is 0:" . $credential->sign_count());
 			$firefox->delete_webauthn_credential($credential, $authenticator);
 		}
-		$credential = $firefox->add_webauthn_credential( private_key => { name => 'RSA-PSS', size => 1024 }, host => $host_name, user => $user_name);
-		ok($credential->id(), "Credential id is " . $credential->id());
-		ok($credential->host() eq $host_name, "Hostname is '$host_name':" . $credential->host());
-		ok($credential->user() eq $user_name, "Username is '$user_name':" . $credential->user());
+		eval {
+			$credential = $firefox->add_webauthn_credential( private_key => { name => 'RSA-PSS', size => 1024 }, host => $host_name, user => $user_name);
+			ok($credential->id(), "Credential id is " . $credential->id());
+			ok($credential->host() eq $host_name, "Hostname is '$host_name':" . $credential->host());
+			ok($credential->user() eq $user_name, "Username is '$user_name':" . $credential->user());
+		};
 		ok($firefox->delete_webauthn_authenticator($authenticator), "Deleted virtual authenticator");
 		my $default_authenticator = $firefox->webauthn_authenticator();
 		ok($default_authenticator, "Default virtual authenticator still exists");

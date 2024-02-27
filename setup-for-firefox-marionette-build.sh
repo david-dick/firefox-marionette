@@ -279,6 +279,7 @@ _APK_REPO_
 		${SUDO}pkg_add pkgin
 		PACKAGES="firefox \
 					git \
+					mozilla-rootcerts-openssl \
 					nginx \
 					openssl \
 					p5-Archive-Zip \
@@ -297,6 +298,10 @@ _APK_REPO_
 					p5-Sub-Uplevel \
 					p5-Sub-Install \
 					p5-Text-CSV_XS \
+					p5-Term-ReadKey \
+					p5-Test-CheckManifest \
+					p5-Test-Pod \
+					p5-Test-Pod-Coverage \
 					p5-XML-Parser \
 					squid \
 					yarn"
