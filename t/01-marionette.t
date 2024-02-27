@@ -1935,8 +1935,8 @@ SKIP: {
 			ok(defined $timezone_offset, "\$geo3->timezone_offset() is the javascript timezone offset:$timezone_offset");
 			my $accuracy = $geo3->accuracy();
 			TODO: {
-				local $TODO = ($major_version < 63) ? "\$geo3->accuracy() not available for older versions of firefox" : q[];
-				ok(defined $accuracy && $accuracy >= 0, "\$geo333->accuracy() is a positive float (accuracy in metres):$accuracy");
+				local $TODO = ($major_version < 63) ? "\$geo3->accuracy() not available for older versions of firefox" : ($^O eq 'dragonfly') ? "\$geo3->accuracy can fail on DragonFly" : q[];
+				ok(defined $accuracy && $accuracy >= 0, "\$geo3->accuracy() is a positive float (accuracy in metres):$accuracy");
 			}
 			my $altitude = $geo3->altitude();
 			if (defined $altitude) {

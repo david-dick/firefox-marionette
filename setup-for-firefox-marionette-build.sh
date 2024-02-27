@@ -202,12 +202,16 @@ _APK_REPO_
 					p5-PDF-API2 \
 					p5-Text-CSV_XS \
 					p5-Term-ReadKey \
+					p5-Test-CheckManifest \
+					p5-Test-Pod \
+					p5-Test-Pod-Coverage \
 					p5-Test-Simple \
 					p5-XML-Parser \
 					squid \
 					xauth \
 					xorg-vfbserver \
 					yarn"
+		${SUDO}pkg upgrade -y
 		pkg info $PACKAGES >/dev/null || ${SUDO}pkg install -y $PACKAGES
 		if [ ! -e /etc/machine-id ]
 		then
@@ -215,7 +219,7 @@ _APK_REPO_
 		fi
 		;;
 	FreeBSD)
-		PACKAGES="firefox \
+		PACKAGES="firefox-esr \
 					git \
 					nginx \
 					openssl \
@@ -233,12 +237,16 @@ _APK_REPO_
 					p5-PDF-API2 \
 					p5-Text-CSV_XS \
 					p5-Term-ReadKey \
+					p5-Test-CheckManifest \
+					p5-Test-Pod \
+					p5-Test-Pod-Coverage \
 					p5-Test-Simple \
 					p5-XML-Parser \
 					squid \
 					xauth \
 					xorg-vfbserver \
 					yarn"
+		${SUDO}pkg upgrade -y
 		pkg info $PACKAGES >/dev/null || ${SUDO}pkg install -y $PACKAGES
 		mount | grep fdescfs >/dev/null || ${SUDO}mount -t fdescfs fdesc /dev/fd
 		if [ ! -e /etc/machine-id ]
@@ -265,10 +273,13 @@ _APK_REPO_
 					p5-Sub-Exporter \
 					p5-Sub-Uplevel \
 					p5-Sub-Install \
+					p5-Test-CheckManifest \
+					p5-Test-Pod-Coverage \
 					p5-Text-CSV_XS \
 					p5-XML-Parser \
 					squid \
 					yarn"
+		${SUDO}pkg_add -u
 		pkg_info $PACKAGES >/dev/null || ${SUDO}pkg_add -I $PACKAGES
 		perl -MConfig::INI -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Config::INI
 		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT} cpan Crypt::URandom
