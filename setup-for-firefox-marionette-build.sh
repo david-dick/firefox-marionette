@@ -146,6 +146,8 @@ case $OSNAME in
 				perl-json \
 				perl-pdf-api2 \
 				perl-term-readkey \
+				perl-test-pod \
+				perl-test-pod-coverage \
 				perl-test-simple \
 				perl-text-csv_xs \
 				perl-uri \
@@ -155,6 +157,8 @@ case $OSNAME in
 				xauth \
 				xvfb \
 				yarn"
+			${SUDO}apk update
+			${SUDO}apk upgrade
 			INSTALL_PACKAGES=0
 			for PACKAGE_NAME in $PACKAGES
 			do
