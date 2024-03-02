@@ -113,6 +113,40 @@ foreach my $sig_name (@sig_names) {
 $SIG{INT} = sub { $terminated = 1; die "Caught an INT signal"; };
 $SIG{TERM} = sub { $terminated = 1; die "Caught a TERM signal"; };
 
+sub _check_navigator_attributes {
+	my ($firefox, $major_version, $user_agent, %user_agents_to_js) = @_;
+	foreach my $key (qw(
+				platform
+				appVersion
+			)) {
+		my $value = $firefox->script('return navigator.' . $key);
+		if ($user_agent =~ /^libwww[-]perl/smx) {
+			ok(defined $value, "navigator.$key is unchanged as '$value'");
+		} elsif (defined $user_agents_to_js{$user_agent}{$key}) {
+			ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
+		} else {
+			ok(!defined $value, "navigator.$key is undefined");
+		}
+	}
+	if ($major_version > $min_stealth_version) {
+		foreach my $key (qw(
+					productSub
+					vendor
+					vendorSub
+					oscpu
+				)) {
+			my $value = $firefox->script('return navigator.' . $key);
+			if ($user_agent =~ /^libwww[-]perl/smx) {
+				ok(defined $value, "navigator.$key is unchanged as '$value'");
+			} elsif (defined $user_agents_to_js{$user_agent}{$key}) {
+				ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
+			} else {
+				ok(!defined $value, "navigator.$key is undefined");
+			}
+		}
+	}
+}
+
 sub wait_for_server_on {
 	my ($daemon, $pid) = @_;
 	my $host = URI->new($daemon->url())->host();
@@ -202,25 +236,27 @@ sub start_firefox {
 			$parameters{trust} = $ca_cert_handle->filename();
 		}
 	}
-	if ($major_version >= $min_stealth_version) { # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver#browser_compatibility
-	} elsif ($parameters{stealth}) {
-		diag("stealth support is not available for Firefox versions less than $min_stealth_version");
-		delete $parameters{stealth};
-	}
-	if ($major_version >= $min_geo_version) {
-	} elsif ($parameters{geo}) {
-		diag("geo support is not available for Firefox versions less than $min_geo_version");
-		delete $parameters{geo};
-	}
-	if ((defined $major_version) && ($major_version >= 61)) {
-	} elsif ($parameters{har}) {
-		diag("HAR support is not available for Firefox versions less than 61");
-		delete $parameters{har};
-	}
-	if ((defined $major_version) && ($major_version >= 60)) {
-	} elsif ($parameters{bookmarks}) {
-		diag("Bookmark support is not available for Firefox versions less than 60");
-		delete $parameters{bookmarks};
+	if (defined $major_version) {
+		if ($major_version >= $min_stealth_version) { # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver#browser_compatibility
+		} elsif ($parameters{stealth}) {
+			diag("stealth support is not available for Firefox versions less than $min_stealth_version");
+			delete $parameters{stealth};
+		}
+		if ($major_version >= $min_geo_version) {
+		} elsif ($parameters{geo}) {
+			diag("geo support is not available for Firefox versions less than $min_geo_version");
+			delete $parameters{geo};
+		}
+		if ((defined $major_version) && ($major_version >= 61)) {
+		} elsif ($parameters{har}) {
+			diag("HAR support is not available for Firefox versions less than 61");
+			delete $parameters{har};
+		}
+		if ((defined $major_version) && ($major_version >= 60)) {
+		} elsif ($parameters{bookmarks}) {
+			diag("Bookmark support is not available for Firefox versions less than 60");
+			delete $parameters{bookmarks};
+		}
 	}
 	if ($parameters{console}) {
 		$parameters{console} = 1;
@@ -762,6 +798,7 @@ if ($ENV{FIREFOX_BINARY}) {
 }
 my $correct_exit_status = 0;
 my $mozilla_pid_support;
+my $original_agent;
 SKIP: {
 	diag("Initial tests");
 	($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile, mime_types => [ 'application/pkcs10', 'application/pdf' ]);
@@ -803,7 +840,8 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
-	diag("User Agent is " . $firefox->agent());
+	$original_agent = $firefox->agent();
+	diag("User Agent is $original_agent");
 	if ($major_version > 50) {
 		ok($capabilities->platform_version(), "Firefox Platform version is " . $capabilities->platform_version());
 	}
@@ -838,6 +876,8 @@ SKIP: {
 				$update = $firefox->update();
 				if (defined $update->app_version()) {
 					diag("New Browser version is " . $update->app_version());
+					$original_agent = $firefox->agent();
+					diag("New User Agent is $original_agent");
 					($major_version, $minor_version, $patch_version) = split /[.]/smx, $update->app_version();
 					if ($major_version == 102) { # This was a bad firefox version for marionette.  It blew up when loading metacpan.org
 						$ENV{FIREFOX_NO_NETWORK} = 1;
@@ -1600,8 +1640,7 @@ SKIP: {
 		ok($original_language eq $browser_language, "\$firefox->languages() equals navigator.languages:'$original_language' vs '$browser_language'");
 	}
 	my $test_agent_string = "Firefox::Marionette v$Firefox::Marionette::VERSION test suite";
-	my $original_agent = $firefox->agent($test_agent_string);
-	ok($original_agent, "\$firefox->agent() returns a user agent string:$original_agent");
+	ok($firefox->agent($test_agent_string) eq $original_agent, "\$firefox->agent(\$test_agent_string) returns the original user agent string of '$original_agent'");
 	my $shadow_root;
 	my $path;
 	if ($ENV{FIREFOX_HOST}) {
@@ -1719,6 +1758,7 @@ SKIP: {
 	# https://bot.sannysoft.com/
 	my $webdriver = $firefox->script('return navigator.webdriver');
 	ok(!$webdriver, "navigator.webdriver returns false when stealth is on");
+	my $freebsd_118_user_agent_string = 'Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0';
 	my %user_agents_to_js = (
 		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36' =>
 						{
@@ -1792,7 +1832,7 @@ SKIP: {
 							vendorSub => '',
 							oscpu => 'DragonFly x86_64',
 						},
-		'Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0' =>
+		$freebsd_118_user_agent_string =>
 						{
 							platform => 'FreeBSD amd64',
 							appVersion => '5.0 (X11)',
@@ -1837,37 +1877,85 @@ SKIP: {
 		}
 		ok($user_agent, "Testing '$user_agent'");
 		ok($firefox->agent($user_agent), "\$firefox->agent(\"$user_agent\") succeeded");
-		ok($firefox->go("about:blank"), "\$firefox->go(\"about:blank\") loaded successfully for user agent test of values");
-		foreach my $key (qw(
-					platform
-					appVersion
-				)) {
-			my $value = $firefox->script('return navigator.' . $key);
-			if ($user_agent =~ /^libwww[-]perl/smx) {
-				ok(defined $value, "navigator.$key is unchanged as '$value'");
-			} elsif (defined $user_agents_to_js{$user_agent}{$key}) {
-				ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
-			} else {
-				ok(!defined $value, "navigator.$key is undefined");
-			}
-		}
 		if ($major_version > $min_stealth_version) {
-			foreach my $key (qw(
-						productSub
-						vendor
-						vendorSub
-						oscpu
-					)) {
-				my $value = $firefox->script('return navigator.' . $key);
-				if ($user_agent =~ /^libwww[-]perl/smx) {
-					ok(defined $value, "navigator.$key is unchanged as '$value'");
-				} elsif (defined $user_agents_to_js{$user_agent}{$key}) {
-					ok($value eq $user_agents_to_js{$user_agent}{$key}, "navigator.$key is now '$user_agents_to_js{$user_agent}{$key}':$value");
-				} else {
-					ok(!defined $value, "navigator.$key is undefined");
-				}
-			}
+			_check_navigator_attributes($firefox, $major_version, $user_agent, %user_agents_to_js);
 		}
+		ok($firefox->go("about:blank"), "\$firefox->go(\"about:blank\") loaded successfully for user agent test of values");
+		_check_navigator_attributes($firefox, $major_version, $user_agent, %user_agents_to_js);
+	}
+	if ($major_version > $min_stealth_version) {
+		my $agent = $firefox->agent(undef);
+		ok($agent,
+				"\$firefox->agent(undef)                          should return 'libwww-perl/6.72'");
+		ok($agent eq 'libwww-perl/6.72',
+				"\$firefox->agent(undef)                             did return '$agent'");
+		$agent = $firefox->agent(version => 120);
+		ok($agent eq $original_agent,
+				"\$firefox->agent(version => 120)                 should return '$original_agent'");
+		ok($agent eq $original_agent,
+				"\$firefox->agent(version => 120)                    did return '$agent'");
+		$agent = $firefox->agent(increment => -5);
+		my $correct_agent = $original_agent;
+		$correct_agent =~ s/rv:\d+/rv:120/smx;
+		$correct_agent =~ s/Firefox\/\d+/Firefox\/120/smx;
+		ok($correct_agent,
+				"\$firefox->agent(increment => -5)                should return '$correct_agent'");
+		ok($agent eq $correct_agent,
+				"\$firefox->agent(increment => -5)                   did return '$agent'");
+		$agent = $firefox->agent(version => 108);
+		$correct_agent = $original_agent;
+		my $increment_major_version = $major_version - 5;
+		my $increment_rv_version = $increment_major_version < 120 && $increment_major_version > 109 ? 109 : $increment_major_version;
+		$correct_agent =~ s/rv:\d+/rv:$increment_rv_version/smx;
+		$correct_agent =~ s/Firefox\/\d+/Firefox\/$increment_major_version/smx;
+		ok($agent,
+				"\$firefox->agent(version => 108)                 should return '$correct_agent'");
+		ok($agent eq $correct_agent,
+				"\$firefox->agent(version => 108)                    did return '$agent'");
+		$agent = $firefox->agent(undef);
+		$correct_agent = $original_agent;
+		$correct_agent =~ s/rv:\d+/rv:108/smx;
+		$correct_agent =~ s/Firefox\/\d+/Firefox\/108/smx;
+		ok($agent,
+				"\$firefox->agent(undef)                          should return '$correct_agent'");
+		ok($agent eq $correct_agent,
+				"\$firefox->agent(undef)                             did return '$agent'");
+		$firefox->agent(os => 'Win64');
+		$agent = $firefox->agent(undef);
+		ok($agent =~ /^Mozilla\/5[.]0[ ][(]Windows[ ]NT[ ]10[.]0;[ ]Win64;[ ]x64;[ ]rv:\d{2,3}[.]0[)][ ]Gecko\/20100101[ ]Firefox\/\d{2,3}[.]0$/smx,
+				"\$firefox->agent(os => 'Win64')                     did return '$agent'");
+		$firefox->agent(os => 'FreeBSD', version => 110);
+		$agent = $firefox->agent(undef);
+		ok($agent =~ /^Mozilla\/5[.]0[ ][(]X11;[ ]FreeBSD[ ]amd64;[ ]rv:109.0[)][ ]Gecko\/20100101[ ]Firefox\/110.0$/smx,
+				"\$firefox->agent(os => 'FreeBSD', version => 110)   did return '$agent'");
+		$firefox->agent(os => 'linux', arch => 'i686');
+		$agent = $firefox->agent(undef);
+		ok($agent =~ /^Mozilla\/5[.]0[ ][(]X11;[ ]Linux[ ]i686;[ ]rv:\d{2,3}.0[)][ ]Gecko\/20100101[ ]Firefox\/\d{2,3}.0$/smx,
+				"\$firefox->agent(os => 'linux', arch => 'i686')     did return '$agent'");
+		$firefox->agent(os => 'darwin');
+		$agent = $firefox->agent(undef);
+		ok($agent =~ /^Mozilla\/5[.]0[ ][(]Macintosh;[ ]Intel[ ]Mac[ ]OS[ ]X[ ]\d+[.]\d+;[ ]rv:\d{2,3}.0[)][ ]Gecko\/20100101[ ]Firefox\/\d{2,3}.0$/smx,
+				"\$firefox->agent(os => 'darwin')                    did return '$agent'");
+		$firefox->agent(os => 'darwin', platform => 'X11');
+		$agent = $firefox->agent(undef);
+		ok($agent =~ /^Mozilla\/5[.]0[ ][(]X11;[ ]Intel[ ]Mac[ ]OS[ ]X[ ]\d+[.]\d+;[ ]rv:\d{2,3}.0[)][ ]Gecko\/20100101[ ]Firefox\/\d{2,3}.0$/smx,
+				"\$firefox->agent(os => 'darwin', platform => 'X11') did return '$agent'");
+		$firefox->agent(os => 'darwin', arch => '10.13');
+		$agent = $firefox->agent(undef);
+		ok($agent =~ /^Mozilla\/5[.]0[ ][(]Macintosh;[ ]Intel[ ]Mac[ ]OS[ ]X[ ]10[.]13;[ ]rv:\d{2,3}.0[)][ ]Gecko\/20100101[ ]Firefox\/\d{2,3}.0$/smx,
+				"\$firefox->agent(os => 'darwin', arch => '10.13')   did return '$agent'");
+		$firefox->agent(os => 'freebsd', version => 118);
+		$agent = $firefox->agent(undef);
+		ok($agent eq $freebsd_118_user_agent_string,
+				"\$firefox->agent(os => 'freebsd', version => '118') did return '$agent'");
+		eval { $firefox->agent(version => 'blah') };
+		my $exception = $@;
+		chomp $exception;
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->agent(version => 'blah') throws an exception:$exception");
+		eval { $firefox->agent(increment => 'blah') };
+		$exception = $@;
+		chomp $exception;
+		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->agent(increment => 'blah') throws an exception:$exception");
 	}
 	if (($tls_tests_ok) && ($ENV{RELEASE_TESTING})) {
 		my $json;
@@ -3073,6 +3161,7 @@ SKIP: {
 my $bad_network_behaviour;
 SKIP: {
 	diag("Starting new firefox for testing metacpan and iframe, with find, downloads, extensions and actions");
+	$profile->set_value('general.useragent.override', 'libwww-perl/6.72');
 	($skip_message, $firefox) = start_firefox(0, debug => 0, page_load => 600000, script => 5432, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(accept_insecure_certs => 1, page_load_strategy => 'eager'), geo => $freeipapi_uri);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -3081,6 +3170,12 @@ SKIP: {
 		skip($skip_message, 247);
 	}
 	ok($firefox, "Firefox has started in Marionette mode without defined capabilities, but with a defined profile and debug turned off");
+	my $agent;
+	eval {
+		$agent = $firefox->agent( os => 'Linux' );
+	};
+	ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->agent(os => 'Linux') fails when general.useragent.override is already set to an unparsable value:$@");
+
 	my $chrome_window_handle_supported;
 	eval {
 		$chrome_window_handle_supported = $firefox->chrome_window_handle();

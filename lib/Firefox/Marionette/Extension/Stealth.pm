@@ -60,11 +60,22 @@ _JS_
 
 sub _inject_contents {
     my ($class) = @_;
+    return <<'_JS_' . $class->user_agent_contents();
+{
+  let navProto = Object.getPrototypeOf(window.navigator);
+  let winProto = Object.getPrototypeOf(window);
+  Object.defineProperty(navProto, 'webdriver', {value: false, writable: true, enumerable: false});
+}
+_JS_
+}
+
+sub user_agent_contents {
+    my ($class) = @_;
     return <<'_JS_';
 {
   let navProto = Object.getPrototypeOf(window.navigator);
   let winProto = Object.getPrototypeOf(window);
-  Object.defineProperty(navProto, 'webdriver', {value: false, writable: false, enumerable: false});
+  let docProto = Object.getPrototypeOf(window.document);
   let bluetooth = {
                     getAvailability: function () { return new Promise((resolve, reject) => resolve(false))},
                };
@@ -98,61 +109,65 @@ sub _inject_contents {
   let locks = { query: function() { }, request: function() { } };
   let login = { setStatus: function() { return undefined } };
   if (navigator.userAgent.match(/Chrome/)) {
-    Object.defineProperty(navProto, 'vendor', {value: "Google Inc.", writable: false});
-    Object.defineProperty(navProto, 'productSub', {value: "20030107", writable: false});
-    Object.defineProperty(navProto, 'getUserMedia', {value: getUserMedia, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'webkitGetUserMedia', {value: getUserMedia, writable: false, enumerable: true});
+    Object.defineProperty(navProto, 'vendor', {value: "Google Inc.", writable: true});
+    Object.defineProperty(navProto, 'productSub', {value: "20030107", writable: true});
+    Object.defineProperty(navProto, 'getUserMedia', {value: getUserMedia, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'webkitGetUserMedia', {value: getUserMedia, writable: true, enumerable: true});
     try {
-      Object.defineProperty(navProto, 'bluetooth', {value: bluetooth, writable: false, enumerable: true});
-      Object.defineProperty(navProto, 'bluetooth', {value: bluetooth, writable: false, enumerable: true});
+      Object.defineProperty(navProto, 'bluetooth', {value: bluetooth, writable: true, enumerable: true});
+      Object.defineProperty(navProto, 'bluetooth', {value: bluetooth, writable: true, enumerable: true});
     } catch(e) {
       console.log("Unable to redefine bluetooth:" + e);
     }
-    Object.defineProperty(winProto, 'chrome', {value: chrome, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'canLoadAdAuctionFencedFrame', {value: canLoadAdAuctionFencedFrame, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'canShare', {value: canShare, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'clearAppBadge', {value: clearAppBadge, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'clearOriginJoinedAdInterestGroup', {value: clearOriginJoinedAdInterestGroup, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'connection', {value: connection, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'createAuctionNonce', {value: createAuctionNonce, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'deprecatedReplaceInURN', {value: deprecatedReplaceInURN, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'deprecatedRunAdAuctionEnforcesKAnonymity', {value: false, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'deprecatedURNtoURL', {value: deprecatedURNtoURL, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'deviceMemory', {value: (navigator.hardwareConcurrency < 4 ? 4 : 8), writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'getBattery', {value: getBattery, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'getGamePads', {value: getGamePads, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'getInstalledRelatedApps', {value: getInstalledRelatedApps, writable: false, enumerable: true});
+    Object.defineProperty(winProto, 'chrome', {value: chrome, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'canLoadAdAuctionFencedFrame', {value: canLoadAdAuctionFencedFrame, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'canShare', {value: canShare, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'clearAppBadge', {value: clearAppBadge, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'clearOriginJoinedAdInterestGroup', {value: clearOriginJoinedAdInterestGroup, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'connection', {value: connection, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'createAuctionNonce', {value: createAuctionNonce, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'deprecatedReplaceInURN', {value: deprecatedReplaceInURN, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'deprecatedRunAdAuctionEnforcesKAnonymity', {value: false, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'deprecatedURNtoURL', {value: deprecatedURNtoURL, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'deviceMemory', {value: (navigator.hardwareConcurrency < 4 ? 4 : 8), writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'getBattery', {value: getBattery, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'getGamePads', {value: getGamePads, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'getInstalledRelatedApps', {value: getInstalledRelatedApps, writable: true, enumerable: true});
     if (!window.navigator.gpu) {
-      Object.defineProperty(navProto, 'gpu', {value: gpu, writable: false, enumerable: true});
+      Object.defineProperty(navProto, 'gpu', {value: gpu, writable: true, enumerable: true});
     }
-    Object.defineProperty(navProto, 'hid', {value: hid, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'ink', {value: {}, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'joinAdInterestGroup', {value: joinAdInterestGroup, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'keyboard', {value: keyboard, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'leaveAdInterestGroup', {value: leaveAdInterestGroup, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'locks', {value: locks, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'login', {value: login, writable: false, enumerable: true});
-    delete navProto.buildID;
+    Object.defineProperty(navProto, 'hid', {value: hid, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'ink', {value: {}, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'joinAdInterestGroup', {value: joinAdInterestGroup, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'keyboard', {value: keyboard, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'leaveAdInterestGroup', {value: leaveAdInterestGroup, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'locks', {value: locks, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'login', {value: login, writable: true, enumerable: true});
     delete navProto.oscpu;
   } else if (navigator.userAgent.match(/Safari/)) {
-    Object.defineProperty(navProto, 'vendor', {value: "Apple Computer, Inc.", writable: false});
-    Object.defineProperty(navProto, 'productSub', {value: "20030107", writable: false});
-    Object.defineProperty(navProto, 'getUserMedia', {value: getUserMedia, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'webkitGetUserMedia', {value: getUserMedia, writable: false, enumerable: true});
+    Object.defineProperty(navProto, 'vendor', {value: "Apple Computer, Inc.", writable: true});
+    Object.defineProperty(navProto, 'productSub', {value: "20030107", writable: true});
+    Object.defineProperty(navProto, 'getUserMedia', {value: getUserMedia, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'webkitGetUserMedia', {value: getUserMedia, writable: true, enumerable: true});
     /* no bluetooth for Safari - https://developer.mozilla.org/en-US/docs/Web/API/Bluetooth#browser_compatibility */
-    Object.defineProperty(winProto, 'chrome', {value: chrome, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'canLoadAdAuctionFencedFrame', {value: canLoadAdAuctionFencedFrame, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'canShare', {value: canShare, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'clearAppBadge', {value: clearAppBadge, writable: false, enumerable: true});
-    Object.defineProperty(navProto, 'clearOriginJoinedAdInterestGroup', {value: clearOriginJoinedAdInterestGroup, writable: false, enumerable: true});
+    Object.defineProperty(winProto, 'chrome', {value: chrome, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'canLoadAdAuctionFencedFrame', {value: canLoadAdAuctionFencedFrame, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'canShare', {value: canShare, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'clearAppBadge', {value: clearAppBadge, writable: true, enumerable: true});
+    Object.defineProperty(navProto, 'clearOriginJoinedAdInterestGroup', {value: clearOriginJoinedAdInterestGroup, writable: true, enumerable: true});
     /* no connection for Safari - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/connection#browser_compatibility */
     /* no deviceMemory for Safari - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory#browser_compatibility */
     /* no getBattery for Safari - https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getBattery#browser_compatibility */
-    delete navProto.buildID;
     delete navProto.oscpu;
+  } else if (navigator.userAgent.match(/Trident/)) {
+    Object.defineProperty(docProto, 'documentMode', {value: true, writable: true, enumerable: true});
+  }
+  if (navigator.userAgent.match(/^Mozilla\/5[.]0[ ][(][^)]*?;[ ]rv:\d+[.]0[)][ ]Gecko\/20100101[ ]Firefox\/\d+[.]0/)) {
+    Object.defineProperty(navProto, 'vendor', {value: "", writable: true});
+    Object.defineProperty(navProto, 'productSub', {value: "20100101", writable: true});
   } else {
-    Object.defineProperty(navProto, 'vendor', {value: "", writable: false});
-    Object.defineProperty(navProto, 'productSub', {value: "20100101", writable: false});
+    delete navProto.buildID;
+    delete window.InstallTrigger;
   }
 }
 _JS_
@@ -186,6 +201,10 @@ This module contains the Stealth extension.  This module should not be used dire
 =head2 new
  
 Returns a L<Archive::Zip|Archive::Zip> of the Stealth extension.
+
+=head2 user_agent_contents
+
+Returns the javascript used to setup a different (or the original) user agent as a string.
 
 =head1 DIAGNOSTICS
 

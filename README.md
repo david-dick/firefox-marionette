@@ -246,7 +246,7 @@ returns if pre-existing addons (extensions/themes) are allowed to run.  This wil
 
 ## agent
 
-accepts an optional value for the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) header and sets this using the profile preferences.  This value will be used on the next page load.  It returns the current value, such as 'Mozilla/5.0 (&lt;system-information>) &lt;platform> (&lt;platform-details>) &lt;extensions>'.  This value is retrieved with [navigator.userAgent](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent).
+accepts an optional value for the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) header and sets this using the profile preferences and inserting [javascript](#script) into the current page. It returns the current value, such as 'Mozilla/5.0 (&lt;system-information>) &lt;platform> (&lt;platform-details>) &lt;extensions>'.  This value is retrieved with [navigator.userAgent](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent).
 
 This method can be used to set a user agent string like so;
 
@@ -272,7 +272,24 @@ If the user agent string that is passed as a parameter looks like a [Chrome](htt
 - network.http.accept-encoding.secure
 - privacy.donottrackheader.enabled
 
-If the `stealth` parameter is supplied, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
+In addition, this method will accept a hash of values as parameters as well.  When a hash is provided, this method will alter specific parts of the normal Firefox User Agent.  These hash parameters are;
+
+- os - The desired operating system, known values are "linux", "win32", "darwin", "freebsd", "netbsd", "openbsd" and "dragonfly"
+- version - A specific version of firefox, such as 120.
+- increment - A specific offset from the actual version of firefox, such as -5
+
+These parameters can be used to set a user agent string like so;
+
+    use Firefox::Marionette();
+    use strict;
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->agent(os => 'freebsd', version => 118);
+
+    # user agent is now equal to
+    # Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0
+
+If the `stealth` parameter has supplied to the [new](#new) method, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
 
 - [https://browserleaks.com/javascript](https://browserleaks.com/javascript)
 - [https://www.amiunique.org/fingerprint](https://www.amiunique.org/fingerprint)

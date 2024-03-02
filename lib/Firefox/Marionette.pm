@@ -127,6 +127,14 @@ sub _SHORT_GUID_BYTES               { return 9 }
 sub _DEFAULT_DOWNLOAD_TIMEOUT       { return 300 }
 sub _CREDENTIAL_ID_LENGTH           { return 32 }
 
+sub _FIREFOX_109_RV_MIN {
+    return 109;
+}    # https://bugzilla.mozilla.org/show_bug.cgi?id=1805967
+
+sub _FIREFOX_109_RV_MAX {
+    return 119;
+}    # https://bugzilla.mozilla.org/show_bug.cgi?id=1805967
+
 # sub _MAGIC_NUMBER_MOZL4Z            { return "mozLz40\0" }
 
 sub _WATERFOX_CURRENT_VERSION_EQUIV {
@@ -465,122 +473,313 @@ _JS_
     return $self;
 }
 
-sub agent {
-    my ( $self, @new ) = @_;
-    my $pref_name = 'general.useragent.override';
-    my $old_agent =
-      $self->script( $self->_compress_script('return navigator.userAgent') );
-    if ( ( scalar @new ) > 0 ) {
-        if ( defined $new[0] ) {
-            $self->set_pref( $pref_name, $new[0] );
-            my ( $chrome, $iphone, $safari );
-            if ( $new[0] =~ /Chrome/smx ) {
-                $chrome = 1;
-            }
-            elsif ( $new[0] =~ /Safari/smx ) {
-                $safari = 1;
-                if ( $new[0] =~ /iPhone/smx ) {
-                    $iphone = 1;
-                }
-            }
+sub _is_chrome_user_agent {
+    my ( $self, $user_agent ) = @_;
+    if ( $user_agent =~ /Chrome/smx ) {
+        return 1;
+    }
+    return;
+}
+
+sub _is_safari_user_agent {
+    my ( $self, $user_agent ) = @_;
+    if ( $user_agent =~ /Safari/smx ) {
+        return 1;
+    }
+    return;
+}
+
+sub _is_safari_and_iphone_user_agent {
+    my ( $self, $user_agent ) = @_;
+    if ( $user_agent =~ /iPhone/smx ) {
+        return 1;
+    }
+    return;
+}
+
+sub _is_trident_user_agent {
+    my ( $self, $user_agent ) = @_;
+    if ( $user_agent =~ /Trident/smx ) {
+        return 1;
+    }
+    return;
+}
+
+sub _parse_user_agent {
+    my ( $self, $user_agent ) = @_;
+    my ( $app_version, $platform, $vendor, $vendor_sub, $oscpu );
 
     # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent#value
-            if (
-                $new[0] =~ m{^
+    if ( !defined $user_agent ) {
+        $user_agent = $self->{original_agent};
+    }
+    if (
+        $user_agent =~ m{^
                                         [^\/]+\/ # appCodeName
                                         ((5[.]0[ ][(][^; ]+)[^;]*;[ ] # appVersion
                                         ([^;)]+)[;)] # platform
 					.*)
 				$}smx
-              )
-            {
-
-                my ( $webkit_app, $app_version, $platform ) = ( $1, $2, $3 );
-                $app_version .= q[)];
-                my ( $vendor, $vendor_sub, $oscpu ) = ( q[], q[], $platform );
-                if ($chrome) {
-                    $app_version = $webkit_app;
-                    $vendor      = 'Google Inc.';
-                    $vendor_sub  = q[];
-                }
-                elsif ($safari) {
-                    $app_version = $webkit_app;
-                    if ($iphone) {
-                        $platform = 'iPhone';
-                        $oscpu    = undef;
-                    }
-                    else {
-                        $platform = 'MacIntel';
-                        $oscpu    = $platform;
-                    }
-                    $vendor     = 'Apple Computer, Inc.';
-                    $vendor_sub = q[];
-                }
-                if ( $new[0] =~ /Win(?:32|64)/smx ) {
-                    $platform = 'Win32';
-                    $oscpu    = $platform;
-                }
-                elsif ( $new[0] =~ /Intel[ ]Mac/smx ) {
-                    $platform = 'MacIntel';
-                }
-                elsif ( $new[0] =~ /Android/smx ) {
-                    $platform = 'Linux armv81';
-                }
-                $self->set_pref( 'general.platform.override',   $platform );
-                $self->set_pref( 'general.appversion.override', $app_version );
-                $self->set_pref( 'general.oscpu.override',      $oscpu );
-                if ($chrome) {
-                    $self->set_pref( 'network.http.accept',
-'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
-                    );
-                    $self->set_pref( 'network.http.accept-encoding',
-                        'gzip, deflate, br' );
-                    $self->set_pref( 'network.http.accept-encoding.secure',
-                        'gzip, deflate, br' );
-                }
-                elsif ($safari) {
-                    $self->set_pref( 'network.http.accept',
-'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                    );
-                    $self->set_pref( 'network.http.accept-encoding',
-                        'gzip, deflate, br' );
-                    $self->set_pref( 'network.http.accept-encoding.secure',
-                        'gzip, deflate, br' );
-                }
-                else {
-                    $self->clear_pref('network.http.accept');
-                    $self->clear_pref('network.http.accept-encoding');
-                    $self->clear_pref('network.http.accept-encoding.secure');
-                }
-                my $false = $self->_translate_to_json_boolean(0);
-                $self->set_pref( 'privacy.donottrackheader.enabled', $false )
-                  ;    # trying to blend in with the most common options
+      )
+    {
+        ( my $webkit_app, $app_version, $platform ) = ( $1, $2, $3 );
+        $app_version .= q[)];
+        ( $vendor, $vendor_sub, $oscpu ) = ( q[], q[], $platform );
+        if ( $self->_is_chrome_user_agent($user_agent) ) {
+            $app_version = $webkit_app;
+            $vendor      = 'Google Inc.';
+            $vendor_sub  = q[];
+        }
+        elsif ( $self->_is_safari_user_agent($user_agent) ) {
+            $app_version = $webkit_app;
+            if ( $self->_is_safari_and_iphone_user_agent($user_agent) ) {
+                $platform = 'iPhone';
+                $oscpu    = undef;
             }
             else {
-                $self->_clear_extra_user_agent_prefs();
+                $platform = 'MacIntel';
+                $oscpu    = $platform;
+            }
+            $vendor     = 'Apple Computer, Inc.';
+            $vendor_sub = q[];
+        }
+        if ( $user_agent =~ /Win(?:32|64)/smx ) {
+            $platform = 'Win32';
+            if ( $self->_is_chrome_user_agent($user_agent) ) {
+                $oscpu = undef;
+            }
+            else {
+                $oscpu = $platform;
             }
         }
+        elsif ( $user_agent =~ /Intel[ ]Mac/smx ) {
+            $platform = 'MacIntel';
+        }
+        elsif ( $user_agent =~ /Android/smx ) {
+            $platform = 'Linux armv81';
+        }
+    }
+    else {
+        ( $app_version, $platform, $vendor, $vendor_sub, $oscpu ) =
+          ( q[], q[], q[], q[], q[] );
+    }
+    return ( $user_agent, $app_version, $platform, $vendor, $vendor_sub,
+        $oscpu );
+}
+
+sub _original_agent {
+    my ($self) = @_;
+    return $self->{original_agent};
+}
+
+sub _parse_original_agent {
+    my ($self)             = @_;
+    my $original_string    = $self->_original_agent();
+    my $general_token_re   = qr/(?:Mozilla\/5[.]0[ ])[(]/smx;
+    my $platform_re        = qr/([^)]*?);[ ]/smx;
+    my $gecko_version_re   = qr/rv:(\d+)[.]0[)][ ]/smx;
+    my $gecko_trail_re     = qr/Gecko\/20100101[ ]/smx;
+    my $firefox_version_re = qr/Firefox\/(\d+)[.]0/smx;
+    my ( $os_string, $rv_version, $firefox_version );
+
+    if ( $original_string =~
+m/^$general_token_re$platform_re$gecko_version_re$gecko_trail_re$firefox_version_re$/smx
+      )
+    {
+        ( $os_string, $rv_version, $firefox_version ) = ( $1, $2, $3 );
+    }
+    else {
+        Firefox::Marionette::Exception->throw('Failed to parse user agent');
+    }
+    return ( $os_string, $rv_version, $firefox_version );
+}
+
+sub _get_agent_from_hash {
+    my ( $self, %new_hash ) = @_;
+    my $new_agent;
+    my ( $os_string, $rv_version, $firefox_version ) =
+      $self->_parse_original_agent();
+    $rv_version = $firefox_version;
+    if ( $new_hash{increment} ) {
+        if ( $new_hash{increment} =~ /^\s*([-])?\s*(\d{1,3})\s*$/smx ) {
+            my ( $sign, $number ) = ( $1, $2 );
+            my $increment = int "$sign$number";
+            $rv_version      += $increment;
+            $firefox_version += $increment;
+            delete $new_hash{increment};
+        }
         else {
-            $self->clear_pref($pref_name);
-            $self->_clear_extra_user_agent_prefs();
+            Firefox::Marionette::Exception->throw(
+'The increment parameter for the agent method must be a positive or negative integer less than 1000.'
+            );
+        }
+    }
+    if ( $new_hash{version} ) {
+        if ( $new_hash{version} =~ /^\s*(\d{1,3})\s*$/smx ) {
+            my ($version) = ($1);
+            $rv_version      = $version;
+            $firefox_version = $version;
+            delete $new_hash{version};
+        }
+        else {
+            Firefox::Marionette::Exception->throw(
+'The version parameter for the agent method must be a positive less than 1000.'
+            );
+        }
+    }
+    if (   ( $rv_version >= _FIREFOX_109_RV_MIN() )
+        && ( $rv_version <= _FIREFOX_109_RV_MAX() ) )
+    {
+        $rv_version = _FIREFOX_109_RV_MIN();
+    }
+    if ( my $os = $new_hash{os} ) {
+        my %correct_os = (
+            linux     => 'Linux',
+            freebsd   => 'FreeBSD',
+            openbsd   => 'OpenBSD',
+            netbsd    => 'NetBSD',
+            dragonfly => 'DragonFly',
+            win32     =>
+              'Win64',    # https://bugzilla.mozilla.org/show_bug.cgi?id=1559747
+            win64  => 'Win64',
+            mac    => 'Intel Mac OS X',
+            darwin => 'Intel Mac OS X',
+        );
+        my %default_platform = (
+            linux     => 'X11',
+            freebsd   => 'X11',
+            openbsd   => 'X11',
+            netbsd    => 'X11',
+            dragonfly => 'X11',
+            win32     => 'Windows NT 10.0',
+            win64     => 'Windows NT 10.0',
+            mac       => 'Macintosh',
+            darwin    => 'Macintosh',
+        );
+        my %default_arch = (
+            linux     => 'x86_64',
+            netbsd    => 'amd64',
+            freebsd   => 'amd64',
+            openbsd   => 'amd64',
+            dragonfly => 'x86_64',
+            win32     =>
+              'x64',    # https://bugzilla.mozilla.org/show_bug.cgi?id=1559747
+            win64  => 'x64',
+            mac    => '14.3',    # try and keep to a recent release
+            darwin => '14.3',    # try and keep to a recent release
+        );
+        my $final_platform = $default_platform{ lc $os };
+        if ( defined $new_hash{platform} ) {
+            $final_platform = $new_hash{platform};
+        }
+        my $final_os   = $correct_os{ lc $os };
+        my $final_arch = $default_arch{ lc $os };
+        if ( defined $new_hash{arch} ) {
+            $final_arch = $new_hash{arch};
+        }
+        $os_string = join q[; ], $final_platform,
+          $self->_join_os_arch_in_agent( $final_os, $final_arch );
+        delete $new_hash{os};
+    }
+    $new_agent =
+        'Mozilla/5.0 ('
+      . $os_string . '; rv:'
+      . $rv_version
+      . '.0) Gecko/20100101 Firefox/'
+      . $firefox_version . '.0';
+    return $new_agent;
+}
+
+sub _join_os_arch_in_agent {
+    my ( $self, $os, $arch ) = @_;
+    if ( $os =~ /^Win(?:32|64)$/smx ) {
+        return join q[; ], $os, $arch;
+    }
+    else {
+        return join q[ ], $os, $arch;
+    }
+}
+
+sub agent {
+    my ( $self, @new_list ) = @_;
+    my $pref_name = 'general.useragent.override';
+    my $old_agent =
+      $self->script( $self->_compress_script('return navigator.userAgent') );
+    if ( !defined $self->{original_agent} ) {
+        $self->{original_agent} = $old_agent;
+    }
+    if ( ( scalar @new_list ) > 0 ) {
+        my $new_agent;
+        if ( !( ( scalar @new_list ) % 2 ) ) {
+            $new_agent = $self->_get_agent_from_hash(@new_list);
+        }
+        else {
+            $new_agent = $new_list[0];
+        }
+        my (
+            $user_agent, $app_version, $platform,
+            $vendor,     $vendor_sub,  $oscpu
+        ) = $self->_parse_user_agent($new_agent);
+        $self->set_pref( $pref_name,                    $user_agent );
+        $self->set_pref( 'general.platform.override',   $platform );
+        $self->set_pref( 'general.appversion.override', $app_version );
+        $self->set_pref( 'general.oscpu.override',      $oscpu );
+        if ( $self->_is_chrome_user_agent($user_agent) ) {
+            $self->set_pref( 'network.http.accept',
+'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
+            );
+            $self->set_pref( 'network.http.accept-encoding',
+                'gzip, deflate, br' );
+            $self->set_pref( 'network.http.accept-encoding.secure',
+                'gzip, deflate, br' );
+        }
+        elsif ( $self->_is_safari_user_agent($user_agent) ) {
+            $self->set_pref( 'network.http.accept',
+'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            );
+            $self->set_pref( 'network.http.accept-encoding',
+                'gzip, deflate, br' );
+            $self->set_pref( 'network.http.accept-encoding.secure',
+                'gzip, deflate, br' );
+        }
+        elsif ( $self->_is_trident_user_agent($user_agent) ) {
+
+    # https://stackoverflow.com/questions/1670329/ie-accept-headers-changing-why
+            $self->set_pref(
+                'network.http.accept',
+'image/jpeg, application/x-ms-application, image/gif, application/xaml+xml, image/pjpeg, application/x-ms-xbap, application/msword, application/vnd.ms-excel, application/x-shockwave-flash, */*',
+            );
+            $self->set_pref( 'network.http.accept-encoding', 'gzip, deflate' );
+            $self->set_pref( 'network.http.accept-encoding.secure',
+                'gzip, deflate' );
+        }
+        else {
+            $self->clear_pref('network.http.accept');
+            $self->clear_pref('network.http.accept-encoding');
+            $self->clear_pref('network.http.accept-encoding.secure');
+        }
+        my $false = $self->_translate_to_json_boolean(0);
+        $self->set_pref( 'privacy.donottrackheader.enabled', $false )
+          ;    # trying to blend in with the most common options
+        if ( $self->{stealth} ) {
+            $self->script(
+                $self->_compress_script(
+                    <<'_JS_' . Firefox::Marionette::Extension::Stealth->user_agent_contents() ), args => [ $user_agent, $app_version, $platform, $vendor, $vendor_sub, $oscpu ] );
+{
+  let navProto = Object.getPrototypeOf(window.navigator);
+  let winProto = Object.getPrototypeOf(window);
+  Object.defineProperty(navProto, 'userAgent', {value: arguments[0], writable: true});
+  Object.defineProperty(navProto, 'appVersion', {value: arguments[1], writable: true});
+  Object.defineProperty(navProto, 'platform', {value: arguments[2], writable: true});
+  Object.defineProperty(navProto, 'vendor', {value: arguments[3], writable: true});
+  Object.defineProperty(navProto, 'vendorSub', {value: arguments[4], writable: true});
+  Object.defineProperty(navProto, 'oscpu', {value: arguments[5], writable: true});
+}
+_JS_
         }
     }
 
     return $old_agent;
-}
-
-sub _clear_extra_user_agent_prefs {
-    my ($self) = @_;
-    $self->clear_pref('general.platform.override');
-    $self->clear_pref('general.appversion.override');
-    $self->clear_pref('general.oscpu.override');
-    $self->clear_pref('network.http.accept');
-    $self->clear_pref('network.http.accept-encoding');
-    $self->clear_pref('network.http.accept-encoding.secure');
-    my $true = $self->_translate_to_json_boolean(1);
-    $self->set_pref( 'privacy.donottrackheader.enabled', $true )
-      ;    # trying to blend in with the most common options
-    return;
 }
 
 sub _download_directory {
@@ -8239,7 +8438,7 @@ sub new_session {
 }
 
 sub browser_version {
-    my ($self) = @_;
+    my ( $self, $new ) = @_;
     if ( defined $self->{_cached_per_instance}->{_browser_version} ) {
         return $self->{_cached_per_instance}->{_browser_version};
     }
@@ -8249,9 +8448,7 @@ sub browser_version {
           $self->{_initial_version}->{minor},
           $self->{_initial_version}->{patch};
     }
-    else {
-        return;
-    }
+    return;
 }
 
 sub _get_moz_headless {
@@ -12164,7 +12361,7 @@ returns if pre-existing addons (extensions/themes) are allowed to run.  This wil
 
 =head2 agent
 
-accepts an optional value for the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent> header and sets this using the profile preferences.  This value will be used on the next page load.  It returns the current value, such as 'Mozilla/5.0 (<system-information>) <platform> (<platform-details>) <extensions>'.  This value is retrieved with L<navigator.userAgent|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent>.
+accepts an optional value for the L<User-Agent|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent> header and sets this using the profile preferences and inserting L<javascript|/script> into the current page. It returns the current value, such as 'Mozilla/5.0 (<system-information>) <platform> (<platform-details>) <extensions>'.  This value is retrieved with L<navigator.userAgent|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent>.
 
 This method can be used to set a user agent string like so;
 
@@ -12200,7 +12397,30 @@ If the user agent string that is passed as a parameter looks like a L<Chrome|htt
 
 =back
 
-If the C<stealth> parameter is supplied, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
+In addition, this method will accept a hash of values as parameters as well.  When a hash is provided, this method will alter specific parts of the normal Firefox User Agent.  These hash parameters are;
+
+=over 4
+
+=item * os - The desired operating system, known values are "linux", "win32", "darwin", "freebsd", "netbsd", "openbsd" and "dragonfly"
+
+=item * version - A specific version of firefox, such as 120.
+
+=item * increment - A specific offset from the actual version of firefox, such as -5
+
+=back
+
+These parameters can be used to set a user agent string like so;
+
+    use Firefox::Marionette();
+    use strict;
+
+    my $firefox = Firefox::Marionette->new();
+    $firefox->agent(os => 'freebsd', version => 118);
+
+    # user agent is now equal to
+    # Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0
+
+If the C<stealth> parameter has supplied to the L<new|/new> method, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
 
 =over 4
 
