@@ -1823,6 +1823,15 @@ SKIP: {
 							vendorSub => '',
 							oscpu => 'NetBSD amd64',
 						},
+		'Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0' =>
+						{
+							platform => 'Linux s390x',
+							appVersion => '5.0 (X11)',
+							productSub => '20100101',
+							vendor => '',
+							vendorSub => '',
+							oscpu => 'Linux s390x',
+						},
 		'Mozilla/5.0 (X11; DragonFly x86_64; rv:108.0) Gecko/20100101 Firefox/108.0' =>
 						{
 							platform => 'DragonFly x86_64',

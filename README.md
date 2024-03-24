@@ -276,6 +276,7 @@ In addition, this method will accept a hash of values as parameters as well.  Wh
 
 - os - The desired operating system, known values are "linux", "win32", "darwin", "freebsd", "netbsd", "openbsd" and "dragonfly"
 - version - A specific version of firefox, such as 120.
+- arch - A specific version of the architecture, such as "x86\_64" or "aarch64" or "s390x".
 - increment - A specific offset from the actual version of firefox, such as -5
 
 These parameters can be used to set a user agent string like so;
@@ -288,6 +289,10 @@ These parameters can be used to set a user agent string like so;
 
     # user agent is now equal to
     # Mozilla/5.0 (X11; FreeBSD amd64; rv:109.0) Gecko/20100101 Firefox/118.0
+
+    $firefox->agent(os => 'linux', arch => 's390x', version => 115);
+    # user agent is now equal to
+    # Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0
 
 If the `stealth` parameter has supplied to the [new](#new) method, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
 
