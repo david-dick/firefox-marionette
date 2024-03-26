@@ -259,7 +259,7 @@ sub new {
             time, 0 );
         $profile->set_value( 'app.update.staging.enabled', 'false',      0 );
         $profile->set_value( 'app.update.timer',           '131400000',  0 );
-        $profile->set_value( 'beacon.enabled',             'false',      0 );
+        $profile->set_value( 'beacon.enabled',             'true',       0 );
         $profile->set_value( 'browser.aboutConfig.showWarning', 'false', 0 );
         $profile->set_value( 'browser.aboutHomeSnippets.updateUrl', q[], 1 );
         $profile->set_value( 'browser.beacon.enabled',          'false', 0 );
