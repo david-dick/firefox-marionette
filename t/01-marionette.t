@@ -1566,6 +1566,7 @@ SKIP: {
 }
 
 my $uname;
+my $arch;
 SKIP: {
 	diag("Starting new firefox for testing PDFs and script elements");
 	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_chrome.html));
@@ -1579,6 +1580,8 @@ SKIP: {
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
 	$uname = $firefox->uname();
 	ok($uname, "Firefox is currently running in $uname");
+	$arch = $firefox->arch();
+	ok($arch, "Firefox is currently running on $arch");
 	if ($major_version < 30) {
 		diag("Skipping WebGL as it can cause older browsers to hang");
 	} elsif ($firefox->script(q[let c = document.createElement('canvas'); return c.getContext('webgl2') ? true : c.getContext('experimental-webgl') ? true : false;])) {

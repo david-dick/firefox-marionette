@@ -1710,6 +1710,17 @@ _JS_
     return $self;
 }
 
+sub arch {
+    my ($self) = @_;
+    my $old    = $self->_context('chrome');
+    my $arch   = $self->script(<<'_JS_');
+return Services.appinfo.XPCOMABI;
+_JS_
+    $arch =~ s/\-.*+$//smx;    # stripping suffixes like x86_64-gcc3
+    $self->_context($old);
+    return $arch;
+}
+
 sub _bookmark_interface_preamble {
     my ($self) = @_;
 
@@ -12464,6 +12475,10 @@ This method returns true or false depending on if the Firefox process is still r
 =head2 application_type
 
 returns the application type for the Marionette protocol.  Should be 'gecko'.
+
+=head2 arch
+
+returns the architecture of the machine running firefox.  Should be something like 'x86_64' or 'arm'.  This is only intended for test suite support.
 
 =head2 aria_label
 

@@ -474,6 +474,12 @@ SUBROUTINES/METHODS
     returns the application type for the Marionette protocol. Should be
     'gecko'.
 
+ arch
+
+    returns the architecture of the machine running firefox. Should be
+    something like 'x86_64' or 'arm'. This is only intended for test suite
+    support.
+
  aria_label
 
     accepts an element as the parameter. It returns the ARIA label

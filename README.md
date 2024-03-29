@@ -314,6 +314,10 @@ This method returns true or false depending on if the Firefox process is still r
 
 returns the application type for the Marionette protocol.  Should be 'gecko'.
 
+## arch
+
+returns the architecture of the machine running firefox.  Should be something like 'x86\_64' or 'arm'.  This is only intended for test suite support.
+
 ## aria\_label
 
 accepts an [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the parameter.  It returns the [ARIA label](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-label) for the [element](https://metacpan.org/pod/Firefox::Marionette::Element).
