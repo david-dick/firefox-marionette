@@ -27,6 +27,7 @@ my $segv_detected;
 my $at_least_one_success;
 my $terminated;
 my $class;
+my $arch_32bit_re = qr/^(?:i[36]86|arm(?:hf|el)?)$/smxi;
 my $quoted_home_directory = quotemeta File::HomeDir->my_home();
 my $is_covering = !!(eval 'Devel::Cover::get_coverage()');
 
@@ -799,6 +800,8 @@ if ($ENV{FIREFOX_BINARY}) {
 my $correct_exit_status = 0;
 my $mozilla_pid_support;
 my $original_agent;
+my $uname;
+my $arch;
 SKIP: {
 	diag("Initial tests");
 	($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile, mime_types => [ 'application/pkcs10', 'application/pdf' ]);
@@ -820,6 +823,9 @@ SKIP: {
 	ok((!scalar grep { /^text\/html$/ } $firefox->mime_types()), "text/html should not be in mime_types");
 	my $capabilities = $firefox->capabilities();
 	ok(1, "\$capabilities->proxy() " . defined $capabilities->proxy() ? "shows an existing proxy setup" : "is undefined");
+	$original_agent = $firefox->agent();
+	$uname = $firefox->uname();
+	$arch = $firefox->arch();
 	diag("Browser version is " . $capabilities->browser_version());
 	if ($firefox->nightly()) {
 		diag($capabilities->browser_version() . " is a nightly release");
@@ -840,8 +846,11 @@ SKIP: {
 	$mozilla_pid_support = defined $capabilities->moz_process_id() ? 1 : 0;
 	diag("Firefox BuildID is " . ($capabilities->moz_build_id() || 'Unknown'));
 	diag("Addons are " . ($firefox->addons() ? 'working' : 'disabled'));
-	$original_agent = $firefox->agent();
 	diag("User Agent is $original_agent");
+	diag("uname is $uname");
+	diag("Arch is $arch");
+	ok($uname, "Firefox is currently running in $uname");
+	ok($arch, "Firefox is currently running on $arch");
 	if ($major_version > 50) {
 		ok($capabilities->platform_version(), "Firefox Platform version is " . $capabilities->platform_version());
 	}
@@ -1565,8 +1574,6 @@ SKIP: {
 	}
 }
 
-my $uname;
-my $arch;
 SKIP: {
 	diag("Starting new firefox for testing PDFs and script elements");
 	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_chrome.html));
@@ -1578,10 +1585,6 @@ SKIP: {
 		skip($skip_message, 6);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
-	$uname = $firefox->uname();
-	ok($uname, "Firefox is currently running in $uname");
-	$arch = $firefox->arch();
-	ok($arch, "Firefox is currently running on $arch");
 	if ($major_version < 30) {
 		diag("Skipping WebGL as it can cause older browsers to hang");
 	} elsif ($firefox->script(q[let c = document.createElement('canvas'); return c.getContext('webgl2') ? true : c.getContext('experimental-webgl') ? true : false;])) {
@@ -1611,6 +1614,8 @@ SKIP: {
 	if ($ENV{FIREFOX_HOST}) {
 	} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		diag("Skipping checks that use a file:// url b/c of OpenBSD's unveil functionality - see https://bugzilla.mozilla.org/show_bug.cgi?id=1580271");
+	} elsif ($arch =~ /$arch_32bit_re/smx) {
+		diag("aria tests can cause hangs in 32 bit architectures.  See debian failures such as https://tests.reproducible-builds.org/debian/rbuild/trixie/armhf/libfirefox-marionette-perl_1.53-1.rbuild.log.gz");
 	} elsif ($major_version >= 113) { # https://bugzilla.mozilla.org/show_bug.cgi?id=1585622
 		my $path = File::Spec->catfile(Cwd::cwd(), qw(t data aria.html));
 		if ($^O eq 'cygwin') {
@@ -2134,7 +2139,7 @@ SKIP: {
 			$new_session_cookie = github_session_cookie($firefox);
 			ok(defined $new_session_cookie, "The session cookie was found after clearing cache");
 			TODO: {
-				local $TODO = ($uname eq 'darwin') ? "Odd issues with clearing too many cookies on $uname" : q[];
+				local $TODO = ($uname eq 'darwin' || $arch =~ /$arch_32bit_re/smx) ? "Odd issues with clearing too many cookies on $uname ($arch)" : q[];
 				ok($old_session_cookie eq $new_session_cookie, "The same session cookie found after clearing network cache");
 			}
 		}
