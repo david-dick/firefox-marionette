@@ -1898,6 +1898,14 @@ SKIP: {
 				"\$firefox->agent(undef)                          should return 'libwww-perl/6.72'");
 		ok($agent eq 'libwww-perl/6.72',
 				"\$firefox->agent(undef)                             did return '$agent'");
+		$firefox->set_javascript(0);
+		ok(!$firefox->get_pref('javascript.enabled'), "Javascript is disabled for $agent");
+		$firefox->set_javascript(undef);
+		ok($firefox->get_pref('javascript.enabled'), "Javascript is enabled for $agent");
+		$firefox->set_javascript(0);
+		ok(!$firefox->get_pref('javascript.enabled'), "Javascript is disabled for $agent");
+		$firefox->set_javascript(1);
+		ok($firefox->get_pref('javascript.enabled'), "Javascript is enabled for $agent");
 		$agent = $firefox->agent(version => 120);
 		ok($agent eq $original_agent,
 				"\$firefox->agent(version => 120)                 should return '$original_agent'");

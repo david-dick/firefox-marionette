@@ -1985,6 +1985,10 @@ accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as th
 
 sends keys to the input field of a currently displayed modal message box
 
+## set\_javascript
+
+accepts a parameter for the the profile preference value of [javascript.enabled](https://support.mozilla.org/en-US/kb/javascript-settings-for-interactive-web-pages#w_for-advanced-users).  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## set\_pref
 
 accepts a [preference](http://kb.mozillazine.org/About:config) name and the new value to set it to.  See the [get\_pref](#get_pref) and [clear\_pref](#clear_pref) methods to get a preference value and to restore it to it's original value.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.

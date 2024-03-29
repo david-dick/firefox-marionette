@@ -2801,6 +2801,13 @@ SUBROUTINES/METHODS
     sends keys to the input field of a currently displayed modal message
     box
 
+ set_javascript
+
+    accepts a parameter for the the profile preference value of
+    javascript.enabled
+    <https://support.mozilla.org/en-US/kb/javascript-settings-for-interactive-web-pages#w_for-advanced-users>.
+    This method returns itself to aid in chaining methods.
+
  set_pref
 
     accepts a preference <http://kb.mozillazine.org/About:config> name and

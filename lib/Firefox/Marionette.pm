@@ -849,6 +849,19 @@ _SCRIPT_
     }
 }
 
+sub set_javascript {
+    my ( $self, $value ) = @_;
+    my $pref_name = 'javascript.enabled';
+    if ( defined $value ) {
+        $self->set_pref( $pref_name,
+            $self->_translate_to_json_boolean( $value ? 1 : 0 ) );
+    }
+    else {
+        $self->clear_pref($pref_name);
+    }
+    return $self;
+}
+
 sub downloaded {
     my ( $self, $path ) = @_;
     my $handle;
@@ -14253,6 +14266,10 @@ accepts a L<element|Firefox::Marionette::Element> as the first parameter and L<s
 =head2 send_alert_text
 
 sends keys to the input field of a currently displayed modal message box
+
+=head2 set_javascript
+
+accepts a parameter for the the profile preference value of L<javascript.enabled|https://support.mozilla.org/en-US/kb/javascript-settings-for-interactive-web-pages#w_for-advanced-users>.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 set_pref
 
