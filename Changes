@@ -1,6 +1,13 @@
 Revision history for Firefox-Marionette
 
-1.53  Sun Mar 03 16:33 2024
+1.54  Sun Mar 31 17:43 2024
+       Adding arch, set_javascript methods
+       Improvements for agent method
+       Skipping some tests on 32 bit architectures
+       Enabling Beacon API
+       Documentation and test suite fixes
+
+1.54  Sun Mar 03 16:33 2024
        Adding CLEAR_BOUNCE_TRACKING_PROTECTION_STATE
        Changes for agent method
        Documentation and test suite fixes

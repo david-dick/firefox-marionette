@@ -3,7 +3,7 @@ package Firefox::Marionette::Certificate;
 use strict;
 use warnings;
 
-our $VERSION = '1.53';
+our $VERSION = '1.54';
 
 sub _NUMBER_OF_MICROSECOND_DIGITS { return -6 }
 
@@ -179,7 +179,7 @@ Firefox::Marionette::Certificate - Represents a x509 Certificate from Firefox
 
 =head1 VERSION
 
-Version 1.53
+Version 1.54
 
 =head1 SYNOPSIS
 

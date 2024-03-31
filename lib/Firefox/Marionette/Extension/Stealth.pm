@@ -4,7 +4,7 @@ use Archive::Zip();
 use strict;
 use warnings;
 
-our $VERSION = '1.53';
+our $VERSION = '1.54';
 
 my $inject_name  = 'inject.js';
 my $content_name = 'content.js';
@@ -182,7 +182,7 @@ Firefox::Marionette::Extension::Stealth - Contains the Stealth Extension
 
 =head1 VERSION
 
-Version 1.53
+Version 1.54
 
 =head1 SYNOPSIS
 

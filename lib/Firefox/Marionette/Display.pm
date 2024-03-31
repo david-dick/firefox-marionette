@@ -3,7 +3,7 @@ package Firefox::Marionette::Display;
 use strict;
 use warnings;
 
-our $VERSION = '1.53';
+our $VERSION = '1.54';
 
 sub new {
     my ( $class, %parameters ) = @_;
@@ -60,7 +60,7 @@ Firefox::Marionette::Display - Represents a display from the displays method
 
 =head1 VERSION
 
-Version 1.53
+Version 1.54
 
 =head1 SYNOPSIS
 

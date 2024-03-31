@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use URI();
 
-our $VERSION = '1.53';
+our $VERSION = '1.54';
 
 sub _NUMBER_OF_MILLISECONDS_IN_A_SECOND { return 1000 }
 
@@ -155,7 +155,7 @@ Firefox::Marionette::UpdateStatus - Represents the resulting status of an Firefo
 
 =head1 VERSION
 
-Version 1.53
+Version 1.54
 
 =head1 SYNOPSIS
 
