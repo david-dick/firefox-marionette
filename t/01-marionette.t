@@ -27,7 +27,7 @@ my $segv_detected;
 my $at_least_one_success;
 my $terminated;
 my $class;
-my $arch_32bit_re = qr/^(?:i[36]86|arm(?:hf|el)?)$/smxi;
+my $arch_32bit_re = qr/^(?:x86|arm(?:hf|el)?)$/smxi;
 my $quoted_home_directory = quotemeta File::HomeDir->my_home();
 my $is_covering = !!(eval 'Devel::Cover::get_coverage()');
 
