@@ -42,7 +42,7 @@ our @EXPORT_OK = qw(
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK, );
 
-our $VERSION = '1.54';
+our $VERSION = '1.55';
 
 sub CLEAR_COOKIES                          { return 1 }
 sub CLEAR_NETWORK_CACHE                    { return 2 }
@@ -104,7 +104,7 @@ Firefox::Marionette::Cache - Constants to describe actions on the cache
 
 =head1 VERSION
 
-Version 1.54
+Version 1.55
 
 =head1 SYNOPSIS
 

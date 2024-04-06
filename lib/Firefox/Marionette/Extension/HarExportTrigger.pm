@@ -3,7 +3,7 @@ package Firefox::Marionette::Extension::HarExportTrigger;
 use strict;
 use warnings;
 
-our $VERSION = '1.54';
+our $VERSION = '1.55';
 
 sub as_string {
     return <<'_BASE64_';
@@ -573,7 +573,7 @@ Firefox::Marionette::Extension::HarExportTrigger - Contains the HAR Export Trigg
 
 =head1 VERSION
 
-Version 1.54
+Version 1.55
 
 =head1 SYNOPSIS
 
