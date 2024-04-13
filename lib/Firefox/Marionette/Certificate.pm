@@ -206,7 +206,7 @@ returns the common name from the certificate.  This can contain the domain name 
 
 =head2 db_key
 
-returns a unique value for the certificate, such as 'AAAAAAAAAAAAAAAQAAAAzS+A/iOMDiIPSGcSKJGHrLMwgcoxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5WZXJpU2lnbiwgSW5jLjEfMB0GA1UECxMWVmVyaVNpZ24gVHJ1c3QgTmV0d29yazE6MDgGA1UECxMxKGMpIDIwMDcgVmVyaVNpZ24sIEluYy4gLSBGb3IgYXV0aG9yaXplZCB1c2Ugb25seTFFMEMGA1UEAxM8VmVyaVNpZ24gQ2xhc3MgMyBQdWJsaWMgUHJpbWFyeSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eSAtIEc0'
+returns a unique value for the certificate.  This looks like a Base64 encoded string approximately 316 bytes long when encoded.
 
 =head2 display_name
 
