@@ -802,6 +802,8 @@ my $mozilla_pid_support;
 my $original_agent;
 my $uname;
 my $arch;
+my $nightly;
+my $developer;
 SKIP: {
 	diag("Initial tests");
 	($skip_message, $firefox) = start_firefox(0, debug => 1, profile => $profile, mime_types => [ 'application/pkcs10', 'application/pdf' ]);
@@ -828,9 +830,11 @@ SKIP: {
 	$arch = $firefox->arch();
 	diag("Browser version is " . $capabilities->browser_version());
 	if ($firefox->nightly()) {
+		$nightly = 1;
 		diag($capabilities->browser_version() . " is a nightly release");
 	}
 	if ($firefox->developer()) {
+		$developer = 1;
 		diag($capabilities->browser_version() . " is a developer release");
 	}
 	($major_version, $minor_version, $patch_version) = split /[.]/smx, $capabilities->browser_version();
@@ -3020,7 +3024,14 @@ SKIP: {
 
 SKIP: {
 	diag("Starting new firefox for testing custom headers");
-	($skip_message, $firefox) = start_firefox(0, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1), geo => URI->new($freeipapi_uri));
+	my %extra_parameters;
+	my $visible = 0;
+	if ($nightly || $developer) {
+		$visible = 1;
+		$extra_parameters{visible} = $visible;
+		diag("Forcing visible for nightly firefox to dodge issues with geo/har methods");
+	}
+	($skip_message, $firefox) = start_firefox($visible, har => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 1), geo => URI->new($freeipapi_uri), %extra_parameters);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
 	}
