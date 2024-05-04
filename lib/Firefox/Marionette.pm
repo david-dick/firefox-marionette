@@ -1897,11 +1897,19 @@ let bookmarkStatus = (async function(bookmarkArguments) {
     let rIconUrl = netUtil.NetUtil.newURI(iconUrl);
     if (bookmarkArguments["icon"]) {
       let icon = bookmarkArguments["icon"];
-      placesUtils.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-        rIconUrl,
-        icon,
-      );
-      let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
+      if (placesUtils.PlacesUtils.favicons.setFaviconForPage) {
+        let iconDataUrl = netUtil.NetUtil.newURI(icon);
+        placesUtils.PlacesUtils.favicons.setFaviconForPage(
+          url,
+          rIconUrl,
+          iconDataUrl
+        );
+      } else {
+        placesUtils.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+          rIconUrl,
+          icon
+        );
+        let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
           url,
           rIconUrl,
           false,
@@ -1909,6 +1917,7 @@ let bookmarkStatus = (async function(bookmarkArguments) {
           null,
           Services.scriptSecurityManager.getSystemPrincipal()
         );
+      }
     } else {
       let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
         url,
