@@ -20,7 +20,7 @@ q[return { getAvailability: function () { return new Promise((resolve, reject) =
     'Navigator.clearAppBadge' =>
       q[return new Promise((resolve, reject) => resolve(undefined))],
     'Navigator.connection' =>
-q[let downlink = (new Array(7.55, 1.6))[Math.floor(Math.random() * 2)]; let rtt = (new Array(0, 50, 100))[Math.floor(Math.random() * 3)]; let obj = { onchange: null, effectiveType: decodeURIComponent(\\x27%274g%27\\x27), rtt: rtt, downlink: downlink, saveData: false }; return new NetworkInformation(obj)],
+q[let downlink = (new Array(7.55, 1.6))[Math.floor(Math.random() * 2)]; let rtt = (new Array(50, 100))[Math.floor(Math.random() * 2)]; let obj = { onchange: null, effectiveType: decodeURIComponent(\\x27%274g%27\\x27), rtt: rtt, downlink: downlink, saveData: false }; return new NetworkInformation(obj)],
     'Navigator.deprecatedReplaceInURN' =>
 q[throw TypeError(decodeURIComponent(\\x27Failed to execute %27deprecatedReplaceInURN%27 on %27Navigator%27: Passed URL must be a valid URN URL.\\x27))],
     'Navigator.deprecatedURNtoURL' =>
