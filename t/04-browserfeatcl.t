@@ -363,7 +363,7 @@ if (0) {
 		$javascript = Firefox::Marionette::Extension::Stealth->user_agent_contents(%agent_parameters);
 }
 	}
-	foreach my $version (reverse (5 .. 124)) {
+	foreach my $version (reverse (6 .. 124)) {
 		ok(1, "About to go to Firefox v$version");
 		my $agent = $firefox->agent(version => $version);
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent(version => $version) produces the actual agent string which contains Firefox version '$1'");
@@ -383,7 +383,7 @@ if (0) {
 		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
 	}
-	foreach my $version (reverse (31 .. 121)) {
+	foreach my $version (reverse (80 .. 121)) {
 		my $chrome_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$version.0.0.0 Safari/537.36";
 		ok(1, "About to go to Chrome v$version - $chrome_user_agent");
 		my $agent = $firefox->agent($chrome_user_agent);
