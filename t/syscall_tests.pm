@@ -60,7 +60,11 @@ sub allow {
 sub run {
 	my ($class, $expected_error_as_posix) = @_;
 	my $cwd = Cwd::cwd();
-	%parameters = ( binary => File::Spec->catfile($cwd, 't', 'stub.pl'), har => 1 );
+	%parameters = (
+			binary => File::Spec->catfile($cwd, 't', 'stub.pl'),
+			har => 1,
+			stealth => 1,
+		);
 	my $success = 0;
 	while(!$success) {
 		$syscall_count = 0;
@@ -69,6 +73,7 @@ sub run {
 			$firefox->pdf();
 			$firefox->selfie();
 			$firefox->import_bookmarks(File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_empty.html)));
+		        $firefox->agent(version => 100);
 			my $final = $syscall_error_at_count;
 			$syscall_error_at_count = undef;
 			ok($syscall_count >= 0 && $firefox->quit() == 0, "Firefox exited okay after $final successful $function calls");

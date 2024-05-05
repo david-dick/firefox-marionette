@@ -47,6 +47,7 @@ use URI();
 use URI::Escape();
 use Time::HiRes();
 use Time::Local();
+use File::HomeDir();
 use File::Temp();
 use File::stat();
 use File::Spec::Unix();
@@ -144,6 +145,16 @@ sub _WATERFOX_CURRENT_VERSION_EQUIV {
 sub _WATERFOX_CLASSIC_VERSION_EQUIV {
     return 56;
 }    # https://github.com/MrAlex94/Waterfox/wiki/Versioning-Guidelines
+
+sub BCD_PATH {
+    my ($create) = @_;
+    my $directory = File::HomeDir->my_dist_data( 'Firefox-Marionette',
+        { defined $create && $create == 1 ? ( create => 1 ) : () } );
+    if ( defined $directory ) {
+        return File::Spec->catfile( $directory, 'bcd.json' );
+    }
+    else { return }
+}
 
 my $proxy_name_regex = qr/perl_ff_m_\w+/smx;
 my $tmp_name_regex   = qr/firefox_marionette_(?:remote|local)_\w+/smx;
@@ -511,7 +522,7 @@ sub _parse_user_agent {
 
     # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent#value
     if ( !defined $user_agent ) {
-        $user_agent = $self->{original_agent};
+        $user_agent = $self->_original_agent();
     }
     if (
         $user_agent =~ m{^
@@ -543,9 +554,17 @@ sub _parse_user_agent {
             $vendor     = 'Apple Computer, Inc.';
             $vendor_sub = q[];
         }
-        if ( $user_agent =~ /Win(?:32|64)/smx ) {
+        elsif ( $self->_is_trident_user_agent($user_agent) ) {
+            $app_version = $webkit_app;
+            $vendor      = q[];
+            $vendor_sub  = undef;
+        }
+        if ( $user_agent =~ /Win(?:32|64|dows)/smx ) {
             $platform = 'Win32';
             if ( $self->_is_chrome_user_agent($user_agent) ) {
+                $oscpu = undef;
+            }
+            elsif ( $self->_is_trident_user_agent($user_agent) ) {
                 $oscpu = undef;
             }
             else {
@@ -589,7 +608,8 @@ m/^$general_token_re$platform_re$gecko_version_re$gecko_trail_re$firefox_version
         ( $os_string, $rv_version, $firefox_version ) = ( $1, $2, $3 );
     }
     else {
-        Firefox::Marionette::Exception->throw('Failed to parse user agent');
+        Firefox::Marionette::Exception->throw(
+            'Failed to parse user agent:' . $original_string );
     }
     return ( $os_string, $rv_version, $firefox_version );
 }
@@ -705,7 +725,7 @@ sub agent {
     my $pref_name = 'general.useragent.override';
     my $old_agent =
       $self->script( $self->_compress_script('return navigator.userAgent') );
-    if ( !defined $self->{original_agent} ) {
+    if ( !defined $self->_original_agent() ) {
         $self->{original_agent} = $old_agent;
     }
     if ( ( scalar @new_list ) > 0 ) {
@@ -762,12 +782,12 @@ sub agent {
         $self->set_pref( 'privacy.donottrackheader.enabled', $false )
           ;    # trying to blend in with the most common options
         if ( $self->{stealth} ) {
+            my %agent_parameters = ( from => $old_agent, to => $user_agent );
             $self->script(
                 $self->_compress_script(
-                    <<'_JS_' . Firefox::Marionette::Extension::Stealth->user_agent_contents() ), args => [ $user_agent, $app_version, $platform, $vendor, $vendor_sub, $oscpu ] );
+                    <<'_JS_' . Firefox::Marionette::Extension::Stealth->user_agent_contents(%agent_parameters) ), args => [ $user_agent, $app_version, $platform, $vendor, $vendor_sub, $oscpu ] );
 {
   let navProto = Object.getPrototypeOf(window.navigator);
-  let winProto = Object.getPrototypeOf(window);
   Object.defineProperty(navProto, 'userAgent', {value: arguments[0], writable: true});
   Object.defineProperty(navProto, 'appVersion', {value: arguments[1], writable: true});
   Object.defineProperty(navProto, 'platform', {value: arguments[2], writable: true});
@@ -776,6 +796,11 @@ sub agent {
   Object.defineProperty(navProto, 'oscpu', {value: arguments[5], writable: true});
 }
 _JS_
+            $self->uninstall( delete $self->{stealth_extension} );
+            my $zip = Firefox::Marionette::Extension::Stealth->new(
+                $self->_original_agent(), $user_agent );
+            $self->{stealth_extension} =
+              $self->_install_extension_by_handle( $zip, 'stealth-0.0.1.xpi' );
         }
     }
 
@@ -4219,21 +4244,33 @@ sub _install_extension {
     close $handle
       or Firefox::Marionette::Exception->throw(
         "Failed to close '$path':$EXTENDED_OS_ERROR");
-    $self->install( $path, 1 );
-    return;
+    return $self->install( $path, 1 );
 }
 
 sub _install_extension_by_handle {
-    my ( $self, $module, $name ) = @_;
+    my ( $self, $zip, $name ) = @_;
     $self->_build_local_extension_directory();
-    my $zip = $module->new();
     my $path =
       File::Spec->catfile( $self->{_local_extension_directory}, $name );
-    $zip->writeToFileNamed($path) == Archive::Zip::AZ_OK()
+    unlink $path
+      or ( $OS_ERROR == POSIX::ENOENT() )
+      or Firefox::Marionette::Exception->throw(
+        "Failed to unlink '$path':$EXTENDED_OS_ERROR");
+    my $handle = FileHandle->new(
+        $path,
+        Fcntl::O_WRONLY() | Fcntl::O_CREAT() | Fcntl::O_EXCL(),
+        Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+      )
+      or Firefox::Marionette::Exception->throw(
+        "Failed to open '$path' for writing:$EXTENDED_OS_ERROR");
+    binmode $handle;
+    $zip->writeToFileHandle( $handle, 1 ) == Archive::Zip::AZ_OK()
       or Firefox::Marionette::Exception->throw(
         "Failed to write to '$path':$EXTENDED_OS_ERROR");
-    $self->install( $path, 1 );
-    return;
+    close $handle
+      or Firefox::Marionette::Exception->throw(
+        "Failed to close '$path':$EXTENDED_OS_ERROR");
+    return $self->install( $path, 1 );
 }
 
 sub _post_launch_checks_and_setup {
@@ -4243,9 +4280,15 @@ sub _post_launch_checks_and_setup {
         $self->timeouts($timeouts);
     }
     if ( $self->{stealth} ) {
-        $self->_install_extension_by_handle(
-            'Firefox::Marionette::Extension::Stealth',
-            'stealth-0.0.1.xpi' );
+        my $old_user_agent = $self->agent();
+        my $zip = Firefox::Marionette::Extension::Stealth->new($old_user_agent);
+        $self->{stealth_extension} =
+          $self->_install_extension_by_handle( $zip, 'stealth-0.0.1.xpi' );
+        $self->script(
+            $self->_compress_script(
+                Firefox::Marionette::Extension::Stealth->user_agent_contents()
+            )
+        );
     }
     if ( $self->{_har} ) {
         $self->_install_extension(
@@ -12136,6 +12179,12 @@ Version 1.55
 
 This is a client module to automate the Mozilla Firefox browser via the L<Marionette protocol|https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol>
 
+=head1 CONSTANTS
+
+=head2 BCD_PATH
+
+returns the local path used for storing the brower compability data for the L<agent|/agent> method when the <code>stealth</code> parameter is supplied to the L<new|/new> method.  This database is built by the build-bcd-for-firefox binary.
+
 =head1 SUBROUTINES/METHODS
 
 =head2 accept_alert
@@ -12459,7 +12508,7 @@ These parameters can be used to set a user agent string like so;
     # user agent is now equal to
     # Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0
 
-If the C<stealth> parameter has supplied to the L<new|/new> method, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
+If the C<stealth> parameter has supplied to the L<new|/new> method, it will also attempt to delete/provide dummy implementations for number of L<javascript attributes|https://github.com/mdn/browser-compat-data> to match the desired browser.  The following websites have been very useful in testing these ideas;
 
 =over 4
 
@@ -12469,7 +12518,11 @@ If the C<stealth> parameter has supplied to the L<new|/new> method, it will also
 
 =item * L<https://bot.sannysoft.com/>
 
+=item * L<https://lraj22.github.io/browserfeatcl/>
+
 =back
+
+Importantly, this will break L<feature detection|https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Cross_browser_testing/Feature_detection> for any website that relies on it.
 
 See L<IMITATING OTHER BROWSERS|/IMITATING-OTHER-BROWSERS> a discussion of these types of techniques.  These changes are not foolproof, but it is interesting to see what can be done with modern browsers.  All this behaviour should be regarded as extremely experimental and subject to change.  Feedback welcome.
 
@@ -14815,7 +14868,7 @@ This list of methods may grow.
 
 Marionette L<by design|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> allows web sites to detect that the browser is being automated.  Firefox L<no longer (since version 88)|https://bugzilla.mozilla.org/show_bug.cgi?id=1632821> allows you to disable this functionality while you are automating the browser, but this can be overridden with the C<stealth> parameter for the L<new|/new> method.  This is extremely experimental and feedback is welcome.
 
-If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
+If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.  I would be very interested if you can supply a test case.
 
 At the very least, under these circumstances, it would be a good idea to be aware that there's an L<ongoing arms race|https://en.wikipedia.org/wiki/Web_scraping#Methods_to_prevent_web_scraping>, and potential L<legal issues|https://en.wikipedia.org/wiki/Web_scraping#Legal_issues> in this area.
 

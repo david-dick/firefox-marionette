@@ -49,6 +49,7 @@ MAIN: {
 	my $capability_length = length $capabilities;
 	syswrite $client, $capability_length . q[:] . $capabilities or die "Failed to write to socket:$!";
 	my $context = "content";
+	my $addon_number = 0;
 	while(1) {
 		$request = _get_request($client);
 		my $message_id = $request->[1];
@@ -57,7 +58,13 @@ MAIN: {
 			_send_response_body($client, $response_body);
 			last;
 		} elsif ($request->[2] eq 'Addon:Install') {
-			syswrite $client, qq(79:[$response_type,$message_id,null,{"value":"6eea9fdc37a5d8fbcbbecd57ee7272669e828a31\@temporary-addon"}]) or die "Failed to write to socket:$!";
+			$addon_number += 1;
+			my $response_body = qq([$response_type,$message_id,null,{"value":"6eea9fdc37a5d8fbcbbecd57ee7272669e828a3${addon_number}\@temporary-addon"}]);
+			_send_response_body($client, $response_body);
+		} elsif ($request->[2] eq 'Addon:Uninstall') {
+			$addon_number += 1;
+			my $response_body = qq([$response_type,$message_id,null,{"value":null}]);
+			_send_response_body($client, $response_body);
 		} elsif ($request->[2] eq 'WebDriver:Print') {
 			syswrite $client, qq(1475:[$response_type,$message_id,null,{"value":"JVBERi0xLjUKJbXtrvsKNCAwIG9iago8PCAvTGVuZ3RoIDUgMCBSCiAgIC9GaWx0ZXIgL0ZsYXRlRGVjb2RlCj4+CnN0cmVhbQp4nDNUMABCXUMgYW5ppJCcy1XIFahQyGVkoWdsaqQApUxNTfWMDQwVzI0hdFGqQrhCHpehAggWpSvoJxoopBcT1pTGFcgFACsfF2cKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCiAgIDc1CmVuZG9iagozIDAgb2JqCjw8CiAgIC9FeHRHU3RhdGUgPDwKICAgICAgL2EwIDw8IC9DQSAxIC9jYSAxID4+CiAgID4+Cj4+CmVuZG9iago2IDAgb2JqCjw8IC9UeXBlIC9PYmpTdG0KICAgL0xlbmd0aCA3IDAgUgogICAvTiAxCiAgIC9GaXJzdCA0CiAgIC9GaWx0ZXIgL0ZsYXRlRGVjb2RlCj4+CnN0cmVhbQp4nD3NMQvCMBQE4L2/4hbnJlEUIXRoC8VBkOgmDiU+pEsSkkbsvzeJ1PG+d7wTYJWUqG+LI9SX8UXYgFdADp7MDA4GVeBMz2ls7Qf3RAx7LnA4CjzKsbNmTvWA3b8/eBsdpMwh599G0ZWuSf1ogstbeln5hNlHWlOXWj29J01qaDM2TfmvKNjoNQVsy2biL4KVMvQKZW5kc3RyZWFtCmVuZG9iago3IDAgb2JqCiAgIDE0NwplbmRvYmoKOCAwIG9iago8PCAvVHlwZSAvT2JqU3RtCiAgIC9MZW5ndGggMTEgMCBSCiAgIC9OIDMKICAgL0ZpcnN0IDE2CiAgIC9GaWx0ZXIgL0ZsYXRlRGVjb2RlCj4+CnN0cmVhbQp4nE2PTQvCMBBE7/kVc7NFaHZrxQ+kF8WLCCLexEOosQZKt6QR1F+vRgSvs/OWNwxSM4xJMYGnrBYL6MOjs9A7U9teAdAbd+5xRA7CHqcYLeXWBrAqy0jsvJxvlfVIKuO8gDOeZAWSawhdP9c6prU33dVVfSa+TtPvG29NkDe2ladrGoO18/Yi97+rk3ZlgkWymueUj2jMIybiohgyDYjSn8JXemmCaaSOeBwA/lh/Si9o4j6UCmVuZHN0cmVhbQplbmRvYmoKMTEgMCBvYmoKICAgMTgxCmVuZG9iagoxMiAwIG9iago8PCAvVHlwZSAvWFJlZgogICAvTGVuZ3RoIDU3CiAgIC9GaWx0ZXIgL0ZsYXRlRGVjb2RlCiAgIC9TaXplIDEzCiAgIC9XIFsxIDIgMl0KICAgL1Jvb3QgMTAgMCBSCiAgIC9JbmZvIDkgMCBSCj4+CnN0cmVhbQp4nBXKQQ0AIAwEwW1LCLyQgB1cIA8TeIPrZ7K5HPCe08CpYNxkJEdYEd6TmZemEG6xtMWGD8f2BIAKZW5kc3RyZWFtCmVuZG9iagpzdGFydHhyZWYKODYzCiUlRU9GCg=="}]) or die "Failed to write to socket:$!";
 		} elsif ($request->[2] eq 'WebDriver:TakeScreenshot') {
@@ -69,8 +76,15 @@ MAIN: {
 			my $response_body = qq([$response_type,$message_id,null,{"value":null}]);
 			_send_response_body($client, $response_body);
 		} elsif ($request->[2] eq 'WebDriver:ExecuteScript') {
-			my $now = time;
-			my $response_body = qq([$response_type,$message_id,null,{"value":{"guid":"root________","index":0,"type":2,"title":"","dateAdded":$now,"lastModified":$now,"childCount":5}}]);
+			my $response_body;
+			if ($request->[3]->{script} eq 'return navigator.userAgent') {
+				my $trimmed_browser_version = $browser_version;
+				$trimmed_browser_version =~ s/^(\d+(?:[.]\d+)?).*$/$1/smx;
+				$response_body = qq([$response_type,$message_id,null,{"value":"Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/$trimmed_browser_version"}]);
+			} else {
+				my $now = time;
+				$response_body = qq([$response_type,$message_id,null,{"value":{"guid":"root________","index":0,"type":2,"title":"","dateAdded":$now,"lastModified":$now,"childCount":5}}]);
+			}
 			_send_response_body($client, $response_body);
 		} else {
 			die "Unsupported method in stub firefox";

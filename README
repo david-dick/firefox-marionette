@@ -34,6 +34,15 @@ DESCRIPTION
     Marionette protocol
     <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol>
 
+CONSTANTS
+
+ BCD_PATH
+
+    returns the local path used for storing the brower compability data for
+    the agent method when the <code>stealth</code> parameter is supplied to
+    the new method. This database is built by the build-bcd-for-firefox
+    binary.
+
 SUBROUTINES/METHODS
 
  accept_alert
@@ -445,15 +454,22 @@ SUBROUTINES/METHODS
         # Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0
 
     If the stealth parameter has supplied to the new method, it will also
-    attempt to change a number of javascript attributes to match the
-    desired browser. The following websites have been very useful in
-    testing these ideas;
+    attempt to delete/provide dummy implementations for number of
+    javascript attributes <https://github.com/mdn/browser-compat-data> to
+    match the desired browser. The following websites have been very useful
+    in testing these ideas;
 
       * https://browserleaks.com/javascript
 
       * https://www.amiunique.org/fingerprint
 
       * https://bot.sannysoft.com/
+
+      * https://lraj22.github.io/browserfeatcl/
+
+    Importantly, this will break feature detection
+    <https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Cross_browser_testing/Feature_detection>
+    for any website that relies on it.
 
     See IMITATING OTHER BROWSERS a discussion of these types of techniques.
     These changes are not foolproof, but it is interesting to see what can
@@ -3512,7 +3528,7 @@ WEBSITES THAT BLOCK AUTOMATION
     If the web site you are trying to automate mysteriously fails when you
     are automating a workflow, but it works when you perform the workflow
     manually, you may be dealing with a web site that is hostile to
-    automation.
+    automation. I would be very interested if you can supply a test case.
 
     At the very least, under these circumstances, it would be a good idea
     to be aware that there's an ongoing arms race

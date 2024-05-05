@@ -550,6 +550,8 @@ sub new {
     my $username       = $parameters{username};
     my $password       = $parameters{password};
     my $realm          = $parameters{realm};
+    my $root_name      = $parameters{htdocs};
+    my $index_name     = $parameters{index};
     my $port           = $class->new_port();
     my $base_directory = $class->tmp_directory('nginx');
     my $passwd_path =
@@ -565,26 +567,36 @@ sub new {
         my $certificate_handle =
           $ca->new_cert( $key_path, $listen, $certificate_path );
     }
-    my $root_name = 'htdocs';
-    my $root_directory =
-      File::Spec->catfile( $base_directory->dirname(), $root_name );
-    mkdir $root_directory, Fcntl::S_IRWXU()
-      or Carp::croak("Failed to mkdir $root_directory:$EXTENDED_OS_ERROR");
-    my $index_name      = 'index.txt';
-    my $index_file_path = File::Spec->catfile( $root_directory, $index_name );
-    my $index_handle    = FileHandle->new(
-        $index_file_path,
-        Fcntl::O_WRONLY() | Fcntl::O_EXCL() | Fcntl::O_CREAT(),
-        Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
-    ) or Carp::croak("Failed to open $index_file_path:$EXTENDED_OS_ERROR");
-    my $random_string =
-      MIME::Base64::encode_base64(
-        Crypt::URandom::urandom( _RANDOM_STRING_LENGTH() ) );
-    chomp $random_string;
-    print {$index_handle} $random_string
-      or Carp::croak("Failed to write to $index_file_path:$EXTENDED_OS_ERROR");
-    close $index_handle
-      or Carp::croak("Failed to close $index_file_path:$EXTENDED_OS_ERROR");
+    my $random_string;
+    if ( !$root_name ) {
+        $root_name = 'htdocs';
+        my $root_directory =
+          File::Spec->catfile( $base_directory->dirname(), $root_name );
+        mkdir $root_directory, Fcntl::S_IRWXU()
+          or Carp::croak("Failed to mkdir $root_directory:$EXTENDED_OS_ERROR");
+        if ( !$index_name ) {
+            $index_name = 'index.txt';
+            my $index_file_path =
+              File::Spec->catfile( $root_directory, $index_name );
+            my $index_handle = FileHandle->new(
+                $index_file_path,
+                Fcntl::O_WRONLY() | Fcntl::O_EXCL() | Fcntl::O_CREAT(),
+                Fcntl::S_IRUSR() | Fcntl::S_IWUSR()
+              )
+              or
+              Carp::croak("Failed to open $index_file_path:$EXTENDED_OS_ERROR");
+            $random_string =
+              MIME::Base64::encode_base64(
+                Crypt::URandom::urandom( _RANDOM_STRING_LENGTH() ) );
+            chomp $random_string;
+            print {$index_handle} $random_string
+              or Carp::croak(
+                "Failed to write to $index_file_path:$EXTENDED_OS_ERROR");
+            close $index_handle
+              or Carp::croak(
+                "Failed to close $index_file_path:$EXTENDED_OS_ERROR");
+        }
+    }
     my $pid_path =
       File::Spec->catfile( $base_directory->dirname(), 'nginx.pid' );
     my $pid_handle = FileHandle->new(
@@ -640,6 +652,12 @@ http {
     keepalive_timeout       65;
     types_hash_max_size     4096;
 
+    types {
+        text/html           html;
+        text/javascript     js;
+        text/css            css;
+        application/json    json;
+    }
     default_type            text/plain;
 
     server  {

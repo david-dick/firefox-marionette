@@ -41,6 +41,7 @@ MANIFEST			This list of files
 LICENSE
 README
 README.md
+build-bcd-for-firefox
 ca-bundle-for-firefox
 check-firefox-certificate-authorities
 mozilla-head-check
@@ -80,6 +81,7 @@ t/03-seek.t
 t/03-stat.t
 t/03-sysopen.t
 t/04-botd.t
+t/04-browserfeatcl.t
 t/04-fingerprint.t
 t/04-proxy.t
 t/04-webauthn.t

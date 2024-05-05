@@ -19,6 +19,7 @@ ok_manifest({filter => [qr/(?:
 				fingerprintjs|
 				servers[.]csv|
 				BotD|
+				browserfeatcl|
 				package\-lock[.]json|
 				MYMETA[.]json[.]lock
 			)/smx]});

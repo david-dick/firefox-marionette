@@ -31,6 +31,12 @@ Version 1.55
 
 This is a client module to automate the Mozilla Firefox browser via the [Marionette protocol](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol)
 
+# CONSTANTS
+
+## BCD\_PATH
+
+returns the local path used for storing the brower compability data for the [agent](#agent) method when the &lt;code>stealth&lt;/code> parameter is supplied to the [new](#new) method.  This database is built by the build-bcd-for-firefox binary.
+
 # SUBROUTINES/METHODS
 
 ## accept\_alert
@@ -294,11 +300,14 @@ These parameters can be used to set a user agent string like so;
     # user agent is now equal to
     # Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0
 
-If the `stealth` parameter has supplied to the [new](#new) method, it will also attempt to change a number of javascript attributes to match the desired browser.  The following websites have been very useful in testing these ideas;
+If the `stealth` parameter has supplied to the [new](#new) method, it will also attempt to delete/provide dummy implementations for number of [javascript attributes](https://github.com/mdn/browser-compat-data) to match the desired browser.  The following websites have been very useful in testing these ideas;
 
 - [https://browserleaks.com/javascript](https://browserleaks.com/javascript)
 - [https://www.amiunique.org/fingerprint](https://www.amiunique.org/fingerprint)
 - [https://bot.sannysoft.com/](https://bot.sannysoft.com/)
+- [https://lraj22.github.io/browserfeatcl/](https://lraj22.github.io/browserfeatcl/)
+
+Importantly, this will break [feature detection](https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Cross_browser_testing/Feature_detection) for any website that relies on it.
 
 See [IMITATING OTHER BROWSERS](#imitating-other-browsers) a discussion of these types of techniques.  These changes are not foolproof, but it is interesting to see what can be done with modern browsers.  All this behaviour should be regarded as extremely experimental and subject to change.  Feedback welcome.
 
@@ -2493,7 +2502,7 @@ This list of methods may grow.
 
 Marionette [by design](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver) allows web sites to detect that the browser is being automated.  Firefox [no longer (since version 88)](https://bugzilla.mozilla.org/show_bug.cgi?id=1632821) allows you to disable this functionality while you are automating the browser, but this can be overridden with the `stealth` parameter for the [new](#new) method.  This is extremely experimental and feedback is welcome.
 
-If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.
+If the web site you are trying to automate mysteriously fails when you are automating a workflow, but it works when you perform the workflow manually, you may be dealing with a web site that is hostile to automation.  I would be very interested if you can supply a test case.
 
 At the very least, under these circumstances, it would be a good idea to be aware that there's an [ongoing arms race](https://en.wikipedia.org/wiki/Web_scraping#Methods_to_prevent_web_scraping), and potential [legal issues](https://en.wikipedia.org/wiki/Web_scraping#Legal_issues) in this area.
 
