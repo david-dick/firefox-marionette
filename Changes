@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.56  Sun May 05 19:16 2024
+       Using mdn/browser-compat-data for stealth
+       Bookmark fixes for firefox changes
+       Documentation fix for debian lintian
+
 1.55  Sat Apr 06 12:22 2024
        Fixing 32 bit architecture test regex for x86
 
