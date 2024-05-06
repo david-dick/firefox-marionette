@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.57  Mon May 06 19:45 2024
+       Setting minimum perl version to 5.10
+
 1.56  Sun May 05 19:16 2024
        Using mdn/browser-compat-data for stealth
        Bookmark fixes for firefox changes
