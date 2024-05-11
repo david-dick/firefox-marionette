@@ -355,13 +355,6 @@ SKIP: {
 		$javascript = Firefox::Marionette::Extension::Stealth->user_agent_contents(%agent_parameters);
 		ok($javascript =~ /delete[ ]window[.]ContentVisibilityAutoStateChangeEvent/, "Extension code includes ContentVisibilityAutoStateChangeEvent");
 		ok($javascript =~ /delete[ ]window[.]ShadowRoot/, "Extension code includes ShadowRoot");
-if (0) {
-		%agent_parameters = (
-					from => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-					to => 'Mozilla/5.0 (X11; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0',
-				);
-		$javascript = Firefox::Marionette::Extension::Stealth->user_agent_contents(%agent_parameters);
-}
 	}
 	foreach my $version (reverse (6 .. 124)) {
 		ok(1, "About to go to Firefox v$version");
