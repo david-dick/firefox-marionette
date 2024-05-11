@@ -105,8 +105,11 @@ sub _content_contents {
 _JS_
 }
 
+my $_function_definition_count = 1;
+
 sub user_agent_contents {
     my ( $class, %parameters ) = @_;
+    $_function_definition_count = 1;
     my ( $definition_name, $function_definition ) =
       $class->_get_js_function_definition( 'webdriver', 'return false' );
     my $contents = <<"_JS_";
@@ -290,8 +293,6 @@ _JS_
 _JS_
     return $contents;
 }
-
-my $_function_definition_count = 1;
 
 sub _get_js_function_definition {
     my ( $class, $name, $function_body ) = @_;
