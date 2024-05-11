@@ -356,6 +356,7 @@ SKIP: {
 		ok($javascript =~ /delete[ ]window[.]ContentVisibilityAutoStateChangeEvent/, "Extension code includes ContentVisibilityAutoStateChangeEvent");
 		ok($javascript =~ /delete[ ]window[.]ShadowRoot/, "Extension code includes ShadowRoot");
 	}
+	my $nightly_failures_found = 0;
 	foreach my $version (reverse (6 .. 124)) {
 		ok(1, "About to go to Firefox v$version");
 		my $agent = $firefox->agent(version => $version);
@@ -366,12 +367,32 @@ SKIP: {
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent() contains Firefox version '$1' in the agent string (real version is " . $firefox->browser_version() . ")");
 		my $test_result_version = $1;
 		my $extracted_report = $firefox->await(sub { $firefox->has_class('success') or $firefox->has_class('error') })->text();
-		ok($extracted_report =~ /You[']re[ ]using[ ]Firefox[ ](\d+)(?:[.]\d+)?(?:[ ]\-[ ](\d+)(?:[.]9)?[!])?/smx, "browserfeatcl reports '$extracted_report' which matches Firefox");
-		my ($min_version, $max_version) = ($1, $2);
-		if (defined $max_version) {
-			ok($min_version <= $version && $version <= $max_version, "browserfeatcl matches between $min_version and $max_version which includes fake version '$version'");
-		} else {
-			ok($min_version == $version, "browserfeatcl matches $min_version which equals fake version '$version'");
+		TODO: {
+			local $TODO = $firefox->nightly() ? "Nightly releases may break feature detection from browser-compat-data" : q[];
+			ok($extracted_report =~ /You[']re[ ]using[ ]Firefox[ ](\d+)(?:[.]\d+)?(?:[ ]\-[ ](\d+)(?:[.]9)?[!])?/smx, "browserfeatcl reports '$extracted_report' which matches Firefox");
+			my ($min_version, $max_version) = ($1, $2);
+			if (defined $max_version) {
+				my $result;
+				if ($min_version <= $version && $version <= $max_version) {
+					$result = 1;
+				} elsif ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok($result, "browserfeatcl matches between $min_version and $max_version which includes fake version '$version'");
+			} elsif (defined $min_version) {
+				my $result;
+				if ($min_version == $version) {
+					$result = 1;
+				} elsif ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok($result, "browserfeatcl matches $min_version which equals fake version '$version'");
+			} else {
+				if ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok(0, "browserfeatcl failed to output any version when looking for fake version '$version'");
+			}
 		}
 		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
@@ -386,12 +407,32 @@ SKIP: {
 		$agent = $firefox->agent();
 		ok($agent =~ /Chrome\/$version/smx, "\$firefox->agent() contains Chrome version '$version' in the agent string (real version is Firefox v" . $firefox->browser_version() . ")");
 		my $extracted_report = $firefox->await(sub { $firefox->has_class('success') or $firefox->has_class('error') })->text();
-		ok($extracted_report =~ /You[']re[ ]using[ ]Chrom(?:e|ium)[ ](\d+)(?:[.]\d+)?(?:[ ]\-[ ](\d+)[!])?/smx, "browserfeatcl reports '$extracted_report' which matches Chrome");
-		my ($min_version, $max_version) = ($1, $2);
-		if (defined $max_version) {
-			ok($min_version <= $version && $version <= $max_version, "browserfeatcl matches between $min_version and $max_version which includes fake version '$version'");
-		} else {
-			ok($min_version == $version, "browserfeatcl matches $min_version which equals fake version '$version'");
+		TODO: {
+			local $TODO = $firefox->nightly() ? "Nightly releases may break feature detection from browser-compat-data" : q[];
+			ok($extracted_report =~ /You[']re[ ]using[ ]Chrom(?:e|ium)[ ](\d+)(?:[.]\d+)?(?:[ ]\-[ ](\d+)[!])?/smx, "browserfeatcl reports '$extracted_report' which matches Chrome");
+			my ($min_version, $max_version) = ($1, $2);
+			if (defined $max_version) {
+				my $result;
+				if ($min_version <= $version && $version <= $max_version) {
+					$result = 1;
+				} elsif ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok($result, "browserfeatcl matches between $min_version and $max_version which includes fake version '$version'");
+			} elsif (defined $min_version) {
+				my $result;
+				if ($min_version == $version) {
+					$result = 1;
+				} elsif ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok($result, "browserfeatcl matches $min_version which equals fake version '$version'");
+			} else {
+				if ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok(0, "browserfeatcl failed to output any version when looking for fake version '$version'");
+			}
 		}
 		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
@@ -406,15 +447,38 @@ SKIP: {
 		$agent = $firefox->agent();
 		ok($agent =~ /Version\/$version[ ]Safari\/(\d+)/smx, "\$firefox->agent() contains Safari version '$version' in the agent string (real version is Firefox v" . $firefox->browser_version() . ")");
 		my $extracted_report = $firefox->await(sub { $firefox->has_class('success') or $firefox->has_class('error') })->text();
-		ok($extracted_report =~ /You[']re[ ]using[ ]Safari[ ](\d+)(?:[.]\d+)?(?:[ ]\-[ ](\d+)[.]9[!])?/smx, "browserfeatcl reports '$extracted_report' which matches Safari");
-		my ($min_version, $max_version) = ($1, $2);
-		if (defined $max_version) {
-			ok($min_version <= $version && $version <= $max_version, "browserfeatcl matches between $min_version and $max_version which includes fake version '$version'");
-		} else {
-			ok($min_version == $version, "browserfeatcl matches $min_version which equals fake version '$version'");
+		TODO: {
+			local $TODO = $firefox->nightly() ? "Nightly releases may break feature detection from browser-compat-data" : q[];
+			ok($extracted_report =~ /You[']re[ ]using[ ]Safari[ ](\d+)(?:[.]\d+)?(?:[ ]\-[ ](\d+)[.]9[!])?/smx, "browserfeatcl reports '$extracted_report' which matches Safari");
+			my ($min_version, $max_version) = ($1, $2);
+			if (defined $max_version) {
+				my $result;
+				if ($min_version <= $version && $version <= $max_version) {
+					$result = 1;
+				} elsif ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok($result, "browserfeatcl matches between $min_version and $max_version which includes fake version '$version'");
+			} elsif (defined $min_version) {
+				my $result;
+				if ($min_version == $version) {
+					$result = 1;
+				} elsif ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok($result, "browserfeatcl matches $min_version which equals fake version '$version'");
+			} else {
+				if ($firefox->nightly()) {
+					$nightly_failures_found += 1;
+				}
+				ok(0, "browserfeatcl failed to output any version when looking for fake version '$version'");
+			}
 		}
 		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
+	}
+	if ($nightly_failures_found) {
+		diag("$nightly_failures_found nightly failures have been found");
 	}
 	ok($firefox->quit() == 0, "\$firefox->quit() was successful()");
 	ok($nginx->stop() == 0, "Stopped nginx on $nginx_listen:" . $nginx->port());
