@@ -788,12 +788,12 @@ sub agent {
                     <<'_JS_' . Firefox::Marionette::Extension::Stealth->user_agent_contents(%agent_parameters) ), args => [ $user_agent, $app_version, $platform, $vendor, $vendor_sub, $oscpu ] );
 {
   let navProto = Object.getPrototypeOf(window.navigator);
-  Object.defineProperty(navProto, 'userAgent', {value: arguments[0], writable: true});
-  Object.defineProperty(navProto, 'appVersion', {value: arguments[1], writable: true});
-  Object.defineProperty(navProto, 'platform', {value: arguments[2], writable: true});
-  Object.defineProperty(navProto, 'vendor', {value: arguments[3], writable: true});
-  Object.defineProperty(navProto, 'vendorSub', {value: arguments[4], writable: true});
-  Object.defineProperty(navProto, 'oscpu', {value: arguments[5], writable: true});
+  Object.defineProperty(navProto, 'userAgent', {value: arguments[0], writable: true, configurable: true});
+  Object.defineProperty(navProto, 'appVersion', {value: arguments[1], writable: true, configurable: true});
+  Object.defineProperty(navProto, 'platform', {value: arguments[2], writable: true, configurable: true});
+  Object.defineProperty(navProto, 'vendor', {value: arguments[3], writable: true, configurable: true});
+  Object.defineProperty(navProto, 'vendorSub', {value: arguments[4], writable: true, configurable: true});
+  Object.defineProperty(navProto, 'oscpu', {value: arguments[5], writable: true, configurable: true});
 }
 _JS_
             $self->uninstall( delete $self->{stealth_extension} );

@@ -9,7 +9,8 @@ use warnings;
 
 our $VERSION = '1.57';
 
-sub _BUFFER_SIZE { return 65_536 }
+sub _BUFFER_SIZE  { return 65_536 }
+sub _MSIE_VERSION { return 11 }
 
 my $content_name = 'content.js';
 
@@ -107,8 +108,46 @@ _JS_
 
 my $_function_definition_count = 1;
 
+sub _get_browser_type_and_version {
+    my ( $class, $user_agent_string ) = @_;
+    my ( $browser_type, $browser_version );
+    if ( $user_agent_string =~ /Chrome\/(\d+)/smx ) {
+        ( $browser_type, $browser_version ) = ( 'chrome', $1 );
+        if ( $user_agent_string =~ /Edg(?:[eA]|iOS)?\/(\d+)/smx ) {
+            ( $browser_type, $browser_version ) = ( 'edge', $1 );
+        }
+        elsif ( $user_agent_string =~ /(?:Opera|Presto|OPR)\/(\d+)/smx ) {
+            ( $browser_type, $browser_version ) = ( 'opera', $1 );
+        }
+    }
+    elsif (
+        $user_agent_string =~ /Version\/(\d+)(?:[.]\d+)?[ ].*Safari\/\d+/smx )
+    {
+        ( $browser_type, $browser_version ) = ( 'safari', $1 );
+    }
+    elsif ( $user_agent_string =~ /Trident/smx ) {
+        ( $browser_type, $browser_version ) = ( 'ie', _MSIE_VERSION() );
+    }
+    my $general_token_re   = qr/Mozilla\/5[.]0[ ]/smx;
+    my $platform_etc_re    = qr/[(][^)]+[)][ ]/smx;
+    my $gecko_trail_re     = qr/Gecko\/20100101[ ]/smx;
+    my $firefox_version_re = qr/Firefox\/(\d+)[.]0/smx;
+    if ( $user_agent_string =~
+/^$general_token_re$platform_etc_re$gecko_trail_re$firefox_version_re$/smx
+      )
+    {
+        ( $browser_type, $browser_version ) = ( 'firefox', $1 );
+    }
+    return ( $browser_type, $browser_version );
+}
+
 sub user_agent_contents {
     my ( $class, %parameters ) = @_;
+    my ( $to_browser_type, $to_browser_version );
+    if ( defined $parameters{to} ) {
+        ( $to_browser_type, $to_browser_version ) =
+          $class->_get_browser_type_and_version( $parameters{to} );
+    }
     $_function_definition_count = 1;
     my ( $definition_name, $function_definition ) =
       $class->_get_js_function_definition( 'webdriver', 'return false' );
@@ -123,16 +162,18 @@ sub user_agent_contents {
   Object.defineProperty(navProto, "webdriver", {get: $definition_name, enumerable: false, configurable: true});
   let getUserMedia = window.navigator.mozGetUserMedia;
 _JS_
-    my $from_user_agent_string = $parameters{from};
-    my $to_user_agent_string   = $parameters{to};
-    if ( defined $to_user_agent_string ) {
-        my ( $from_browser_type, $from_browser_version );
-        my ( $to_browser_type,   $to_browser_version );
-        if ( $to_user_agent_string =~ /Chrome\/(\d+)/smx ) {
-            ( $to_browser_type, $to_browser_version ) = ( 'chrome', $1 );
+    my ( $from_browser_type, $from_browser_version );
+    if ( defined $to_browser_type ) {
+        ( $from_browser_type, $from_browser_version ) =
+          $class->_get_browser_type_and_version( $parameters{from} );
+        if (   ( $to_browser_type eq 'chrome' )
+            || ( $to_browser_type eq 'edge' )
+            || ( $to_browser_type eq 'opera' ) )
+        {
             $contents .= <<'_JS_';
-  Object.defineProperty(navProto, "vendor", {value: "Google Inc.", writable: true});
-  Object.defineProperty(navProto, "productSub", {value: "20030107", writable: true});
+  Object.defineProperty(navProto, "vendor", {value: "Google Inc.", writable: true, configurable: true});
+  Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
+  Object.defineProperty(navProto, "productSub", {value: "20030107", writable: true, configurable: true});
   delete navProto.oscpu;
   let chrome = {
                   csi: function () { },
@@ -167,25 +208,22 @@ _JS_
                   app: function () { },
                   runtime: { connect: function() { }, sendMessage: function() { } }
                };
-  Object.defineProperty(winProto, "chrome", {value: chrome, writable: true, enumerable: true});
+  Object.defineProperty(winProto, "chrome", {value: chrome, writable: true, enumerable: true, configurable: true});
 
   let canLoadAdAuctionFencedFrame = function() { return true };
  
-  Object.defineProperty(navProto, "canLoadAdAuctionFencedFrame", {value: canLoadAdAuctionFencedFrame, writable: true, enumerable: true});
+  Object.defineProperty(navProto, "canLoadAdAuctionFencedFrame", {value: canLoadAdAuctionFencedFrame, writable: true, enumerable: true, configurable: true});
 
   let createAuctionNonce = function() { return crypto.randomUUID() };
-  Object.defineProperty(navProto, "createAuctionNonce", {value: createAuctionNonce, writable: true, enumerable: true});
+  Object.defineProperty(navProto, "createAuctionNonce", {value: createAuctionNonce, writable: true, enumerable: true, configurable: true});
 
-  Object.defineProperty(navProto, "deprecatedRunAdAuctionEnforcesKAnonymity", {value: false, writable: true, enumerable: true});
+  Object.defineProperty(navProto, "deprecatedRunAdAuctionEnforcesKAnonymity", {value: false, writable: true, enumerable: true, configurable: true});
 
   delete window.navigator.mozGetUserMedia;
 _JS_
-            if ( $to_user_agent_string =~ /Edg(?:[eA]|iOS)?\/(\d+)/smx ) {
-                ( $to_browser_type, $to_browser_version ) = ( 'edge', $1 );
+            if ( $to_browser_type eq 'edge' ) {
             }
-            elsif ( $to_user_agent_string =~ /(?:Opera|Presto|OPR)\/(\d+)/smx )
-            {
-                ( $to_browser_type, $to_browser_version ) = ( 'opera', $1 );
+            elsif ( $to_browser_type eq 'opera' ) {
                 my ( $scrap_name, $scrap_definition ) =
                   $class->_get_js_function_definition( 'scrap', 'return null' );
                 $contents .= <<"_JS_";
@@ -195,42 +233,33 @@ _JS_
 _JS_
             }
         }
-        elsif ( $to_user_agent_string =~
-            /Version\/(\d+)(?:[.]\d+)?[ ].*Safari\/\d+/smx )
-        {
-            ( $to_browser_type, $to_browser_version ) = ( 'safari', $1 );
+        elsif ( $to_browser_type eq 'safari' ) {
             $contents .= <<'_JS_';
-  Object.defineProperty(navProto, "vendor", {value: "Apple Computer, Inc.", writable: true});
-  Object.defineProperty(navProto, "productSub", {value: "20030107", writable: true});
+  Object.defineProperty(navProto, "vendor", {value: "Apple Computer, Inc.", writable: true, configurable: true});
+  Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
+  Object.defineProperty(navProto, "productSub", {value: "20030107", writable: true, configurable: true});
   delete navProto.oscpu;
   delete window.navigator.mozGetUserMedia;
 _JS_
         }
-        elsif ( $to_user_agent_string =~ /Trident/smx ) {
+        elsif ( $to_browser_type eq 'ie' ) {
             $contents .= <<'_JS_';
   let docProto = Object.getPrototypeOf(window.document);
   delete navProto.productSub;
   delete navProto.vendorSub;
   delete navProto.oscpu;
   delete window.navigator.mozGetUserMedia;
-  Object.defineProperty(navProto, "vendor", {value: "", writable: true});
-  Object.defineProperty(docProto, "documentMode", {value: true, writable: true, enumerable: true});
-  Object.defineProperty(navProto, "msDoNotTrack", {value: "0", writable: true});
-  Object.defineProperty(winProto, "msWriteProfilerMark", {value: {}, writable: true});
+  Object.defineProperty(navProto, "vendor", {value: "", writable: true, configurable: true});
+  Object.defineProperty(docProto, "documentMode", {value: true, writable: true, enumerable: true, configurable: true});
+  Object.defineProperty(navProto, "msDoNotTrack", {value: "0", writable: true, configurable: true});
+  Object.defineProperty(winProto, "msWriteProfilerMark", {value: {}, writable: true, configurable: true});
 _JS_
         }
-        my $general_token_re   = qr/Mozilla\/5[.]0[ ]/smx;
-        my $platform_etc_re    = qr/[(][^)]+[)][ ]/smx;
-        my $gecko_trail_re     = qr/Gecko\/20100101[ ]/smx;
-        my $firefox_version_re = qr/Firefox\/(\d+)[.]0/smx;
-        if ( $to_user_agent_string =~
-/^$general_token_re$platform_etc_re$gecko_trail_re$firefox_version_re$/smx
-          )
-        {
-            ( $to_browser_type, $to_browser_version ) = ( 'firefox', $1 );
+        if ( $to_browser_type eq 'firefox' ) {
             $contents .= <<'_JS_';
-  Object.defineProperty(navProto, "vendor", {value: "", writable: true});
-  Object.defineProperty(navProto, "productSub", {value: "20100101", writable: true});
+  Object.defineProperty(navProto, "vendor", {value: "", writable: true, configurable: true});
+  Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
+  Object.defineProperty(navProto, "productSub", {value: "20100101", writable: true, configurable: true});
 _JS_
         }
         else {
@@ -239,13 +268,7 @@ _JS_
   delete window.InstallTrigger;
 _JS_
         }
-        if ( $from_user_agent_string =~
-/^$general_token_re$platform_etc_re$gecko_trail_re$firefox_version_re$/smx
-          )
-        {
-            ( $from_browser_type, $from_browser_version ) = ( 'firefox', $1 );
-        }
-        if ( $from_browser_version && $to_browser_version ) {
+        if ($from_browser_version) {
             $contents .= $class->_browser_compat_data(
                 from_browser_type    => $from_browser_type,
                 from_browser_version => $from_browser_version,
@@ -341,9 +364,15 @@ sub _check_and_add_function {
     }
 _JS_
         if ( $javascript_class eq 'Navigator' ) {
-            $contents .= <<"_JS_";
+            if (
+                $function_name =~ /^(?:vendor|vendorSub|productSub|oscpu)$/smx )
+            {
+            }
+            else {
+                $contents .= <<"_JS_";
   Object.defineProperty(navProto, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
 _JS_
+            }
         }
         elsif ( $javascript_class eq 'Document' ) {
             $contents .= <<"_JS_";
@@ -490,7 +519,7 @@ sub _available_in {
                 }
             }
         }
-        else {
+        elsif ( defined $proposed_change_properties->{rm} ) {
             if ( $proposed_change_properties->{rm} <=
                 $properties{browser_version} )
             {
@@ -554,6 +583,18 @@ sub _browser_compat_data {
                 $change_properties = $proposed_change_properties;
             }
         }
+        my $to_string_tag_allowed = 0;
+        if (
+            defined $browser_properties{'Symbol.toStringTag'}{browsers}
+            { $parameters{to_browser_type} }[0]{add} )
+        {
+            if ( $browser_properties{'Symbol.toStringTag'}{browsers}
+                { $parameters{to_browser_type} }[0]{add} <
+                $parameters{to_browser_version} )
+            {
+                $to_string_tag_allowed = 1;
+            }
+        }
         my $change_details = {
             delete_property            => $delete_property,
             add_property               => $add_property,
@@ -563,10 +604,7 @@ sub _browser_compat_data {
             filters                    => $parameters{filters},
             proposed_change_properties => $change_properties,
             deleted_classes            => \%deleted_classes,
-            to_string_tag_allowed      =>
-              $browser_properties{'Symbol.toStringTag'}{browsers}
-              { $parameters{to_browser_type} }[0]{add} <
-              $parameters{to_browser_version},
+            to_string_tag_allowed      => $to_string_tag_allowed,
         };
         $contents .= $class->_process_change($change_details);
     }
