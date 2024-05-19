@@ -150,7 +150,8 @@ sub user_agent_contents {
     }
     $_function_definition_count = 1;
     my ( $definition_name, $function_definition ) =
-      $class->_get_js_function_definition( 'webdriver', 'return false' );
+      $class->_get_js_function_definition( $to_browser_type, 'webdriver',
+        'return false' );
     my $contents = <<"_JS_";
 {
   if (("console" in window) && ("log" in window.console)) {
@@ -164,17 +165,81 @@ sub user_agent_contents {
 _JS_
     my ( $from_browser_type, $from_browser_version );
     if ( defined $to_browser_type ) {
+        my $native_code_body = $class->_native_code_body($to_browser_type);
         ( $from_browser_type, $from_browser_version ) =
           $class->_get_browser_type_and_version( $parameters{from} );
+        if (   ( defined $from_browser_type )
+            && ( $from_browser_type ne $to_browser_type ) )
+        {
+            $contents .= <<"_JS_";
+  window.eval.toString = function eval_def() { return "function eval() $native_code_body" };
+  Function.prototype.bind.toString = function bind_def() { return "function bind() $native_code_body" };
+_JS_
+        }
         if (   ( $to_browser_type eq 'chrome' )
             || ( $to_browser_type eq 'edge' )
             || ( $to_browser_type eq 'opera' ) )
         {
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.vendor',
+                {
+                    function_body => q[return \\x27Google Inc.\\x27],
+                    override      => 1
+                },
+                {}
+            );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Navigator.vendorSub',
+                { function_body => q[return \\x27\\x27], override => 1 }, {} );
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.productSub',
+                {
+                    function_body => q[return \\x2720030107\\x27],
+                    override      => 1
+                },
+                {}
+            );
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.webkitPersistentStorage',
+                {
+                    function_body =>
+q[return { queryUsageAndQuota: function() { return undefined }, requestQuota: function() { return undefined } }]
+                },
+                {}
+            );
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.webkitTemporaryStorage',
+                {
+                    function_body =>
+q[return { queryUsageAndQuota: function() { return undefined }, requestQuota: function() { return undefined } }]
+                },
+                {}
+            );
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Window.webkitResolveLocalFileSystemURL',
+                { function_body => q[return undefined] }, {}
+            );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Window.webkitMediaStream',
+                { function_body => q[return undefined] }, {} );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Window.webkitSpeechGrammar',
+                { function_body => q[return undefined] }, {} );
             $contents .= <<'_JS_';
-  Object.defineProperty(navProto, "vendor", {value: "Google Inc.", writable: true, configurable: true});
-  Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
-  Object.defineProperty(navProto, "productSub", {value: "20030107", writable: true, configurable: true});
   delete navProto.oscpu;
+  delete window.ApplePayError;
+  delete window.CSSPrimitiveValue;
+  delete window.Counter;
+  delete navigator.getStorageUpdates;
+  delete window.WebKitMediaKeys;
   let chrome = {
                   csi: function () { },
                   getVariableName: function () { },
@@ -218,14 +283,14 @@ _JS_
   Object.defineProperty(navProto, "createAuctionNonce", {value: createAuctionNonce, writable: true, enumerable: true, configurable: true});
 
   Object.defineProperty(navProto, "deprecatedRunAdAuctionEnforcesKAnonymity", {value: false, writable: true, enumerable: true, configurable: true});
-
-  delete window.navigator.mozGetUserMedia;
 _JS_
+
             if ( $to_browser_type eq 'edge' ) {
             }
             elsif ( $to_browser_type eq 'opera' ) {
                 my ( $scrap_name, $scrap_definition ) =
-                  $class->_get_js_function_definition( 'scrap', 'return null' );
+                  $class->_get_js_function_definition( $to_browser_type,
+                    'scrap', 'return null' );
                 $contents .= <<"_JS_";
   $scrap_definition
   Object.defineProperty(winProto, "g_opr", {value: {scrap: $scrap_name}, enumerable: true, configurable: true});
@@ -234,13 +299,56 @@ _JS_
             }
         }
         elsif ( $to_browser_type eq 'safari' ) {
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.vendor',
+                {
+                    function_body => q[return \\x27Apple Computer, Inc.\\x27],
+                    override      => 1
+                },
+                {}
+            );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Navigator.vendorSub',
+                { function_body => q[return \\x27\\x27], override => 1 }, {} );
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.productSub',
+                {
+                    function_body => q[return \\x2720030107\\x27],
+                    override      => 1
+                },
+                {}
+            );
             $contents .= <<'_JS_';
-  Object.defineProperty(navProto, "vendor", {value: "Apple Computer, Inc.", writable: true, configurable: true});
-  Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
-  Object.defineProperty(navProto, "productSub", {value: "20030107", writable: true, configurable: true});
   delete navProto.oscpu;
-  delete window.navigator.mozGetUserMedia;
+  delete navigator.webkitPersistentStorage;
+  delete navigator.webkitTemporaryStorage;
+  delete window.webkitResolveLocalFileSystemURL;
+  delete window.webkitMediaStream;
+  delete window.webkitSpeechGrammar;
 _JS_
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Window.ApplePayError',
+                { function_body => q[return undefined] }, {} );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Window.CSSPrimitiveValue',
+                { function_body => q[return undefined] }, {} );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Window.Counter', { function_body => q[return undefined] },
+                {} );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Navigator.getStorageUpdates',
+                { function_body => q[return undefined] }, {} );
+            $contents .=
+              $class->_check_and_add_function( $to_browser_type,
+                'Window.WebKitMediaKeys',
+                { function_body => q[return undefined] }, {} );
         }
         elsif ( $to_browser_type eq 'ie' ) {
             $contents .= <<'_JS_';
@@ -248,7 +356,16 @@ _JS_
   delete navProto.productSub;
   delete navProto.vendorSub;
   delete navProto.oscpu;
-  delete window.navigator.mozGetUserMedia;
+  delete navigator.webkitPersistentStorage;
+  delete navigator.webkitTemporaryStorage;
+  delete window.webkitResolveLocalFileSystemURL;
+  delete window.webkitMediaStream;
+  delete window.webkitSpeechGrammar;
+  delete window.ApplePayError;
+  delete window.CSSPrimitiveValue;
+  delete window.Counter;
+  delete navigator.getStorageUpdates;
+  delete window.WebKitMediaKeys;
   Object.defineProperty(navProto, "vendor", {value: "", writable: true, configurable: true});
   Object.defineProperty(docProto, "documentMode", {value: true, writable: true, enumerable: true, configurable: true});
   Object.defineProperty(navProto, "msDoNotTrack", {value: "0", writable: true, configurable: true});
@@ -260,12 +377,43 @@ _JS_
   Object.defineProperty(navProto, "vendor", {value: "", writable: true, configurable: true});
   Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
   Object.defineProperty(navProto, "productSub", {value: "20100101", writable: true, configurable: true});
+  delete navigator.webkitPersistentStorage;
+  delete navigator.webkitTemporaryStorage;
+  delete window.webkitResolveLocalFileSystemURL;
+  delete window.webkitMediaStream;
+  delete window.webkitSpeechGrammar;
+  delete window.ApplePayError;
+  delete window.CSSPrimitiveValue;
+  delete window.Counter;
+  delete navigator.getStorageUpdates;
+  delete window.WebKitMediaKeys;
+  if ("onmozfullscreenchange" in window) {
+  } else {
+    Object.defineProperty(window, "onmozfullscreenchange", {value: undefined, writable: true, configurable: true});
+  }
+  if ("mozInnerScreenX" in window) {
+  } else {
+    Object.defineProperty(window, "mozInnerScreenX", {value: 0, writable: true, configurable: true});
+  }
+  if ("CSSMozDocumentRule" in window) {
+  } else {
+    Object.defineProperty(window, "CSSMozDocumentRule", {value: undefined, writable: true, configurable: true});
+  }
+  if ("CanvasCaptureMediaStream" in window) {
+  } else {
+    Object.defineProperty(window, "CanvasCaptureMediaStream", {value: undefined, writable: true, configurable: true});
+  }
 _JS_
         }
         else {
             $contents .= <<'_JS_';
   delete navProto.buildID;
   delete window.InstallTrigger;
+  delete window.navigator.mozGetUserMedia;
+  delete window.onmozfullscreenchange;
+  delete window.mozInnerScreenX;
+  delete window.CSSMozDocumentRule;
+  delete window.CanvasCaptureMediaStream;
 _JS_
         }
         if ($from_browser_version) {
@@ -317,18 +465,29 @@ _JS_
     return $contents;
 }
 
+sub _native_code_body {
+    my ( $class, $to_browser_type ) = @_;
+    my $native_code_body = q[{] . q[\\] . 'n    [native code]' . q[\\] . q[n}];
+    if ( ( defined $to_browser_type ) && ( $to_browser_type eq 'chrome' ) ) {
+        $native_code_body = q[{ [native code] }];
+    }
+    return $native_code_body;
+}
+
 sub _get_js_function_definition {
-    my ( $class, $name, $function_body ) = @_;
+    my ( $class, $to_browser_type, $name, $function_body ) = @_;
     $_function_definition_count += 1;
-    my $actual_name = "fm_def_$_function_definition_count";
+    my $native_code_body = $class->_native_code_body($to_browser_type);
+    my $actual_name      = "fm_def_$_function_definition_count";
     return ( $actual_name, <<"_JS_");
 let $actual_name = new Function("$function_body");
-  $actual_name.toString = function fm_def() { return "function ${name}() {\\n    [native code]\\n}" };
+  $actual_name.toString = function fm_def() { return "function ${name}() $native_code_body" };
 _JS_
 }
 
 sub _check_and_add_function {
-    my ( $class, $property_name, $proposed_change_properties, $deleted_classes )
+    my ( $class, $to_browser_type, $property_name, $proposed_change_properties,
+        $deleted_classes )
       = @_;
     my $javascript_class = $property_name;
     $javascript_class =~ s/[.][\-_@[:alnum:]]+$//smx;
@@ -341,10 +500,28 @@ sub _check_and_add_function {
     my $contents = q[];
     if ( !$deleted_classes->{$javascript_class} ) {
         my ( $definition_name, $function_definition ) =
-          $class->_get_js_function_definition( $function_name,
+          $class->_get_js_function_definition( $to_browser_type, $function_name,
             $proposed_change_properties->{function_body} );
         $contents .= <<"_JS_";
   $function_definition
+_JS_
+        if ( $proposed_change_properties->{override} ) {
+            $contents .=
+              <<"_JS_";    # So far, all overrides are Navigator overrides
+  Object.defineProperty(window.$javascript_class, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
+  Object.defineProperty(navProto, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
+_JS_
+        }
+        elsif ( $javascript_class eq 'Window' ) {
+            $contents .= <<"_JS_";
+  if ("$function_name" in window) {
+  } else {
+    Object.defineProperty(window, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
+  }
+_JS_
+        }
+        else {
+            $contents .= <<"_JS_";
   if (winProto.$parent_class && winProto.$javascript_class) {
     if ("$function_name" in winProto.$javascript_class) {
     } else {
@@ -363,25 +540,26 @@ sub _check_and_add_function {
       }
     }
 _JS_
-        if ( $javascript_class eq 'Navigator' ) {
-            if (
-                $function_name =~ /^(?:vendor|vendorSub|productSub|oscpu)$/smx )
-            {
-            }
-            else {
-                $contents .= <<"_JS_";
+            if ( $javascript_class eq 'Navigator' ) {
+                if ( $function_name =~
+                    /^(?:vendor|vendorSub|productSub|oscpu)$/smx )
+                {
+                }
+                else {
+                    $contents .= <<"_JS_";
   Object.defineProperty(navProto, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
 _JS_
+                }
             }
-        }
-        elsif ( $javascript_class eq 'Document' ) {
-            $contents .= <<"_JS_";
+            elsif ( $javascript_class eq 'Document' ) {
+                $contents .= <<"_JS_";
   Object.defineProperty(window.document, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
 _JS_
-        }
-        $contents .= <<"_JS_";
+            }
+            $contents .= <<"_JS_";
   }
 _JS_
+        }
     }
     return $contents;
 }
@@ -596,6 +774,7 @@ sub _browser_compat_data {
             }
         }
         my $change_details = {
+            to_browser_type            => $parameters{to_browser_type},
             delete_property            => $delete_property,
             add_property               => $add_property,
             change_number              => $change_number,
@@ -675,6 +854,7 @@ sub _process_change {
         else {
             if (
                 my $proposed_change = $class->_check_and_add_function(
+                    $change_details->{to_browser_type},
                     $change_details->{property_name},
                     $change_details->{proposed_change_properties},
                     $change_details->{deleted_classes}

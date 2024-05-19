@@ -63,7 +63,7 @@ SKIP: {
 	my $original_webdriver_definition = $firefox->script($webdriver_definition_script);
 	my $quoted_webdriver_definition = $original_webdriver_definition;
 	$quoted_webdriver_definition =~ s/\n/\\n/smxg;
-	my $webdriver_def_regex = qr/function[ ]webdriver[(][)][ ][{]\n[ ]+\[native[ ]code\]\n[}]/smx;
+	my $webdriver_def_regex = qr/function[ ]webdriver[(][)][ ][{]\n?[ ]+\[native[ ]code\][\n ][}]/smx;
 	ok($original_webdriver_definition =~ /^$webdriver_def_regex$/smx, "Webdriver definition matches regex:$quoted_webdriver_definition");
 	ok($firefox->quit() == 0, "\$firefox->quit() succeeded");
 	$firefox = Firefox::Marionette->new(
