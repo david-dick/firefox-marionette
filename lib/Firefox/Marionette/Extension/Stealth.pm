@@ -49,17 +49,13 @@ q[return { getLayoutMap: function() { }, lock: function() { }, unlock: function(
 );
 
 sub new {
-    my ( $class, $from_user_agent_string, $to_user_agent_string ) = @_;
+    my ( $class, %agent_parameters ) = @_;
     my $zip = Archive::Zip->new();
     my $manifest =
       $zip->addString( $class->_manifest_contents(), 'manifest.json' );
     $manifest->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
-    my $content = $zip->addString(
-        $class->_content_contents(
-            $from_user_agent_string, $to_user_agent_string
-        ),
-        $content_name
-    );
+    my $content = $zip->addString( $class->_content_contents(%agent_parameters),
+        $content_name );
     $content->desiredCompressionMethod( Archive::Zip::COMPRESSION_DEFLATED() );
     return $zip;
 }
@@ -89,11 +85,8 @@ _JS_
 }
 
 sub _content_contents {
-    my ( $class, $from_user_agent_string, $to_user_agent_string ) = @_;
-    my $user_agent_contents = $class->user_agent_contents(
-        from => $from_user_agent_string,
-        to   => $to_user_agent_string
-    );
+    my ( $class, %agent_parameters ) = @_;
+    my $user_agent_contents = $class->user_agent_contents(%agent_parameters);
     $user_agent_contents =~ s/\s+/ /smxg;
     $user_agent_contents =~ s/\\n/\\\\n/smxg;
     return <<"_JS_";
@@ -180,28 +173,6 @@ _JS_
             || ( $to_browser_type eq 'edge' )
             || ( $to_browser_type eq 'opera' ) )
         {
-            $contents .= $class->_check_and_add_function(
-                $to_browser_type,
-                'Navigator.vendor',
-                {
-                    function_body => q[return \\x27Google Inc.\\x27],
-                    override      => 1
-                },
-                {}
-            );
-            $contents .=
-              $class->_check_and_add_function( $to_browser_type,
-                'Navigator.vendorSub',
-                { function_body => q[return \\x27\\x27], override => 1 }, {} );
-            $contents .= $class->_check_and_add_function(
-                $to_browser_type,
-                'Navigator.productSub',
-                {
-                    function_body => q[return \\x2720030107\\x27],
-                    override      => 1
-                },
-                {}
-            );
             $contents .= $class->_check_and_add_function(
                 $to_browser_type,
                 'Navigator.webkitPersistentStorage',
@@ -299,28 +270,6 @@ _JS_
             }
         }
         elsif ( $to_browser_type eq 'safari' ) {
-            $contents .= $class->_check_and_add_function(
-                $to_browser_type,
-                'Navigator.vendor',
-                {
-                    function_body => q[return \\x27Apple Computer, Inc.\\x27],
-                    override      => 1
-                },
-                {}
-            );
-            $contents .=
-              $class->_check_and_add_function( $to_browser_type,
-                'Navigator.vendorSub',
-                { function_body => q[return \\x27\\x27], override => 1 }, {} );
-            $contents .= $class->_check_and_add_function(
-                $to_browser_type,
-                'Navigator.productSub',
-                {
-                    function_body => q[return \\x2720030107\\x27],
-                    override      => 1
-                },
-                {}
-            );
             $contents .= <<'_JS_';
   delete navProto.oscpu;
   delete navigator.webkitPersistentStorage;
@@ -353,9 +302,6 @@ _JS_
         elsif ( $to_browser_type eq 'ie' ) {
             $contents .= <<'_JS_';
   let docProto = Object.getPrototypeOf(window.document);
-  delete navProto.productSub;
-  delete navProto.vendorSub;
-  delete navProto.oscpu;
   delete navigator.webkitPersistentStorage;
   delete navigator.webkitTemporaryStorage;
   delete window.webkitResolveLocalFileSystemURL;
@@ -366,7 +312,6 @@ _JS_
   delete window.Counter;
   delete navigator.getStorageUpdates;
   delete window.WebKitMediaKeys;
-  Object.defineProperty(navProto, "vendor", {value: "", writable: true, configurable: true});
   Object.defineProperty(docProto, "documentMode", {value: true, writable: true, enumerable: true, configurable: true});
   Object.defineProperty(navProto, "msDoNotTrack", {value: "0", writable: true, configurable: true});
   Object.defineProperty(winProto, "msWriteProfilerMark", {value: {}, writable: true, configurable: true});
@@ -374,9 +319,6 @@ _JS_
         }
         if ( $to_browser_type eq 'firefox' ) {
             $contents .= <<'_JS_';
-  Object.defineProperty(navProto, "vendor", {value: "", writable: true, configurable: true});
-  Object.defineProperty(navProto, "vendorSub", {value: "", writable: true, configurable: true});
-  Object.defineProperty(navProto, "productSub", {value: "20100101", writable: true, configurable: true});
   delete navigator.webkitPersistentStorage;
   delete navigator.webkitTemporaryStorage;
   delete window.webkitResolveLocalFileSystemURL;
@@ -424,6 +366,36 @@ _JS_
                 to_browser_version   => $to_browser_version,
                 filters              => $parameters{filters},
             );
+        }
+    }
+    my %navigator_agent_mappings = (
+        to          => 'userAgent',
+        app_version => 'appVersion',
+        platform    => 'platform',
+        product     => 'product',
+        product_sub => 'productSub',
+        vendor      => 'vendor',
+        vendor_sub  => 'vendorSub',
+        oscpu       => 'oscpu',
+    );
+    foreach my $key ( sort { $a cmp $b } keys %navigator_agent_mappings ) {
+        if ( defined $parameters{$key} ) {
+            my $encoded = URI::Escape::uri_escape( $parameters{$key} );
+            $contents .= $class->_check_and_add_function(
+                $to_browser_type,
+                'Navigator.' . $navigator_agent_mappings{$key},
+                {
+                    function_body =>
+                      qq[return decodeURIComponent(\\x27$encoded\\x27)],
+                    override => 1
+                },
+                {}
+            );
+        }
+        else {
+            $contents .= <<"_JS_";
+  delete navigator.$key;
+_JS_
         }
     }
     $contents .= <<'_JS_';
@@ -541,11 +513,17 @@ _JS_
     }
 _JS_
             if ( $javascript_class eq 'Navigator' ) {
-                if ( $function_name =~
-                    /^(?:vendor|vendorSub|productSub|oscpu)$/smx )
-                {
-                }
-                else {
+                my %ignore_functions = (
+                    userAgent  => 1,
+                    appVersion => 1,
+                    platform   => 1,
+                    vendor     => 1,
+                    vendorSub  => 1,
+                    product    => 1,
+                    productSub => 1,
+                    oscpu      => 1,
+                );
+                if ( !$ignore_functions{function_name} ) {
                     $contents .= <<"_JS_";
   Object.defineProperty(navProto, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
 _JS_

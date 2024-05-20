@@ -518,7 +518,8 @@ sub _is_trident_user_agent {
 
 sub _parse_user_agent {
     my ( $self, $user_agent ) = @_;
-    my ( $app_version, $platform, $vendor, $vendor_sub, $oscpu );
+    my ( $app_version, $platform, $product, $product_sub, $vendor, $vendor_sub,
+        $oscpu );
 
     # https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent#value
     if ( !defined $user_agent ) {
@@ -536,26 +537,31 @@ sub _parse_user_agent {
         ( my $webkit_app, $app_version, $platform ) = ( $1, $2, $3 );
         $app_version .= q[)];
         ( $vendor, $vendor_sub, $oscpu ) = ( q[], q[], $platform );
+        $product     = 'Gecko';
+        $product_sub = '20100101';
         if ( $self->_is_chrome_user_agent($user_agent) ) {
             $app_version = $webkit_app;
+            $product_sub = '20030107';
             $vendor      = 'Google Inc.';
             $vendor_sub  = q[];
+            $oscpu       = undef;
         }
         elsif ( $self->_is_safari_user_agent($user_agent) ) {
             $app_version = $webkit_app;
+            $product_sub = '20030107';
             if ( $self->_is_safari_and_iphone_user_agent($user_agent) ) {
                 $platform = 'iPhone';
-                $oscpu    = undef;
             }
             else {
                 $platform = 'MacIntel';
-                $oscpu    = $platform;
             }
             $vendor     = 'Apple Computer, Inc.';
             $vendor_sub = q[];
+            $oscpu      = undef;
         }
         elsif ( $self->_is_trident_user_agent($user_agent) ) {
             $app_version = $webkit_app;
+            $product_sub = undef;
             $vendor      = q[];
             $vendor_sub  = undef;
         }
@@ -576,14 +582,17 @@ sub _parse_user_agent {
         }
         elsif ( $user_agent =~ /Android/smx ) {
             $platform = 'Linux armv81';
+            $oscpu    = undef;
         }
     }
     else {
-        ( $app_version, $platform, $vendor, $vendor_sub, $oscpu ) =
-          ( q[], q[], q[], q[], q[] );
+        (
+            $app_version, $platform, $product, $product_sub, $vendor,
+            $vendor_sub,  $oscpu
+        ) = ( q[], q[], q[], q[], q[], q[], q[] );
     }
-    return ( $user_agent, $app_version, $platform, $vendor, $vendor_sub,
-        $oscpu );
+    return ( $user_agent, $app_version, $platform, $product, $product_sub,
+        $vendor, $vendor_sub, $oscpu );
 }
 
 sub _original_agent {
@@ -736,10 +745,9 @@ sub agent {
         else {
             $new_agent = $new_list[0];
         }
-        my (
-            $user_agent, $app_version, $platform,
-            $vendor,     $vendor_sub,  $oscpu
-        ) = $self->_parse_user_agent($new_agent);
+        my ( $user_agent, $app_version, $platform, $product, $product_sub,
+            $vendor, $vendor_sub, $oscpu )
+          = $self->_parse_user_agent($new_agent);
         $self->set_pref( $pref_name,                    $user_agent );
         $self->set_pref( 'general.platform.override',   $platform );
         $self->set_pref( 'general.appversion.override', $app_version );
@@ -782,23 +790,27 @@ sub agent {
         $self->set_pref( 'privacy.donottrackheader.enabled', $false )
           ;    # trying to blend in with the most common options
         if ( $self->{stealth} ) {
-            my %agent_parameters = ( from => $old_agent, to => $user_agent );
+            my %agent_parameters = (
+                from        => $old_agent,
+                to          => $user_agent,
+                app_version => $app_version,
+                platform    => $platform,
+                product     => $product,
+                product_sub => $product_sub,
+                vendor      => $vendor,
+                vendor_sub  => $vendor_sub,
+                oscpu       => $oscpu,
+            );
             $self->script(
                 $self->_compress_script(
-                    <<'_JS_' . Firefox::Marionette::Extension::Stealth->user_agent_contents(%agent_parameters) ), args => [ $user_agent, $app_version, $platform, $vendor, $vendor_sub, $oscpu ] );
-{
-  let navProto = Object.getPrototypeOf(window.navigator);
-  Object.defineProperty(navProto, 'userAgent', {value: arguments[0], writable: true, configurable: true});
-  Object.defineProperty(navProto, 'appVersion', {value: arguments[1], writable: true, configurable: true});
-  Object.defineProperty(navProto, 'platform', {value: arguments[2], writable: true, configurable: true});
-  Object.defineProperty(navProto, 'vendor', {value: arguments[3], writable: true, configurable: true});
-  Object.defineProperty(navProto, 'vendorSub', {value: arguments[4], writable: true, configurable: true});
-  Object.defineProperty(navProto, 'oscpu', {value: arguments[5], writable: true, configurable: true});
-}
-_JS_
+                    Firefox::Marionette::Extension::Stealth
+                      ->user_agent_contents(
+                        %agent_parameters)
+                )
+            );
             $self->uninstall( delete $self->{stealth_extension} );
-            my $zip = Firefox::Marionette::Extension::Stealth->new(
-                $self->_original_agent(), $user_agent );
+            my $zip =
+              Firefox::Marionette::Extension::Stealth->new(%agent_parameters);
             $self->{stealth_extension} =
               $self->_install_extension_by_handle( $zip, 'stealth-0.0.1.xpi' );
         }
@@ -4281,7 +4293,7 @@ sub _post_launch_checks_and_setup {
     }
     if ( $self->{stealth} ) {
         my $old_user_agent = $self->agent();
-        my $zip = Firefox::Marionette::Extension::Stealth->new($old_user_agent);
+        my $zip            = Firefox::Marionette::Extension::Stealth->new();
         $self->{stealth_extension} =
           $self->_install_extension_by_handle( $zip, 'stealth-0.0.1.xpi' );
         $self->script(
