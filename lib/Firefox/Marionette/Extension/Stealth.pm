@@ -154,7 +154,7 @@ sub user_agent_contents {
   let winProto = Object.getPrototypeOf(window);
   $function_definition
   Object.defineProperty(navProto, "webdriver", {get: $definition_name, enumerable: false, configurable: true});
-  let getUserMedia = window.navigator.mozGetUserMedia;
+  let getUserMedia = navProto.mozGetUserMedia;
 _JS_
     my ( $from_browser_type, $from_browser_version );
     if ( defined $to_browser_type ) {
@@ -351,7 +351,7 @@ _JS_
             $contents .= <<'_JS_';
   delete navProto.buildID;
   delete window.InstallTrigger;
-  delete window.navigator.mozGetUserMedia;
+  delete navProto.mozGetUserMedia;
   delete window.onmozfullscreenchange;
   delete window.mozInnerScreenX;
   delete window.CSSMozDocumentRule;
@@ -392,9 +392,9 @@ _JS_
                 {}
             );
         }
-        else {
+        elsif ($parameters{to}) {
             $contents .= <<"_JS_";
-  delete navigator.$key;
+  delete navigator.$navigator_agent_mappings{$key};
 _JS_
         }
     }
@@ -513,25 +513,13 @@ _JS_
     }
 _JS_
             if ( $javascript_class eq 'Navigator' ) {
-                my %ignore_functions = (
-                    userAgent  => 1,
-                    appVersion => 1,
-                    platform   => 1,
-                    vendor     => 1,
-                    vendorSub  => 1,
-                    product    => 1,
-                    productSub => 1,
-                    oscpu      => 1,
-                );
-                if ( !$ignore_functions{function_name} ) {
-                    $contents .= <<"_JS_";
-  Object.defineProperty(navProto, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
+                $contents .= <<"_JS_";
+    Object.defineProperty(navProto, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
 _JS_
-                }
             }
             elsif ( $javascript_class eq 'Document' ) {
                 $contents .= <<"_JS_";
-  Object.defineProperty(window.document, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
+    Object.defineProperty(window.document, "$function_name", {get: $definition_name, enumerable: true, configurable: true});
 _JS_
             }
             $contents .= <<"_JS_";
