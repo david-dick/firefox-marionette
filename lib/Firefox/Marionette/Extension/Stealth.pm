@@ -95,6 +95,7 @@ sub _content_contents {
   let text = document.createTextNode('$user_agent_contents');
   script.appendChild(text);
   (document.head || document.documentElement).appendChild(script);
+  script.remove();
 }
 _JS_
 }
