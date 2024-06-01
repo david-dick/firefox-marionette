@@ -392,7 +392,7 @@ _JS_
                 {}
             );
         }
-        elsif ($parameters{to}) {
+        elsif ( $parameters{to} ) {
             $contents .= <<"_JS_";
   delete navigator.$navigator_agent_mappings{$key};
 _JS_
