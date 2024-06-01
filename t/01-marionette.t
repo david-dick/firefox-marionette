@@ -3894,11 +3894,7 @@ SKIP: {
 	}
 	$firefox->sleep_time_in_ms(2_000);
 	ok($firefox->find_id($search_box_id)->clear()->find_id($search_box_id)->type('Test::More'), "Sent 'Test::More' to the '$search_box_id' field directly to the element");
-	if ($ENV{FIREFOX_BINARY}) {
-		ok($firefox->go("https://metacpan.org/pod/Test::More"), "Just directly going to https://metacpan.org/pod/Test::More b/c FIREFOX_BINARY has been specified");
-	} else {
-		ok($firefox->await(sub { $firefox->find_class('autocomplete-suggestion'); })->click(), "Clicked on the first result");
-	}
+	ok($firefox->go("https://metacpan.org/pod/Test::More"), "Just directly going to https://metacpan.org/pod/Test::More");
 	diag("Going to Test::More page with a page load strategy of " . ($capabilities->page_load_strategy() || ''));
 	SKIP: {
 		if ($major_version < 45) {
