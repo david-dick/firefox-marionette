@@ -8,6 +8,7 @@ lib/Firefox/Marionette/Certificate.pm
 lib/Firefox/Marionette/Cookie.pm
 lib/Firefox/Marionette/Extension/HarExportTrigger.pm
 lib/Firefox/Marionette/Extension/Stealth.pm
+lib/Firefox/Marionette/Extension/Timezone.pm
 lib/Firefox/Marionette/Image.pm
 lib/Firefox/Marionette/Keys.pm
 lib/Firefox/Marionette/Link.pm
@@ -58,6 +59,7 @@ t/data/bookmarks_truncated.html
 t/data/aria.html
 t/data/elements.html
 t/data/iframe.html
+t/data/timezone.html
 t/data/visible.html
 t/data/logins.json
 t/data/keepass1.xml
@@ -84,6 +86,7 @@ t/04-botd.t
 t/04-browserfeatcl.t
 t/04-fingerprint.t
 t/04-proxy.t
+t/04-timezone.t
 t/04-webauthn.t
 t/manifest.t
 t/pod-coverage.t

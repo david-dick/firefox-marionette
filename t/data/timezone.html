@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en-au">
+  <head>
+    <title>Timezone Tests</title>
+    <script>
+      let originDate = new Date(parseInt(new URL(document.location.href).hash.replace(/^#/, "").concat('000')));
+    </script>
+  </head>
+  <body>
+    <p id="locale"><script>document.write(new Intl.DateTimeFormat().resolvedOptions().locale)</script></p>
+    <p id="unixTime"><script>document.write(new Date(originDate).getTime() / 1000)</script></p>
+    <p id="toString"><script>document.write(new Date(originDate).toString())</script></p>
+    <p id="toLocaleString"><script>document.write(new Date(originDate).toLocaleString())</script></p>
+    <p id="toLocaleFormat"><script>if ("toLocaleFormat" in Date) { document.write(new Date(originDate).toLocaleFormat()) }</script></p>
+    <p id="getDate"><script>document.write(new Date(originDate).getDate())</script></p>
+    <p id="getDay"><script>document.write(new Date(originDate).getDay())</script></p>
+    <p id="getMonth"><script>document.write(new Date(originDate).getMonth())</script></p>
+    <p id="getFullYear"><script>document.write(new Date(originDate).getFullYear())</script></p>
+    <p id="getHours"><script>document.write(new Date(originDate).getHours())</script></p>
+    <p id="getMinutes"><script>document.write(new Date(originDate).getMinutes())</script></p>
+    <p id="getSeconds"><script>document.write(new Date(originDate).getSeconds())</script></p>
+    <iframe id="sandbox" sandbox="allow-same-origin" style="display:none">
+    </iframe>
+    <script>
+      var iframe = document.getElementById("sandbox").contentWindow;
+    </script>
+    <p id="iframe_locale"><script>document.write(new iframe.Intl.DateTimeFormat().resolvedOptions().locale)</script></p>
+    <p id="iframe_unixTime"><script>document.write(new iframe.Date(originDate).getTime() / 1000)</script></p>
+    <p id="iframe_toString"><script>document.write(new iframe.Date(originDate).toString())</script></p>
+    <p id="iframe_toLocaleString"><script>document.write(new iframe.Date(originDate).toLocaleString())</script></p>
+    <p id="iframe_toLocaleFormat"><script>if ("toLocaleFormat" in iframe.Date) { document.write(new iframe.Date(originDate).toLocaleFormat()) }</script></p>
+    <p id="iframe_getDate"><script>document.write(new iframe.Date(originDate).getDate())</script></p>
+    <p id="iframe_getDay"><script>document.write(new iframe.Date(originDate).getDay())</script></p>
+    <p id="iframe_getMonth"><script>document.write(new iframe.Date(originDate).getMonth())</script></p>
+    <p id="iframe_getFullYear"><script>document.write(new iframe.Date(originDate).getFullYear())</script></p>
+    <p id="iframe_getHours"><script>document.write(new iframe.Date(originDate).getHours())</script></p>
+    <p id="iframe_getMinutes"><script>document.write(new iframe.Date(originDate).getMinutes())</script></p>
+    <p id="iframe_getSeconds"><script>document.write(new iframe.Date(originDate).getSeconds())</script></p>
+  </body>
+</html>

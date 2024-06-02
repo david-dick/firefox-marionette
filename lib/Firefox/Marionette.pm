@@ -274,6 +274,25 @@ sub _setup_geo {
     return $self;
 }
 
+sub tz {
+    my ( $self, $timezone ) = @_;
+    require Firefox::Marionette::Extension::Timezone;
+    my %parameters = ( timezone => $timezone );
+    $self->script(
+        $self->_compress_script(
+            Firefox::Marionette::Extension::Timezone->timezone_contents(
+                %parameters)
+        )
+    );
+    if ( $self->{timezone_extension} ) {
+        $self->uninstall( delete $self->{timezone_extension} );
+    }
+    my $zip = Firefox::Marionette::Extension::Timezone->new(%parameters);
+    $self->{timezone_extension} =
+      $self->_install_extension_by_handle( $zip, 'timezone-0.0.1.xpi' );
+    return $self;
+}
+
 sub geo {
     my ( $self, @parameters ) = @_;
 
@@ -288,6 +307,9 @@ sub geo {
         $self->set_pref( 'geo.wifi.uri',
             q[data:application/json,]
               . JSON->new()->convert_blessed()->encode($location) );
+        if ( my $ipgeolocation_timezone = $location->tz() ) {
+            $self->tz( $ipgeolocation_timezone );
+        }
         return $self;
     }
     my $new_location =
@@ -1348,6 +1370,9 @@ sub _init {
     }
     if ( defined $parameters{trackable} ) {
         $self->{trackable} = $parameters{trackable};
+    }
+    if ( defined $parameters{timezone} ) {
+        $self->{timezone} = $parameters{timezone};
     }
     $self->_load_specified_extensions(%parameters);
     $self->_determine_mime_types(%parameters);
@@ -13348,7 +13373,9 @@ NOTE: firefox will only allow L<Geolocation|https://developer.mozilla.org/en-US/
 
     warn "Apparently, we're now at " . Firefox::Marionette->new( proxy => 'https://this.is.another.location:3128', geo => 'https://freeipapi.com/api/json/' )->go('https://maps.google.com/')->geo();
 
-NOTE: currently this call sets the location to be exactly what is specified.  It doesn't change anything else relevant (yet, but it may in future), such as L<languages|/languages> or the L<timezone|https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset>.  This function should be considered experimental.  Feedback welcome.
+NOTE: currently this call sets the location to be exactly what is specified.  It will also attempt to modify the current timezone (if available in the L<geo location|Firefox::Marionette::GeoLocation> parameter) to match the specified L<timeZone|Firefox::Marionette::GeoLocation#tz>.  This function should be considered experimental.  Feedback welcome.
+
+If particular, the L<ipgeolocation API|https://ipgeolocation.io/documentation/ip-geolocation-api.html> is the only API that currently providing geolocation data and matching timezone data in one API call.  If anyone finds/develops another similar API, I would be delighted to include support for it in this module.
 
 =head2 go
 
@@ -14466,6 +14493,10 @@ accepts a L<element|Firefox::Marionette::Element> as the first parameter and ret
 
 returns the current L<timeouts|Firefox::Marionette::Timeouts> for page loading, searching, and scripts.
 
+=head2 tz
+
+accepts a L<Olson TZ identifier|https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List> as the first parameter. This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
+
 =head2 title
 
 returns the current L<title|https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title> of the window.
@@ -14752,8 +14783,6 @@ the combination of a variety of parameter names and the ability to pass paramete
     $firefox->geo($firefox->json('http://api.ipstack.com/142.250.70.206?access_key=' . $api_key)); # get geo location from specific IP address (http access only for free)
 
 These sites were active at the time this documentation was written, but mainly function as an illustration of the flexibility of L<geo|/geo> and L<json|/json> methods in providing the desired location to the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API>.
-
-The L<country_code|Firefox::Marionette::GeoLocation#country_code> and L<timezone_offset|Firefox::Marionette::GeoLocation#timezone_offset> methods can be used to help set the L<languages|/languages> method and possibly in the future change the timezone of the browser.
 
 =head1 CONSOLE LOGGING
 

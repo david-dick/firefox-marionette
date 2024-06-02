@@ -1455,10 +1455,16 @@ SUBROUTINES/METHODS
         warn "Apparently, we're now at " . Firefox::Marionette->new( proxy => 'https://this.is.another.location:3128', geo => 'https://freeipapi.com/api/json/' )->go('https://maps.google.com/')->geo();
 
     NOTE: currently this call sets the location to be exactly what is
-    specified. It doesn't change anything else relevant (yet, but it may in
-    future), such as languages or the timezone
-    <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset>.
-    This function should be considered experimental. Feedback welcome.
+    specified. It will also attempt to modify the current timezone (if
+    available in the geo location parameter) to match the specified
+    timeZone. This function should be considered experimental. Feedback
+    welcome.
+
+    If particular, the ipgeolocation API
+    <https://ipgeolocation.io/documentation/ip-geolocation-api.html> is the
+    only API that currently providing geolocation data and matching
+    timezone data in one API call. If anyone finds/develops another similar
+    API, I would be delighted to include support for it in this module.
 
  go
 
@@ -2964,6 +2970,13 @@ SUBROUTINES/METHODS
 
     returns the current timeouts for page loading, searching, and scripts.
 
+ tz
+
+    accepts a Olson TZ identifier
+    <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List> as
+    the first parameter. This method returns itself to aid in chaining
+    methods.
+
  title
 
     returns the current title
@@ -3318,10 +3331,6 @@ GEO LOCATION
     mainly function as an illustration of the flexibility of geo and json
     methods in providing the desired location to the Geolocation API
     <https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API>.
-
-    The country_code and timezone_offset methods can be used to help set
-    the languages method and possibly in the future change the timezone of
-    the browser.
 
 CONSOLE LOGGING
 
