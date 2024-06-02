@@ -3528,6 +3528,10 @@ IMITATING OTHER BROWSERS
       <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language>
       for your browser session.
 
+      * the tz method, which can change the timezone
+      <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List>
+      for your browser session.
+
     This list of methods may grow.
 
 WEBSITES THAT BLOCK AUTOMATION

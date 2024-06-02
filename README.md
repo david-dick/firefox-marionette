@@ -2501,6 +2501,7 @@ There are a collection of methods and techniques that may be useful if you would
 - the [agent](#agent) method, which if supplied a recognisable [User Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent), will attempt to change other attributes to match the desired browser.  This is extremely experimental and feedback is welcome.
 - the [geo](#geo) method, which allows the modification of the [Geolocation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation) reported by the browser, but not the location produced by mapping the external IP address used by the browser (see the [NETWORK ARCHITECTURE](#network-architecture) section for a discussion of different types of proxies that can be used to change your external IP address).
 - the [languages](#languages) method, which can change the [requested languages](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language) for your browser session.
+- the [tz](#tz) method, which can change the [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) for your browser session.
 
 This list of methods may grow.
 

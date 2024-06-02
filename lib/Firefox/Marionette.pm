@@ -14903,6 +14903,8 @@ There are a collection of methods and techniques that may be useful if you would
 
 =item * the L<languages|/languages> method, which can change the L<requested languages|https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language> for your browser session.
 
+=item * the L<tz|/tz> method, which can change the L<timezone|https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List> for your browser session.
+
 =back
 
 This list of methods may grow.
