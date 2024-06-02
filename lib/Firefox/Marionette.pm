@@ -13373,7 +13373,7 @@ NOTE: firefox will only allow L<Geolocation|https://developer.mozilla.org/en-US/
 
     warn "Apparently, we're now at " . Firefox::Marionette->new( proxy => 'https://this.is.another.location:3128', geo => 'https://freeipapi.com/api/json/' )->go('https://maps.google.com/')->geo();
 
-NOTE: currently this call sets the location to be exactly what is specified.  It will also attempt to modify the current timezone (if available in the L<geo location|Firefox::Marionette::GeoLocation> parameter) to match the specified L<timeZone|Firefox::Marionette::GeoLocation#tz>.  This function should be considered experimental.  Feedback welcome.
+NOTE: currently this call sets the location to be exactly what is specified.  It will also attempt to modify the current timezone (if available in the L<geo location|Firefox::Marionette::GeoLocation> parameter) to match the specified L<timezone|Firefox::Marionette::GeoLocation#tz>.  This function should be considered experimental.  Feedback welcome.
 
 If particular, the L<ipgeolocation API|https://ipgeolocation.io/documentation/ip-geolocation-api.html> is the only API that currently providing geolocation data and matching timezone data in one API call.  If anyone finds/develops another similar API, I would be delighted to include support for it in this module.
 
@@ -14783,6 +14783,8 @@ the combination of a variety of parameter names and the ability to pass paramete
     $firefox->geo($firefox->json('http://api.ipstack.com/142.250.70.206?access_key=' . $api_key)); # get geo location from specific IP address (http access only for free)
 
 These sites were active at the time this documentation was written, but mainly function as an illustration of the flexibility of L<geo|/geo> and L<json|/json> methods in providing the desired location to the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API>.
+
+As mentioned in the L<geo|/geo> method documentation, the L<ipgeolocation API|https://ipgeolocation.io/documentation/ip-geolocation-api.html> is the only API that currently providing geolocation data and matching timezone data in one API call.  If this url is used, the L<tz|/tz> method will be automatically called to set the timezone to the matching timezone for the geographic location.
 
 =head1 CONSOLE LOGGING
 

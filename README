@@ -1457,7 +1457,7 @@ SUBROUTINES/METHODS
     NOTE: currently this call sets the location to be exactly what is
     specified. It will also attempt to modify the current timezone (if
     available in the geo location parameter) to match the specified
-    timeZone. This function should be considered experimental. Feedback
+    timezone. This function should be considered experimental. Feedback
     welcome.
 
     If particular, the ipgeolocation API
@@ -3331,6 +3331,13 @@ GEO LOCATION
     mainly function as an illustration of the flexibility of geo and json
     methods in providing the desired location to the Geolocation API
     <https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API>.
+
+    As mentioned in the geo method documentation, the ipgeolocation API
+    <https://ipgeolocation.io/documentation/ip-geolocation-api.html> is the
+    only API that currently providing geolocation data and matching
+    timezone data in one API call. If this url is used, the tz method will
+    be automatically called to set the timezone to the matching timezone
+    for the geographic location.
 
 CONSOLE LOGGING
 

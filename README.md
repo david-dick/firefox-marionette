@@ -1116,7 +1116,7 @@ NOTE: firefox will only allow [Geolocation](https://developer.mozilla.org/en-US/
 
     warn "Apparently, we're now at " . Firefox::Marionette->new( proxy => 'https://this.is.another.location:3128', geo => 'https://freeipapi.com/api/json/' )->go('https://maps.google.com/')->geo();
 
-NOTE: currently this call sets the location to be exactly what is specified.  It will also attempt to modify the current timezone (if available in the [geo location](https://metacpan.org/pod/Firefox::Marionette::GeoLocation) parameter) to match the specified [timeZone](https://metacpan.org/pod/Firefox::Marionette::GeoLocation#tz).  This function should be considered experimental.  Feedback welcome.
+NOTE: currently this call sets the location to be exactly what is specified.  It will also attempt to modify the current timezone (if available in the [geo location](https://metacpan.org/pod/Firefox::Marionette::GeoLocation) parameter) to match the specified [timezone](https://metacpan.org/pod/Firefox::Marionette::GeoLocation#tz).  This function should be considered experimental.  Feedback welcome.
 
 If particular, the [ipgeolocation API](https://ipgeolocation.io/documentation/ip-geolocation-api.html) is the only API that currently providing geolocation data and matching timezone data in one API call.  If anyone finds/develops another similar API, I would be delighted to include support for it in this module.
 
@@ -2393,6 +2393,8 @@ the combination of a variety of parameter names and the ability to pass paramete
     $firefox->geo($firefox->json('http://api.ipstack.com/142.250.70.206?access_key=' . $api_key)); # get geo location from specific IP address (http access only for free)
 
 These sites were active at the time this documentation was written, but mainly function as an illustration of the flexibility of [geo](#geo) and [json](#json) methods in providing the desired location to the [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API).
+
+As mentioned in the [geo](#geo) method documentation, the [ipgeolocation API](https://ipgeolocation.io/documentation/ip-geolocation-api.html) is the only API that currently providing geolocation data and matching timezone data in one API call.  If this url is used, the [tz](#tz) method will be automatically called to set the timezone to the matching timezone for the geographic location.
 
 # CONSOLE LOGGING
 
