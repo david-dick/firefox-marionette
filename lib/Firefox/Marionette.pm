@@ -12220,7 +12220,7 @@ This is a client module to automate the Mozilla Firefox browser via the L<Marion
 
 =head2 BCD_PATH
 
-returns the local path used for storing the brower compability data for the L<agent|/agent> method when the <code>stealth</code> parameter is supplied to the L<new|/new> method.  This database is built by the build-bcd-for-firefox binary.
+returns the local path used for storing the brower compability data for the L<agent|/agent> method when the C<stealth> parameter is supplied to the L<new|/new> method.  This database is built by the L<build-bcd-for-firefox|https://metacpan.org/pod/build-bcd-for-firefox> binary.
 
 =head1 SUBROUTINES/METHODS
 
@@ -12545,7 +12545,7 @@ These parameters can be used to set a user agent string like so;
     # user agent is now equal to
     # Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0
 
-If the C<stealth> parameter has supplied to the L<new|/new> method, it will also attempt to delete/provide dummy implementations for number of L<javascript attributes|https://github.com/mdn/browser-compat-data> to match the desired browser.  The following websites have been very useful in testing these ideas;
+If the C<stealth> parameter has supplied to the L<new|/new> method, it will also attempt to create known specific javascript functions to imitate the required browser.  If the database built by L<build-bcd-for-firefox|https://metacpan.org/pod/build-bcd-for-firefox> is accessible, then it will also attempt to delete/provide dummy implementations for the corresponding L<javascript attributes|https://github.com/mdn/browser-compat-data> for the desired browser.  The following websites have been very useful in testing these ideas;
 
 =over 4
 

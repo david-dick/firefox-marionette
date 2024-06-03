@@ -35,7 +35,7 @@ This is a client module to automate the Mozilla Firefox browser via the [Marione
 
 ## BCD\_PATH
 
-returns the local path used for storing the brower compability data for the [agent](#agent) method when the &lt;code>stealth&lt;/code> parameter is supplied to the [new](#new) method.  This database is built by the build-bcd-for-firefox binary.
+returns the local path used for storing the brower compability data for the [agent](#agent) method when the `stealth` parameter is supplied to the [new](#new) method.  This database is built by the [build-bcd-for-firefox](https://metacpan.org/pod/build-bcd-for-firefox) binary.
 
 # SUBROUTINES/METHODS
 
@@ -300,7 +300,7 @@ These parameters can be used to set a user agent string like so;
     # user agent is now equal to
     # Mozilla/5.0 (X11; Linux s390x; rv:109.0) Gecko/20100101 Firefox/115.0
 
-If the `stealth` parameter has supplied to the [new](#new) method, it will also attempt to delete/provide dummy implementations for number of [javascript attributes](https://github.com/mdn/browser-compat-data) to match the desired browser.  The following websites have been very useful in testing these ideas;
+If the `stealth` parameter has supplied to the [new](#new) method, it will also attempt to create known specific javascript functions to imitate the required browser.  If the database built by [build-bcd-for-firefox](https://metacpan.org/pod/build-bcd-for-firefox) is accessible, then it will also attempt to delete/provide dummy implementations for the corresponding [javascript attributes](https://github.com/mdn/browser-compat-data) for the desired browser.  The following websites have been very useful in testing these ideas;
 
 - [https://browserleaks.com/javascript](https://browserleaks.com/javascript)
 - [https://www.amiunique.org/fingerprint](https://www.amiunique.org/fingerprint)

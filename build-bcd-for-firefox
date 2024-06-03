@@ -360,7 +360,7 @@ Version 1.57
 
 =head1 DESCRIPTION
 
-This program is intended to build a database for the agent method of the Firefox::Marionette class.  It builds this database by cloning the @mdn/browser-compat-data repository on github.com and then summarising this data for the agent method.
+This program is intended to build a database for the agent method of the Firefox::Marionette class.  It builds this database by cloning the L<@mdn/browser-compat-data|https://github.com/mdn/browser-compat-data> repository on github.com and then summarising this data for the agent method.
 
 The path where the database is stored varies by user and operating system, and can be shown with the --path option.
 
