@@ -19,6 +19,14 @@
     <p id="getHours"><script>document.write(new Date(originDate).getHours())</script></p>
     <p id="getMinutes"><script>document.write(new Date(originDate).getMinutes())</script></p>
     <p id="getSeconds"><script>document.write(new Date(originDate).getSeconds())</script></p>
+    <p id="Collator"><script>document.write(new Intl.Collator(undefined, { sensitivity: "base" }).resolvedOptions().locale)</script></p>
+    <p id="DisplayNames"><script>document.write(new Intl.DisplayNames(undefined, { type: "region"}).resolvedOptions().locale)</script></p>
+    <p id="DurationFormat"><script>if ("DurationFormat" in Intl) { document.write(new Intl.DurationFormat(undefined, { style: "long" }).resolvedOptions().locale) }</script></p>
+    <p id="ListFormat"><script>document.write(new Intl.ListFormat(undefined, { style: "long", type: "conjunction" }).resolvedOptions().locale)</script></p>
+    <p id="NumberFormat"><script>document.write(new Intl.NumberFormat(undefined).resolvedOptions().locale)</script></p>
+    <p id="PluralRules"><script>document.write(new Intl.PluralRules(undefined).resolvedOptions().locale)</script></p>
+    <p id="RelativeTimeFormat"><script>document.write(new Intl.RelativeTimeFormat(undefined, { style: 'short' }).resolvedOptions().locale)</script></p>
+    <p id="Segmenter"><script>document.write(new Intl.Segmenter(undefined, { granularity: 'word' }).resolvedOptions().locale)</script></p>
     <iframe id="sandbox" sandbox="allow-same-origin" style="display:none">
     </iframe>
     <script>
@@ -36,5 +44,13 @@
     <p id="iframe_getHours"><script>document.write(new iframe.Date(originDate).getHours())</script></p>
     <p id="iframe_getMinutes"><script>document.write(new iframe.Date(originDate).getMinutes())</script></p>
     <p id="iframe_getSeconds"><script>document.write(new iframe.Date(originDate).getSeconds())</script></p>
+    <p id="iframe_Collator"><script>document.write(new Intl.Collator(undefined, { sensitivity: "base" }).resolvedOptions().locale)</script></p>
+    <p id="iframe_DisplayNames"><script>document.write(new Intl.DisplayNames(undefined, { type: "region"}).resolvedOptions().locale)</script></p>
+    <p id="iframe_DurationFormat"><script>if ("DurationFormat" in Intl) { document.write(new Intl.DurationFormat(undefined, { style: "long" }).resolvedOptions().locale) }</script></p>
+    <p id="iframe_ListFormat"><script>document.write(new Intl.ListFormat(undefined, { style: "long", type: "conjunction" }).resolvedOptions().locale)</script></p>
+    <p id="iframe_NumberFormat"><script>document.write(new Intl.NumberFormat(undefined).resolvedOptions().locale)</script></p>
+    <p id="iframe_PluralRules"><script>document.write(new Intl.PluralRules(undefined).resolvedOptions().locale)</script></p>
+    <p id="iframe_RelativeTimeFormat"><script>document.write(new Intl.RelativeTimeFormat(undefined, { style: 'short' }).resolvedOptions().locale)</script></p>
+    <p id="iframe_Segmenter"><script>document.write(new Intl.Segmenter(undefined, { granularity: 'word' }).resolvedOptions().locale)</script></p>
   </body>
 </html>

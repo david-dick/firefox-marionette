@@ -102,7 +102,7 @@ sub timezone_contents {
     win.Date.prototype.getMinutes = function() { return parseInt(win.Intl.DateTimeFormat(locale, { minute: "numeric", timeZone: tz }).format(this.valueOf()), 10) };
 
     let idtc = win.Intl.Collator;
-    win.Intl.Collator = function() { if (!arguments[0]) { arguments[0] = [ locale ]  } return itdc(arguments[0]) };
+    win.Intl.Collator = function() { if (!arguments[0]) { arguments[0] = [ locale ]  } return new idtc(arguments[0]) };
     let idtf = win.Intl.DateTimeFormat;
     win.Intl.DateTimeFormat = function() {
                         if (arguments[1]) {
@@ -117,22 +117,24 @@ sub timezone_contents {
                         }
                         return idtf(arguments[0], arguments[1]);
     }; 
-    let idn = win.Intl.DisplayNames;
-    win.Intl.DisplayNames = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return idn(arguments[0]) };
-    let idf = win.Intl.DurationFormat;
-    win.Intl.DurationFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return idf(arguments[0], arguments[1]) };
+    let idtn = win.Intl.DisplayNames;
+    win.Intl.DisplayNames = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new idtn(arguments[0], arguments[1]) };
+    if ("DurationFormat" in win.Intl) {
+      let idf = win.Intl.DurationFormat;
+      win.Intl.DurationFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return idf(arguments[0], arguments[1]) };
+    }
     let ilf = win.Intl.ListFormat;
-    win.Intl.ListFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return ilf(arguments[0], arguments[1]) };
+    win.Intl.ListFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new ilf(arguments[0], arguments[1]) };
     let idtl = win.Intl.Locale;
-    win.Intl.Locale = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return idtl(arguments[0]) };
+    win.Intl.Locale = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new idtl(arguments[0]) };
     let inf = win.Intl.NumberFormat;
-    win.Intl.NumberFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return inf(arguments[0], arguments[1]) };
+    win.Intl.NumberFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new inf(arguments[0], arguments[1]) };
     let ipr = win.Intl.PluralRules;
-    win.Intl.PluralRules = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return ipr(arguments[0]) };
+    win.Intl.PluralRules = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new ipr(arguments[0]) };
     let irtf = win.Intl.RelativeTimeFormat;
-    win.Intl.RelativeTimeFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return irtf(arguments[0], arguments[1]) };
+    win.Intl.RelativeTimeFormat = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new irtf(arguments[0], arguments[1]) };
     let isg = win.Intl.Segmenter;
-    win.Intl.Segmenter = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return isg(arguments[0], arguments[1]) };
+    win.Intl.Segmenter = function() { if (!arguments[0]) { arguments[0] = [ locale ] } return new isg(arguments[0], arguments[1]) };
   };
   setTimezone(window);
 

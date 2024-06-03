@@ -63,6 +63,13 @@ SKIP: {
 			getHours
 			getMinutes
 			getSeconds
+			Collator
+			DisplayNames
+			DurationFormat
+			ListFormat
+			PluralRules
+			RelativeTimeFormat
+			Segmenter
 		);
 	my $locale_diag;
 	my $now = time;
@@ -117,6 +124,14 @@ SKIP: {
 				ok($correct_answers{$time}{$id} eq $actual_answer, "\$firefox->find_id('iframe_$id')->text() returned '$correct_answers{$time}{$id}':'$actual_answer'");
 			}
 		}
+		$timezone = 'Australia/Melbourne';
+		ok($firefox->tz($timezone), "\$firefox->tz(\"$timezone\") is called to override the timezone");
+		my $url = 'http://' . $nginx->address() . q[:] . $nginx->port() . '#' . $now;
+		ok($firefox->go('about:blank'), "reset url to about:blank");
+		ok($firefox->go($url), "go to $url with timezone set to $timezone");
+		my $id = 'toString';
+		my $override_answer =  $firefox->find_id($id)->text();
+		ok($override_answer =~ /GMT[+]1[10]00/smx, "\$firefox->find_id('$id')->text() returned an answer matching Melbourne:'$override_answer'");
 		ok($firefox->quit() == 0, "\$firefox->quit() succeeded");
 	}
 	ok($nginx->stop() == 0, "Stopped nginx on " . $nginx->address() . q[:] . $nginx->port());
