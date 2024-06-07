@@ -146,7 +146,8 @@ sub user_agent_contents {
     my ( $definition_name, $function_definition ) =
       $class->_get_js_function_definition( $to_browser_type, 'webdriver',
         'return false' );
-    my $contents = <<"_JS_";
+    my $native_code_body = $class->_native_code_body($to_browser_type);
+    my $contents         = <<"_JS_";
 {
   if (("console" in window) && ("log" in window.console)) {
     console.log("Loading Firefox::Marionette::Extension::Stealth");
@@ -155,11 +156,12 @@ sub user_agent_contents {
   let winProto = Object.getPrototypeOf(window);
   $function_definition
   Object.defineProperty(navProto, "webdriver", {get: $definition_name, enumerable: false, configurable: true});
+  console.clear = function() { console.log("$class blocked an attempt at clearing the console...") };
+  console.clear.toString = function clear_def() { return "function clear() $native_code_body" };
   let getUserMedia = navProto.mozGetUserMedia;
 _JS_
     my ( $from_browser_type, $from_browser_version );
     if ( defined $to_browser_type ) {
-        my $native_code_body = $class->_native_code_body($to_browser_type);
         ( $from_browser_type, $from_browser_version ) =
           $class->_get_browser_type_and_version( $parameters{from} );
         if (   ( defined $from_browser_type )
