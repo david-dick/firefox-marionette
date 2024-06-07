@@ -80,7 +80,7 @@ SKIP: {
 					if ($agent =~ /Chrome/smx) {
 						$correct_value = qq[function $property() { [native code] }];
 					} else {
-						$correct_value = qq[function $property() {\\n [native code]\\n}];
+						$correct_value = qq[function $property() {\\n    [native code]\\n}];
 					}
 					ok($actual_values{$property}{$descriptor} eq $correct_value, "navigator.$property ($descriptor) = $correct_value:$actual_values{$property}{$descriptor}");
 				}

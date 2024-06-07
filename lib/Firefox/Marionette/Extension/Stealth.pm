@@ -440,7 +440,8 @@ _JS_
 
 sub _native_code_body {
     my ( $class, $to_browser_type ) = @_;
-    my $native_code_body = q[{] . q[\\] . 'n    [native code]' . q[\\] . q[n}];
+    my $native_code_body =
+      q[{] . q[\\] . 'n\\x20\\x20\\x20\\x20[native code]' . q[\\] . q[n}];
     if ( ( defined $to_browser_type ) && ( $to_browser_type eq 'chrome' ) ) {
         $native_code_body = q[{ [native code] }];
     }
