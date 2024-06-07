@@ -145,13 +145,14 @@ sub timezone_contents {
       if (mutation.type === "childList") {
         for (let node of mutation.addedNodes) {
           if (node.nodeName === "IFRAME") {
-            setTimezone(node.contentWindow);
+            if (node.contentWindow !== null) {
+              setTimezone(node.contentWindow);
+            }
           }
         }
       }
     }
   }).observe((document.head || document.documentElement), { attributes: true, childList: true, subtree: true });
-
 
   if (("console" in window) && ("log" in window.console)) {
     console.log("Loaded Firefox::Marionette::Extension::Timezone");
