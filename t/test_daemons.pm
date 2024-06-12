@@ -153,6 +153,7 @@ sub new {
     $self->{ca_config_handle}->print(<<"_CONFIG_");
 [ req ]
 distinguished_name     = req_distinguished_name
+x509_extensions        = v3_ca
 attributes             = req_attributes
 prompt                 = no
 
@@ -183,6 +184,13 @@ authorityKeyIdentifier = keyid,issuer
 basicConstraints       = CA:FALSE
 keyUsage               = digitalSignature, keyEncipherment
 prompt                 = no
+
+[ v3_ca ]
+keyUsage=critical, keyCertSign
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer:always
+basicConstraints=critical,CA:TRUE,pathlen:1
+extendedKeyUsage=serverAuth
 
 _CONFIG_
     seek $self->{ca_config_handle}, 0, 0
