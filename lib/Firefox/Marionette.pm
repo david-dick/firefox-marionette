@@ -13943,7 +13943,17 @@ accepts an optional hash as a parameter.  Allowed keys are below;
 
 =item * profile - create a new profile based on the supplied L<profile|Firefox::Marionette::Profile>.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|/set_pref> and L<clear_pref|/clear_pref> methods to make changes while firefox is running.
 
-=item * profile_name - pick a specific existing profile to automate, rather than creating a new profile.  L<Firefox|https://firefox.com> refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the L<Firefox::Marionette::Profile::names()|Firefox::Marionette::Profile#names> method.  NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|/set_pref> and L<clear_pref|/clear_pref> methods to make changes while firefox is running.
+=item * profile_name - pick a specific existing profile to automate, rather than creating a new profile.  L<Firefox|https://firefox.com> refuses to allow more than one instance of a profile to run at the same time.  Profile names can be obtained by using the L<Firefox::Marionette::Profile::names()|Firefox::Marionette::Profile#names> method. The following conditions are required to use existing profiles;
+
+=over 8
+
+=item * the preference C<security.webauth.webauthn_enable_softtoken> must be set to C<true> in the profile OR
+
+=item * the C<webauth> parameter to this method must be set to C<0>
+
+=back
+
+NOTE: firefox ignores any changes made to the profile on the disk while it is running, instead, use the L<set_pref|/set_pref> and L<clear_pref|/clear_pref> methods to make changes while firefox is running.
 
 =item * proxy - this is a shortcut method for setting a L<proxy|Firefox::Marionette::Proxy> using the L<capabilities|Firefox::Marionette::Capabilities> parameter above.  It accepts a proxy URL, with the following allowable schemes, 'http' and 'https'.  It also allows a reference to a list of proxy URLs which will function as list of proxies that Firefox will try in L<left to right order|https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#description> until a working proxy is found.  See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH>, L<NETWORK ARCHITECTURE|/NETWORK-ARCHITECTURE> and L<SETTING UP SOCKS SERVERS USING SSH|Firefox::Marionette::Proxy#SETTING-UP-SOCKS-SERVERS-USING-SSH>.
 

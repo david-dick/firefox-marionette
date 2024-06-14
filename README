@@ -2217,10 +2217,17 @@ SUBROUTINES/METHODS
       than creating a new profile. Firefox <https://firefox.com> refuses to
       allow more than one instance of a profile to run at the same time.
       Profile names can be obtained by using the
-      Firefox::Marionette::Profile::names() method. NOTE: firefox ignores
-      any changes made to the profile on the disk while it is running,
-      instead, use the set_pref and clear_pref methods to make changes
-      while firefox is running.
+      Firefox::Marionette::Profile::names() method. The following
+      conditions are required to use existing profiles;
+
+	* the preference security.webauth.webauthn_enable_softtoken must be
+	set to true in the profile OR
+
+	* the webauth parameter to this method must be set to 0
+
+      NOTE: firefox ignores any changes made to the profile on the disk
+      while it is running, instead, use the set_pref and clear_pref methods
+      to make changes while firefox is running.
 
       * proxy - this is a shortcut method for setting a proxy using the
       capabilities parameter above. It accepts a proxy URL, with the
