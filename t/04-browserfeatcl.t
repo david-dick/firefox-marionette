@@ -59,7 +59,7 @@ SKIP: {
 	my ($major_version, $minor_version, $patch_version) = split /[.]/smx, $firefox->browser_version();
 	my $original_agent = $firefox->agent();
 	ok($firefox->script('return navigator.webdriver') == JSON::true(), "\$firefox->script('return navigator.webdriver') returns true");
-	my $webdriver_definition_script = 'let descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(navigator), "webdriver"); return descriptor.get.toString();';
+	my $webdriver_definition_script = 'return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(navigator), "webdriver").get.toString();';
 	my $original_webdriver_definition = $firefox->script($webdriver_definition_script);
 	my $quoted_webdriver_definition = $original_webdriver_definition;
 	$quoted_webdriver_definition =~ s/\n/\\n/smxg;
