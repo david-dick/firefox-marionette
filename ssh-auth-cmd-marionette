@@ -169,10 +169,11 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
     my @sftp_server_regexs;
     if ( !$options{'scp-only'} ) {
         @sftp_server_regexs = (
-            map { qr/$_/smx } (
+            map { qr/${_}[ ]?/smx }
+              ( # Adding a space for new sftp-server in Fedora 40 (openssh-9.6p1)
                 quotemeta '/usr/libexec/openssh/sftp-server',   # Redhat, Debian
                 quotemeta '/usr/libexec/sftp-server',           # FreeBSD
-            )
+              )
         );
     }
     my $darwin_profile_regex = qr/Application[ ]Support\/Firefox\/Profiles/smx;
