@@ -154,6 +154,13 @@ sub timezone_contents {
     }
   }).observe((document.head || document.documentElement), { attributes: true, childList: true, subtree: true });
 
+  if ("Worker" in window) {
+    let tzw = window.Worker;
+    window.Worker = function(url) {
+      console.log("Worker told to start with " + url);
+      return new tzw(url);
+    };
+  }
   if (("console" in window) && ("log" in window.console)) {
     console.log("Loaded Firefox::Marionette::Extension::Timezone");
   }
