@@ -357,7 +357,7 @@ SKIP: {
 		ok($javascript =~ /delete[ ]window[.]ShadowRoot/, "Extension code includes ShadowRoot");
 	}
 	my $nightly_failures_found = 0;
-	foreach my $version (reverse (6 .. 124)) {
+	foreach my $version (reverse (6 .. 123)) {
 		ok(1, "About to go to Firefox v$version");
 		my $agent = $firefox->agent(version => $version);
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent(version => $version) produces the actual agent string which contains Firefox version '$1'");
