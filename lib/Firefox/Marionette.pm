@@ -12732,7 +12732,7 @@ accepts a L<certificate stored in the Firefox database|Firefox::Marionette::Cert
         }
     }
 
-The L<ca-bundle-for-firefox|ca-bundle-for-firefox> command that is provided as part of this distribution does this.
+The L<ca-bundle-for-firefox|https://metacpan.org/pod/ca-bundle-for-firefox> command that is provided as part of this distribution does this.
 
 =head2 certificates
 
@@ -13959,7 +13959,7 @@ NOTE: firefox ignores any changes made to the profile on the disk while it is ru
 
 =item * reconnect - an experimental parameter to allow a reconnection to firefox that a connection has been discontinued.  See the survive parameter.
 
-=item * scp - force the scp protocol when transferring files to remote hosts via ssh. See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> and the --scp-only option in the L<ssh-auth-cmd-marionette|ssh-auth-cmd-marionette> script in this distribution.
+=item * scp - force the scp protocol when transferring files to remote hosts via ssh. See L<REMOTE AUTOMATION OF FIREFOX VIA SSH|/REMOTE-AUTOMATION-OF-FIREFOX-VIA-SSH> and the --scp-only option in the L<ssh-auth-cmd-marionette|https://metacpan.org/pod/ssh-auth-cmd-marionette> script in this distribution.
 
 =item * script - a shortcut to allow directly providing the L<script|Firefox::Marionette::Timeout#script> timeout, instead of needing to use timeouts from the capabilities parameter.  Overrides all longer ways.
 
@@ -14845,7 +14845,7 @@ This module has support for creating and automating an instance of Firefox on a 
 
     no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
 
-As an example, the L<ssh-auth-cmd-marionette|ssh-auth-cmd-marionette> command is provided as part of this distribution.
+As an example, the L<ssh-auth-cmd-marionette|https://metacpan.org/pod/ssh-auth-cmd-marionette> command is provided as part of this distribution.
 
 The module will expect to access private keys via the local L<ssh-agent|https://man.openbsd.org/ssh-agent> when authenticating.
 

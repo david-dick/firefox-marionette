@@ -679,8 +679,9 @@ SUBROUTINES/METHODS
             }
         }
 
-    The ca-bundle-for-firefox command that is provided as part of this
-    distribution does this.
+    The ca-bundle-for-firefox
+    <https://metacpan.org/pod/ca-bundle-for-firefox> command that is
+    provided as part of this distribution does this.
 
  certificates
 
@@ -2244,7 +2245,8 @@ SUBROUTINES/METHODS
 
       * scp - force the scp protocol when transferring files to remote
       hosts via ssh. See REMOTE AUTOMATION OF FIREFOX VIA SSH and the
-      --scp-only option in the ssh-auth-cmd-marionette script in this
+      --scp-only option in the ssh-auth-cmd-marionette
+      <https://metacpan.org/pod/ssh-auth-cmd-marionette> script in this
       distribution.
 
       * script - a shortcut to allow directly providing the script timeout,
@@ -3411,8 +3413,9 @@ REMOTE AUTOMATION OF FIREFOX VIA SSH
 
         no-agent-forwarding,no-pty,no-X11-forwarding,permitopen="127.0.0.1:*",command="/usr/local/bin/ssh-auth-cmd-marionette" ssh-rsa AAAA ... == user@server
 
-    As an example, the ssh-auth-cmd-marionette command is provided as part
-    of this distribution.
+    As an example, the ssh-auth-cmd-marionette
+    <https://metacpan.org/pod/ssh-auth-cmd-marionette> command is provided
+    as part of this distribution.
 
     The module will expect to access private keys via the local ssh-agent
     <https://man.openbsd.org/ssh-agent> when authenticating.
