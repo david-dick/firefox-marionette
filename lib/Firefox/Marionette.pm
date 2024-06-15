@@ -308,7 +308,7 @@ sub geo {
             q[data:application/json,]
               . JSON->new()->convert_blessed()->encode($location) );
         if ( my $ipgeolocation_timezone = $location->tz() ) {
-            $self->tz( $ipgeolocation_timezone );
+            $self->tz($ipgeolocation_timezone);
         }
         return $self;
     }
