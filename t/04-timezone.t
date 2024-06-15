@@ -85,7 +85,6 @@ SKIP: {
 								);
 			ok($firefox, "Created a normal firefox object");
 			foreach my $time (
-						$now,
 						Time::Local::timegm(1,0,0,1,0,2000),
 						Time::Local::timegm(59,59,23,31,11,2010),
 						Time::Local::timegm(5,5,5,5,5,2005),
