@@ -67,7 +67,7 @@ _JS_
 sub timezone_contents {
     my ( $class, %parameters ) = @_;
     my $encoded_timezone = URI::Escape::uri_escape( $parameters{timezone} );
-    my $encoded_locale = URI::Escape::uri_escape( 'en-US' );
+    my $encoded_locale   = URI::Escape::uri_escape('en-US');
     my $contents         = <<"_JS_";
 {
   if (("console" in window) && ("log" in window.console)) {
