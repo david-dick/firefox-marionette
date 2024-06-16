@@ -1,5 +1,11 @@
 Revision history for Firefox-Marionette
 
+1.58  Sat Jun 15 21:01 2024
+       Fixes to sftp regexs in ssh-auth-cmd-marionette
+       Adding initial timezone work
+       Fixes to stealth module
+       Adding CLEAR_STORAGE_PERMISSIONS and CLEAR_COOKIES_AND_SITE_DATA methods
+
 1.57  Mon May 06 19:45 2024
        Setting minimum perl version to 5.10
 
