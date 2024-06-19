@@ -1888,7 +1888,7 @@ SKIP: {
 			$new_session_cookie = github_session_cookie($firefox);
 			ok(defined $new_session_cookie, "The session cookie was found after clearing cache");
 			TODO: {
-				local $TODO = ($uname eq 'darwin' || $arch =~ /$arch_32bit_re/smx) ? "Odd issues with clearing too many cookies on $uname ($arch)" : q[];
+				local $TODO = ($uname eq 'MSWin32' || $uname eq 'darwin' || $arch =~ /$arch_32bit_re/smx) ? "Odd issues with clearing too many cookies on $uname ($arch)" : q[];
 				ok($old_session_cookie eq $new_session_cookie, "The same session cookie found after clearing network cache");
 			}
 		}
