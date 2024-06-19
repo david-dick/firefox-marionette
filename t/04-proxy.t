@@ -1,4 +1,4 @@
-#! /usr/bin/perl -wT
+#! /usr/bin/perl -w
 
 use strict;
 use Firefox::Marionette();
@@ -19,14 +19,6 @@ SKIP: {
 	}
 	if ($^O eq 'MSWin32') {
 		plan skip_all => "Cannot test in a $^O environment";
-	} else {
-		delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
-		if (defined $ENV{PATH}) {
-			$ENV{PATH} = '/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin:/bin';
-			if ($^O eq 'netbsd') {
-				$ENV{PATH} .= ":/usr/pkg/sbin:/usr/pkg/bin";
-			}
-		}
 	}
 	require test_daemons;
 	if (!Test::CA->available()) {
