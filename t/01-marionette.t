@@ -114,9 +114,9 @@ $SIG{INT} = sub { $terminated = 1; die "Caught an INT signal"; };
 $SIG{TERM} = sub { $terminated = 1; die "Caught a TERM signal"; };
 
 sub wait_for_server_on {
-	my ($daemon, $pid) = @_;
-	my $host = URI->new($daemon->url())->host();
-	my $port = URI->new($daemon->url())->port();
+	my ($daemon, $url, $pid) = @_;
+	my $host = URI->new($url)->host();
+	my $port = URI->new($url)->port();
 	undef $daemon;
 	CONNECT: while (!IO::Socket::IP->new(Type => Socket::SOCK_STREAM(), PeerPort => $port, PeerHost => $host)) {
 		diag("Waiting for server ($pid) to listen on $host:$port:$!");
@@ -172,6 +172,7 @@ sub out_of_time {
 
 my $launches = 0;
 my $ca_cert_handle;
+my $ca_private_key_handle;
 my $metacpan_ca_cert_handle;
 my $guid_regex = qr/[a-f\d]{8}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{4}\-[a-f\d]{12}/smx;
 my @old_binary_keys = (qw(firefox_binary firefox marionette));;
@@ -669,14 +670,6 @@ if ($ENV{RELEASE_TESTING}) {
 		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
 			) ) {
 		if ( IO::Socket::SSL->new(
-		PeerAddr => 'untrusted-root.badssl.com:443',
-		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE(),
-			) ) {
-		if ( !IO::Socket::SSL->new(
-		PeerAddr => 'untrusted-root.badssl.com:443',
-		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
-			) ) {
-		if ( IO::Socket::SSL->new(
 		PeerAddr => 'metacpan.org:443',
 		SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_PEER(),
 			) ) {
@@ -684,12 +677,6 @@ if ($ENV{RELEASE_TESTING}) {
 			$tls_tests_ok = 1;
 		} else {
 			diag("TLS/Network are NOT okay:Failed to connect to metacpan.org:$IO::Socket::SSL::SSL_ERROR");
-		}
-		} else {
-			diag("TLS/Network are NOT okay:Successfully connected to untrusted-root.badssl.com");
-		}
-		} else {
-			diag("TLS/Network are NOT okay:Failed to connect to untrusted-root.badssl.com:$IO::Socket::SSL::SSL_ERROR");
 		}
 	} else {
 		diag("TLS/Network are NOT okay:Successfully connected to missing.example.org");
@@ -1127,7 +1114,7 @@ if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
 	eval {
 		$ca_cert_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_cert_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
 		fcntl $ca_cert_handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
-		my $ca_private_key_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_private_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
+		$ca_private_key_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_private_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
 		system {'openssl'} 'openssl', 'genrsa', '-out' => $ca_private_key_handle->filename(), 4096 and Carp::croak("Failed to generate a private key:$!");
 		my $ca_config_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_config_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
 		$ca_config_handle->print(<<"_CONFIG_");
@@ -1338,7 +1325,7 @@ SKIP: {
 				if (my $pid = fork) {
 					my $url = 'http://wtf.example.org';
 					my $favicon_url = 'http://wtf.example.org/favicon.ico';
-					wait_for_server_on($daemon, $pid);
+					wait_for_server_on($daemon, $daemon->url(), $pid);
 					$daemon = undef;
 					my $try_count = 0;
 					GO: {
@@ -1927,10 +1914,7 @@ SKIP: {
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("Skipping network tests", 3);
 	}
-	if (!$tls_tests_ok) {
-		skip("TLS test infrastructure seems compromised", 3);
-	}
-	ok($firefox->go(URI->new("https://untrusted-root.badssl.com/")), "https://untrusted-root.badssl.com/ has been loaded");
+	ok($firefox->go('about:mozilla'), 'about:mozilla has been loaded');
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 2);
 	}
@@ -2438,15 +2422,48 @@ SKIP: {
 	if (!$ENV{RELEASE_TESTING}) {
 		skip("Skipping network tests", 2);
 	}
-	if (!$tls_tests_ok) {
-		skip("TLS test infrastructure seems compromised", 2);
-	}
 	if (grep /^accept_insecure_certs$/, $capabilities->enumerate()) {
 		ok(!$capabilities->accept_insecure_certs(), "\$capabilities->accept_insecure_certs() is false");
-		eval { $firefox->go(URI->new("https://untrusted-root.badssl.com/")) };
-		my $exception = "$@";
-		chomp $exception;
-		ok(ref $@ eq 'Firefox::Marionette::Exception::InsecureCertificate', "https://untrusted-root.badssl.com/ threw an exception:$exception");
+		if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} ne 'localhost')) {
+			diag("insecure cert test is not supported for remote hosts");
+		} elsif (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_PORT})) {
+			diag("insecure cert test is not supported for remote hosts");
+		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
+			my $daemon = IO::Socket::SSL->new(
+				LocalAddr => 'localhost',
+				LocalPort => 0,
+				Listen => 10,
+				SSL_cert_file => $ca_cert_handle->filename(),
+				SSL_key_file => $ca_private_key_handle->filename(),
+			);
+			my $url = 'https://localhost:' . $daemon->sockport();
+			if (my $pid = fork) {
+				wait_for_server_on($daemon, $url, $pid);
+				eval { $firefox->go(URI->new($url)) };
+				my $exception = "$@";
+				chomp $exception;
+				ok(ref $@ eq 'Firefox::Marionette::Exception::InsecureCertificate', $url . " threw an exception:$exception");
+				while(kill 0, $pid) {
+					kill $signals_by_name{TERM}, $pid;
+					sleep 1;
+					waitpid $pid, POSIX::WNOHANG();
+				}
+			} elsif (defined $pid) {
+				eval {
+					foreach ((1 .. 2)) {
+						my $connection = $daemon->accept();
+					}
+					exit 0;
+				};
+				chomp $@;
+				diag("insecure cert test server failed:$@");
+				exit 1;
+			} else {
+				diag("insecure cert test fork failed:$@");
+			}
+		} else {
+			diag("No forking available for $^O");
+		}
 	} else {
 		diag("\$capabilities->accept_insecure_certs is not supported for " . $capabilities->browser_version());
 	}
@@ -4336,7 +4353,7 @@ SKIP: {
 			my $json_document = Encode::decode('UTF-8', '{ "id": "5", "value": "sömething"}');
 			my $txt_document = 'This is ordinary text';
 			if (my $pid = fork) {
-				wait_for_server_on($daemon, $pid);
+				wait_for_server_on($daemon, $daemon->url(), $pid);
 				my $base_url = $daemon->url();
 				undef $daemon;
 				$firefox->go($base_url . '?format=JSON');
@@ -4486,7 +4503,7 @@ SKIP: {
 				skip("\$capabilities->proxy is not supported for " . $^O, 3);
 			} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
 				if (my $pid = fork) {
-					wait_for_server_on($daemon, $pid);
+					wait_for_server_on($daemon, $daemon->url(), $pid);
 					my $base_url = $daemon->url();
 					undef $daemon;
 					$firefox->go($base_url . '?links_and_images');
