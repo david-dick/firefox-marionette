@@ -683,6 +683,7 @@ if ($ENV{RELEASE_TESTING}) {
 	}
 }
 my $skip_message;
+my $profiles_work = 1;
 SKIP: {
 	if ($ENV{FIREFOX_BINARY}) {
 		skip("No profile testing when the FIREFOX_BINARY override is used", 6);
@@ -702,6 +703,7 @@ SKIP: {
 	my @names = Firefox::Marionette::Profile->names();
 	foreach my $name (@names) {
 		next unless ($name eq 'throw');
+		$profiles_work = 0;
 		($skip_message, $firefox) = start_firefox(0, debug => 1, profile_name => $name );
 		if (!$skip_message) {
 			$at_least_one_success = 1;
@@ -718,6 +720,7 @@ SKIP: {
 		} else {
 			$profile = Firefox::Marionette::Profile->existing($name);
 		}
+		$profile->set_value('security.webauth.webauthn_enable_softtoken', 'true', 0);
 		($skip_message, $firefox) = start_firefox(0, profile => $profile );
 		if (defined $ENV{FIREFOX_DEBUG}) {
 			ok($firefox->debug() eq $ENV{FIREFOX_DEBUG}, "\$firefox->debug() returns \$ENV{FIREFOX_DEBUG}:$ENV{FIREFOX_DEBUG}");
@@ -728,6 +731,7 @@ SKIP: {
 		ok($firefox, "Firefox loaded with a profile copied from $name");
 		ok($firefox->go('http://example.com'), "firefox with the copied profile from $name loaded example.com");
 		ok($firefox->quit() == 0, "firefox with the profile copied from $name quit successfully");
+		$profiles_work = 1;
 	}
 }
 if ($ENV{WATERFOX}) {
@@ -5295,6 +5299,7 @@ SKIP: {
 	}
 
 }
+ok($profiles_work, "Specified profile names work");
 ok($at_least_one_success, "At least one firefox start worked");
 eval "no warnings; sub File::Temp::newdir { \$! = POSIX::EACCES(); return; } use warnings;";
 ok(!$@, "File::Temp::newdir is redefined to fail:$@");
