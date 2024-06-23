@@ -2429,14 +2429,15 @@ SKIP: {
 		} elsif (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_PORT})) {
 			diag("insecure cert test is not supported for remote hosts");
 		} elsif ((exists $Config::Config{'d_fork'}) && (defined $Config::Config{'d_fork'}) && ($Config::Config{'d_fork'} eq 'define')) {
+			my $ip_address = '127.0.0.1';
 			my $daemon = IO::Socket::SSL->new(
-				LocalAddr => 'localhost',
+				LocalAddr => $ip_address,
 				LocalPort => 0,
-				Listen => 10,
+				Listen => 20,
 				SSL_cert_file => $ca_cert_handle->filename(),
 				SSL_key_file => $ca_private_key_handle->filename(),
 			);
-			my $url = 'https://localhost:' . $daemon->sockport();
+			my $url = "https://$ip_address:" . $daemon->sockport();
 			if (my $pid = fork) {
 				wait_for_server_on($daemon, $url, $pid);
 				eval { $firefox->go(URI->new($url)) };
@@ -2450,6 +2451,10 @@ SKIP: {
 				}
 			} elsif (defined $pid) {
 				eval {
+					local $SIG{ALRM} = sub { die "alarm during insecure cert test\n" };
+					alarm 40;
+					$0 = "[Test insecure cert test for " . getppid . "]";
+					diag("Accepting connections on $url for $0");
 					foreach ((1 .. 2)) {
 						my $connection = $daemon->accept();
 					}
