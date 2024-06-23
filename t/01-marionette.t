@@ -1109,7 +1109,7 @@ SKIP: {
 	}
 }
 
-if (($^O eq 'MSWin32') || ($^O eq 'cygwin')) {
+if ($^O eq 'MSWin32') {
 } elsif ($ENV{RELEASE_TESTING}) {
 	eval {
 		$ca_cert_handle = File::Temp->new( TEMPLATE => File::Spec->catfile( File::Spec->tmpdir(), 'firefox_test_ca_cert_XXXXXXXXXXX')) or Firefox::Marionette::Exception->throw( "Failed to open temporary file for writing:$!");
