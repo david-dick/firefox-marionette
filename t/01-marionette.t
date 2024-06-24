@@ -290,7 +290,7 @@ sub start_firefox {
 			}
 			$parameters{capabilities} = Firefox::Marionette::Capabilities->new(%new);
 		}
-		if ((($parameters{visible}) || ($require_visible)) && ($ENV{FIREFOX_NO_VISIBLE})) {
+		if (($parameters{visible}) || ($require_visible)) {
 			$skip_message = "Firefox visible tests are unreliable on a remote host";
 			return ($skip_message, undef);
 		}
