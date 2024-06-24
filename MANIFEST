@@ -38,7 +38,7 @@ lib/Firefox/Marionette/WebWindow.pm
 lib/Waterfox/Marionette.pm
 lib/Waterfox/Marionette/Profile.pm
 Makefile.PL
-MANIFEST			This list of files
+MANIFEST
 LICENSE
 README
 README.md
@@ -99,5 +99,5 @@ t/addons/discogs-search/README.md
 t/stub.pl
 t/syscall_tests.pm
 t/test_daemons.pm
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.yml
+META.json
