@@ -176,7 +176,8 @@ qr/plutil[ ]-convert[ ]json[ ]-o[ ]-[ ]"(?:$plist_prefix_regex)\/Info[.]plist"/s
               )
         );
     }
-    my $darwin_profile_regex = qr/Application[ ]Support\/Firefox\/Profiles/smx;
+    my $darwin_profile_regex =
+      qr/Library\/Application\\[ ]Support\/Firefox\/Profiles/smx;
     my $named_profile_regex =
       qr/(?:[.]mozilla\/firefox|$darwin_profile_regex)/smx;
     my $profile_path_regex =
