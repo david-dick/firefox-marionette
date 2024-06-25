@@ -2459,7 +2459,7 @@ SKIP: {
 					alarm 40;
 					$0 = "[Test insecure cert test for " . getppid . "]";
 					diag("Accepting connections on $url for $0");
-					foreach ((1 .. 2)) {
+					foreach ((1 .. 3)) {
 						my $connection = $daemon->accept();
 					}
 					exit 0;
