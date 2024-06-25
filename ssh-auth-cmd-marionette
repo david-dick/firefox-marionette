@@ -32,6 +32,14 @@ my $binary  = 'firefox';
 my $ident   = 'ssh-auth-cmd-marionette';
 my %options = ( facility => 'LOG_LOCAL0' );
 
+sub _origin {
+    my (
+        $source_ip_address,      $source_port,
+        $destination_ip_address, $destination_port
+    ) = split q[ ], $ENV{SSH_CONNECTION};
+    return $source_ip_address;
+}
+
 sub _tmp_directory_regex {
     my (%parameters) = @_;
     my $regex = qr{(?:/var)?/tmp}smx;
@@ -223,17 +231,18 @@ qr/ls[ ]-1[ ]"$allowed_binary_directories_regex(?:\/updates(?:\/\d+)?)?"/smx,
         }
         Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
         Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
-            "Executing '$command_and_arguments'" );
+            "Executing '$command_and_arguments' from " . _origin() );
         Sys::Syslog::closelog();
         exec $command_and_arguments
           or die "Failed to '$command_and_arguments':$EXTENDED_OS_ERROR\n";
     }
     else {
+        my $origin = _origin();
         Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
         Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
                 'Unrecognisable command "'
               . $ENV{SSH_ORIGINAL_COMMAND}
-              . "\" with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\""
+              . "\" from $origin with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\""
         );
         Sys::Syslog::closelog();
     }
