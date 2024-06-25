@@ -35,6 +35,7 @@ our @EXPORT_OK = qw(
   CLEAR_FINGERPRINTING_PROTECTION_STATE
   CLEAR_BOUNCE_TRACKING_PROTECTION_STATE
   CLEAR_STORAGE_PERMISSIONS
+  CLEAR_SHUTDOWN_EXCEPTIONS
   CLEAR_ALL
   CLEAR_ALL_CACHES
   CLEAR_DOM_STORAGES
@@ -59,7 +60,7 @@ sub CLEAR_HISTORY                          { return 1024 }
 sub CLEAR_SESSION_HISTORY                  { return 2048 }
 sub CLEAR_AUTH_TOKENS                      { return 4096 }
 sub CLEAR_AUTH_CACHE                       { return 8192 }
-sub CLEAR_PERMISSIONS                      { return 16_384 }
+sub CLEAR_SITE_PERMISSIONS                 { return 16_384 }
 sub CLEAR_CONTENT_PREFERENCES              { return 32_768 }
 sub CLEAR_HSTS                             { return 65_536 }
 sub CLEAR_EME                              { return 131_072 }
@@ -76,7 +77,12 @@ sub CLEAR_COOKIE_BANNER_EXECUTED_RECORD    { return 134_217_728 }
 sub CLEAR_FINGERPRINTING_PROTECTION_STATE  { return 268_435_456 }
 sub CLEAR_BOUNCE_TRACKING_PROTECTION_STATE { return 536_870_912 }
 sub CLEAR_STORAGE_PERMISSIONS              { return 1_073_741_824 }
+sub CLEAR_SHUTDOWN_EXCEPTIONS              { return 2_147_483_648 }
 sub CLEAR_ALL                              { return 0xFFFFFFFF }
+
+sub CLEAR_PERMISSIONS {
+    return CLEAR_SITE_PERMISSIONS() | CLEAR_SHUTDOWN_EXCEPTIONS();
+}
 
 sub CLEAR_ALL_CACHES {
     return CLEAR_NETWORK_CACHE() | CLEAR_IMAGE_CACHE() | CLEAR_CSS_CACHE() |
@@ -133,6 +139,8 @@ Version 1.58
 
 This module handles the implementation of the Firefox cache constants.  This is sourced from L<toolkit/components/cleardata/nsIClearDataService.idl|https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/cleardata/nsIClearDataService.idl>
 
+Cache settings in Firefox have changed a lot and are still changing in 2024.  The ones that have been historically available AND stable (they have at least retained the same number) have been L<CLEAR_COOKIES|/CLEAR_COOKIES>, L<CLEAR_NETWORK_CACHE|/CLEAR_NETWORK_CACHE> and L<CLEAR_IMAGE_CACHE|/CLEAR_IMAGE_CACHE>.  For the other variables, YMMV.
+
 =head1 CONSTANTS
 
 =head2 CLEAR_COOKIES
@@ -187,9 +195,9 @@ returns the value of CLEAR_AUTH_TOKENS, which is 1 << 12 = 4096
 
 returns the value of CLEAR_AUTH_CACHE, which is 1 << 13 = 8192 (Login cache)
 
-=head2 CLEAR_PERMISSIONS
+=head2 CLEAR_SITE_PERMISSIONS
 
-returns the value of CLEAR_PERMISSIONS, which is 1 << 14 = 16384
+returns the value of CLEAR_SITE_PERMISSIONS, which is 1 << 14 = 16384
 
 =head2 CLEAR_CONTENT_PREFERENCES
 
@@ -255,9 +263,17 @@ returns the value of CLEAR_BOUNCE_TRACKING_PROTECTION_STATE, which is 1 << 29 = 
 
 returns the value of CLEAR_STORAGE_PERMISSIONS, which is 1 << 30 = 1073741824
 
+=head2 CLEAR_SHUTDOWN_EXCEPTIONS
+
+returns the value of CLEAR_SHUTDOWN_EXCEPTIONS, which is 1 << 31 = 2147483648
+
 =head2 CLEAR_ALL
 
 returns the value of CLEAR_ALL, which is 4294967295 (0xFFFFFFFF)
+
+=head2 CLEAR_PERMISSIONS
+
+returns the value of CLEAR_PERMISSIONS, which is 2147500032 (L<CLEAR_SITE_PERMISSIONS|/CLEAR_SITE_PERMISSIONS> | L<CLEAR_SHUTDOWN_EXCEPTIONS|/CLEAR_SHUTDOWN_EXCEPTIONS>)
 
 =head2 CLEAR_ALL_CACHES
 
