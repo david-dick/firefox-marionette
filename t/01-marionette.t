@@ -712,6 +712,20 @@ SKIP: {
 			skip($skip_message, 6);
 		}
 		ok($firefox, "Firefox loaded with the $name profile");
+		if ($major_version < 52) {
+		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
+		} else {
+			my $install_path = Cwd::abs_path('t/addons/test.xpi');
+			diag("Original install path is $install_path");
+			if ($^O eq 'MSWin32') {
+				$install_path =~ s/\//\\/smxg;
+			}
+			diag("Installing extension from $install_path");
+			my $temporary = 1;
+			my $install_id = $firefox->install($install_path, $temporary);
+			ok($install_id, "Successfully installed an extension:$install_id");
+			ok($firefox->uninstall($install_id), "Successfully uninstalled an extension");
+		}
 		ok($firefox->go('http://example.com'), "firefox with the $name profile loaded example.com");
 		ok($firefox->quit() == 0, "firefox with the $name profile quit successfully");
 		my $profile;
