@@ -211,7 +211,7 @@ qr/(?:$quoted_linux_profiles_ini|$quoted_darwin_profiles_ini)\/profiles[.]ini/sm
       qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-t[ ]"?$root_dir_regex\/$addons_regex"?/smx,
       qr/scp[ ]\-p[ ]\-t[ ]$root_dir_regex\/certs\/root_ca_\d{1,10}[.]cer/smx,
 qr/scp[ ]\-p[ ]\-[fT][ ](?:\-P[ ])?$allowed_binary_directories_regex\/$version_updates_regex/smx,
-      qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]"?$root_dir_regex\/$downloads_regex"?/smx,
+qr/scp(?:[ ]\-v)?[ ]\-p[ ]\-[tf][ ]"?$root_dir_regex\/$downloads_regex"?/smx,
       qr/scp[ ]\-p[ ]\-[tf][ ]"?$profiles_ini_regex"?/smx,
       qr/kill[ ]\-0[ ]\d{1,8}/smx,
       qr/which[ ]$allowed_binary_regex/smx,
