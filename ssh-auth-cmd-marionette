@@ -223,6 +223,7 @@ qr/ls[ ]-1[ ]"$allowed_binary_directories_regex(?:\/updates(?:\/\d+)?)?"/smx,
       qr/(?:$xvfb_regex)?"$allowed_binary_regex"$firefox_arguments_regex/smx,
       qr/grep[ ]$prefs_grep_patterns_regex$profile_path_regex\/prefs[.]js/smx;
 
+    my $user_name = getpwuid $EFFECTIVE_USER_ID;
     if ( $ENV{SSH_ORIGINAL_COMMAND} =~ m/^($allowed_commands_regex)$/smx ) {
         my ($command_and_arguments) = ($1);
         if ( $options{'force-binary'} ) {
@@ -231,7 +232,8 @@ qr/ls[ ]-1[ ]"$allowed_binary_directories_regex(?:\/updates(?:\/\d+)?)?"/smx,
         }
         Sys::Syslog::openlog( $ident, 'cons', $options{facility} );
         Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
-            "Executing '$command_and_arguments' from " . _origin() );
+            "Executing '$command_and_arguments' as '$user_name' from "
+              . _origin() );
         Sys::Syslog::closelog();
         exec $command_and_arguments
           or die "Failed to '$command_and_arguments':$EXTENDED_OS_ERROR\n";
@@ -242,7 +244,7 @@ qr/ls[ ]-1[ ]"$allowed_binary_directories_regex(?:\/updates(?:\/\d+)?)?"/smx,
         Sys::Syslog::syslog( Sys::Syslog::LOG_WARNING(),
                 'Unrecognisable command "'
               . $ENV{SSH_ORIGINAL_COMMAND}
-              . "\" from $origin with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\""
+              . "\" as '$user_name' from $origin with a quoted TMPDIR of \"$quoted_tmp_directory\" and a root directory regex of \"$root_dir_regex\""
         );
         Sys::Syslog::closelog();
     }
