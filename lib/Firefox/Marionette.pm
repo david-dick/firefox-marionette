@@ -11893,12 +11893,9 @@ sub install {
     my $actual_path;
     if ( $self->_ssh() ) {
         if ( !$self->_addons_directory() ) {
-            $self->{_root_directory} = $self->_get_remote_root_directory();
+            $self->{_root_directory}   = $self->_get_remote_root_directory();
             $self->{_addons_directory} = $self->_make_remote_directory(
-                $self->_remote_catfile(
-                    $self->{_root_directory}, 'addons'
-                )
-            );
+                $self->_remote_catfile( $self->{_root_directory}, 'addons' ) );
         }
         my ( $volume, $directories, $name ) =
           File::Spec->splitpath("$xpi_path");
