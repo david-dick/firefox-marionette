@@ -1146,8 +1146,10 @@ sub _setup_ssh_with_reconnect {
                 $self->{marionette_binary} = $proxy->{ssh}->{binary};
                 $self->{_initial_version}  = $proxy->{firefox}->{version};
                 $self->_initialise_version();
-                $self->{_ssh_local_directory} = $ssh_local_directory;
-                $self->{_root_directory}      = $proxy->{ssh}->{root};
+                $self->{_ssh_local_directory}   = $ssh_local_directory;
+                $self->{_root_directory}        = $proxy->{ssh}->{root};
+                $self->{_remote_root_directory} = $proxy->{ssh}->{root};
+
                 if ( defined $proxy->{ssh}->{tmp} ) {
                     $self->{_original_remote_tmp_directory} =
                       $proxy->{ssh}->{tmp};
@@ -7519,6 +7521,9 @@ sub _write_local_proxy {
 sub _setup_profile_directories {
     my ( $self, $profile ) = @_;
     if ( ($profile) && ( $profile->download_directory() ) ) {
+        if ( $self->_ssh() ) {
+            $self->{_root_directory} = $self->_get_remote_root_directory();
+        }
     }
     elsif ( my $ssh = $self->_ssh() ) {
         $self->{_root_directory} = $self->_get_remote_root_directory();
@@ -10826,6 +10831,7 @@ sub title {
 
 sub quit {
     my ( $self, $flags ) = @_;
+    my $ssh_local_directory = $self->ssh_local_directory();
     if ( !$self->alive() ) {
         my $socket = delete $self->{_socket};
         if ($socket) {
@@ -10862,8 +10868,8 @@ sub quit {
         $self->_terminate_process();
     }
     if ( !$self->_reconnected() ) {
-        if ( $self->ssh_local_directory() ) {
-            File::Path::rmtree( $self->ssh_local_directory(), 0, 0 );
+        if ($ssh_local_directory) {
+            File::Path::rmtree( $ssh_local_directory, 0, 0 );
         }
         elsif ( defined $self->root_directory() ) {
             File::Path::rmtree( $self->root_directory(), 0, 0 );
@@ -10961,36 +10967,42 @@ sub _wait_for_firefox_to_exit {
 
 sub _get_remote_root_directory {
     my ($self) = @_;
-    $self->_initialise_remote_uname();
-    my $original_tmp_directory;
-    {
-        local %ENV = %ENV;
-        delete $ENV{TMPDIR};
-        delete $ENV{TMP};
-        $original_tmp_directory =
-             $self->_get_remote_environment_variable_via_ssh('TMPDIR')
-          || $self->_get_remote_environment_variable_via_ssh('TMP')
-          || '/tmp';
-        $original_tmp_directory =~ s/\/$//smx;    # remove trailing / for darwin
-        $self->{_original_remote_tmp_directory} = $original_tmp_directory;
-    }
-    my $name = File::Temp::mktemp('firefox_marionette_remote_XXXXXXXXXXX');
-    my $proposed_tmp_directory =
-      $self->_remote_catfile( $original_tmp_directory, $name );
-    local $ENV{TMPDIR} = $proposed_tmp_directory;
-    my $new_tmp_dir = $self->_get_remote_environment_variable_via_ssh('TMPDIR');
-    my $remote_root_directory;
+    if ( !$self->{_remote_root_directory} ) {
+        $self->_initialise_remote_uname();
+        my $original_tmp_directory;
+        {
+            local %ENV = %ENV;
+            delete $ENV{TMPDIR};
+            delete $ENV{TMP};
+            $original_tmp_directory =
+                 $self->_get_remote_environment_variable_via_ssh('TMPDIR')
+              || $self->_get_remote_environment_variable_via_ssh('TMP')
+              || '/tmp';
+            $original_tmp_directory =~
+              s/\/$//smx;    # remove trailing / for darwin
+            $self->{_original_remote_tmp_directory} = $original_tmp_directory;
+        }
+        my $name = File::Temp::mktemp('firefox_marionette_remote_XXXXXXXXXXX');
+        my $proposed_tmp_directory =
+          $self->_remote_catfile( $original_tmp_directory, $name );
+        local $ENV{TMPDIR} = $proposed_tmp_directory;
+        my $new_tmp_dir =
+          $self->_get_remote_environment_variable_via_ssh('TMPDIR');
+        my $remote_root_directory;
 
-    if (   ( defined $new_tmp_dir )
-        && ( $new_tmp_dir eq $proposed_tmp_directory ) )
-    {
-        $remote_root_directory = $self->_make_remote_directory($new_tmp_dir);
+        if (   ( defined $new_tmp_dir )
+            && ( $new_tmp_dir eq $proposed_tmp_directory ) )
+        {
+            $remote_root_directory =
+              $self->_make_remote_directory($new_tmp_dir);
+        }
+        else {
+            $remote_root_directory = $self->_make_remote_directory(
+                $self->_remote_catfile( $original_tmp_directory, $name ) );
+        }
+        $self->{_remote_root_directory} = $remote_root_directory;
     }
-    else {
-        $remote_root_directory = $self->_make_remote_directory(
-            $self->_remote_catfile( $original_tmp_directory, $name ) );
-    }
-    return $remote_root_directory;
+    return $self->{_remote_root_directory};
 }
 
 sub uname {
@@ -11046,7 +11058,7 @@ sub _get_remote_environment_variable_via_ssh {
 sub _cleanup_remote_filesystem {
     my ($self) = @_;
     if (   ( my $ssh = $self->_ssh() )
-        && ( defined $self->{_root_directory} ) )
+        && ( defined $self->_get_remote_root_directory() ) )
     {
         my $binary     = 'rm';
         my @parameters = ('-Rf');
@@ -11054,7 +11066,7 @@ sub _cleanup_remote_filesystem {
             $binary     = 'rmdir';
             @parameters = ( '/S', '/Q' );
         }
-        my @remote_directories = ( $self->{_root_directory} );
+        my @remote_directories = ( $self->_get_remote_root_directory() );
         if ( $self->{_original_remote_tmp_directory} ) {
             foreach my $sandbox ( sort { $a cmp $b } keys %{ $ssh->{sandbox} } )
             {
@@ -11870,15 +11882,21 @@ sub _get_xpi_path {
     return $xpi_path;
 }
 
+sub _addons_directory {
+    my ($self) = @_;
+    return $self->{_addons_directory};
+}
+
 sub install {
     my ( $self, $path, $temporary ) = @_;
     my $xpi_path = $self->_get_xpi_path($path);
     my $actual_path;
     if ( $self->_ssh() ) {
-        if ( !$self->{_addons_directory} ) {
+        if ( !$self->_addons_directory() ) {
+            $self->{_root_directory} = $self->_get_remote_root_directory();
             $self->{_addons_directory} = $self->_make_remote_directory(
                 $self->_remote_catfile(
-                    $self->_get_remote_root_directory(), 'addons'
+                    $self->{_root_directory}, 'addons'
                 )
             );
         }
@@ -11888,7 +11906,7 @@ sub install {
           or Firefox::Marionette::Exception->throw(
             "Failed to open '$xpi_path' for reading:$EXTENDED_OS_ERROR");
         binmode $handle;
-        my $addons_directory = $self->{_addons_directory};
+        my $addons_directory = $self->_addons_directory();
         $actual_path = $self->_remote_catfile( $addons_directory, $name );
         $self->_put_file_via_scp( $handle, $actual_path, 'addon ' . $name );
         if ( $self->_remote_uname() eq 'cygwin' ) {
