@@ -41,6 +41,7 @@ if (defined $ENV{WATERFOX}) {
 	$class = 'Firefox::Marionette';
 	$class->import(qw(:all));
 }
+diag("Starting test at " . localtime);
 my $alarm;
 if (defined $ENV{FIREFOX_ALARM}) {
 	if ($ENV{FIREFOX_ALARM} =~ /^(\d{1,6})\s*$/smx) {
@@ -493,6 +494,11 @@ sub start_firefox {
 	}
 	if (($firefox) && (!$skip_message)) {
 		$launches += 1;
+		if (defined $firefox->root_directory()) {
+			ok($firefox, "\$firefox->root_directory() is " . $firefox->root_directory());
+		} else {
+			ok($firefox, "\$firefox->root_directory() is not defined yet");
+		}
 	}
 	return ($skip_message, $firefox);
 }
