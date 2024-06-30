@@ -537,7 +537,7 @@ MAIN: {
 	_multiple_attempts_execute($^X, [ ($local_devel_cover_inc ? $local_devel_cover_inc : ()), '-Ilib', '-wT', 't/04-proxy.t' ], {});
 	_multiple_attempts_execute($^X, [ ($local_devel_cover_inc ? $local_devel_cover_inc : ()), '-Ilib', 't/04-webauthn.t' ], {});
 	_multiple_attempts_execute($^X, [ ($local_devel_cover_inc ? $local_devel_cover_inc : ()), '-Ilib', 't/04-botd.t' ], {});
-	_multiple_attempts_execute($^X, [ ($local_devel_cover_inc ? $local_devel_cover_inc : ()), '-Ilib', '-wT', 't/04-browserfeatcl.t' ], {});
+	_multiple_attempts_execute($^X, [ ($local_devel_cover_inc ? $local_devel_cover_inc : ()), '-Ilib', 't/04-browserfeatcl.t' ], {});
 	_multiple_attempts_execute($^X, [ ($local_devel_cover_inc ? $local_devel_cover_inc : ()), '-Ilib', 't/04-timezone.t' ], {});
 	while (_check_for_background_processes($background_pids, @servers)) {
 		sleep 10;
