@@ -1191,6 +1191,9 @@ SKIP: {
 	}
 	my $proxy = Firefox::Marionette::Proxy->new(%proxy_parameters);
 	my $bookmarks_path = File::Spec->catfile(Cwd::cwd(), qw(t data bookmarks_edge.html));
+	if ($major_version == 38) {
+		skip("Skipping b/c of segmentation faults for proxy capabilities", 6);
+	}
 	($skip_message, $firefox) = start_firefox(0, kiosk => 1, sleep_time_in_ms => 5, profile => $profile, capabilities => Firefox::Marionette::Capabilities->new(proxy => $proxy, moz_headless => 1, strict_file_interactability => 1, accept_insecure_certs => 1, page_load_strategy => 'eager', unhandled_prompt_behavior => 'accept and notify', moz_webdriver_click => 1, moz_accessibility_checks => 1, moz_use_non_spec_compliant_pointer_origin => 1, timeouts => Firefox::Marionette::Timeouts->new(page_load => 54_321, script => 4567, implicit => 6543)), bookmarks => $bookmarks_path);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1446,6 +1449,9 @@ SKIP: {
 	my $longitude = 24;
 	my $geo1 = Firefox::Marionette::GeoLocation->new(lat => $latitude, lng => $longitude);
 	diag("Starting new firefox for testing proxies with proxy port TCP/$proxyPort");
+	if (($major_version == 45) || ($major_version == 38)) {
+		skip("Skipping b/c of segmentation faults for proxy capabilities", 6);
+	}
 	($skip_message, $firefox) = start_firefox(0, chatty => 1, devtools => 1, page_load => 65432, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( pac => URI->new('http://localhost:' . $proxyPort)), moz_headless => 1), geo => $geo1);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -1492,6 +1498,9 @@ SKIP: {
 	my $visible = 1;
 	if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} eq 'localhost') && ($ENV{FIREFOX_USER})) {
 		$visible = 'local';
+	}
+	if ($major_version == 38) {
+		skip("Skipping b/c proxy must be undefined", 7);
 	}
 	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost', none => 'localhost')));
 	if (!$skip_message) {
@@ -4664,6 +4673,9 @@ SKIP: {
 	my $proxyPort = empty_port();
 	diag("Starting new firefox for testing proxy by argument, capabilities, window switching and certificates using proxy port TCP/$proxyPort");
 	my $proxy_host = 'localhost:' . $proxyPort;
+	if ($major_version == 38) {
+		skip("Skipping b/c proxy must be undefined", 32);
+	}
 	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json', 't/data/key4.db' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -4946,9 +4958,12 @@ SKIP: {
 	my $proxyHttpPort = empty_port();
 	my $proxyHttpsPort = empty_port();
 	my $proxyFtpPort = empty_port();
-	$ENV{http_proxy} = 'http://localhost:' . $proxyHttpPort;
-	$ENV{https_proxy} = 'http://localhost:' . $proxyHttpsPort;
-	$ENV{ftp_proxy} = 'ftp://localhost:' . $proxyFtpPort;
+	if ($major_version == 38) {
+	} else {
+		$ENV{http_proxy} = 'http://localhost:' . $proxyHttpPort;
+		$ENV{https_proxy} = 'http://localhost:' . $proxyHttpsPort;
+		$ENV{ftp_proxy} = 'ftp://localhost:' . $proxyFtpPort;
+	}
 	($skip_message, $firefox) = start_firefox(1, addons => 1, visible => 1, width => 800, height => 600);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5124,6 +5139,12 @@ SKIP: {
 	diag("Starting new firefox for testing visibility and TLS proxy servers");
 	my $proxyPort = empty_port();
 	my $proxy_host = 'localhost:' . $proxyPort;
+	if ($major_version == 45) {
+		skip("Skipping b/c of proxy setCharPref exceptions", 1);
+	}
+	if ($major_version == 38) {
+		skip("Skipping b/c proxy must be undefined", 1);
+	}
 	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600,capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, proxy => Firefox::Marionette::Proxy->new(tls => $proxy_host)));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5220,6 +5241,9 @@ SKIP: {
 	diag("Starting new firefox for shortcut TLS proxy servers");
 	my $proxyPort = empty_port();
 	my $proxy_host = 'localhost:' . $proxyPort;
+	if (($major_version == 45) || ($major_version == 38)) {
+		skip("Skipping b/c of segmentation faults for proxy capabilities", 5);
+	}
 	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, page_load_strategy => 'none', proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), proxy => "https://$proxy_host");
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5255,6 +5279,9 @@ SKIP: {
 	diag("Starting new firefox for shortcut normal proxy servers");
 	my $proxyPort = empty_port();
 	my $proxy_host = 'localhost:' . $proxyPort;
+	if ($major_version == 38) {
+		skip("Skipping b/c of segmentation faults for proxy capabilities", 5);
+	}
 	($skip_message, $firefox) = start_firefox(0, proxy => URI::URL->new("http://$proxy_host"));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
