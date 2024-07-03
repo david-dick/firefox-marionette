@@ -42,6 +42,10 @@ MAIN: {
       and Carp::croak(q[Failed to 'perl Makefile.PL']);
     system {'cover'} 'cover', '-test'
       and Carp::croak(q[Failed to 'cover -test']);
+    system {'make'} 'make', 'clean'
+      and Carp::croak(q[Failed to 'make clean']);
+    system {'rm'} 'rm', 'Makefile.old'
+      and Carp::croak(q[Failed to 'rm Makefile.old']);
     Sys::Syslog::openlog( $ident, 'cons', $facility );
     Sys::Syslog::syslog( Sys::Syslog::LOG_INFO(),
         "Passed cover -test at mozilla-central changeset $changeset" );
