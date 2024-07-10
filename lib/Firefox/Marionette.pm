@@ -49,7 +49,6 @@ use Time::HiRes();
 use Time::Local();
 use File::HomeDir();
 use File::Temp();
-use File::stat();
 use File::Spec::Unix();
 use File::Spec::Win32();
 use FileHandle();
