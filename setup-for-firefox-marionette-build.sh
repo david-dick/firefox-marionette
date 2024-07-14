@@ -376,6 +376,32 @@ _PKG_PATH_
 		perl -MCrypt::URandom -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Crypt::URandom
 		perl -MCrypt::PasswdMD5 -e 'exit 0' || PERL_MM_USE_DEFAULT=1 cpan Crypt::PasswdMD5
 		;;
+	Darwin)
+		for PACKAGE in Archive::Zip \
+					JSON \
+					Config::INI \
+					Crypt::PasswdMD5 \
+					Crypt::URandom \
+					File::HomeDir \
+					Digest::SHA \
+					HTTP::Daemon \
+					HTTP::Message \
+					IO::Socket::SSL \
+					PDF::API2 \
+					PerlIO::utf8_strict \
+					Sub::Exporter \
+					Sub::Uplevel \
+					Text::CSV_XS \
+					Term::ReadKey \
+					Test::CheckManifest \
+					Test::Pod \
+					Test::Pod::Coverage \
+					Test::Simple \
+					XML::Parser
+		do
+			perl -M$PACKAGE -e 'exit 0' 2>>/dev/null || PERL_MM_USE_DEFAULT=1 ${SUDO_WITH_ENVIRONMENT}cpan $PACKAGE
+		done
+		;;
 	*)
 		echo "Any help with patching '$OSNAME' support would be awesome???"
 		;;
