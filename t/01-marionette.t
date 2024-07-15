@@ -2913,6 +2913,12 @@ SKIP: {
 		if (!$tls_tests_ok) {
 			skip("TLS test infrastructure seems compromised", 5);
 		}
+		if ($^O eq 'darwin') {
+			if (($firefox->nightly()) || ($firefox->developer())) {
+				skip("github actions are having trouble for Darwin nightly", 5);
+				diag("github actions are having trouble for Darwin nightly");
+			}
+		}
 		ok($firefox->go(URI->new("https://fastapi.metacpan.org/author/DDICK")), "https://fastapi.metacpan.org/author/DDICK has been loaded");
 		ok($firefox->interactive() && $firefox->loaded(), "\$firefox->interactive() and \$firefox->loaded() are ok");
 		if ($major_version < 61) {
