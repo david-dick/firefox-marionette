@@ -51,6 +51,10 @@ SKIP: {
 	my ($major_version, $minor_version, $patch_version) = split /[.]/smx, $firefox->browser_version();
 	my $original_agent = $firefox->agent();
 	ok($firefox->script('return navigator.webdriver') == JSON::true(), "\$firefox->script('return navigator.webdriver') returns true");
+	my $webdriver_prototype_call_script = 'try { Object.getPrototypeOf(navigator).webdriver } catch (e) { return e.toString() }';
+	my $original_webdriver_prototype_call_result = $firefox->script($webdriver_prototype_call_script);
+	my $webdriver_prototype_call_regex = qr/TypeError:[ ]'get[ ]webdriver'[ ]called[ ]on[ ]an[ ]object[ ]that[ ]does[ ]not[ ]implement[ ]interface[ ]Navigator[.]/smx;
+	ok($original_webdriver_prototype_call_result =~ /^$webdriver_prototype_call_regex$/smx, "window.Navigator.prototype.webdriver throws type error:" . $original_webdriver_prototype_call_result);
 	my $webdriver_definition_script = 'return Object.getOwnPropertyDescriptor(Object.getPrototypeOf(navigator), "webdriver").get.toString();';
 	my $original_webdriver_definition = $firefox->script($webdriver_definition_script);
 	my $quoted_webdriver_definition = $original_webdriver_definition;
@@ -66,6 +70,12 @@ SKIP: {
 			devtools => 1,
 					);
 	ok($firefox, "Created a stealth firefox object");
+	check_webdriver($firefox,
+				webdriver_definition_script => $webdriver_definition_script,
+				webdriver_def_regex => $webdriver_def_regex,
+				webdriver_prototype_call_script => $webdriver_prototype_call_script,
+				webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+			);
 	# checking against
 	# https://browserleaks.com/javascript
 	# https://www.amiunique.org/fingerprint
@@ -304,7 +314,12 @@ SKIP: {
 		chomp $exception;
 		ok(ref $@ eq 'Firefox::Marionette::Exception', "\$firefox->agent(increment => 'blah') throws an exception:$exception");
 	}
-	check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+	check_webdriver($firefox,
+				webdriver_definition_script => $webdriver_definition_script,
+				webdriver_def_regex => $webdriver_def_regex,
+				webdriver_prototype_call_script => $webdriver_prototype_call_script,
+				webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+			);
 	{
 		my $tmp_dir = File::Temp->newdir(
 					TEMPLATE => File::Spec->catdir(File::Spec->tmpdir(), 'perl_ff_m_test_XXXXXXXXXXX')
@@ -353,7 +368,12 @@ SKIP: {
 		ok(1, "About to go to Firefox v$version");
 		my $agent = $firefox->agent(version => $version);
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent(version => $version) produces the actual agent string which contains Firefox version '$1'");
-		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+		check_webdriver($firefox,
+					webdriver_definition_script => $webdriver_definition_script,
+					webdriver_def_regex => $webdriver_def_regex,
+					webdriver_prototype_call_script => $webdriver_prototype_call_script,
+					webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+				);
 		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Loaded browserfeatcl");
 		$agent = $firefox->agent();
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent() contains Firefox version '$1' in the agent string (real version is " . $firefox->browser_version() . ")");
@@ -386,7 +406,12 @@ SKIP: {
 				ok(0, "browserfeatcl failed to output any version when looking for fake version '$version'");
 			}
 		}
-		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+		check_webdriver($firefox,
+					webdriver_definition_script => $webdriver_definition_script,
+					webdriver_def_regex => $webdriver_def_regex,
+					webdriver_prototype_call_script => $webdriver_prototype_call_script,
+					webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+				);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
 	}
 	foreach my $version (reverse (80 .. 121)) {
@@ -394,7 +419,12 @@ SKIP: {
 		ok(1, "About to go to Chrome v$version - $chrome_user_agent");
 		my $agent = $firefox->agent($chrome_user_agent);
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent('$chrome_user_agent') produces the actual agent string which contains Firefox version '$1'");
-		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+		check_webdriver($firefox,
+					webdriver_definition_script => $webdriver_definition_script,
+					webdriver_def_regex => $webdriver_def_regex,
+					webdriver_prototype_call_script => $webdriver_prototype_call_script,
+					webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+				);
 		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Loaded browserfeatcl");
 		$agent = $firefox->agent();
 		ok($agent =~ /Chrome\/$version/smx, "\$firefox->agent() contains Chrome version '$version' in the agent string (real version is Firefox v" . $firefox->browser_version() . ")");
@@ -426,7 +456,12 @@ SKIP: {
 				ok(0, "browserfeatcl failed to output any version when looking for fake version '$version'");
 			}
 		}
-		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+		check_webdriver($firefox,
+					webdriver_definition_script => $webdriver_definition_script,
+					webdriver_def_regex => $webdriver_def_regex,
+					webdriver_prototype_call_script => $webdriver_prototype_call_script,
+					webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+				);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
 	}
 	foreach my $version (reverse (9 .. 17)) {
@@ -434,7 +469,12 @@ SKIP: {
 		ok(1, "About to go to Safari v$version - $safari_user_agent");
 		my $agent = $firefox->agent($safari_user_agent);
 		ok($agent =~ /Firefox\/(\d+)/smx, "\$firefox->agent('$safari_user_agent') produces the actual agent string which contains Firefox version '$1'");
-		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+		check_webdriver($firefox,
+					webdriver_definition_script => $webdriver_definition_script,
+					webdriver_def_regex => $webdriver_def_regex,
+					webdriver_prototype_call_script => $webdriver_prototype_call_script,
+					webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+				);
 		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Loaded browserfeatcl");
 		$agent = $firefox->agent();
 		ok($agent =~ /Version\/$version[ ]Safari\/(\d+)/smx, "\$firefox->agent() contains Safari version '$version' in the agent string (real version is Firefox v" . $firefox->browser_version() . ")");
@@ -466,7 +506,12 @@ SKIP: {
 				ok(0, "browserfeatcl failed to output any version when looking for fake version '$version'");
 			}
 		}
-		check_webdriver($firefox, $webdriver_definition_script, $webdriver_def_regex);
+		check_webdriver($firefox,
+					webdriver_definition_script => $webdriver_definition_script,
+					webdriver_def_regex => $webdriver_def_regex,
+					webdriver_prototype_call_script => $webdriver_prototype_call_script,
+					webdriver_prototype_call_regex => $webdriver_prototype_call_regex,
+				);
 		ok($firefox->agent(undef), "\$firefox->agent(undef) to reset agent string to original");
 	}
 	if ($nightly_failures_found) {
@@ -477,13 +522,18 @@ SKIP: {
 }
 
 sub check_webdriver {
-	my ($firefox, $webdriver_definition_script, $webdriver_def_regex) = @_;
+	my ($firefox, %parameters) = @_;
 	if ($firefox->script(q[if ('webdriver' in navigator) { return 1 } else { return 0 }])) {
+	eval {
 		ok($firefox->script('return navigator.webdriver') == JSON::false(), "\$firefox->script('return navigator.webdriver') returns false");
-		my $stealth_webdriver_definition = $firefox->script($webdriver_definition_script);
+		my $stealth_webdriver_definition = $firefox->script($parameters{webdriver_definition_script});
 		my $quoted_webdriver_definition = $stealth_webdriver_definition;
 		$quoted_webdriver_definition =~ s/\n/\\n/smxg;
-		ok($stealth_webdriver_definition =~ /^$webdriver_def_regex$/smx, "Webdriver definition matches:$quoted_webdriver_definition");
+		ok($stealth_webdriver_definition =~ /^$parameters{webdriver_def_regex}$/smx, "Webdriver definition matches:$quoted_webdriver_definition");
+		my $stealth_webdriver_prototype_call_result = $firefox->script($parameters{webdriver_prototype_call_script});
+		ok(defined $stealth_webdriver_prototype_call_result &&
+			$stealth_webdriver_prototype_call_result =~ /^$parameters{webdriver_prototype_call_regex}$/smx, "window.Navigator.prototype.webdriver throws type error:" . ($stealth_webdriver_prototype_call_result || "no exception thrown at all"));
+	};
 	} else {
 		my $agent = $firefox->agent();
 		ok(1, "Webdriver does not exist for " . $agent);

@@ -144,8 +144,8 @@ sub user_agent_contents {
     }
     $_function_definition_count = 1;
     my ( $definition_name, $function_definition ) =
-      $class->_get_js_function_definition( $to_browser_type, 'webdriver',
-        'return false' );
+      $class->_get_js_function_definition( $to_browser_type, 'Navigator',
+        'webdriver', 'return false' );
     my $native_code_body = $class->_native_code_body($to_browser_type);
     my $contents         = <<"_JS_";
 {
@@ -264,7 +264,7 @@ _JS_
             elsif ( $to_browser_type eq 'opera' ) {
                 my ( $scrap_name, $scrap_definition ) =
                   $class->_get_js_function_definition( $to_browser_type,
-                    'scrap', 'return null' );
+                    'Window', 'scrap', 'return null' );
                 $contents .= <<"_JS_";
   $scrap_definition
   Object.defineProperty(winProto, "g_opr", {value: {scrap: $scrap_name}, enumerable: true, configurable: true});
@@ -451,7 +451,15 @@ sub _native_code_body {
 }
 
 sub _get_js_function_definition {
-    my ( $class, $to_browser_type, $name, $function_body ) = @_;
+    my ( $class, $to_browser_type, $javascript_class, $name, $function_body ) =
+      @_;
+    $function_body = <<"_JS_";
+if ($javascript_class.prototype.isPrototypeOf(this)) {
+  $function_body
+} else {
+  throw TypeError(decodeURIComponent(\\x27%27get $name%27 called on an object that does not implement interface $javascript_class.\\x27));
+}
+_JS_
     $_function_definition_count += 1;
     my $native_code_body = $class->_native_code_body($to_browser_type);
     my $actual_name      = "fm_def_$_function_definition_count";
@@ -476,7 +484,8 @@ sub _check_and_add_function {
     my $contents = q[];
     if ( !$deleted_classes->{$javascript_class} ) {
         my ( $definition_name, $function_definition ) =
-          $class->_get_js_function_definition( $to_browser_type, $function_name,
+          $class->_get_js_function_definition( $to_browser_type,
+            $javascript_class, $function_name,
             $proposed_change_properties->{function_body} );
         $contents .= <<"_JS_";
   $function_definition
