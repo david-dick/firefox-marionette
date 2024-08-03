@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.60  Sun Aug 04 07:27 2024
+     - Added CLEAR_JS_CACHE and resolve methods
+     - Stealth support for Object.getPrototypeOf($class).$method
+     - Various test suite/coverage fixes
+
 1.59  Sun Jun 30 20:10 2024
      - Adding SSH_CONNECTION and EUID into syslog for ssh-auth-cmd-marionette
      - Changed CLEAR_PERMISSIONS, added CLEAR_SHUTDOWN_EXCEPTIONS and CLEAR_SITE_PERMISSIONS methods

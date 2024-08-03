@@ -6,7 +6,7 @@ use Encode();
 use overload q[""] => '_lat_long';
 use charnames qw(:full);
 
-our $VERSION = '1.59';
+our $VERSION = '1.60';
 
 sub _MINUTES_IN_ONE_HOUR             { return 60 }
 sub _MINUTES_IN_ONE_DEGREE           { return 60 }
@@ -212,7 +212,7 @@ Firefox::Marionette::GeoLocation - Represents a GeoLocation for Firefox
 
 =head1 VERSION
 
-Version 1.59
+Version 1.60
 
 =head1 SYNOPSIS
 
