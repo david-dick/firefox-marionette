@@ -6,6 +6,7 @@ lib/Firefox/Marionette/Cache.pm
 lib/Firefox/Marionette/Capabilities.pm
 lib/Firefox/Marionette/Certificate.pm
 lib/Firefox/Marionette/Cookie.pm
+lib/Firefox/Marionette/DNS.pm
 lib/Firefox/Marionette/Extension/HarExportTrigger.pm
 lib/Firefox/Marionette/Extension/Stealth.pm
 lib/Firefox/Marionette/Extension/Timezone.pm

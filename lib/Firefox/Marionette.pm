@@ -8,6 +8,7 @@ use Firefox::Marionette::Element();
 use Firefox::Marionette::Cache();
 use Firefox::Marionette::Cookie();
 use Firefox::Marionette::Display();
+use Firefox::Marionette::DNS();
 use Firefox::Marionette::Window::Rect();
 use Firefox::Marionette::Element::Rect();
 use Firefox::Marionette::GeoLocation();
@@ -1015,6 +1016,59 @@ sub downloads {
     my ( $self, $download_directory ) = @_;
     $download_directory ||= $self->_download_directory();
     return $self->_directory_listing( {}, $download_directory );
+}
+
+sub resolve {
+    my ( $self, $host_name, %options ) = @_;
+    my $old = $self->_context('chrome');
+    my $type =
+      defined $options{type}
+      ? $options{type}
+      : Firefox::Marionette::DNS::RESOLVE_TYPE_DEFAULT();
+    my $flags =
+      defined $options{flags}
+      ? $options{flags}
+      : Firefox::Marionette::DNS::RESOLVE_DEFAULT_FLAGS();
+    my $result = $self->script(
+        $self->_compress_script(
+            <<'_JS_'), args => [ $host_name, $type, $flags, undef ] );
+let lookup = function(host_name, type, flags) {
+  return new Promise((resolve) => {
+    let listener = {
+      QueryInterface: function(aIID) {
+        if (aIID.equals(Components.interfaces.nsIDNSListener) || aIID.equals(Components.interfaces.nsISupports)) {
+          return this;
+        }
+        throw Components.results.NS_NOINTERFACE;
+      },
+      onLookupComplete: function(inRequest, inRecord, inStatus) {
+        if (Components.interfaces.nsIDNSAddrRecord) {
+          inRecord.QueryInterface(Components.interfaces.nsIDNSAddrRecord);
+        }
+        let answers = new Array();
+        while(inRecord.hasMore()) {
+          answers.push(inRecord.getNextAddrAsString());
+        }
+        resolve(answers);
+      }
+    };
+    let threadManager = Components.classes["@mozilla.org/thread-manager;1"].createInstance(Components.interfaces.nsIThreadManager);
+    let currentThread = threadManager.currentThread;
+    let dnsService = Components.classes["@mozilla.org/network/dns-service;1"].createInstance(Components.interfaces.nsIDNSService);
+    try {
+      dnsService.asyncResolve(arguments[0], arguments[2], listener, currentThread);
+    } catch (e) {
+      dnsService.asyncResolve(arguments[0], arguments[1], arguments[2], null, listener, currentThread);
+    }
+})};
+let result = (async function(host_name, type, flag) {
+  let awaitResult = await lookup(host_name, type, flag);
+  return awaitResult;
+})(arguments[0], arguments[1], arguments[2], arguments[3]);
+return result;
+_JS_
+    $self->_context($old);
+    return @{$result};
 }
 
 sub _setup_adb {
@@ -14310,6 +14364,25 @@ This method returns L<itself|Firefox::Marionette> to aid in chaining methods if 
     } else {
        say 'Resize failed to work';
     }
+
+=head2 resolve
+
+accepts a hostname as an argument and resolves it to a list of matching IP addresses.  It can also accept an optional hash containing additional keys, described in L<Firefox::Marionette::DNS|Firefox::Marionette::DNS>.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $ssh_server = 'remote.example.org';
+    my $firefox = Firefox::Marionette->new( host => $ssh_server );
+    my $hostname = 'metacpan.org';
+    foreach my $ip_address ($firefox->resolve($hostname)) {
+       say "$hostname resolves to $ip_address at $ssh_server";
+    }
+    $firefox = Firefox::Marionette->new();
+    foreach my $ip_address ($firefox->resolve($hostname, flags => Firefox::Marionette::DNS::RESOLVE_REFRESH_CACHE() | Firefox::Marionette::DNS::RESOLVE_BYPASS_CACHE(), type => Firefox::Marionette::DNS::RESOLVE_TYPE_DEFAULT())) {
+       say "$hostname resolves to $ip_address;
+    }
+
 
 =head2 restart
 

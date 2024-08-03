@@ -4,7 +4,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 # VERSION
 
-Version 1.57
+Version 1.59
 
 # SYNOPSIS
 
@@ -1923,6 +1923,24 @@ This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to ai
         say 'We are showing an XGA display';
     } else {
        say 'Resize failed to work';
+    }
+
+## resolve
+
+accepts a hostname as an argument and resolves it to a list of matching IP addresses.  It can also accept an optional hash containing additional keys, described in [Firefox::Marionette::DNS](https://metacpan.org/pod/Firefox::Marionette::DNS).
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $ssh_server = 'remote.example.org';
+    my $firefox = Firefox::Marionette->new( host => $ssh_server );
+    my $hostname = 'metacpan.org';
+    foreach my $ip_address ($firefox->resolve($hostname)) {
+       say "$hostname resolves to $ip_address at $ssh_server";
+    }
+    $firefox = Firefox::Marionette->new();
+    foreach my $ip_address ($firefox->resolve($hostname, flags => Firefox::Marionette::DNS::RESOLVE_REFRESH_CACHE() | Firefox::Marionette::DNS::RESOLVE_BYPASS_CACHE(), type => Firefox::Marionette::DNS::RESOLVE_TYPE_DEFAULT())) {
+       say "$hostname resolves to $ip_address;
     }
 
 ## restart

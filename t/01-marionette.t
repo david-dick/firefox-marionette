@@ -1752,6 +1752,23 @@ SKIP: {
 	my $webdriver = $firefox->script('return navigator.webdriver');
 	ok(!$webdriver, "navigator.webdriver returns false when stealth is on");
 	if (($tls_tests_ok) && ($ENV{RELEASE_TESTING})) {
+		$firefox->chrome();
+		foreach my $name (@Firefox::Marionette::DNS::EXPORT_OK) {
+			my $correct = $firefox->script("return Components.interfaces.nsIDNSService.$name");
+			my $actual = eval "return Firefox::Marionette::DNS::$name();";
+			local $TODO = ($major_version < 115 && $name =~ /^((?:RESOLVE_(?:TYPE_DEFAULT|TYPE_TXT|TYPE_HTTPSSVC|ALLOW_NAME_COLLISION|DISABLE_TRR|REFRESH_CACHE|TRR_MODE_MASK|TRR_DISABLED_MODE|IGNORE_SOCKS_DNS|IP_HINT|WANT_RECORD_ON_ERROR))|ALL_DNSFLAGS_BITS)$/smx) ? "Older firefox (less than 115) can have different values for Firefox::Marionette::DNS constants" : q[];
+			local $TODO = $TODO || (($major_version < 130 && $name =~ /^((?:RESOLVE_(?:CREATE_MOCK_HTTPS_RR|DISABLE_NATIVE_HTTPS_QUERY))|ALL_DNSFLAGS_BITS)$/smx) ? "Older firefox (less than 130) can have different values for Firefox::Marionette::DNS constants" : q[]);
+			ok(defined $correct && defined $actual && $correct == $actual, "Firefox::Marionette::DNS::$name() ($actual) matches the value in firefox (" . (defined $correct ? $correct : "null") . ")");
+		}
+		$firefox->content();
+		if ($major_version >= 52) {
+			foreach my $result ($firefox->resolve('localhost')) {
+				ok($result =~ /^(127[.]0[.]0[.]1|::1)/smx, "\$firefox->resolve('localhost') returned correctly:$result");
+			}
+			foreach my $result ($firefox->resolve('localhost', type => 0, flags => 0)) {
+				ok($result =~ /^(127[.]0[.]0[.]1|::1)/smx, "\$firefox->resolve('localhost', type => 0, flags => 0) returned correctly:$result");
+			}
+		}
 		my $json;
 		if ($major_version < 50) {
 			diag("\$firefox->json(\$url) calls aren't going to work for versions < 50");
