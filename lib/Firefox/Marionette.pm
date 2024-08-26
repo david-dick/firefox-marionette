@@ -1018,6 +1018,19 @@ sub downloads {
     return $self->_directory_listing( {}, $download_directory );
 }
 
+sub resolve_override {
+    my ( $self, $host_name, $ip_address ) = @_;
+    my $old    = $self->_context('chrome');
+    my $result = $self->script(
+        $self->_compress_script(
+            <<'_JS_'), args => [ $host_name, $ip_address ] );
+const override = Components.classes["@mozilla.org/network/native-dns-override;1"].getService(Components.interfaces.nsINativeDNSResolverOverride);
+override.addIPOverride(arguments[0], arguments[1]);
+_JS_
+    $self->_context($old);
+    return $self;
+}
+
 sub resolve {
     my ( $self, $host_name, %options ) = @_;
     my $old = $self->_context('chrome');
@@ -14383,6 +14396,27 @@ accepts a hostname as an argument and resolves it to a list of matching IP addre
        say "$hostname resolves to $ip_address;
     }
 
+
+=head2 resolve_override
+
+accepts a hostname and an IP address as parameters.  This method then forces the browser to override any future DNS requests for the supplied hostname.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $ssh_server = 'remote.example.org';
+    my $firefox = Firefox::Marionette->new( host => $ssh_server );
+    my $hostname = 'metacpan.org';
+    my $ip_address = '127.0.0.1';
+    foreach my $result ($firefox->resolve_override($hostname, $ip_address)->resolve($hostname)) {
+       if ($result eq $ip_address) {
+         die "local metacpan time?";
+       } else {
+         die "This should not happen";
+       }
+    }
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 restart
 

@@ -1768,6 +1768,13 @@ SKIP: {
 			foreach my $result ($firefox->resolve('localhost', type => 0, flags => 0)) {
 				ok($result =~ /^(127[.]0[.]0[.]1|::1)/smx, "\$firefox->resolve('localhost', type => 0, flags => 0) returned correctly:$result");
 			}
+			if ($major_version >= 78) {
+				my $test_dns_name = 'custom-weird.example.com';
+				my $ip_address = '127.0.0.84';
+				foreach my $result ($firefox->resolve_override($test_dns_name, $ip_address)->resolve($test_dns_name)) {
+					ok($result eq $ip_address, "\$firefox->resolve_override('$test_dns_name', '$ip_address') worked correctly:$result");
+				}
+			}
 		}
 		my $json;
 		if ($major_version < 50) {
