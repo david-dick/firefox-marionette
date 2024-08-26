@@ -1943,6 +1943,27 @@ accepts a hostname as an argument and resolves it to a list of matching IP addre
        say "$hostname resolves to $ip_address;
     }
 
+## resolve\_override
+
+accepts a hostname and an IP address as parameters.  This method then forces the browser to override any future DNS requests for the supplied hostname.
+
+    use Firefox::Marionette();
+    use v5.10;
+
+    my $ssh_server = 'remote.example.org';
+    my $firefox = Firefox::Marionette->new( host => $ssh_server );
+    my $hostname = 'metacpan.org';
+    my $ip_address = '127.0.0.1';
+    foreach my $result ($firefox->resolve_override($hostname, $ip_address)->resolve($hostname)) {
+       if ($result eq $ip_address) {
+         die "local metacpan time?";
+       } else {
+         die "This should not happen";
+       }
+    }
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## restart
 
 restarts the browser.  After the restart, [capabilities](https://metacpan.org/pod/Firefox::Marionette::Capabilities) should be restored.  The same profile settings should be applied, but the current state of the browser (such as the [uri](#uri) will be reset (like after a normal browser restart).  This method is primarily intended for use by the [update](#update) method.  Not sure if this is useful by itself.
