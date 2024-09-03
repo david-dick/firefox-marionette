@@ -1950,17 +1950,17 @@ accepts a hostname and an IP address as parameters.  This method then forces the
     use Firefox::Marionette();
     use v5.10;
 
-    my $ssh_server = 'remote.example.org';
-    my $firefox = Firefox::Marionette->new( host => $ssh_server );
+    my $firefox = Firefox::Marionette->new();
     my $hostname = 'metacpan.org';
     my $ip_address = '127.0.0.1';
     foreach my $result ($firefox->resolve_override($hostname, $ip_address)->resolve($hostname)) {
        if ($result eq $ip_address) {
-         die "local metacpan time?";
+         warn "local metacpan time?";
        } else {
          die "This should not happen";
        }
     }
+    $firefox->go('https://metacpan.org'); # this tries to contact a webserver on 127.0.0.1
 
 This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
 
