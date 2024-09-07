@@ -4823,6 +4823,8 @@ SKIP: {
 		$firefox->script(qq[alert('$alert_text')]);
 		ok($firefox->accept_alert(), "\$firefox->accept_alert() accepts alert box");
 	}
+	my $certificate = Firefox::Marionette::Certificate->new();
+	ok(!$certificate->is_server_cert(), "Firefox::Marionette::Certificate->new() does not produce a server cert (test coverage)");
 	my @certificates;
 	eval { @certificates = $firefox->certificates(); };
 	SKIP: {

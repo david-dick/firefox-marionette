@@ -4204,7 +4204,7 @@ _JS_
     $self->_context($old);
     my @certificates;
     foreach my $certificate ( @{$certificates} ) {
-        push @certificates, Firefox::Marionette::Certificate->new($certificate);
+        push @certificates, Firefox::Marionette::Certificate->new(%{$certificate});
     }
     return @certificates;
 }

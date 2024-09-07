@@ -8,9 +8,9 @@ our $VERSION = '1.60';
 sub _NUMBER_OF_MICROSECOND_DIGITS { return -6 }
 
 sub new {
-    my ( $class, $parameters ) = @_;
+    my ( $class, %parameters ) = @_;
 
-    my $self = bless { %{$parameters} }, $class;
+    my $self = bless { %parameters }, $class;
     return $self;
 }
 
