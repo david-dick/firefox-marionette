@@ -1285,10 +1285,10 @@ SKIP: {
 	SKIP: {
 		if (!grep /^moz_use_non_spec_compliant_pointer_origin$/, $capabilities->enumerate()) {
 			diag("\$capabilities->moz_use_non_spec_compliant_pointer_origin is not supported for " . $capabilities->browser_version());
-			skip("\$capabilities->moz_use_non_spec_compliant_pointer_origin is not supported for " . $capabilities->browser_version(), 1);
+			ok($capabilities->moz_use_non_spec_compliant_pointer_origin() == 0, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is set to false");
+		} else {
+			ok($capabilities->moz_use_non_spec_compliant_pointer_origin() == 1, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is set to true");
 		}
-		local $TODO = $capabilities->browser_name() =~ /waterfox/i ? "\$firefox->moz_use_non_spec_compliant_pointer_origin() may not work for waterfox" : undef;
-		ok($capabilities->moz_use_non_spec_compliant_pointer_origin() == 1, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is set to true");
 	}
 	SKIP: {
 		if (!grep /^moz_accessibility_checks$/, $capabilities->enumerate()) {
