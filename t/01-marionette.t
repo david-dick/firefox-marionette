@@ -1948,6 +1948,7 @@ SKIP: {
 				local $TODO = $TODO || ($major_version < 128 && $name =~ /^(?:CLEAR_CREDENTIAL_MANAGER_STATE|CLEAR_COOKIE_BANNER_EXCEPTION|CLEAR_COOKIE_BANNER_EXECUTED_RECORD|CLEAR_FINGERPRINTING_PROTECTION_STATE|CLEAR_BOUNCE_TRACKING_PROTECTION_STATE|CLEAR_FORGET_ABOUT_SITE|CLEAR_STORAGE_PERMISSIONS|CLEAR_COOKIES_AND_SITE_DATA)$/) ? "Old firefox (less than 128) can have different values for Firefox::Marionette::Cache constants" : q[];
 				local $TODO = $TODO || ($major_version < 129 && $name =~ /^(?:CLEAR_PERMISSIONS|CLEAR_FORGET_ABOUT_SITE)$/) ? "Old firefox (less than 129) can have different values for Firefox::Marionette::Cache constants" : q[];
 				local $TODO = $TODO || ($major_version < 130 && $name =~ /^(?:CLEAR_ALL_CACHES|CLEAR_FORGET_ABOUT_SITE)$/) ? "Old firefox (less than 130) can have different values for Firefox::Marionette::Cache constants" : q[];
+				local $TODO = $TODO || ($major_version < 132 && $name =~ /^(?:CLEAR_SESSION_HISTORY|CLEAR_FORGET_ABOUT_SITE)$/) ? "Old firefox (less than 132) can have different values for Firefox::Marionette::Cache constants" : q[];
 				my $result = $firefox->check_cache_key($name);
 				ok($result == &$name(), "\$firefox->check_cache_key($name) eq Firefox::Marionette::Cache::${name} which should be $result and is " . &$name());
 			}
