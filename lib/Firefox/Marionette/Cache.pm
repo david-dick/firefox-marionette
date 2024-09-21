@@ -10,7 +10,6 @@ our @EXPORT_OK = qw(
   CLEAR_IMAGE_CACHE
   CLEAR_JS_CACHE
   CLEAR_DOWNLOADS
-  CLEAR_PASSWORDS
   CLEAR_MEDIA_DEVICES
   CLEAR_DOM_QUOTA
   CLEAR_PREDICTOR_NETWORK_DATA
@@ -52,7 +51,6 @@ sub CLEAR_NETWORK_CACHE                    { return 2 }
 sub CLEAR_IMAGE_CACHE                      { return 4 }
 sub CLEAR_JS_CACHE                         { return 8 }
 sub CLEAR_DOWNLOADS                        { return 16 }
-sub CLEAR_PASSWORDS                        { return 32 }
 sub CLEAR_MEDIA_DEVICES                    { return 64 }
 sub CLEAR_DOM_QUOTA                        { return 128 }
 sub CLEAR_PREDICTOR_NETWORK_DATA           { return 256 }
@@ -162,10 +160,6 @@ returns the value of CLEAR_JS_CACHE, which is 1 << 3 = 8
 =head2 CLEAR_DOWNLOADS
 
 returns the value of CLEAR_DOWNLOADS, which is 1 << 4 = 16
-
-=head2 CLEAR_PASSWORDS
-
-returns the value of CLEAR_PASSWORDS, which is 1 << 5 = 32
 
 =head2 CLEAR_MEDIA_DEVICES
 
