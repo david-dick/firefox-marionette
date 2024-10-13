@@ -2049,14 +2049,17 @@ let bookmarkStatus = (async function(bookmarkArguments) {
         );
       }
     } else {
-      let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
-        url,
-        rIconUrl,
-        true,
-        placesUtils.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-        null,
-        Services.scriptSecurityManager.getSystemPrincipal()
-      );
+      if (placesUtils.PlacesUtils.favicons.setFaviconForPage) {
+      } else if (placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage) {
+        let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
+          url,
+          rIconUrl,
+          true,
+          placesUtils.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+          null,
+          Services.scriptSecurityManager.getSystemPrincipal()
+        );
+      }
     }
   }
   return bookmark;
