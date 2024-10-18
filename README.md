@@ -4,7 +4,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 # VERSION
 
-Version 1.60
+Version 1.61
 
 # SYNOPSIS
 

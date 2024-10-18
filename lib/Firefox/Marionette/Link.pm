@@ -6,7 +6,7 @@ use URI::URL();
 
 use parent qw(Firefox::Marionette::Element);
 
-our $VERSION = '1.60';
+our $VERSION = '1.61';
 
 sub new {
     my ( $class, $element ) = @_;
@@ -78,7 +78,7 @@ Firefox::Marionette::Link - Represents a link from the links method
 
 =head1 VERSION
 
-Version 1.60
+Version 1.61
 
 =head1 SYNOPSIS
 

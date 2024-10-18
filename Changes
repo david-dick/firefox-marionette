@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.61  Sat Oct 19 08:28 2024
+     - Removed CLEAR_PASSWORDS and CLEAR_SESSION_HISTORY methods
+     - Added resolve_override method
+     - Fixes for refactoring bookmarks API
+
 1.60  Sun Aug 04 07:27 2024
      - Added CLEAR_JS_CACHE and resolve methods
      - Stealth support for Object.getPrototypeOf($class).$method
