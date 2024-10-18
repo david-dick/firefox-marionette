@@ -1285,7 +1285,12 @@ SKIP: {
 	SKIP: {
 		if (!grep /^moz_use_non_spec_compliant_pointer_origin$/, $capabilities->enumerate()) {
 			diag("\$capabilities->moz_use_non_spec_compliant_pointer_origin is not supported for " . $capabilities->browser_version());
-			ok($capabilities->moz_use_non_spec_compliant_pointer_origin() == 0, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is set to false");
+			my $moz_use_non_spec_compliant_pointer_origin = $capabilities->moz_use_non_spec_compliant_pointer_origin();
+			if (defined $moz_use_non_spec_compliant_pointer_origin) {
+				ok($moz_use_non_spec_compliant_pointer_origin == 0, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is set to false");
+			} else {
+				ok(1, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is not defined");
+			}
 		} else {
 			ok($capabilities->moz_use_non_spec_compliant_pointer_origin() == 1, "\$capabilities->moz_use_non_spec_compliant_pointer_origin() is set to true");
 		}
