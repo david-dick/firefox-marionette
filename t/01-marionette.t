@@ -967,7 +967,7 @@ SKIP: {
 		TODO: {
 			local $TODO = "Some installations of firefox can default to webdriver being off"; # such as http://www.cpantesters.org/cpan/report/a0532bce-c32c-11ee-ae2f-883f6e8775ea (FreeBSD 14.0-STABLE) (BuildID 20240123011445)
 			my $webdriver = $firefox->script('return navigator.webdriver');
-			ok($webdriver, "navigator.webdriver returns true:$webdriver");
+			ok($webdriver, "navigator.webdriver returns true:" . (defined $webdriver ? $webdriver : q[undef]));
 		}
 	}
 	ok(!defined $firefox->child_error(), "Firefox does not have a value for child_error");
@@ -1865,7 +1865,7 @@ SKIP: {
 			my $accuracy = $geo3->accuracy();
 			TODO: {
 				local $TODO = ($major_version < 63) ? "\$geo3->accuracy() not available for older versions of firefox" : ($^O eq 'dragonfly') ? "\$geo3->accuracy can fail on DragonFly" : q[];
-				ok(defined $accuracy && $accuracy >= 0, "\$geo3->accuracy() is a positive float (accuracy in metres):$accuracy");
+				ok(defined $accuracy && $accuracy >= 0, "\$geo3->accuracy() is a positive float (accuracy in metres):" . (defined $accuracy ? $accuracy : q[]));
 			}
 			my $altitude = $geo3->altitude();
 			if (defined $altitude) {
