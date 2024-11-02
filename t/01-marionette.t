@@ -5348,9 +5348,13 @@ SKIP: {
 	} elsif (out_of_time()) {
 		skip("Skipping exit status b/c out of time", 2);
 	}
-	my $exit_status = system { $^X } $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', 'my $f = Firefox::Marionette->new(); exit 0';
+	my $argument_string = q[];
+	if ($ENV{FIREFOX_VISIBLE}) {
+		$argument_string = q[visible => 1];
+	}
+	my $exit_status = system { $^X } $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', "my \$f = Firefox::Marionette->new($argument_string); exit 0";
 	ok($exit_status == 0, "Firefox::Marionette doesn't alter the exit code of the parent process if it isn't closed cleanly");
-	$exit_status = system { $^X } $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', 'my $f = Firefox::Marionette->new(); $f = undef; exit 0';
+	$exit_status = system { $^X } $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', "my \$f = Firefox::Marionette->new($argument_string); \$f = undef; exit 0";
 	ok($exit_status == 0, "Firefox::Marionette doesn't alter the exit code of the parent process if it is 'undefed'");
 	if ($ENV{RELEASE_TESTING}) {
 		if ($ENV{FIREFOX_HOST}) {
@@ -5365,14 +5369,14 @@ SKIP: {
 			fcntl $handle, Fcntl::F_SETFD(), 0 or Carp::croak("Can't clear close-on-exec flag on temporary file:$!");
 			my $via = $ENV{FIREFOX_VIA} ? q[, via => "] . $ENV{FIREFOX_VIA} . q["] : q[];
 			my $handle_fileno = fileno $handle;
-			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', q['open(my $fh, ">&=", ] . $handle_fileno . q[) or die "OPEN:$!"; $f = Firefox::Marionette->new( user => "] . $user . q[", host => "] . $host . q["] . $via . q[); $fh->print($f->ssh_local_directory()) or die "PRINT:$!"; close($fh) or die "CLOSE:$!";'];
+			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', q['open(my $fh, ">&=", ] . $handle_fileno . q[) or die "OPEN:$!"; $f = Firefox::Marionette->new( user => "] . $user . q[", host => "] . $host . q["] . $via . ($argument_string ? ", $argument_string" : q[]) . q[); $fh->print($f->ssh_local_directory()) or die "PRINT:$!"; close($fh) or die "CLOSE:$!";'];
 			$command =~ s/([@])/\\$1/smxg;
 			my $output = `$command`;
 			$handle->seek(0,0) or die "Failed to seek on temporary file:$!";
 			my $result = read($handle, my $directory, 2048) or die "Failed to read from temporary file:$!";
 			ok(!-d $directory, "Firefox::Marionette->new() cleans up the ssh local directory at $directory");
 		} else {
-			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', q['$f = Firefox::Marionette->new(); print $f->root_directory();'];
+			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', qq['\\\$f = Firefox::Marionette->new($argument_string); print \\\$f->root_directory();'];
 			my $directory = `$command`;
 			ok(!-d $directory, "Firefox::Marionette->new() cleans up the local directory at $directory");
 		}

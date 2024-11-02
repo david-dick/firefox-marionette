@@ -16,6 +16,9 @@ if ($^O eq 'MSWin32') {
 		if ($^O eq 'netbsd') {
 			$ENV{PATH} .= ":/usr/pkg/bin";
 		}
+		if ($^O eq 'openbsd') {
+			$ENV{PATH} .= ":/usr/X11R6/bin/";
+		}
 		if (my $pid = fork) {
 			waitpid $pid, 0;
 			if ($? == 0) {
@@ -55,6 +58,9 @@ if (($ENV{FIREFOX_HOST}) && ($ENV{FIREFOX_HOST} =~ /^(.*)$/smx)) {
 }
 if ($ENV{FIREFOX_DEBUG}) {
 	$parameters{debug} = $ENV{FIREFOX_DEBUG};
+}
+if ($ENV{FIREFOX_VISIBLE}) {
+	$parameters{visible} = $ENV{FIREFOX_VISIBLE};
 }
 SKIP: {
 	if (!$run_taint_checks) {
