@@ -254,6 +254,18 @@ SKIP: {
 	ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with SOCKS proxy (v5)");
 	$strip = $firefox->strip();
 	ok($strip eq $nginx->content(), "Successfully retrieved web page through ssh and SOCKS proxy (v5):$strip:");
+	foreach my $scheme (qw(socks socks4 socks5)) {
+		local $ENV{all_proxy} = $scheme . '://' . $socks_listen . ':' . $socks->port();
+		my $firefox = Firefox::Marionette->new(
+			debug => $debug,
+			visible => $visible,
+			profile => $profile,
+					);
+		ok($firefox, "Created a firefox object going through ssh and the all_proxy environment variable of ($scheme://$socks_listen:" . $socks->port() . ")");
+		ok($firefox->go("http://$nginx_listen:" . $nginx->port()), "Retrieved webpage with all_proxy environment variable set to a scheme of $scheme");
+		my $strip = $firefox->strip();
+		ok($strip eq $nginx->content(), "Successfully retrieved web page through all_proxy environment variable set to a scheme of $scheme");
+	}
 	ok($nginx->stop() == 0, "Stopped nginx on $nginx_listen:" . $nginx->port());
 	ok($socks->stop() == 0, "Stopped SOCKS proxy on $socks_listen:" . $socks->port());
 }

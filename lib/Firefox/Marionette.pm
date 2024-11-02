@@ -8514,6 +8514,9 @@ sub _proxy_from_env {
                 $build->{proxyAutoconfigUrl} =
                   Firefox::Marionette::Proxy->get_inline_pac($uri);
             }
+            elsif ( $value =~ /^socks(?:[45])?:\/\/(.*?(:\d+)?)$/smx ) {
+                $build->{ $build_key . 'Proxy' } = $1;
+            }
             else {
                 $build->{ $build_key . 'Proxy' } = $uri->host_port();
             }
