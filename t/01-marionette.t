@@ -1908,7 +1908,7 @@ SKIP: {
 				ok($geo4->latitude() == $latitude, "\$geo4->latitude() has remained after a page load");
 				ok($geo4->longitude() == $longitude, "\$geo4->longitude() has remained after a page load");
 			}
-			ok($firefox->go('https://github.com'), "\$firefox->go('https://github.com') succeeded");
+			ok($firefox->go('https://github.com/login'), "\$firefox->go('https://github.com/login') succeeded");
 			my $old_session_cookie = github_session_cookie($firefox);
 			ok($old_session_cookie, "Found github session cookie");
 			ok($firefox->go('about:blank'), "\$firefox->go('about:blank') succeeded");
@@ -1919,21 +1919,21 @@ SKIP: {
 			}
 			ok($cookie_count == 0, "There are no availabe cookies for about:blank");
 			ok(ref $firefox->clear_cache() eq $class, "\$firefox->clear_cache() produces a $class object");
-			ok($firefox->go('https://github.com'), "\$firefox->go('https://github.com') succeeded");
+			ok($firefox->go('https://github.com/login'), "\$firefox->go('https://github.com/login') succeeded");
 			my $new_session_cookie = github_session_cookie($firefox);
 			ok(defined $new_session_cookie, "The session cookie was found after clearing cache");
 			ok($old_session_cookie ne $new_session_cookie, "Different session cookie found after clearing everything in the cache");
 			$old_session_cookie = $new_session_cookie;
 			ok($firefox->go('about:blank'), "\$firefox->go('about:blank') succeeded");
 			ok(ref $firefox->clear_cache(Firefox::Marionette::Cache::CLEAR_COOKIES()) eq $class, "\$firefox->clear_cache(Firefox::Marionette::Cache::CLEAR_COOKIES()) produces a $class object");
-			ok($firefox->go('https://github.com'), "\$firefox->go('https://github.com') succeeded");
+			ok($firefox->go('https://github.com/login'), "\$firefox->go('https://github.com/login') succeeded");
 			$new_session_cookie = github_session_cookie($firefox);
 			ok(defined $new_session_cookie, "The session cookie was found after clearing cache");
 			ok($old_session_cookie ne $new_session_cookie, "Different session cookie found after clearing cookie cache");
 			$old_session_cookie = $new_session_cookie;
 			ok($firefox->go('about:blank'), "\$firefox->go('about:blank') succeeded");
 			ok(ref $firefox->clear_cache(Firefox::Marionette::Cache::CLEAR_NETWORK_CACHE()) eq $class, "\$firefox->clear_cache(Firefox::Marionette::Cache::CLEAR_NETWORK_CACHE()) produces a $class object");
-			ok($firefox->go('https://github.com'), "\$firefox->go('https://github.com') succeeded");
+			ok($firefox->go('https://github.com/login'), "\$firefox->go('https://github.com/login') succeeded");
 			$new_session_cookie = github_session_cookie($firefox);
 			ok(defined $new_session_cookie, "The session cookie was found after clearing cache");
 			TODO: {
