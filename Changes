@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.62  Sun Nov 03 17:45 2024
+     - Adding support for socks scheme in proxy variables
+     - Test suite fixes
+
 1.61  Sat Oct 19 08:28 2024
      - Removed CLEAR_PASSWORDS and CLEAR_SESSION_HISTORY methods
      - Added resolve_override method

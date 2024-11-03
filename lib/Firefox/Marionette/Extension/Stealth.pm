@@ -7,7 +7,7 @@ use English qw( -no_match_vars );
 use strict;
 use warnings;
 
-our $VERSION = '1.61';
+our $VERSION = '1.62';
 
 sub _BUFFER_SIZE  { return 65_536 }
 sub _MSIE_VERSION { return 11 }
@@ -866,7 +866,7 @@ Firefox::Marionette::Extension::Stealth - Contains the Stealth Extension
 
 =head1 VERSION
 
-Version 1.61
+Version 1.62
 
 =head1 SYNOPSIS
 

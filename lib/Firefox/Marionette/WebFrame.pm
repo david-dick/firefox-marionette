@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Firefox::Marionette::LocalObject);
 
-our $VERSION = '1.61';
+our $VERSION = '1.62';
 
 sub IDENTIFIER { return 'frame-075b-4da1-b6ba-e579c2d3230a' }
 
@@ -17,7 +17,7 @@ Firefox::Marionette::WebFrame - Represents a Firefox web frame retrieved using t
 
 =head1 VERSION
 
-Version 1.61
+Version 1.62
 
 =head1 SYNOPSIS
 
