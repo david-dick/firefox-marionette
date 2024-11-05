@@ -5376,7 +5376,7 @@ SKIP: {
 			my $result = read($handle, my $directory, 2048) or die "Failed to read from temporary file:$!";
 			ok(!-d $directory, "Firefox::Marionette->new() cleans up the ssh local directory at $directory");
 		} else {
-			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', qq['\\\$f = Firefox::Marionette->new($argument_string); print \\\$f->root_directory();'];
+			my $command = join q[ ], $^X, (map { "-I$_" } @INC), '-MFirefox::Marionette', '-e', qq['\$f = Firefox::Marionette->new($argument_string); print \$f->root_directory();'];
 			my $directory = `$command`;
 			ok(!-d $directory, "Firefox::Marionette->new() cleans up the local directory at $directory");
 		}
