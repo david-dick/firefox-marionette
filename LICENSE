@@ -1,9 +1,9 @@
 This is free software; you can redistribute it and/or modify it under the
-same terms as the Perl5 (v5.0.0 ~ v5.20.0) programming language system
+same terms as the Perl5 (v5.0.0 ~ v5.40.0) programming language system
 itself: under the terms of either:
  
 a) the "Artistic License 1.0" as published by The Perl Foundation
-   http://www.perlfoundation.org/artistic_license_1_0
+   https://www.perlfoundation.org/artistic-license-10.html
  
 b) the GNU General Public License as published by the Free Software Foundation;
    either version 1 http://www.gnu.org/licenses/gpl-1.0.html
