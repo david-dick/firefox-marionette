@@ -70,6 +70,41 @@ case $OSNAME in
 				fi
 			done
 		fi
+		if [ -e "/etc/SUSE-brand" ]
+		then
+			PACKAGES="dbus-1-x11 \
+						MozillaFirefox \
+						git \
+						make \
+						Mesa-dri-nouveau \
+						nginx \
+						openssl \
+						perl-Archive-Zip \
+						perl-Config-INI \
+						perl-Crypt-PasswdMD5 \
+						perl-Crypt-URandom \
+						perl-ExtUtils-MakeMaker \
+						perl-File-HomeDir \
+						perl-Font-TTF \
+						perl-HTTP-Daemon \
+						perl-HTTP-Message \
+						perl-IO-Socket-SSL \
+						perl-JSON \
+						perl-PDF-API2 \
+						perl-PerlIO-utf8_strict \
+						perl-Sub-Exporter \
+						perl-Sub-Uplevel \
+						perl-Text-CSV_XS \
+						perl-Term-ReadKey \
+						perl-Test-Exception \
+						perl-Test-Memory-Cycle \
+						perl-Test-Simple \
+						perl-XML-Parser \
+						squid \
+						xorg-x11-server-Xvfb \
+						yarn"
+			rpm -q --quiet $PACKAGES || ${SUDO}zypper install -y $PACKAGES
+		fi
 		if [ -e "/etc/debian_version" ]
 		then
 			${SUDO}apt-get update
@@ -252,6 +287,44 @@ _APK_REPO_
 					yarn"
 		${SUDO}pkg upgrade -y
 		pkg info $PACKAGES >/dev/null || ${SUDO}pkg install -y $PACKAGES
+		mount | grep fdescfs >/dev/null || ${SUDO}mount -t fdescfs fdesc /dev/fd
+		if [ ! -e /etc/machine-id ]
+		then
+			${SUDO}dbus-uuidgen --ensure=/etc/machine-id
+		fi
+		;;
+	MidnightBSD)
+		PACKAGES="firefox \
+					git \
+					nginx \
+					openssl \
+					perl5 \
+					p5-Archive-Zip \
+					p5-JSON \
+					p5-Config-INI \
+					p5-Crypt-PasswdMD5 \
+					p5-Crypt-URandom \
+					p5-File-HomeDir \
+					p5-Digest-SHA \
+					p5-HTTP-Daemon \
+					p5-HTTP-Message \
+					p5-IO-Socket-SSL \
+					p5-PDF-API2 \
+					p5-Text-CSV_XS \
+					p5-Term-ReadKey \
+					p5-Test-CheckManifest \
+					p5-Test-Pod \
+					p5-Test-Pod-Coverage \
+					p5-Test-Simple \
+					p5-XML-Parser \
+					squid \
+					xauth \
+					xorg-vfbserver \
+					yarn"
+		for NAME in $PACKAGES
+		do
+			mport info $NAME >/dev/null || ${SUDO}mport install $NAME
+		done
 		mount | grep fdescfs >/dev/null || ${SUDO}mount -t fdescfs fdesc /dev/fd
 		if [ ! -e /etc/machine-id ]
 		then
