@@ -43,6 +43,7 @@ MANIFEST
 LICENSE
 README
 README.md
+SECURITY.md
 build-bcd-for-firefox
 ca-bundle-for-firefox
 check-firefox-certificate-authorities
