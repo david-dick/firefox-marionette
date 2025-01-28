@@ -103,7 +103,7 @@ Version 1.62
 
 =head1 DESCRIPTION
 
-This module is a super class of L<Firefox::Marionette::Element|Firefox::Marionette::Element> designed to be compatible with L<WWW::Mechanize::Image|WWW::Mechanize::Image>.
+This module is a subclass of L<Firefox::Marionette::Element|Firefox::Marionette::Element> designed to be compatible with L<WWW::Mechanize::Image|WWW::Mechanize::Image>.
 
 =head1 SUBROUTINES/METHODS
 
