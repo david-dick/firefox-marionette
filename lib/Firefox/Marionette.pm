@@ -888,7 +888,14 @@ sub download {
         my $result          = $self->script(
             $self->_compress_script(
                 <<'_SCRIPT_'), args => [ $uri->as_string(), $download_path ] );
-let Downloads = ChromeUtils.import("resource://gre/modules/Downloads.jsm").Downloads;
+let lazy = {};
+if (ChromeUtils.defineESModuleGetters) {
+  ChromeUtils.defineESModuleGetters(lazy, {
+    Downloads: "resource://gre/modules/Downloads.sys.mjs",
+  });
+} else {
+  lazy.Downloads = ChromeUtils.import("resource://gre/modules/Downloads.jsm").Downloads;
+}
 return Downloads.fetch({ url: arguments[0] }, { path: arguments[1] });
 _SCRIPT_
         $self->timeouts($timeouts);
@@ -1858,9 +1865,18 @@ sub _bookmark_interface_preamble {
     # netwerk/base/NetUtil.sys.mjs
     # toolkit/components/places/PlacesUtils.sys.mjs
     return <<'_JS_';    # toolkit/components/places/Bookmarks.sys.mjs
-let bookmarks = ChromeUtils.import("resource://gre/modules/Bookmarks.jsm");
-let placesUtils = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-let netUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+let lazy = {};
+if (ChromeUtils.defineESModuleGetters) {
+  ChromeUtils.defineESModuleGetters(lazy, {
+    Bookmarks: "resource://gre/modules/Bookmarks.sys.mjs",
+    PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+    NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+  });
+} else {
+  lazy.Bookmarks = ChromeUtils.import("resource://gre/modules/Bookmarks.jsm").Bookmarks;
+  lazy.PlacesUtils = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm").PlacesUtils;
+  lazy.NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm").NetUtil;
+}
 let taggingSvc = Components.classes["@mozilla.org/browser/tagging-service;1"].getService(Components.interfaces.nsITaggingService);
 _JS_
 }
@@ -1915,19 +1931,19 @@ sub _get_bookmark {
             $self->_bookmark_interface_preamble()
               . <<'_JS_'), args => [$parameter] );
 return (async function(guidOrInfo) {
-  let bookmark = await bookmarks.Bookmarks.fetch(guidOrInfo);
+  let bookmark = await lazy.Bookmarks.fetch(guidOrInfo);
   if (bookmark) {
     for(let name of [ "dateAdded", "lastModified" ]) {
       bookmark[name] = Math.floor(bookmark[name] / 1000);
     }
   }
   if ((bookmark) && ("url" in bookmark)) {
-    let keyword = await placesUtils.PlacesUtils.keywords.fetch({ "url": bookmark["url"] });
+    let keyword = await lazy.PlacesUtils.keywords.fetch({ "url": bookmark["url"] });
     if (keyword) {
       bookmark["keyword"] = keyword["keyword"];
     }
-    let url = netUtil.NetUtil.newURI(bookmark["url"]);
-    bookmark["tags"] = await placesUtils.PlacesUtils.tagging.getTagsForURI(url);
+    let url = lazy.NetUtil.newURI(bookmark["url"]);
+    bookmark["tags"] = await lazy.PlacesUtils.tagging.getTagsForURI(url);
 
     let addFavicon = function(pageUrl) {
       return new Promise((resolve, reject) => {
@@ -1938,7 +1954,7 @@ return (async function(guidOrInfo) {
           }
         );
       })};
-    let awaitResult = await addFavicon(placesUtils.PlacesUtils.toURI(bookmark["url"]));
+    let awaitResult = await addFavicon(lazy.PlacesUtils.toURI(bookmark["url"]));
     if (awaitResult[0]) {
       bookmark["iconUrl"] = awaitResult[0].spec;
     }
@@ -1978,7 +1994,7 @@ sub bookmarks {
             $self->_compress_script(
                 $self->_bookmark_interface_preamble()
                   . <<'_JS_'), args => [$parameter] ) };
-return bookmarks.Bookmarks.search(arguments[0]);
+return lazy.Bookmarks.search(arguments[0]);
 _JS_
     $self->_context($old);
     return @bookmarks;
@@ -1999,23 +2015,23 @@ for(let name of [ "dateAdded", "lastModified" ]) {
 if (arguments[0]["tags"]) {
   let tags = arguments[0]["tags"];
   delete arguments[0]["tags"];
-  let url = netUtil.NetUtil.newURI(arguments[0]["url"]);
+  let url = lazy.NetUtil.newURI(arguments[0]["url"]);
   taggingSvc.tagURI(url, tags);
 }
 if (arguments[0]["keyword"]) {
   let keyword = arguments[0]["keyword"];
   delete arguments[0]["keyword"];
   let url = arguments[0]["url"];
-  placesUtils.PlacesUtils.keywords.insert({ "url": url, "keyword": keyword });
+  lazy.PlacesUtils.keywords.insert({ "url": url, "keyword": keyword });
 }
 let bookmarkStatus = (async function(bookmarkArguments) {
-  let exists = await bookmarks.Bookmarks.fetch({ "guid": bookmarkArguments["guid"] });
+  let exists = await lazy.Bookmarks.fetch({ "guid": bookmarkArguments["guid"] });
   let bookmark;
   if (exists) {
     bookmarkArguments["index"] = exists["index"];
-    bookmark = bookmarks.Bookmarks.update(bookmarkArguments);
+    bookmark = lazy.Bookmarks.update(bookmarkArguments);
   } else {
-    bookmark = bookmarks.Bookmarks.insert(bookmarkArguments);
+    bookmark = lazy.Bookmarks.insert(bookmarkArguments);
   }
   let result = await bookmark;
   if (bookmarkArguments["url"]) {
@@ -2023,39 +2039,39 @@ let bookmarkStatus = (async function(bookmarkArguments) {
     if (!iconUrl) {
       iconUrl = 'fake-favicon-uri:' + bookmarkArguments["url"];
     }
-    let url = netUtil.NetUtil.newURI(bookmarkArguments["url"]);
-    let rIconUrl = netUtil.NetUtil.newURI(iconUrl);
+    let url = lazy.NetUtil.newURI(bookmarkArguments["url"]);
+    let rIconUrl = lazy.NetUtil.newURI(iconUrl);
     if (bookmarkArguments["icon"]) {
       let icon = bookmarkArguments["icon"];
-      if (placesUtils.PlacesUtils.favicons.setFaviconForPage) {
-        let iconDataUrl = netUtil.NetUtil.newURI(icon);
-        placesUtils.PlacesUtils.favicons.setFaviconForPage(
+      if (lazy.PlacesUtils.favicons.setFaviconForPage) {
+        let iconDataUrl = lazy.NetUtil.newURI(icon);
+        lazy.PlacesUtils.favicons.setFaviconForPage(
           url,
           rIconUrl,
           iconDataUrl
         );
       } else {
-        placesUtils.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+        lazy.PlacesUtils.favicons.replaceFaviconDataFromDataURL(
           rIconUrl,
           icon
         );
-        let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
+        let iconResult = lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
           url,
           rIconUrl,
           false,
-          placesUtils.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+          lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
           null,
           Services.scriptSecurityManager.getSystemPrincipal()
         );
       }
     } else {
-      if (placesUtils.PlacesUtils.favicons.setFaviconForPage) {
-      } else if (placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage) {
-        let iconResult = placesUtils.PlacesUtils.favicons.setAndFetchFaviconForPage(
+      if (lazy.PlacesUtils.favicons.setFaviconForPage) {
+      } else if (lazy.PlacesUtils.favicons.setAndFetchFaviconForPage) {
+        let iconResult = lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
           url,
           rIconUrl,
           true,
-          placesUtils.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+          lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
           null,
           Services.scriptSecurityManager.getSystemPrincipal()
         );
@@ -2078,7 +2094,7 @@ sub delete_bookmark {
         $self->_compress_script(
             $self->_bookmark_interface_preamble()
               . <<'_JS_'), args => [$guid] );
-return bookmarks.Bookmarks.remove(arguments[0]);
+return lazy.Bookmarks.remove(arguments[0]);
 _JS_
     $self->_context($old);
     return $self;
@@ -14936,13 +14952,7 @@ Sending debug to the console can be quite confusing in firefox, as some techniqu
 
     $firefox->script( q[console.log("This goes to devtools b/c it's being generated in content mode")]);
 
-    $firefox->chrome()->script( q[console.log("Can't be seen b/c it's in chrome mode")]);
-
-    $firefox->chrome()->script( q[const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm"); console.log("Find me in the browser console in chrome mode")]);
-
-    # This won't work b/c of permissions
-    #
-    # $firefox->content()->script( q[const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm"); console.log("Find me in the browser console in content mode")]);
+    $firefox->chrome()->script( q[console.log("Sent out on standard error for Firefox 136 and later")]);
 
 =head1 REMOTE AUTOMATION OF FIREFOX VIA SSH
 

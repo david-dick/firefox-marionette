@@ -2451,13 +2451,7 @@ Sending debug to the console can be quite confusing in firefox, as some techniqu
 
     $firefox->script( q[console.log("This goes to devtools b/c it's being generated in content mode")]);
 
-    $firefox->chrome()->script( q[console.log("Can't be seen b/c it's in chrome mode")]);
-
-    $firefox->chrome()->script( q[const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm"); console.log("Find me in the browser console in chrome mode")]);
-
-    # This won't work b/c of permissions
-    #
-    # $firefox->content()->script( q[const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm"); console.log("Find me in the browser console in content mode")]);
+    $firefox->chrome()->script( q[console.log("Sent out on standard error for Firefox 136 and later")]);
 
 # REMOTE AUTOMATION OF FIREFOX VIA SSH
 
