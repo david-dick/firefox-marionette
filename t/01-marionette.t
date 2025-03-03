@@ -1515,6 +1515,9 @@ SKIP: {
 	if ($major_version == 38) {
 		skip("Skipping b/c proxy must be undefined", 7);
 	}
+	if ($major_version >= 135) {
+		skip("Skipping b/c proxy seems to cause hangs", 7);
+	}
 	($skip_message, $firefox) = start_firefox($visible, seer => 1, chatty => 1, capabilities => Firefox::Marionette::Capabilities->new(proxy => Firefox::Marionette::Proxy->new( host => 'localhost', none => 'localhost')));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -4738,6 +4741,9 @@ SKIP: {
 	if ($major_version == 38) {
 		skip("Skipping b/c proxy must be undefined", 32);
 	}
+	if ($major_version >= 135) {
+		skip("Skipping b/c proxy seems to cause hangs", 32);
+	}
 	($skip_message, $firefox) = start_firefox(1, import_profile_paths => [ 't/data/logins.json', 't/data/key4.db' ], manual_certificate_add => 1, console => 1, debug => 0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, accept_insecure_certs => 0, page_load_strategy => 'none', moz_webdriver_click => 0, moz_accessibility_checks => 0, proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), timeouts => Firefox::Marionette::Timeouts->new(page_load => 78_901, script => 76_543, implicit => 34_567));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5028,6 +5034,9 @@ SKIP: {
 		$ENV{https_proxy} = 'http://localhost:' . $proxyHttpsPort;
 		$ENV{ftp_proxy} = 'ftp://localhost:' . $proxyFtpPort;
 	}
+	if ($major_version >= 135) {
+		skip("Skipping b/c proxy seems to cause hangs", 15);
+	}
 	($skip_message, $firefox) = start_firefox(1, addons => 1, visible => 1, width => 800, height => 600);
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5209,6 +5218,9 @@ SKIP: {
 	if ($major_version == 38) {
 		skip("Skipping b/c proxy must be undefined", 1);
 	}
+	if ($major_version >= 135) {
+		skip("Skipping b/c proxy seems to cause hangs", 1);
+	}
 	($skip_message, $firefox) = start_firefox(1, visible => 1, width => 800, height => 600,capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, proxy => Firefox::Marionette::Proxy->new(tls => $proxy_host)));
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5305,6 +5317,12 @@ SKIP: {
 	if (($major_version == 45) || ($major_version == 38)) {
 		skip("Skipping b/c of segmentation faults for proxy capabilities", 5);
 	}
+	if (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+		skip("Skipping b/c of hangs in Windows 11 with recent firefox (>= 135) for proxy capabilities", 5);
+	}
+	if ($major_version >= 135) {
+		skip("Skipping b/c proxy seems to cause hangs", 5);
+	}
 	($skip_message, $firefox) = start_firefox(0, capabilities => Firefox::Marionette::Capabilities->new(moz_headless => 0, page_load_strategy => 'none', proxy => Firefox::Marionette::Proxy->new(host => $proxy_host)), proxy => "https://$proxy_host");
 	if (!$skip_message) {
 		$at_least_one_success = 1;
@@ -5342,6 +5360,12 @@ SKIP: {
 	my $proxy_host = 'localhost:' . $proxyPort;
 	if ($major_version == 38) {
 		skip("Skipping b/c of segmentation faults for proxy capabilities", 5);
+	}
+	if (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+		skip("Skipping b/c of hangs in Windows 11 with recent firefox (>= 135) for proxy capabilities", 5);
+	}
+	if ($major_version >= 135) {
+		skip("Skipping b/c proxy seems to cause hangs", 5);
 	}
 	($skip_message, $firefox) = start_firefox(0, proxy => URI::URL->new("http://$proxy_host"));
 	if (!$skip_message) {
