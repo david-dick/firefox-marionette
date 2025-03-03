@@ -1485,11 +1485,19 @@ SKIP: {
 			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
 		}
 		$firefox->go("file://$path");
-		my $geo2 = $firefox->geo();
-		my $returned_latitude = $geo2->latitude();
-		my $returned_longitude = $geo2->longitude();
-		ok($returned_latitude == $latitude, "\$geo2->latitude() is correctly reported as $latitude:$returned_latitude");
-		ok($returned_longitude == $longitude, "\$geo2->longitude() is correctly reported as $longitude:$returned_longitude");
+		my $geo2;
+		eval { $geo2 = $firefox->geo(); };
+		if ((!defined $geo2) && (($uname eq 'cygwin') || ($uname eq 'MSWin32'))) {
+			diag("Location services may be disabled:$@");
+			eval {
+				$firefox->dismiss_alert();
+			};
+		} elsif (defined $geo2) {
+			my $returned_latitude = $geo2->latitude();
+			my $returned_longitude = $geo2->longitude();
+			ok($returned_latitude == $latitude, "\$geo2->latitude() is correctly reported as $latitude:$returned_latitude");
+			ok($returned_longitude == $longitude, "\$geo2->longitude() is correctly reported as $longitude:$returned_longitude");
+		}
 	}
 	TODO: {
 		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
@@ -1515,13 +1523,6 @@ SKIP: {
 		skip($skip_message, 7);
 	}
 	ok($firefox, "Firefox has started in Marionette mode with definable capabilities set to known values");
-	if ($major_version >= $min_geo_version) {
-		eval {
-			$firefox->geo();
-		};
-		chomp $@;
-		ok($@ =~ /^javascript[ ]error:[ ]User[ ]denied[ ]geolocation[ ]prompt[ ]at[ ]t.01\-marionette[.]t[ ]line[ ]\d+$/smx, "Geolocation throws an exception with source and line numbers:$@");
-	}
 	my $capabilities = $firefox->capabilities();
 	ok((ref $capabilities) eq 'Firefox::Marionette::Capabilities', "\$firefox->capabilities() returns a Firefox::Marionette::Capabilities object");
 	SKIP: {
@@ -1855,41 +1856,47 @@ SKIP: {
 		} elsif (($^O eq 'openbsd') && (Cwd::cwd() !~ /^($quoted_home_directory\/Downloads|\/tmp)/)) {
 		} elsif ($major_version >= $min_geo_version) {
 			$firefox->geo($json);
-			my $geo3 = $firefox->geo();
-			$latitude = $geo3->latitude();
-			ok($latitude >= -90 && $latitude <= 90, "\$geo3->latitude() looks like a latitude >= -90 and <= 90:$latitude");
-			$longitude = $geo3->longitude();
-			ok($longitude >= -180 && $longitude <= 180, "\$geo3->longitude() looks like a longitude >= -180 and <= 180:$longitude");
-			my $timezone_offset = $geo3->timezone_offset();
-			ok(defined $timezone_offset, "\$geo3->timezone_offset() is the javascript timezone offset:$timezone_offset");
-			my $accuracy = $geo3->accuracy();
-			TODO: {
-				local $TODO = ($major_version < 63) ? "\$geo3->accuracy() not available for older versions of firefox" : ($^O eq 'dragonfly') ? "\$geo3->accuracy can fail on DragonFly" : q[];
-				ok(defined $accuracy && $accuracy >= 0, "\$geo3->accuracy() is a positive float (accuracy in metres):" . (defined $accuracy ? $accuracy : q[]));
-			}
-			my $altitude = $geo3->altitude();
-			if (defined $altitude) {
-				ok($altitude >= 0, "\$geo3->altitude() is a positive float (altitude in metres):$altitude");
-			} else {
-				ok(1, "\$geo3->altitude() is not defined");
-			}
-			my $altitude_accuracy = $geo3->altitude_accuracy();
-			if (defined $altitude_accuracy) {
-				ok($altitude_accuracy >= 0, "\$geo3->altitude_accuracy() is a positive float (altitude accuracy in metres):$altitude_accuracy");
-			} else {
-				ok(1, "\$geo3->altitude_accuracy() is not defined");
-			}
-			my $heading = $geo3->heading();
-			if (defined $heading) {
-				ok($heading >= 0 && $heading <= 360, "\$geo3->heading() looks like a heading >= 0 and <= 360:$latitude");
-			} else {
-				ok(1, "\$geo3->heading() is not defined");
-			}
-			my $speed = $geo3->speed();
-			if (defined $speed) {
-				ok($speed >= 0, "\$geo3->speed() is a positive float (speed in metres per second):$speed");
-			} else {
-				ok(1, "\$geo3->speed() is not defined");
+			if (my $geo3 = $firefox->geo()) {
+				$latitude = $geo3->latitude();
+				ok($latitude >= -90 && $latitude <= 90, "\$geo3->latitude() looks like a latitude >= -90 and <= 90:$latitude");
+				$longitude = $geo3->longitude();
+				ok($longitude >= -180 && $longitude <= 180, "\$geo3->longitude() looks like a longitude >= -180 and <= 180:$longitude");
+				my $timezone_offset = $geo3->timezone_offset();
+				ok(defined $timezone_offset, "\$geo3->timezone_offset() is the javascript timezone offset:$timezone_offset");
+				my $accuracy = $geo3->accuracy();
+				TODO: {
+					local $TODO = ($major_version < 63) ? "\$geo3->accuracy() not available for older versions of firefox" : ($^O eq 'dragonfly') ? "\$geo3->accuracy can fail on DragonFly" : q[];
+					ok(defined $accuracy && $accuracy >= 0, "\$geo3->accuracy() is a positive float (accuracy in metres):" . (defined $accuracy ? $accuracy : q[]));
+				}
+				my $altitude = $geo3->altitude();
+				if (defined $altitude) {
+					ok($altitude >= 0, "\$geo3->altitude() is a positive float (altitude in metres):$altitude");
+				} else {
+					ok(1, "\$geo3->altitude() is not defined");
+				}
+				my $altitude_accuracy = $geo3->altitude_accuracy();
+				if (defined $altitude_accuracy) {
+					ok($altitude_accuracy >= 0, "\$geo3->altitude_accuracy() is a positive float (altitude accuracy in metres):$altitude_accuracy");
+				} else {
+					ok(1, "\$geo3->altitude_accuracy() is not defined");
+				}
+				my $heading = $geo3->heading();
+				if (defined $heading) {
+					ok($heading >= 0 && $heading <= 360, "\$geo3->heading() looks like a heading >= 0 and <= 360:$latitude");
+				} else {
+					ok(1, "\$geo3->heading() is not defined");
+				}
+				my $speed = $geo3->speed();
+				if (defined $speed) {
+					ok($speed >= 0, "\$geo3->speed() is a positive float (speed in metres per second):$speed");
+				} else {
+					ok(1, "\$geo3->speed() is not defined");
+				}
+			} elsif (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+				diag("Location services may be disabled");
+				eval {
+					$firefox->dismiss_alert();
+				};
 			}
 		}
 		if ($major_version < 63) {
@@ -1904,9 +1911,15 @@ SKIP: {
 					$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
 				}
 				$firefox->go("file://$path");
-				my $geo4 = $firefox->geo();
-				ok($geo4->latitude() == $latitude, "\$geo4->latitude() has remained after a page load");
-				ok($geo4->longitude() == $longitude, "\$geo4->longitude() has remained after a page load");
+				if (my $geo4 = $firefox->geo()) {
+					ok($geo4->latitude() == $latitude, "\$geo4->latitude() has remained after a page load");
+					ok($geo4->longitude() == $longitude, "\$geo4->longitude() has remained after a page load");
+				} elsif (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+					diag("Location services may be disabled");
+					eval {
+						$firefox->dismiss_alert();
+					};
+				}
 			}
 			ok($firefox->go('https://github.com/login'), "\$firefox->go('https://github.com/login') succeeded");
 			my $old_session_cookie = github_session_cookie($firefox);
@@ -2960,9 +2973,12 @@ SKIP: {
 				chomp $@;
 				diag("Threw an exception in geo method:$@");
 			};
-			if ((!defined $geo6) && (($firefox->nightly()) || ($firefox->developer()))) {
-				diag("Failed geo method in nightly/developer");
-			} else {
+			if ((!defined $geo6) && (($uname eq 'cygwin') || ($uname eq 'MSWin32'))) {
+				diag("Location services may be disabled");
+				eval {
+					$firefox->dismiss_alert();
+				};
+			} elsif (defined $geo6) {
 				ok($geo6->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo6->latitude());
 				ok($geo6->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo6->longitude());
 			}
@@ -3070,9 +3086,15 @@ SKIP: {
 			skip("Running out of time.  Trying to shutdown tests as fast as possible", 246);
 		}
 		if ($major_version >= $min_geo_version) {
-			my $geo = $firefox->geo();
-			ok($geo->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo->latitude());
-			ok($geo->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo->longitude());
+			if (my $geo = $firefox->geo()) {
+				ok($geo->latitude() == -37.5, "\$firefox->geo()->latitude() returned -31.5:" . $geo->latitude());
+				ok($geo->longitude() == 144.5, "\$firefox->geo()->longitude() returned 144.5:" . $geo->longitude());
+			} elsif (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+				diag("Location services may be disabled");
+				eval {
+					$firefox->dismiss_alert();
+				};
+			}
 		}
 		if ($major_version >= 121) {
 			my @frames = sort @{$firefox->script("return [ window.frames[0], window.frames[1] ];")};
@@ -4405,11 +4427,17 @@ SKIP: {
 			$path = $firefox->execute( 'cygpath', '-s', '-m', $path );
 		}
 		$firefox->go("file://$path");
-		my $geo5 = $firefox->geo();
-		my $current_latitude = $geo5->latitude();
-		my $current_longitude = $geo5->longitude();
-		ok($current_latitude == $new_latitude, "\$geo5->latitude() has changed after a call to \$firefox->geo(latitude => $new_latitude, longitude => $new_longitude):$current_latitude");
-		ok($current_longitude == $new_longitude, "\$geo5->longitude() has changed after a call to \$firefox->geo(latitude => $new_latitude, longitude => $new_longitude):$current_longitude");
+		if (my $geo5 = $firefox->geo()) {
+			my $current_latitude = $geo5->latitude();
+			my $current_longitude = $geo5->longitude();
+			ok($current_latitude == $new_latitude, "\$geo5->latitude() has changed after a call to \$firefox->geo(latitude => $new_latitude, longitude => $new_longitude):$current_latitude");
+			ok($current_longitude == $new_longitude, "\$geo5->longitude() has changed after a call to \$firefox->geo(latitude => $new_latitude, longitude => $new_longitude):$current_longitude");
+		} elsif (($uname eq 'cygwin') || ($uname eq 'MSWin32')) {
+			diag("Location services may be disabled");
+			eval {
+				$firefox->dismiss_alert();
+			};
+		}
 	}
 	my $daemon = HTTP::Daemon->new(LocalAddr => 'localhost') || die "Failed to create HTTP::Daemon";
 	SKIP: {

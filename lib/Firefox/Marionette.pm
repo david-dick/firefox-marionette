@@ -312,9 +312,11 @@ sub geo {
         }
         return $self;
     }
-    my $new_location =
-      Firefox::Marionette::GeoLocation->new( $self->_get_geolocation() );
-    return $new_location;
+    if ( my $geo_location = $self->_get_geolocation() ) {
+        my $new_location = Firefox::Marionette::GeoLocation->new($geo_location);
+        return $new_location;
+    }
+    return;
 }
 
 sub _get_geolocation {
