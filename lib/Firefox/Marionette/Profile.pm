@@ -351,6 +351,8 @@ sub new {
         $profile->set_value( 'media.navigator.enabled',    'false', 0 );
         $profile->set_value( 'network.captive-portal-service.enabled',
             'false', 0 );
+        $profile->set_value( 'network.connectivity-service.enabled',
+            'false', 0 );
         $profile->set_value( 'network.cookie.lifetimePolicy',       '2',    0 );
         $profile->set_value( 'privacy.clearOnShutdown.downloads',   'true', 0 );
         $profile->set_value( 'privacy.clearOnShutdown.formdata',    'true', 0 );
