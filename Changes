@@ -1,5 +1,12 @@
 Revision history for Firefox-Marionette
 
+1.63  Mon Mar 10 07:59 2025
+     - Adding CLEAR_MESSAGING_LAYER_SECURITY_STATE method
+     - geo method returns undef on failure instead of an exception
+     - Remove ChromeUtils.import usage
+     - Fixes for DurationFormat changes
+     - Documentation/test suite fixes
+
 1.62  Sun Nov 03 17:45 2024
      - Adding support for socks scheme in proxy variables
      - Test suite fixes

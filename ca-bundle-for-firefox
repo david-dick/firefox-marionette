@@ -8,7 +8,7 @@ use Firefox::Marionette();
 use FileHandle();
 use Encode();
 
-our $VERSION = '1.62';
+our $VERSION = '1.63';
 
 my %options;
 
@@ -115,7 +115,7 @@ ca-bundle-for-firefox - generate the ca-bundle.crt for the current firefox insta
 
 =head1 VERSION
 
-Version 1.62
+Version 1.63
 
 =head1 USAGE
 
