@@ -12297,7 +12297,7 @@ Firefox::Marionette - Automate the Firefox browser with the Marionette protocol
 
 =head1 VERSION
 
-Version 1.62
+Version 1.63
 
 =head1 SYNOPSIS
 
@@ -13457,7 +13457,7 @@ full screens the firefox window. This method returns L<itself|Firefox::Marionett
 
 =head2 geo
 
-accepts an optional L<geo location|Firefox::Marionette::GeoLocation> object or the parameters for a L<geo location|Firefox::Marionette::GeoLocation> object, turns on the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API> and returns the current L<value|Firefox::Marionette::GeoLocation> returned by calling the javascript L<getCurrentPosition|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition> method.  This method is further discussed in the L<GEO LOCATION|/GEO-LOCATION> section.
+accepts an optional L<geo location|Firefox::Marionette::GeoLocation> object or the parameters for a L<geo location|Firefox::Marionette::GeoLocation> object, turns on the L<Geolocation API|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API> and returns the current L<value|Firefox::Marionette::GeoLocation> returned by calling the javascript L<getCurrentPosition|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition> method.  This method is further discussed in the L<GEO LOCATION|/GEO-LOCATION> section.  If the current location cannot be determined, this method will return undef.
 
 NOTE: firefox will only allow L<Geolocation|https://developer.mozilla.org/en-US/docs/Web/API/Geolocation> calls to be made from L<secure contexts|https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts> and bizarrely, this does not include about:blank or similar.  Therefore, you will need to load a page before calling the L<geo|/geo> method.
 
@@ -13473,9 +13473,11 @@ NOTE: firefox will only allow L<Geolocation|https://developer.mozilla.org/en-US/
 
     $firefox->go('https://maps.google.com/');
 
-    my $geo = $firefox->geo();
-
-    warn "Apparently, we're now at " . join q[, ], $geo->latitude(), $geo->longitude();
+    if (my $geo = $firefox->geo()) {
+        warn "Apparently, we're now at " . join q[, ], $geo->latitude(), $geo->longitude();
+    } else {
+        warn "This computer is not allowing geolocation";
+    }
 
     # OR the quicker setup (run this with perl -C)
 
