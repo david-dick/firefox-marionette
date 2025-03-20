@@ -3,7 +3,7 @@ package Firefox::Marionette::Proxy;
 use strict;
 use warnings;
 
-our $VERSION = '1.63';
+our $VERSION = '1.64';
 
 sub DEFAULT_SOCKS_VERSION { return 5 }
 sub DEFAULT_SQUID_PORT    { return 3128 }
@@ -107,7 +107,7 @@ Firefox::Marionette::Proxy - Represents a Proxy used by Firefox Capabilities usi
 
 =head1 VERSION
 
-Version 1.63
+Version 1.64
 
 =head1 SYNOPSIS
 

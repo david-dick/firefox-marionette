@@ -1,5 +1,8 @@
 Revision history for Firefox-Marionette
 
+1.64  Thu Mar 20 15:349 2025
+     - Push a new version to CPAN after inadvertent deletion.  Thanks to Veraellyunjie for GH#80
+
 1.63  Mon Mar 10 07:59 2025
      - Adding CLEAR_MESSAGING_LAYER_SECURITY_STATE method
      - geo method returns undef on failure instead of an exception

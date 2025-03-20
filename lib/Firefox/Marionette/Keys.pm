@@ -53,7 +53,7 @@ our @EXPORT_OK = qw(
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK, );
 
-our $VERSION = '1.63';
+our $VERSION = '1.64';
 
 sub CANCEL          { return chr hex '0xE001' }
 sub HELP            { return chr hex '0xE002' }
@@ -108,7 +108,7 @@ Firefox::Marionette::Keys - Human readable special keys for the Marionette proto
 
 =head1 VERSION
 
-Version 1.63
+Version 1.64
 
 =head1 SYNOPSIS
 

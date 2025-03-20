@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Firefox::Marionette::LocalObject);
 
-our $VERSION = '1.63';
+our $VERSION = '1.64';
 
 sub IDENTIFIER { return 'window-fcc6-11e5-b4f8-330a88ab9d7f' }
 
@@ -17,7 +17,7 @@ Firefox::Marionette::WebWindow - Represents a Firefox window retrieved using the
 
 =head1 VERSION
 
-Version 1.63
+Version 1.64
 
 =head1 SYNOPSIS
 
