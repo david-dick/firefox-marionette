@@ -3524,8 +3524,9 @@ WEBGL
 
 FILE UPLOADS
 
-    Uploading files in forms is accomplished by using the type command. An
-    example is shown below;
+    Uploading files in forms is accomplished by using the type command to
+    enter the full path of the file you want to upload. An example is shown
+    below;
 
         use Firefox::Marionette();
         use File::Spec();

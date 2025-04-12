@@ -2520,7 +2520,7 @@ With all those conditions being met, [WebGL](https://en.wikipedia.org/wiki/WebGL
 
 # FILE UPLOADS
 
-Uploading files in forms is accomplished by using the [type](https://metacpan.org/pod/Firefox::Marionette::Input#type) command.  An example is shown below;
+Uploading files in forms is accomplished by using the [type](https://metacpan.org/pod/Firefox::Marionette::Element#type) command to enter the full path of the file you want to upload.  An example is shown below;
 
     use Firefox::Marionette();
     use File::Spec();
