@@ -15026,6 +15026,23 @@ With all those conditions being met, L<WebGL|https://en.wikipedia.org/wiki/WebGL
         die "WebGL is not supported";
     }
 
+=head1 FILE UPLOADS
+
+Uploading files in forms is accomplished by using the L<type|Firefox::Marionette::Input#type> command.  An example is shown below;
+
+    use Firefox::Marionette();
+    use File::Spec();
+    use Cwd();
+
+    my $firefox = Firefox::Marionette->new();
+    my $firefox_marionette_directory = Cwd::cwd();
+    $firefox->go("https://practice.expandtesting.com/upload");
+    while($firefox->percentage_visible($firefox->find_id("fileSubmit")) < 90) {
+        sleep 1;
+    }
+    $firefox->find_id("fileInput")->type(File::Spec->catfile($firefox_marionette_directory, qw(t 04-uploads.t)));
+    $firefox->find_id("fileSubmit")->click();
+
 =head1 FINDING ELEMENTS IN A SHADOW DOM
 
 One aspect of L<Web Components|https://developer.mozilla.org/en-US/docs/Web/API/Web_components> is the L<shadow DOM|https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>.  When you need to explore the structure of a L<custom element|https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements>, you need to access it via the shadow DOM.  The following is an example of navigating the shadow DOM via a html file included in the test suite of this package.

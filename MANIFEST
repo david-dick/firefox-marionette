@@ -88,6 +88,7 @@ t/04-botd.t
 t/04-browserfeatcl.t
 t/04-fingerprint.t
 t/04-proxy.t
+t/04-uploads.t
 t/04-timezone.t
 t/04-webauthn.t
 t/manifest.t
