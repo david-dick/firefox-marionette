@@ -195,6 +195,7 @@ sub start_firefox {
 	}
 	if ($parameters{manual_certificate_add}) {
 		delete $parameters{manual_certificate_add};
+	} elsif ((defined $parameters{system_access}) && ($parameters{system_access} == 0)) {
 	} elsif (defined $ca_cert_handle) {
 		if ($launches % 2) {
 			diag("Setting trust to list");
@@ -5389,6 +5390,25 @@ SKIP: {
 	TODO: {
 		local $TODO = $correct_exit_status == 0 ? q[] : "$version_string is not exiting cleanly";
 		ok($firefox->quit() == $correct_exit_status, "Firefox has closed with an exit status of $correct_exit_status:" . $firefox->child_error());
+	}
+}
+
+SKIP: {
+	if ($major_version > 138) {
+		($skip_message, $firefox) = start_firefox(0, system_access => 0);
+		if (!$skip_message) {
+			$at_least_one_success = 1;
+		}
+		if ($skip_message) {
+			skip($skip_message, 5);
+		}
+		ok($firefox->content(), "\$firefox->content() is called to prove we are okay");
+		eval {
+			$firefox->chrome();
+		};
+		chomp $@;
+		ok($@, "Unable to move to chrome mode when system_access is turned off:$@");
+		ok($firefox->quit() == 0, "Firefox has closed with an exit status of 0:" . $firefox->child_error());
 	}
 }
 

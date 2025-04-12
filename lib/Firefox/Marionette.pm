@@ -1439,6 +1439,11 @@ sub _init {
             $parameters{user}, $parameters{reconnect}
         );
     }
+    if ( defined $parameters{system_access} ) {
+        $self->{system_access} = $parameters{system_access};
+    } else {
+        $self->{system_access} = 1;
+    }
     if ( defined $parameters{width} ) {
         $self->{window_width} = $parameters{width};
     }
@@ -4700,7 +4705,9 @@ sub _get_remote_profile_directory {
 sub _setup_arguments {
     my ( $self, %parameters ) = @_;
     my @arguments = qw(-marionette);
-
+    if ( $self->{system_access} ) {
+        push @arguments, '-remote-allow-system-access';
+    }
     if ( defined $self->{window_width} ) {
         push @arguments, '-width', $self->{window_width};
     }
@@ -14080,6 +14087,8 @@ NOTE: firefox ignores any changes made to the profile on the disk while it is ru
 =item * stealth - stops L<navigator.webdriver|https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver> from being accessible by the current web page.  This is achieved by loading an L<extension|https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions>, which will automatically switch on the C<addons> parameter for the L<new|/new> method.  This is extremely experimental.  See L<IMITATING OTHER BROWSERS|/IMITATING-OTHER-BROWSERS> for a discussion.
 
 =item * survive - if this is set to a true value, firefox will not automatically exit when the object goes out of scope.  See the reconnect parameter for an experimental technique for reconnecting.
+
+=item * system_access - firefox L<after version 138|https://bugzilla.mozilla.org/show_bug.cgi?id=1944565> allows disabling system access for javascript.  By default, this module will turn on system access.
 
 =item * trust - give a path to a L<root certificate|https://en.wikipedia.org/wiki/Root_certificate> encoded as a L<PEM encoded X.509 certificate|https://datatracker.ietf.org/doc/html/rfc7468#section-5> that will be trusted for this session.
 
