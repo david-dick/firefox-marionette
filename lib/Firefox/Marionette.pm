@@ -2540,7 +2540,7 @@ sub delete_webauthn_authenticator {
     );
     my $response = $self->_get_response($message_id);
     if (   ( $self->webauthn_authenticator() )
-        && ( $self->webauthn_authenticator()->id() == $authenticator->id() ) )
+        && ( $self->webauthn_authenticator()->id() eq $authenticator->id() ) )
     {
         delete $self->{$webauthn_default_authenticator_key_name};
     }
