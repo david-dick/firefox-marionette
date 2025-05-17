@@ -427,6 +427,7 @@ WriteMakefile(
         'Fcntl'               => 0,
         'FileHandle'          => 0,
         'File::Find'          => 0,
+        'File::Path'          => 2.08,
         'File::Spec'          => 0,
         'File::Temp'          => 0,
         'IO::Handle'          => 0,
