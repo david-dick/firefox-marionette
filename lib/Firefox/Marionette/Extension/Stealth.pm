@@ -463,7 +463,7 @@ _JS_
     $_function_definition_count += 1;
     my $native_code_body = $class->_native_code_body($to_browser_type);
     my $actual_name      = "fm_def_$_function_definition_count";
-    return ( $actual_name, <<"_JS_");
+    return ( $actual_name, <<"_JS_" );
 let $actual_name = new Function("$function_body");
   $actual_name.toString = function fm_def() { return "function ${name}() $native_code_body" };
 _JS_
