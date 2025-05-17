@@ -110,6 +110,8 @@ SKIP: {
 				diag("Failed to fork http proxy:$!");
 				die "Failed to fork:$!";
 			}
+		} else {
+			plan(skip_all => 'No upload tests except when RELEASE_TESTING is set');
 		}
 	} else {
 		skip("No forking available for $^O", 1);
