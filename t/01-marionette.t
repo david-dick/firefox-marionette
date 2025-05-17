@@ -3619,35 +3619,37 @@ SKIP: {
 		$count += 1;
 	}
 	ok($count == 1, "Found elements with wantarray find_by_selector:$count");
-	ok($firefox->find('API', 'link text')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element when searching by link text");
-	ok($firefox->find('API', BY_LINK())->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element when searching by link text");
-	ok($firefox->list_by_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with list_by_link");
-	ok($firefox->find_by_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_by_link");
+	my $metacpan_api_hostname = q[api.metacpan.org];
+	my $metacpan_api_url_regex = qr/https:\/\// . (quotemeta $metacpan_api_hostname) . qr/\/?/smx;
+	ok($firefox->find('API', 'link text')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element when searching by link text");
+	ok($firefox->find('API', BY_LINK())->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element when searching by link text");
+	ok($firefox->list_by_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with list_by_link");
+	ok($firefox->find_by_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with find_by_link");
 	TODO: {
 		local $TODO = $major_version == 45 ? "Nested find_link can break for $major_version.$minor_version.$patch_version" : undef;
 		my $result;
 		eval {
-			$result = $firefox->find_by_class($footer_links)->find_by_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx;
+			$result = $firefox->find_by_class($footer_links)->find_by_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx;
 		};
 		ok($result, "Correctly found nested element with find_by_link");
 	}
-	ok($firefox->find_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_link");
-	ok($firefox->has_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with has_link");
+	ok($firefox->find_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with find_link");
+	ok($firefox->has_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with has_link");
 	TODO: {
 		local $TODO = $major_version == 45 ? "Nested find_link can break for $major_version.$minor_version.$patch_version" : undef;
 		my $result;
 		eval {
-			$result = $firefox->find_class($footer_links)->find_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx;
+			$result = $firefox->find_class($footer_links)->find_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx;
 		};
 		ok($result, "Correctly found nested element with find_link");
 		eval {
-			$result = $firefox->has_class($footer_links)->has_link('API')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx;
+			$result = $firefox->has_class($footer_links)->has_link('API')->attribute('href') =~ /^$metacpan_api_url_regex$/smx;
 		};
 		ok($result, "Correctly found nested element with has_link");
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_class($footer_links)->list_by_link('API')) {
-		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with list_by_link");
+		ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with list_by_link");
 		$count += 1;
 	}
 	SKIP: {
@@ -3660,7 +3662,7 @@ SKIP: {
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_class($footer_links)->find_by_link('API')) {
-		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with find_by_link");
+		ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with find_by_link");
 		$count += 1;
 	}
 	SKIP: {
@@ -3677,7 +3679,7 @@ SKIP: {
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_link('API')) {
-		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found wantarray element with find_by_link");
+		ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found wantarray element with find_by_link");
 		$count += 1;
 	}
 	if (($count == 1) && ($major_version < 50)) {
@@ -3693,7 +3695,7 @@ SKIP: {
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_link('API')) {
-		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found wantarray element with find_link");
+		ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found wantarray element with find_link");
 		$count += 1;
 	}
 	if (($count == 1) && ($major_version < 50)) {
@@ -3707,19 +3709,19 @@ SKIP: {
 			ok((($count == 1) or ($count == 2)), "Found elements with wantarray find_link:$count");
 		}
 	}
-	ok($firefox->find('AP', 'partial link text')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element when searching by partial link text");
-	ok($firefox->find('AP', BY_PARTIAL())->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element when searching by partial link text");
-	ok($firefox->list_by_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with list_by_partial");
-	ok($firefox->find_by_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_by_partial");
-	ok($firefox->find_by_class($footer_links)->find_by_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with find_by_partial");
-	ok($firefox->find_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with find_partial");
-	ok($firefox->has_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found element with has_partial");
-	ok($firefox->find_class($footer_links)->find_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with find_partial");
-	ok($firefox->has_class($footer_links)->has_partial('AP')->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with has_partial");
+	ok($firefox->find('AP', 'partial link text')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element when searching by partial link text");
+	ok($firefox->find('AP', BY_PARTIAL())->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element when searching by partial link text");
+	ok($firefox->list_by_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with list_by_partial");
+	ok($firefox->find_by_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with find_by_partial");
+	ok($firefox->find_by_class($footer_links)->find_by_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with find_by_partial");
+	ok($firefox->find_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with find_partial");
+	ok($firefox->has_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found element with has_partial");
+	ok($firefox->find_class($footer_links)->find_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with find_partial");
+	ok($firefox->has_class($footer_links)->has_partial('AP')->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with has_partial");
 	$count = 0;
 	foreach my $element ($firefox->find_by_class($footer_links)->list_by_partial('AP')) {
 		if ($count == 0) {
-			ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with list_by_partial");
+			ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with list_by_partial");
 		}
 		$count +=1;
 	}
@@ -3737,7 +3739,7 @@ SKIP: {
 	$count = 0;
 	foreach my $element ($firefox->find_by_class($footer_links)->find_by_partial('AP')) {
 		if ($count == 0) {
-			ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found nested element with find_by_partial");
+			ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found nested element with find_by_partial");
 		}
 		$count +=1;
 	}
@@ -3754,7 +3756,7 @@ SKIP: {
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_by_partial('AP')) {
-		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found wantarray element with find_by_partial");
+		ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found wantarray element with find_by_partial");
 		$count +=1;
 	}
 	if ($major_version >= 61) {
@@ -3764,7 +3766,7 @@ SKIP: {
 	}
 	$count = 0;
 	foreach my $element ($firefox->find_partial('AP')) {
-		ok($element->attribute('href') =~ /^https:\/\/fastapi[.]metacpan[.]org\/?$/smx, "Correctly found wantarray element with find_partial");
+		ok($element->attribute('href') =~ /^$metacpan_api_url_regex$/smx, "Correctly found wantarray element with find_partial");
 		$count +=1;
 	}
 	if ($major_version >= 61) {
@@ -3864,7 +3866,8 @@ SKIP: {
 		}
 	}
 	my $clicked;
-	my @elements = $firefox->find('//a[@href="https://fastapi.metacpan.org/"]');
+	my $xpath = qq(//a[\@href="https://$metacpan_api_hostname/"]);
+	my @elements = $firefox->find($xpath);
 	if (out_of_time()) {
 		skip("Running out of time.  Trying to shutdown tests as fast as possible", 61);
 	}
