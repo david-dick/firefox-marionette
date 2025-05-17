@@ -1951,15 +1951,27 @@ return (async function(guidOrInfo) {
     }
     let url = lazy.NetUtil.newURI(bookmark["url"]);
     bookmark["tags"] = await lazy.PlacesUtils.tagging.getTagsForURI(url);
-
+    let serviceResult;
+    if (lazy.PlacesUtils.favicons.getFaviconForPage) {
+      serviceResult = await PlacesUtils.favicons.getFaviconForPage(url, 0);
+    }
     let addFavicon = function(pageUrl) {
       return new Promise((resolve, reject) => {
-        PlacesUtils.favicons.getFaviconDataForPage(
-          pageUrl,
-          function (pageUrl, dataLen, data, mimeType, size) {
-            resolve([ pageUrl, dataLen, data, mimeType, size ]);
+        if (PlacesUtils.favicons.getFaviconForPage) {
+/* https://bugzilla.mozilla.org/show_bug.cgi?id=1915762 */
+          if (serviceResult === null ) {
+            resolve([]);
+          } else {
+            resolve([ serviceResult.uri, serviceResult.rawData.length, serviceResult.rawData, serviceResult.mimeType, serviceResult.width ]);
           }
-        );
+        } else {
+          PlacesUtils.favicons.getFaviconDataForPage(
+            pageUrl,
+            function (pageUrl, dataLen, data, mimeType, size) {
+              resolve([ pageUrl, dataLen, data, mimeType, size ]);
+            }
+          );
+        }
       })};
     let awaitResult = await addFavicon(lazy.PlacesUtils.toURI(bookmark["url"]));
     if (awaitResult[0]) {
