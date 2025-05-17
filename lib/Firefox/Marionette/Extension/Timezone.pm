@@ -7,7 +7,7 @@ use English qw( -no_match_vars );
 use strict;
 use warnings;
 
-our $VERSION = '1.64';
+our $VERSION = '1.65';
 
 my $content_name = 'content.js';
 
@@ -178,7 +178,7 @@ Firefox::Marionette::Extension::Timezone - Contains the Timezone Extension
 
 =head1 VERSION
 
-Version 1.64
+Version 1.65
 
 =head1 SYNOPSIS
 

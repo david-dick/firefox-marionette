@@ -1,6 +1,13 @@
 Revision history for Firefox-Marionette
 
-1.64  Thu Mar 20 15:349 2025
+1.65  Sat May 17 15:14 2025
+     - Adding support for -remote-allow-system-access flag.  Thanks for gregoa for GH#84
+     - Test suite fixes for metacpan.org changes
+     - Bookmark fixes for firefox changes
+     - Webauth ids can now be non-numeric
+     - Added upload documentation.   Thanks to Veraellyunjie for GH#81
+
+1.64  Thu Mar 20 15:34 2025
      - Push a new version to CPAN after inadvertent deletion.  Thanks to Veraellyunjie for GH#80
 
 1.63  Mon Mar 10 07:59 2025
