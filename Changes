@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.66  Sat May 17 21:19 2025
+     - Test suite fixes
+     - Using setpgrp to avoid left-over tmp directory entries.  Thanks to esabol for GH#83
+     - Setting File::Path minimum version
+
 1.65  Sat May 17 15:14 2025
      - Adding support for -remote-allow-system-access flag.  Thanks for gregoa for GH#84
      - Test suite fixes for metacpan.org changes

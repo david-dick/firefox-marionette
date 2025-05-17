@@ -11,7 +11,7 @@ use Carp();
 use DirHandle();
 use Sys::Syslog();
 
-our $VERSION = '1.65';
+our $VERSION = '1.66';
 
 MAIN: {
     my $facility = 'LOG_LOCAL0';
