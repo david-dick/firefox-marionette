@@ -76,6 +76,7 @@ our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 our $VERSION = '1.65';
 
 sub _ANYPROCESS                     { return -1 }
+sub _PROCESS_GROUP                  { return -1 }
 sub _COMMAND                        { return 0 }
 sub _DEFAULT_HOST                   { return 'localhost' }
 sub _DEFAULT_PORT                   { return 2828 }
@@ -6351,6 +6352,9 @@ sub _launch_unix {
         }
         elsif ( defined $pid ) {
             eval {
+                setpgrp 0, 0
+                  or Firefox::Marionette::Exception->throw(
+                    "Failed to set process group (setpgrp):$EXTENDED_OS_ERROR");
                 if ( !$self->debug() ) {
                     open STDERR, q[>], $dev_null
                       or Firefox::Marionette::Exception->throw(
@@ -11070,7 +11074,7 @@ sub _wait_for_firefox_to_exit {
 
     }
     else {
-        while ( kill 0, $self->_firefox_pid() ) {
+        while ( kill 0, $self->_firefox_pid() * _PROCESS_GROUP() ) {
             sleep 1;
             $self->_reap();
         }
@@ -11267,7 +11271,7 @@ sub _terminate_local_non_win32_process {
     if ( $term_signal > 0 ) {
         my $count = 0;
         while (( $count < _NUMBER_OF_TERM_ATTEMPTS() )
-            && ( kill $term_signal, $self->_firefox_pid() ) )
+            && ( kill $term_signal, $self->_firefox_pid() * _PROCESS_GROUP() ) )
         {
             $count += 1;
             sleep 1;
@@ -11276,7 +11280,7 @@ sub _terminate_local_non_win32_process {
     }
     my $kill_signal = $self->_signal_number('KILL');    # no more mr nice guy
     if ( $kill_signal > 0 ) {
-        while ( kill $kill_signal, $self->_firefox_pid() ) {
+        while ( kill $kill_signal, $self->_firefox_pid() * _PROCESS_GROUP() ) {
             sleep 1;
             $self->_reap();
         }
@@ -11338,7 +11342,8 @@ sub _terminate_marionette_process {
         elsif ( my $ssh = $self->_ssh() ) {
             $self->_terminate_process_via_ssh();
         }
-        elsif ( ( $self->_firefox_pid() ) && ( kill 0, $self->_firefox_pid() ) )
+        elsif (( $self->_firefox_pid() )
+            && ( kill 0, $self->_firefox_pid() * _PROCESS_GROUP() ) )
         {
             $self->_terminate_local_non_win32_process();
         }
