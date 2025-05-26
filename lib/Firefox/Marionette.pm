@@ -11074,7 +11074,7 @@ sub _wait_for_firefox_to_exit {
 
     }
     else {
-        while ( kill 0, $self->_firefox_pid() * _PROCESS_GROUP() ) {
+        while ( kill 0, $self->_firefox_pid() ) {
             sleep 1;
             $self->_reap();
         }
