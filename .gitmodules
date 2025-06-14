@@ -4,3 +4,6 @@
 [submodule "browserfeatcl"]
 	path = browserfeatcl
 	url = https://github.com/lraj22/browserfeatcl.git
+[submodule "fingerprintjs"]
+	path = fingerprintjs
+	url = https://github.com/fingerprintjs/fingerprintjs.git
