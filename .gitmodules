@@ -1,9 +1,6 @@
 [submodule "BotD"]
 	path = BotD
 	url = https://github.com/fingerprintjs/BotD.git
-[submodule "fingerprintjs"]
-	path = fingerprintjs
-	url = https://github.com/fingerprintjs/fingerprintjs.git
 [submodule "browserfeatcl"]
 	path = browserfeatcl
 	url = https://github.com/lraj22/browserfeatcl.git
