@@ -22,7 +22,7 @@ delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 sub _BUFFER_SIZE { return 8192 }
 sub _MAX_KEYS    { return 3 }
 
-our $VERSION = '1.66';
+our $VERSION = '1.67';
 
 MAIN: {
     my %options;
@@ -351,7 +351,7 @@ build-bcd-for-firefox - build user agent data from the @mdn/browser-compat-data 
 
 =head1 VERSION
 
-Version 1.66
+Version 1.67
 
 =head1 USAGE
 

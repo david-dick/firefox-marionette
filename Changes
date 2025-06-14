@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.67  Sat Jun 14 11:13 2025
+     - Removing setpgrp due to Debian packaging issues.  Thanks to ntyni and gregoa for assistance with this in GH#86
+     - Adding system_access flag to ssh-auth-cmd-marionette.  Thanks to prozorecJP for GH#87
+
 1.66  Sat May 17 21:19 2025
      - Test suite fixes
      - Using setpgrp to avoid left-over tmp directory entries.  Thanks to esabol for GH#83
