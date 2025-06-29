@@ -699,6 +699,18 @@ deletes a single cookie by name.  Accepts a scalar containing the cookie name as
 
 Here be cookie monsters! Note that this method will only delete cookies for the current site.  See [clear\_cache](#clear_cache) for an alternative.  This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods. 
 
+## delete\_element
+
+accepts a [element](https://metacpan.org/pod/Firefox::Marionette::Element) as the first parameter and [delete](https://developer.mozilla.org/en-US/docs/Web/API/Element/remove)'s it from the DOM.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new(visible => 1)->go('https://ebay.com');
+    my $select = $firefox->find_tag('select');
+    $firefox->delete_element($select);
+
+This method returns [itself](https://metacpan.org/pod/Firefox::Marionette) to aid in chaining methods.
+
 ## delete\_header
 
 accepts a list of HTTP header names to delete from future HTTP Requests.

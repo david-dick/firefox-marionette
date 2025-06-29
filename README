@@ -950,6 +950,20 @@ SUBROUTINES/METHODS
     for the current site. See clear_cache for an alternative. This method
     returns itself to aid in chaining methods.
 
+ delete_element
+
+    accepts a element as the first parameter and delete
+    <https://developer.mozilla.org/en-US/docs/Web/API/Element/remove>'s it
+    from the DOM.
+
+        use Firefox::Marionette();
+    
+        my $firefox = Firefox::Marionette->new(visible => 1)->go('https://ebay.com');
+        my $select = $firefox->find_tag('select');
+        $firefox->delete_element($select);
+
+    This method returns itself to aid in chaining methods.
+
  delete_header
 
     accepts a list of HTTP header names to delete from future HTTP

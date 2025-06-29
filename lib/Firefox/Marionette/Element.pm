@@ -40,6 +40,11 @@ sub clear {
     return $self->browser()->clear($self);
 }
 
+sub delete_element {
+    my ($self) = @_;
+    return $self->browser()->delete_element($self);
+}
+
 sub scroll {
     my ( $self, $arguments ) = @_;
     return $self->browser()->scroll( $self, $arguments );
@@ -393,6 +398,16 @@ sends a 'click' to the L<element|Firefox::Marionette::Element>.  The browser wil
 =head2 css
 
 accepts a scalar CSS property name as a parameter.  It returns the value of the computed style for that property.
+
+=head2 delete_element
+
+L<delete|https://developer.mozilla.org/en-US/docs/Web/API/Element/remove>'s this element from the DOM
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new(visible => 1)->go('https://ebay.com');
+    my $select = $firefox->find_tag('select');
+    $select->delete_element();
 
 =head2 find
 

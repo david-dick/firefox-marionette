@@ -9729,6 +9729,21 @@ sub aria_role {    # https://bugzilla.mozilla.org/show_bug.cgi?id=1585622
     return $self->_response_result_value($response);
 }
 
+sub delete_element {
+    my ( $self, $element ) = @_;
+    if (
+        !$self->_is_marionette_object(
+            $element, 'Firefox::Marionette::Element'
+        )
+      )
+    {
+        Firefox::Marionette::Exception->throw(
+            'delete_element method requires a Firefox::Marionette::Element parameter');
+    }
+    $self->script('arguments[0].remove()', args => [ $element ]);
+    return $self;
+}
+
 sub click {
     my ( $self, $element ) = @_;
     if (
@@ -13090,6 +13105,18 @@ deletes a single cookie by name.  Accepts a scalar containing the cookie name as
 =head2 delete_cookies
 
 Here be cookie monsters! Note that this method will only delete cookies for the current site.  See L<clear_cache|/clear_cache> for an alternative.  This method returns L<itself|Firefox::Marionette> to aid in chaining methods. 
+
+=head2 delete_element
+
+accepts a L<element|Firefox::Marionette::Element> as the first parameter and L<delete|https://developer.mozilla.org/en-US/docs/Web/API/Element/remove>'s it from the DOM.
+
+    use Firefox::Marionette();
+
+    my $firefox = Firefox::Marionette->new(visible => 1)->go('https://ebay.com');
+    my $select = $firefox->find_tag('select');
+    $firefox->delete_element($select);
+
+This method returns L<itself|Firefox::Marionette> to aid in chaining methods.
 
 =head2 delete_header
 

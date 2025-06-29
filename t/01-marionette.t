@@ -1661,6 +1661,12 @@ SKIP: {
 		ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully");
 		my $new_agent = $firefox->agent(undef);
 		ok($new_agent eq $test_agent_string, "\$firefox->agent(undef) returns '$test_agent_string':$new_agent");
+		my $element = $firefox->find_class('add');
+		ok($firefox->delete_element($element), "Deleted element with 'add' class");
+		ok(!$firefox->has_class('add'), "Deleted 'add' element cannot be found in the DOM");
+		$element = $firefox->find_class('update');
+		ok($element->delete_element($element), "Deleted element with 'update' class");
+		ok(!$firefox->has_class('update'), "Deleted 'update' element cannot be found in the DOM");
 		ok($firefox->go("file://$path"), "\$firefox->go(\"file://$path\") loaded successfully again");
 		my $final_agent = $firefox->agent();
 		ok($final_agent eq $original_agent, "\$firefox->agent() returns the original user agent string '$original_agent':$final_agent");
