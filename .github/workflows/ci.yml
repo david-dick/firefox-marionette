@@ -45,6 +45,11 @@ jobs:
       run: |
         perl -v
 
+    - name: Upgrade Perl toolchain
+      run: |
+        cpanm --notest --update App::cpanminus
+        cpanm --notest ExtUtils::MakeMaker
+
     - name: Install Modules
       env:
         AUTOMATED_TESTING: 1
