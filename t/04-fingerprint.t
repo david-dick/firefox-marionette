@@ -28,7 +28,13 @@ SKIP: {
 	my $fingerprintjs_listen = '127.0.0.1';
 	my $fingerprintjs = Test::Daemon::FingerprintJS->new(listen => $fingerprintjs_listen, debug => $debug);
 	ok($fingerprintjs, "Started FingerprintJS Server on $fingerprintjs_listen on port " . $fingerprintjs->port() . ", with pid " . $fingerprintjs->pid());
-	$fingerprintjs->wait_until_port_open();
+	eval {
+		$fingerprintjs->wait_until_port_open();
+	} or do {
+		chomp $@;
+		diag("Failed to start FingerprintJS daemon:$@");
+		last;
+	};
 	my $firefox = Firefox::Marionette->new(
 		debug => $debug,
 		visible => $visible,

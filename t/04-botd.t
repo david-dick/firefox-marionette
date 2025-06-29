@@ -28,7 +28,13 @@ SKIP: {
 	my $debug = $ENV{FIREFOX_DEBUG} || 0;
 	my $botd = Test::Daemon::Botd->new(listen => $botd_listen, debug => $debug);
 	ok($botd, "Started botd Server on $botd_listen on port " . $botd->port() . ", with pid " . $botd->pid());
-	$botd->wait_until_port_open();
+	eval {
+		$botd->wait_until_port_open();
+	} or do {
+		chomp $@;
+		diag("Failed to start Botd daemon:$@");
+		last;
+	};
 	my $visible = $ENV{FIREFOX_VISIBLE} || 0;
 	my $firefox = Firefox::Marionette->new(
 		debug => $debug,
