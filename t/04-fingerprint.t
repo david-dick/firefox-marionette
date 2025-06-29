@@ -26,7 +26,7 @@ SKIP: {
 	my $debug = $ENV{FIREFOX_DEBUG} || 0;
 	my $visible = $ENV{FIREFOX_VISIBLE} || 0;
 	my $fingerprintjs_listen = '127.0.0.1';
-	my $fingerprintjs = Test::Daemon::FingerprintJS->new(listen => $fingerprintjs_listen);
+	my $fingerprintjs = Test::Daemon::FingerprintJS->new(listen => $fingerprintjs_listen, debug => $debug);
 	ok($fingerprintjs, "Started FingerprintJS Server on $fingerprintjs_listen on port " . $fingerprintjs->port() . ", with pid " . $fingerprintjs->pid());
 	$fingerprintjs->wait_until_port_open();
 	my $firefox = Firefox::Marionette->new(

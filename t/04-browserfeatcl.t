@@ -33,10 +33,10 @@ SKIP: {
 	}
 	my $nginx_listen = '127.0.0.1';
 	my $htdocs = File::Spec->catdir(Cwd::cwd(), 'browserfeatcl');
-	my $nginx = Test::Daemon::Nginx->new(listen => $nginx_listen, htdocs => $htdocs, index => 'index.html');
+	my $debug = $ENV{FIREFOX_DEBUG} || 0;
+	my $nginx = Test::Daemon::Nginx->new(listen => $nginx_listen, htdocs => $htdocs, index => 'index.html', debug => $debug);
 	ok($nginx, "Started nginx Server on $nginx_listen on port " . $nginx->port() . ", with pid " . $nginx->pid());
 	$nginx->wait_until_port_open();
-	my $debug = $ENV{FIREFOX_DEBUG} || 0;
 	my $visible = $ENV{FIREFOX_VISIBLE} || 0;
 	my %extra_parameters;
 	if ($ENV{FIREFOX_BINARY}) {

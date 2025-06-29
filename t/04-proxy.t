@@ -47,7 +47,8 @@ SKIP: {
 	my $nginx_username = MIME::Base64::encode_base64( Crypt::URandom::urandom( 50 ), q[] );
 	my $nginx_password = MIME::Base64::encode_base64( Crypt::URandom::urandom( 100 ), q[] );
 	my $nginx_realm = "Nginx Server for Firefox::Marionette $0";
-	my $nginx = Test::Daemon::Nginx->new(listen => $nginx_listen, key_size => $default_rsa_key_size, ca => $ca, $ENV{FIREFOX_NO_WEB_AUTH} ? () : ( username => $nginx_username, password => $nginx_password, realm => $nginx_realm));
+	my $debug = $ENV{FIREFOX_DEBUG} || 0;
+	my $nginx = Test::Daemon::Nginx->new(listen => $nginx_listen, key_size => $default_rsa_key_size, ca => $ca, $ENV{FIREFOX_NO_WEB_AUTH} ? () : ( username => $nginx_username, password => $nginx_password, realm => $nginx_realm), debug => $debug);
 	ok($nginx, "Started nginx Server on $nginx_listen on port " . $nginx->port() . ", with pid " . $nginx->pid());
 	$nginx->wait_until_port_open();
 	my $squid_username = MIME::Base64::encode_base64( Crypt::URandom::urandom( 50 ), q[] );
@@ -58,7 +59,6 @@ SKIP: {
 	$squid->wait_until_port_open();
 	my $profile = Firefox::Marionette::Profile->new();
 	$profile->set_value( 'network.proxy.allow_hijacking_localhost', 'true', 0 );
-	my $debug = $ENV{FIREFOX_DEBUG} || 0;
 	my $visible = $ENV{FIREFOX_VISIBLE} || 0;
 	my $loop_max = $ENV{FIREFOX_MAX_LOOP} || 1;
 	AUTH_LOOP: foreach my $loop_count (1 .. $loop_max) {

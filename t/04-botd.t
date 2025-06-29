@@ -25,10 +25,10 @@ SKIP: {
 	}
 	my $override_address = $^O eq 'linux' ? undef : '127.0.0.1';
 	my $botd_listen = $override_address || '127.0.0.2';
-	my $botd = Test::Daemon::Botd->new(listen => $botd_listen);
+	my $debug = $ENV{FIREFOX_DEBUG} || 0;
+	my $botd = Test::Daemon::Botd->new(listen => $botd_listen, debug => $debug);
 	ok($botd, "Started botd Server on $botd_listen on port " . $botd->port() . ", with pid " . $botd->pid());
 	$botd->wait_until_port_open();
-	my $debug = $ENV{FIREFOX_DEBUG} || 0;
 	my $visible = $ENV{FIREFOX_VISIBLE} || 0;
 	my $firefox = Firefox::Marionette->new(
 		debug => $debug,
