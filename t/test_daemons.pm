@@ -393,7 +393,7 @@ sub wait_until_port_open {
         close $socket
           or Carp::croak("Failed to close test socket:$EXTENDED_OS_ERROR");
     }
-    return;
+    return $found_port;
 }
 
 sub directory {
