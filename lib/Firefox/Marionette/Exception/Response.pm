@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Firefox::Marionette::Exception);
 
-our $VERSION = '1.67';
+our $VERSION = '1.68';
 
 sub throw {
     my ( $class, $response ) = @_;
@@ -45,7 +45,7 @@ Firefox::Marionette::Exception::Response - Represents an exception thrown by Fir
 
 =head1 VERSION
 
-Version 1.67
+Version 1.68
 
 =head1 SYNOPSIS
 

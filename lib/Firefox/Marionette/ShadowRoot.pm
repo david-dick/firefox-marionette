@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Firefox::Marionette::LocalObject);
 
-our $VERSION = '1.67';
+our $VERSION = '1.68';
 
 sub IDENTIFIER { return 'shadow-6066-11e4-a52e-4f735466cecf' }
 
@@ -17,7 +17,7 @@ Firefox::Marionette::ShadowRoot - Represents a Firefox shadow root retrieved usi
 
 =head1 VERSION
 
-Version 1.67
+Version 1.68
 
 =head1 SYNOPSIS
 

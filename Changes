@@ -1,5 +1,9 @@
 Revision history for Firefox-Marionette
 
+1.68  Sun Sep 14 08:48 2025
+     - Adding delete_element method
+     - Small fixes, github action updates
+
 1.67  Sat Jun 14 11:13 2025
      - Removing setpgrp due to Debian packaging issues.  Thanks to ntyni and gregoa for assistance with this in GH#86
      - Adding system_access flag to ssh-auth-cmd-marionette.  Thanks to prozorecJP for GH#87

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Firefox::Marionette::LocalObject);
 
-our $VERSION = '1.67';
+our $VERSION = '1.68';
 
 sub IDENTIFIER { return 'element-6066-11e4-a52e-4f735466cecf' }
 
@@ -340,7 +340,7 @@ Firefox::Marionette::Element - Represents a Firefox element retrieved using the 
 
 =head1 VERSION
 
-Version 1.67
+Version 1.68
 
 =head1 SYNOPSIS
 
