@@ -16,6 +16,9 @@ SKIP: {
 	if ($^O eq 'MSWin32') {
 		plan skip_all => "Cannot test in a $^O environment";
 	}
+	if ($ENV{GITHUB_RUN_ID}) {
+		plan skip_all => "Running in github causes hangs:$ENV{GITHUB_RUN_ID}";
+	}
 	my $profile = Firefox::Marionette::Profile->new();
 	my @extra_parameters;
 	if ($ENV{FIREFOX_BINARY}) {
