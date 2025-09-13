@@ -4721,6 +4721,9 @@ sub _get_remote_profile_directory {
 sub _setup_arguments {
     my ( $self, %parameters ) = @_;
     my @arguments = qw(-marionette);
+    if ( ( defined $self->{debug} ) && ( $self->{debug} !~ /^[01]$/smx ) ) {
+        push @arguments, '-MOZ_LOG=' . $self->{debug};
+    }
     if ( $self->{system_access} ) {
         push @arguments, '-remote-allow-system-access';
     }
@@ -4732,9 +4735,6 @@ sub _setup_arguments {
     }
     if ( defined $self->{console} ) {
         push @arguments, '--jsconsole';
-    }
-    if ( ( defined $self->{debug} ) && ( $self->{debug} !~ /^[01]$/smx ) ) {
-        push @arguments, '-MOZ_LOG=' . $self->{debug};
     }
     push @arguments, $self->_check_addons(%parameters);
     push @arguments, $self->_check_visible(%parameters);
