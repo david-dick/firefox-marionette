@@ -11461,6 +11461,7 @@ sub async_script {
             $self->_command('WebDriver:ExecuteAsyncScript'), {%parameters}
         ]
     );
+    my $response = $self->_get_response($message_id);
     return $self;
 }
 
