@@ -59,7 +59,7 @@ jobs:
         cpanm Test::CheckManifest
 
     - name: Install Node.js
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@v6
       with:
         node-version: 16
 
