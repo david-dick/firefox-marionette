@@ -2206,6 +2206,9 @@ SUBROUTINES/METHODS
       instance to survive and reconnect to. It does not do anything else at
       the moment. See the survive parameter.
 
+      * insecure - this is a shortcut method for setting the
+      accept_insecure_certs option in the capabilities parameter above.
+
       * kiosk - start the browser in kiosk
       <https://support.mozilla.org/en-US/kb/firefox-enterprise-kiosk-mode>
       mode.
