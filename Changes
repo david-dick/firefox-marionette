@@ -1,5 +1,10 @@
 Revision history for Firefox-Marionette
 
+1.69  Sat Jan 01 19:11 2026
+     - Removing CLEAR_PREDICTOR_NETWORK_DATA
+     - Adding insecure parameter to new method
+     - Adding build-bcd-for-firefox to EXE_FILES.  Thanks to bokutin for GH#11
+
 1.68  Sun Sep 14 08:48 2025
      - Adding delete_element method
      - Small fixes, github action updates

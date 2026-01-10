@@ -31,7 +31,7 @@ our @EXPORT_OK = qw(
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK, );
 
-our $VERSION = '1.68';
+our $VERSION = '1.69';
 
 sub RESOLVE_TYPE_DEFAULT               { return 0 }
 sub RESOLVE_TYPE_TXT                   { return 16 }
@@ -65,7 +65,7 @@ Firefox::Marionette::DNS - Constants for calls to the resolve method
 
 =head1 VERSION
 
-Version 1.68
+Version 1.69
 
 =head1 SYNOPSIS
 
